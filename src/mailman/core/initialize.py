@@ -124,6 +124,7 @@ def initialize_1(config_path=None):
 def initialize_2(debug=False, propagate_logs=None):
     """Second initialization step.
 
+    * Database
     * Logging
     * Pre-hook
     * Rules
@@ -148,6 +149,8 @@ def initialize_2(debug=False, propagate_logs=None):
     database = call_name(database_class)
     verifyObject(IDatabase, database)
     database.initialize(debug)
+    database.load_migrations()
+    database.commit()
     config.db = database
     # Initialize the rules and chains.  Do the imports here so as to avoid
     # circular imports.

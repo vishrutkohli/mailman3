@@ -55,6 +55,14 @@ specified in the configuration file.
     ... migrations_path: migrations
     ... """)
 
+.. Clean this up at the end of the doctest.
+    >>> def cleanup():
+    ...     import shutil
+    ...     from mailman.config import config
+    ...     config.pop('migrations')
+    ...     shutil.rmtree(tempdir)
+    >>> cleanups.append(cleanup)
+
 Here is an example migrations module.  The key part of this interface is the
 ``upgrade()`` method, which takes four arguments:
 
@@ -138,9 +146,32 @@ We do not get an 802 marker because the migration has already been loaded.
     00000000000801
     20120211000000
 
-.. Clean up the temporary directory::
 
-    >>> config.pop('migrations')
-    >>> sys.path.remove(tempdir)
-    >>> import shutil
-    >>> shutil.rmtree(tempdir)
+Partial upgrades
+================
+
+It's possible (mostly for testing purposes) to only do a partial upgrade, by
+providing a timestamp to `load_migrations()`.  To demonstrate this, we add two
+additional migrations, intended to be applied in sequential order.
+
+    >>> from shutil import copyfile
+    >>> from mailman.testing.helpers import chdir
+    >>> with chdir(path):
+    ...     copyfile('mm_20120211000000.py', 'mm_20120211000002.py')
+    ...     copyfile('mm_20120211000000.py', 'mm_20120211000003.py')
+    ...     copyfile('mm_20120211000000.py', 'mm_20120211000004.py')
+
+Now, only migrate to the ...03 timestamp.
+
+    >>> config.db.load_migrations('20120211000003')
+
+You'll notice that the ...04 version is not present.
+
+    >>> results = config.db.store.find(Version, component='schema')
+    >>> for result in sorted(result.version for result in results):
+    ...     print result
+    00000000000000
+    20120211000000
+    20120211000001
+    20120211000002
+    20120211000003

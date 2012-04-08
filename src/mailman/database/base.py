@@ -143,11 +143,15 @@ class StormBaseDatabase:
         database.DEBUG = (as_boolean(config.database.debug)
                           if debug is None else debug)
         self.store = store
-        self.load_migrations()
         store.commit()
 
-    def load_migrations(self):
-        """Load all not-yet loaded migrations."""
+    def load_migrations(self, until=None):
+        """Load schema migrations.
+
+        :param until: Load only the migrations up to the specified timestamp.
+            With default value of None, load all migrations.
+        :type until: string
+        """
         migrations_path = config.database.migrations_path
         if '.' in migrations_path:
             parent, dot, child = migrations_path.rpartition('.')
@@ -170,9 +174,12 @@ class StormBaseDatabase:
             if len(parts) < 2:
                 continue
             version = parts[1]
-            if version in versions:
+            if len(version.strip()) == 0 or version in versions:
                 # This one is already loaded.
                 continue
+            if until is not None and version > until:
+                # We're done.
+                break
             module_path = migrations_path + '.' + module_fn
             __import__(module_path)
             upgrade = getattr(sys.modules[module_path], 'upgrade', None)
