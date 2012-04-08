@@ -108,6 +108,13 @@ class TestMigration20120407(unittest.TestCase):
             database.initialize()
         # Load all the database SQL to just before ours.
         database.load_migrations('20120406999999')
+        # Populate the test database with a domain and a mailing list.
+        with temporary_db(database):
+            getUtility(IDomainManager).add(
+                'example.com', 'An example domain.',
+                'http://lists.example.com', 'postmaster@example.com')
+            mlist = create_list('test@example.com')
+            del mlist
         database.commit()
         # Load all migrations, up to and including this one.
         database.load_migrations('20120407000000')

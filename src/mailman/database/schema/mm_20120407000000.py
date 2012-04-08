@@ -61,7 +61,7 @@ def upgrade_sqlite(database, store, version, module_path):
             archive_policy = int(ArchivePolicy.public)
         store.execute(
             'update ml_backup set '
-            '    nntp_moderation = {0}, '
+            '    newsgroup_moderation = {0}, '
             '    nntp_prefix_subject_too = {1}, '
             '    archive_policy = {2} '
             'where id = {2};'.format(news_moderation, news_prefix, 
