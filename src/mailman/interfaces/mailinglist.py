@@ -250,6 +250,13 @@ class IMailingList(Interface):
 
     # Delivery.
 
+    archive_policy = Attribute(
+        """The policy for archiving messages to this mailing list.
+
+        The value is an `ArchivePolicy` enum.  Use this to archive the mailing
+        list publicly, privately, or not at all.
+        """)
+
     last_post_at = Attribute(
         """The date and time a message was last posted to the mailing list.""")
 
@@ -510,6 +517,9 @@ class IMailingList(Interface):
         made.  When the action is `Action.accept`, the postings are accepted
         without any other checks.
         """)
+
+    newsgroup_moderation = Attribute(
+        """The moderation policy for the linked newsgroup, if there is one.""")
 
     # Bounces.
 

@@ -33,7 +33,7 @@ import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
-from mailman.interfaces.nntp import NewsModeration
+from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.runners import nntp
 from mailman.testing.helpers import (
     LogFileMark,
@@ -67,7 +67,7 @@ Testing
         # Approved header, which NNTP software uses to forward to the
         # newsgroup.  The message would not have gotten to the mailing list if
         # it wasn't already approved.
-        self._mlist.news_moderation = NewsModeration.moderated
+        self._mlist.newsgroup_moderation = NewsgroupModeration.moderated
         nntp.prepare_message(self._mlist, self._msg, {})
         self.assertEqual(self._msg['approved'], 'test@example.com')
 
@@ -76,14 +76,14 @@ Testing
         # message will get an Approved header, which NNTP software uses to
         # forward to the newsgroup.  The message would not have gotten to the
         # mailing list if it wasn't already approved.
-        self._mlist.news_moderation = NewsModeration.open_moderated
+        self._mlist.newsgroup_moderation = NewsgroupModeration.open_moderated
         nntp.prepare_message(self._mlist, self._msg, {})
         self.assertEqual(self._msg['approved'], 'test@example.com')
 
     def test_moderation_removes_previous_approved_header(self):
         # Any existing Approved header is removed from moderated messages.
         self._msg['Approved'] = 'a bogus approval'
-        self._mlist.news_moderation = NewsModeration.moderated
+        self._mlist.newsgroup_moderation = NewsgroupModeration.moderated
         nntp.prepare_message(self._mlist, self._msg, {})
         headers = self._msg.get_all('approved')
         self.assertEqual(len(headers), 1)
@@ -92,7 +92,7 @@ Testing
     def test_open_moderation_removes_previous_approved_header(self):
         # Any existing Approved header is removed from moderated messages.
         self._msg['Approved'] = 'a bogus approval'
-        self._mlist.news_moderation = NewsModeration.open_moderated
+        self._mlist.newsgroup_moderation = NewsgroupModeration.open_moderated
         nntp.prepare_message(self._mlist, self._msg, {})
         headers = self._msg.get_all('approved')
         self.assertEqual(len(headers), 1)
@@ -102,7 +102,7 @@ Testing
         # The cook-headers handler adds the original and/or stripped (of the
         # prefix) subject to the metadata.  Assume that handler's been run;
         # check the Subject header.
-        self._mlist.news_prefix_subject_too = False
+        self._mlist.nntp_prefix_subject_too = False
         del self._msg['subject']
         self._msg['subject'] = 'Re: Your test'
         msgdata = dict(stripped_subject='Your test')
@@ -115,7 +115,7 @@ Testing
         # The cook-headers handler adds the original and/or stripped (of the
         # prefix) subject to the metadata.  Assume that handler's been run;
         # check the Subject header.
-        self._mlist.news_prefix_subject_too = False
+        self._mlist.nntp_prefix_subject_too = False
         del self._msg['subject']
         self._msg['subject'] = 'Re: Your test'
         msgdata = dict(original_subject='Your test')
@@ -128,7 +128,7 @@ Testing
         # The cook-headers handler adds the original and/or stripped (of the
         # prefix) subject to the metadata.  Assume that handler's been run;
         # check the Subject header.
-        self._mlist.news_prefix_subject_too = True
+        self._mlist.nntp_prefix_subject_too = True
         del self._msg['subject']
         self._msg['subject'] = 'Re: Your test'
         msgdata = dict(stripped_subject='Your test')
@@ -141,7 +141,7 @@ Testing
         # The cook-headers handler adds the original and/or stripped (of the
         # prefix) subject to the metadata.  Assume that handler's been run;
         # check the Subject header.
-        self._mlist.news_prefix_subject_too = True
+        self._mlist.nntp_prefix_subject_too = True
         del self._msg['subject']
         self._msg['subject'] = 'Re: Your test'
         msgdata = dict(original_subject='Your test')

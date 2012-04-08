@@ -28,7 +28,7 @@ __all__ = [
 from zope.interface import implements
 
 from mailman.core.i18n import _
-from mailman.interfaces.nntp import NewsModeration
+from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.rules import IRule
 
 
@@ -46,4 +46,4 @@ class ModeratedNewsgroup:
 
     def check(self, mlist, msg, msgdata):
         """See `IRule`."""
-        return mlist.news_moderation == NewsModeration.moderated
+        return mlist.news_moderation == NewsgroupModeration.moderated

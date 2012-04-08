@@ -48,6 +48,7 @@ class TestMigration20120407(unittest.TestCase):
     Circa: 3.0b1 -> 3.0b2
 
     table mailinglist:
+    * news_moderation -> newsgroup_moderation
     * news_prefix_subject_too -> nntp_prefix_subject_too
     * ADD archive_policy
     * REMOVE archive
@@ -90,6 +91,7 @@ class TestMigration20120407(unittest.TestCase):
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
+                        'news_moderation',
                         'news_prefix_subject_too',
                         'nntp_host'):
             # This should not produce an exception.  Is there some better test
@@ -106,13 +108,6 @@ class TestMigration20120407(unittest.TestCase):
             database.initialize()
         # Load all the database SQL to just before ours.
         database.load_migrations('20120406999999')
-        # Populate the test database with a domain and a mailing list.
-        with temporary_db(database):
-            getUtility(IDomainManager).add(
-                'example.com', 'An example domain.',
-                'http://lists.example.com', 'postmaster@example.com')
-            mlist = create_list('test@example.com')
-            del mlist
         database.commit()
         # Load all migrations, up to and including this one.
         database.load_migrations('20120407000000')
@@ -126,6 +121,7 @@ class TestMigration20120407(unittest.TestCase):
         for missing in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
+                        'news_moderation',
                         'news_prefix_subject_too',
                         'nntp_host'):
             self.assertRaises(sqlite3.OperationalError,

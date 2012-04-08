@@ -31,7 +31,7 @@ import datetime
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
-from mailman.interfaces.nntp import NewsModeration
+from mailman.interfaces.nntp import NewsgroupModeration
 
 
 
@@ -47,7 +47,7 @@ TYPES = dict(
     bounce_info_stale_after=seconds_to_delta,
     bounce_you_are_disabled_warnings_interval=seconds_to_delta,
     digest_volume_frequency=DigestFrequency,
-    news_moderation=NewsModeration,
+    newsgroup_moderation=NewsgroupModeration,
     personalize=Personalization,
     reply_goes_to_list=ReplyToMunging,
     )

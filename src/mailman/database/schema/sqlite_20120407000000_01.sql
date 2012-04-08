@@ -10,11 +10,13 @@
 -- REM archive
 -- REM archive_private
 -- REM archive_volume_frequency
+-- REM news_moderation
 -- REM news_prefix_subject_too
 -- REM nntp_host
 --
 -- THESE COLUMNS ARE ADDED BY THE PYTHON MIGRATION LAYER:
 -- ADD archive_policy
+-- ADD newsgroup_moderation
 -- ADD nntp_prefix_subject_too
 -- LP: #971013
 
@@ -95,7 +97,6 @@ CREATE TABLE ml_backup(
     mime_is_default_digest BOOLEAN,
     moderator_password TEXT,
     new_member_options INTEGER,
-    news_moderation INTEGER,
     nondigestable BOOLEAN,
     nonmember_rejection_notice TEXT,
     obscure_addresses BOOLEAN,
@@ -206,7 +207,6 @@ INSERT INTO ml_backup SELECT
     mime_is_default_digest,
     moderator_password,
     new_member_options,
-    news_moderation,
     nondigestable,
     nonmember_rejection_notice,
     obscure_addresses,
@@ -241,3 +241,4 @@ INSERT INTO ml_backup SELECT
 -- Add the new columns.  They'll get inserted at the Python layer.
 ALTER TABLE ml_backup ADD COLUMN archive_policy INTEGER;
 ALTER TABLE ml_backup ADD COLUMN nntp_prefix_subject_too INTEGER;
+ALTER TABLE ml_backup ADD COLUMN newsgroup_moderation INTEGER;

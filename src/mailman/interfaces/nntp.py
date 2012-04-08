@@ -17,7 +17,7 @@
 
 __metaclass__ = type
 __all__ = [
-    'NewsModeration',
+    'NewsgroupModeration',
     ]
 
 
@@ -25,7 +25,7 @@ from flufl.enum import Enum
 
 
 
-class NewsModeration(Enum):
+class NewsgroupModeration(Enum):
     # The newsgroup is not moderated.
     none = 0
     # The newsgroup is moderated, but allows for an open posting policy.
