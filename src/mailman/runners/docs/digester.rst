@@ -429,9 +429,8 @@ The content can be decoded to see the actual digest text.
 
     # We must display the repr of the decoded value because doctests cannot
     # handle the non-ascii characters.
-    >>> import pprint
-    >>> print pprint.pformat([repr(line)
-    ...  for line in rfc1153.msg.get_payload(decode=True).splitlines()])
+    >>> [repr(line)
+    ...  for line in rfc1153.msg.get_payload(decode=True).splitlines()]
     ["'Envoyez vos messages pour la liste Test \\xc3\\xa0'",
     "'\\ttest@example.com'",
     "''",
