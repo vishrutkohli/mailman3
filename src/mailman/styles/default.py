@@ -117,7 +117,7 @@ from: .*@uplinkpro.com
         mlist.default_nonmember_action = Action.hold
         # Archiver
         mlist.archive = True
-        mlist.archive_private = 0
+        mlist.archive_private = False
         mlist.archive_volume_frequency = 1
         mlist.emergency = False
         mlist.member_moderation_notice = ''
