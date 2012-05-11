@@ -32,8 +32,8 @@ from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.runner import RunnerCrashEvent
 from mailman.testing.helpers import (
-    configuration, event_subscribers, make_testable_runner,
-    specialized_message_from_string as mfs)
+    configuration, event_subscribers, get_queue_messages,
+    make_testable_runner, specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 
 
@@ -78,8 +78,12 @@ Message-ID: <ant>
         event = self._events[0]
         self.assertTrue(isinstance(event, RunnerCrashEvent))
         self.assertEqual(event.mailing_list, self._mlist)
-        self.assertEqual(event.message['message-id'], msg['message-id'])
+        self.assertEqual(event.message['message-id'], '<ant>')
         self.assertEqual(event.metadata['listname'], 'test@example.com')
         self.assertTrue(isinstance(event.error, RuntimeError))
         self.assertEqual(event.error.message, 'borked')
         self.assertTrue(isinstance(event.runner, CrashingRunner))
+        # The message should also have ended up in the shunt queue.
+        shunted = get_queue_messages('shunt')
+        self.assertEqual(len(shunted), 1)
+        self.assertEqual(shunted[0].msg['message-id'], '<ant>')
