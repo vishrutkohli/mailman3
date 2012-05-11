@@ -32,6 +32,7 @@ import traceback
 from cStringIO import StringIO
 from lazr.config import as_boolean, as_timedelta
 from zope.component import getUtility
+from zope.event import notify
 from zope.interface import implementer
 
 from mailman.config import config
@@ -39,7 +40,7 @@ from mailman.core.i18n import _
 from mailman.core.switchboard import Switchboard
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager
-from mailman.interfaces.runner import IRunner
+from mailman.interfaces.runner import IRunner, RunnerCrashEvent
 from mailman.utilities.string import expand
 
 
@@ -216,7 +217,12 @@ class Runner:
             language = mlist.preferred_language
         with _.using(language.code):
             msgdata['lang'] = language.code
-            keepqueued = self._dispose(mlist, msg, msgdata)
+            try:
+                keepqueued = self._dispose(mlist, msg, msgdata)
+            except Exception as error:
+                # Trigger the Zope event and re-raise
+                notify(RunnerCrashEvent(self, mlist, msg, msgdata, error))
+                raise
         if keepqueued:
             self.switchboard.enqueue(msg, msgdata)
 
