@@ -22,10 +22,23 @@ from __future__ import absolute_import, unicode_literals
 __metaclass__ = type
 __all__ = [
     'IRunner',
+    'RunnerCrashEvent',
     ]
 
 
 from zope.interface import Interface, Attribute
+
+
+
+class RunnerCrashEvent:
+    """Triggered when a runner encounters an exception in _dispose()."""
+
+    def __init__(self, runner, mlist, msg, metadata, error):
+        self.runner = runner
+        self.mailing_list = mlist
+        self.message = msg
+        self.metadata = metadata
+        self.error = error
 
 
 
