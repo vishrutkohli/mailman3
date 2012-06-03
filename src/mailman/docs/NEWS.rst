@@ -31,6 +31,10 @@ Architecture
    or unverified.  (LP: #975698)
  * A `PasswordChangeEvent` is triggered when an `IUser`'s password changes.
    (LP: #975700)
+ * When a queue runner gets an exception in its _dispose() method, a
+   `RunnerCrashEvent` is triggered, which contains references to the queue
+   runner, mailing list, message, metadata, and exception.  Interested parties
+   can subscribe to that `zope.event` for notification.
 
 Configuration
 -------------
@@ -60,6 +64,7 @@ Bug fixes
    given by Mark Sapiro. (LP: #949924)
  * Fixed a typo when returning the configuration file's header match checks.
    (LP: #953497)
+ * List-Post should be NO when posting is not allowed. (LP: #987563)
 
 
 3.0 beta 1 -- "The Twilight Zone"

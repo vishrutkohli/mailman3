@@ -17,8 +17,7 @@
 
 """Model for messages."""
 
-
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -26,18 +25,17 @@ __all__ = [
     ]
 
 from storm.locals import AutoReload, Int, RawStr, Unicode
-from zope.interface import implements
+from zope.interface import implementer
 
-from mailman.config import config
 from mailman.database.model import Model
+from mailman.database.transaction import dbconnection
 from mailman.interfaces.messages import IMessage
 
 
 
+@implementer(IMessage)
 class Message(Model):
     """A message in the message store."""
-
-    implements(IMessage)
 
     id = Int(primary=True, default=AutoReload)
     message_id = Unicode()
@@ -45,9 +43,10 @@ class Message(Model):
     path = RawStr()
     # This is a Messge-ID field representation, not a database row id.
 
-    def __init__(self, message_id, message_id_hash, path):
+    @dbconnection
+    def __init__(self, store, message_id, message_id_hash, path):
         super(Message, self).__init__()
         self.message_id = message_id
         self.message_id_hash = message_id_hash
         self.path = path
-        config.db.store.add(self)
+        store.add(self)

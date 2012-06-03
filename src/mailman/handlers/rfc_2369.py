@@ -17,7 +17,7 @@
 
 """RFC 2369 List-* and related headers."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -26,7 +26,7 @@ __all__ = [
 
 
 from email.utils import formataddr
-from zope.interface import implements
+from zope.interface import implementer
 
 from mailman.config import config
 from mailman.core.i18n import _
@@ -74,9 +74,13 @@ def process(mlist, msg, msgdata):
         'List-Subscribe'  : subfieldfmt.format(listinfo, mlist.join_address),
         })
     if not msgdata.get('reduced_list_headers'):
-        # List-Post: is controlled by a separate attribute
-        if mlist.include_list_post_header:
-            headers['List-Post'] = '<mailto:{0}>'.format(mlist.posting_address)
+        # List-Post: is controlled by a separate attribute, which is somewhat
+        # misnamed.  RFC 2369 requires a value of NO if posting is not
+        # allowed, i.e. for an announce-only list.
+        list_post = ('<mailto:{0}>'.format(mlist.posting_address)
+                     if mlist.include_list_post_header
+                     else 'NO')
+        headers['List-Post'] = list_post
         # Add RFC 2369 and 5064 archiving headers, if archiving is enabled.
         if mlist.archive:
             for archiver in config.archivers:
@@ -100,10 +104,9 @@ def process(mlist, msg, msgdata):
 
 
 
+@implementer(IHandler)
 class RFC2369:
     """Add the RFC 2369 List-* headers."""
-
-    implements(IHandler)
 
     name = 'rfc-2369'
     description = _('Add the RFC 2369 List-* headers.')

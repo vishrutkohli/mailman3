@@ -17,7 +17,7 @@
 
 """Domains."""
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -29,10 +29,10 @@ __all__ = [
 from urlparse import urljoin, urlparse
 from storm.locals import Int, Unicode
 from zope.event import notify
-from zope.interface import implements
+from zope.interface import implementer
 
-from mailman.config import config
 from mailman.database.model import Model
+from mailman.database.transaction import dbconnection
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
@@ -40,10 +40,9 @@ from mailman.model.mailinglist import MailingList
 
 
 
+@implementer(IDomain)
 class Domain(Model):
     """Domains."""
-
-    implements(IDomain)
 
     id = Int(primary=True)
 
@@ -90,9 +89,10 @@ class Domain(Model):
         return urlparse(self.base_url).scheme
 
     @property
-    def mailing_lists(self):
+    @dbconnection
+    def mailing_lists(self, store):
         """See `IDomain`."""
-        mailing_lists = config.db.store.find(
+        mailing_lists = store.find(
             MailingList,
             MailingList.mail_host == self.mail_host)
         for mlist in mailing_lists:
@@ -114,12 +114,13 @@ class Domain(Model):
 
 
 
+@implementer(IDomainManager)
 class DomainManager:
     """Domain manager."""
 
-    implements(IDomainManager)
-
-    def add(self, mail_host,
+    @dbconnection
+    def add(self, store,
+            mail_host,
             description=None,
             base_url=None,
             contact_address=None):
@@ -131,20 +132,22 @@ class DomainManager:
                 'Duplicate email host: %s' % mail_host)
         notify(DomainCreatingEvent(mail_host))
         domain = Domain(mail_host, description, base_url, contact_address)
-        config.db.store.add(domain)
+        store.add(domain)
         notify(DomainCreatedEvent(domain))
         return domain
 
-    def remove(self, mail_host):
+    @dbconnection
+    def remove(self, store, mail_host):
         domain = self[mail_host]
         notify(DomainDeletingEvent(domain))
-        config.db.store.remove(domain)
+        store.remove(domain)
         notify(DomainDeletedEvent(mail_host))
         return domain
 
-    def get(self, mail_host, default=None):
+    @dbconnection
+    def get(self, store, mail_host, default=None):
         """See `IDomainManager`."""
-        domains = config.db.store.find(Domain, mail_host=mail_host)
+        domains = store.find(Domain, mail_host=mail_host)
         if domains.count() < 1:
             return default
         assert domains.count() == 1, (
@@ -159,14 +162,17 @@ class DomainManager:
             raise KeyError(mail_host)
         return domain
 
-    def __len__(self):
-        return config.db.store.find(Domain).count()
+    @dbconnection
+    def __len__(self, store):
+        return store.find(Domain).count()
 
-    def __iter__(self):
+    @dbconnection
+    def __iter__(self, store):
         """See `IDomainManager`."""
-        for domain in config.db.store.find(Domain):
+        for domain in store.find(Domain):
             yield domain
 
-    def __contains__(self, mail_host):
+    @dbconnection
+    def __contains__(self, store, mail_host):
         """See `IDomainManager`."""
-        return config.db.store.find(Domain, mail_host=mail_host).count() > 0
+        return store.find(Domain, mail_host=mail_host).count() > 0
