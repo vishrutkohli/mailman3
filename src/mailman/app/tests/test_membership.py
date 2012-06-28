@@ -134,7 +134,7 @@ class AddMemberTest(unittest.TestCase):
         self.assertEqual(member.address.email, 'aperson@example.com')
         self.assertEqual(member.mailing_list, 'test@example.com')
         self.assertEqual(member.role, MemberRole.moderator)
-    
+
     def test_add_member_twice(self):
         # Adding a member with the same role twice causes an
         # AlreadySubscribedError to be raised.
@@ -182,7 +182,7 @@ class AddMemberPasswordTest(unittest.TestCase):
         # inappropriate for unit tests.
         config.push('password scheme', """
         [passwords]
-        password_scheme: sha
+        password_scheme: passlib.hash.sha1_crypt
         """)
 
     def tearDown(self):
@@ -195,4 +195,5 @@ class AddMemberPasswordTest(unittest.TestCase):
                             'Anne Person', 'abc', DeliveryMode.regular,
                             system_preferences.preferred_language)
         self.assertEqual(
-            member.user.password, '{SHA}qZk-NkcGgWq6PiVxeFDCbJzQ2J0=')
+            member.user.password,
+            '{sha1_crypt}$sha1$40000$$nY5NBnPWWAD5KI4X8Jjzp7.1YhV6')

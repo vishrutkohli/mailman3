@@ -30,14 +30,12 @@ __all__ = [
 
 import unittest
 
-from flufl.password import lookup, make_secret
-
 from mailman.app.lifecycle import create_list
-from mailman.config import config
 from mailman.rules import approved
 from mailman.testing.helpers import (
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from mailman.utilities.passwords import encrypt
 
 
 
@@ -48,8 +46,7 @@ class TestApproved(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        scheme = lookup(config.passwords.password_scheme.upper())
-        self._mlist.moderator_password = make_secret('super secret', scheme)
+        self._mlist.moderator_password = encrypt('super secret')
         self._rule = approved.Approved()
         self._msg = mfs("""\
 From: anne@example.com
@@ -150,8 +147,7 @@ class TestApprovedPseudoHeader(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        scheme = lookup(config.passwords.password_scheme.upper())
-        self._mlist.moderator_password = make_secret('super secret', scheme)
+        self._mlist.moderator_password = encrypt('super secret')
         self._rule = approved.Approved()
         self._msg = mfs("""\
 From: anne@example.com
@@ -283,8 +279,7 @@ class TestApprovedPseudoHeaderMIME(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        scheme = lookup(config.passwords.password_scheme.upper())
-        self._mlist.moderator_password = make_secret('super secret', scheme)
+        self._mlist.moderator_password = encrypt('super secret')
         self._rule = approved.Approved()
         self._msg_text_template = """\
 From: anne@example.com

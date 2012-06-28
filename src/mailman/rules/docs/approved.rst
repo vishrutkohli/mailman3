@@ -20,9 +20,8 @@ which is shared among all the administrators.
 This password will not be stored in clear text, so it must be hashed using the
 configured hash protocol.
 
-    >>> from flufl.password import lookup, make_secret
-    >>> scheme = lookup(config.passwords.password_scheme.upper())
-    >>> mlist.moderator_password = make_secret('super secret', scheme)
+    >>> from mailman.utilities.passwords import encrypt
+    >>> mlist.moderator_password = encrypt('super secret')
 
 The ``approved`` rule determines whether the message contains the proper
 approval or not.

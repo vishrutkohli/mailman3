@@ -26,7 +26,7 @@ __all__ = [
     ]
 
 
-from flufl.password import lookup, make_secret, generate
+from passlib.utils import generate_password as generate
 from restish import http, resource
 from uuid import UUID
 from zope.component import getUtility
@@ -38,6 +38,7 @@ from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import Validator
+from mailman.utilities.passwords import encrypt
 
 
 
@@ -102,8 +103,7 @@ class AllUsers(_UserBase):
         if password is None:
             # This will have to be reset since it cannot be retrieved.
             password = generate(int(config.passwords.password_length))
-        scheme = lookup(config.passwords.password_scheme.upper())
-        user.password = make_secret(password, scheme)
+        user.password = encrypt(password)
         location = path_to('users/{0}'.format(user.user_id.int))
         return http.created(location, [], None)
 

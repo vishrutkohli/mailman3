@@ -118,7 +118,7 @@ class ConfigLayer(MockAndMonkeyLayer):
         [mailman]
         layout: testing
         [passwords]
-        password_scheme: cleartext
+        password_scheme: passlib.hash.plaintext
         [paths.testing]
         var_dir: %s
         [devmode]

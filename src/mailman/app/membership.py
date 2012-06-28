@@ -27,11 +27,9 @@ __all__ = [
 
 
 from email.utils import formataddr
-from flufl.password import lookup, make_secret
 from zope.component import getUtility
 
 from mailman.app.notifications import send_goodbye_message
-from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification
 from mailman.interfaces.address import IEmailValidator
@@ -40,6 +38,7 @@ from mailman.interfaces.member import (
     MemberRole, MembershipIsBannedError, NotAMemberError)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.i18n import make
+from mailman.utilities.passwords import encrypt
 
 
 
@@ -96,10 +95,8 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
             user.display_name = (
                 display_name if display_name else address.display_name)
             user.link(address)
-        # Encrypt the password using the currently selected scheme.  The
-        # scheme is recorded in the hashed password string.
-        scheme = lookup(config.passwords.password_scheme.upper())
-        user.password = make_secret(password, scheme)
+        # Encrypt the password using the currently selected hash scheme.
+        user.password = encrypt(password)
         user.preferences.preferred_language = language
         member = mlist.subscribe(address, role)
         member.preferences.delivery_mode = delivery_mode
