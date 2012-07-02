@@ -15,9 +15,9 @@ Here is a history of user visible changes to Mailman.
 Architecture
 ------------
  * `passlib`_ is now used for all password hashing instead of flufl.password.
+   The default hash is `sha512_crypt`.
  * Internally, all datetimes are kept in the UTC timezone, however because of
-   LP: #280708, they are stored in the database in naive format.  The default
-   hash is `sha512_crypt`.
+   LP: #280708, they are stored in the database in naive format.
  * `received_time` is now added to the message metadata by the LMTP runner
    instead of by `Switchboard.enqueue()`.  This latter no longer depends on
    `received_time` in the metadata.
