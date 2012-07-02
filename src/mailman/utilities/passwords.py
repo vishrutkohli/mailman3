@@ -21,14 +21,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'initialize',
+    'handle_ConfigurationUpdatedEvent',
     ]
 
 
 
 from passlib.context import CryptContext
 from pkg_resources import resource_string
-from zope import event
 
 from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 
@@ -57,13 +56,7 @@ class PasswordContext:
 
 
 
-# Create and register a post-processing handler for the configuration file.
-
-def _update_context(event):
+def handle_ConfigurationUpdatedEvent(event):
     if isinstance(event, ConfigurationUpdatedEvent):
         # Just reset the password context.
         event.config.password_context = PasswordContext(event.config)
-
-
-def initialize():
-    event.subscribers.append(_update_context)

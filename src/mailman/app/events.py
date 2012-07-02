@@ -28,13 +28,22 @@ __all__ = [
 from zope import event
 
 from mailman.app import domain, moderator, subscriptions
+from mailman.core import i18n, switchboard
+from mailman.languages import manager as language_manager
+from mailman.styles import manager as style_manager
+from mailman.utilities import passwords
 
 
 
 def initialize():
     """Initialize global event subscribers."""
     event.subscribers.extend([
-        moderator.handle_ListDeletingEvent,
-        subscriptions.handle_ListDeletedEvent,
         domain.handle_DomainDeletingEvent,
+        moderator.handle_ListDeletingEvent,
+        passwords.handle_ConfigurationUpdatedEvent,
+        subscriptions.handle_ListDeletedEvent,
+        switchboard.handle_ConfigurationUpdatedEvent,
+        i18n.handle_ConfigurationUpdatedEvent,
+        style_manager.handle_ConfigurationUpdatedEvent,
+        language_manager.handle_ConfigurationUpdatedEvent,
         ])

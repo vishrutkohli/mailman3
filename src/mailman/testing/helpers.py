@@ -343,14 +343,14 @@ def call_api(url, data=None, method=None, username=None, password=None):
 
 @contextmanager
 def event_subscribers(*subscribers):
-    """Temporarily set the Zope event subscribers list.
+    """Temporarily extend the Zope event subscribers list.
 
     :param subscribers: A sequence of event subscribers.
     :type subscribers: sequence of callables, each receiving one argument, the
         event.
     """
     old_subscribers = event.subscribers[:]
-    event.subscribers = list(subscribers)
+    event.subscribers.extend(subscribers)
     try:
         yield
     finally:

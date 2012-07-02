@@ -41,7 +41,6 @@ from mailman import version
 from mailman.interfaces.configuration import (
     ConfigurationUpdatedEvent, IConfiguration)
 from mailman.interfaces.languages import ILanguageManager
-from mailman.interfaces.styles import IStyleManager
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.modules import call_name
 
@@ -117,26 +116,7 @@ class Configuration:
         """Perform post-processing after loading the configuration files."""
         # Expand and set up all directories.
         self._expand_paths()
-        # Set up the switchboards.  Import this here to avoid circular imports.
-        from mailman.core.switchboard import Switchboard
-        Switchboard.initialize()
-        # Set up all the languages.
-        languages = self._config.getByCategory('language', [])
-        language_manager = getUtility(ILanguageManager)
-        for language in languages:
-            if language.enabled:
-                code = language.name.split('.')[1]
-                language_manager.add(
-                    code, language.charset, language.description)
-        # The default language must always be available.
-        assert self._config.mailman.default_language in language_manager, (
-            'System default language code not defined: %s' %
-            self._config.mailman.default_language)
         self.ensure_directories_exist()
-        getUtility(IStyleManager).populate()
-        # Set the default system language.
-        from mailman.core.i18n import _
-        _.default = self.mailman.default_language
         notify(ConfigurationUpdatedEvent(self))
 
     def _expand_paths(self):
@@ -248,4 +228,10 @@ class Configuration:
     def style_configs(self):
         """Iterate over all the style configuration sections."""
         for section in self._config.getByCategory('style', []):
+            yield section
+
+    @property
+    def language_configs(self):
+        """Iterate over all the language configuration sections."""
+        for section in self._config.getByCategory('language', []):
             yield section

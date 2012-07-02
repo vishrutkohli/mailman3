@@ -112,8 +112,8 @@ def initialize_1(config_path=None):
     os.umask(007)
     # Initialize configuration event subscribers.  This must be done before
     # setting up the configuration system.
-    from mailman.utilities.passwords import initialize as initialize_passwords
-    initialize_passwords()
+    from mailman.app.events import initialize as initialize_events
+    initialize_events()
     # config_path will be set if the command line argument -C is given.  That
     # case overrides all others.  When not given on the command line, the
     # configuration file is searched for in the file system.
@@ -156,7 +156,6 @@ def initialize_2(debug=False, propagate_logs=None):
     # Initialize the rules and chains.  Do the imports here so as to avoid
     # circular imports.
     from mailman.app.commands import initialize as initialize_commands
-    from mailman.app.events import initialize as initialize_events
     from mailman.core.chains import initialize as initialize_chains
     from mailman.core.pipelines import initialize as initialize_pipelines
     from mailman.core.rules import initialize as initialize_rules
@@ -165,7 +164,6 @@ def initialize_2(debug=False, propagate_logs=None):
     initialize_chains()
     initialize_pipelines()
     initialize_commands()
-    initialize_events()
 
 
 def initialize_3():
