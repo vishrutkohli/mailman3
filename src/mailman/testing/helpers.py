@@ -363,8 +363,14 @@ class configuration:
 
     def __init__(self, section, **kws):
         self._section = section
+        # Most tests don't care about the name given to the temporary
+        # configuration.  Usually we'll just craft a random one, but some
+        # tests do care, so give them a hook to set it.
+        if '_configname' in kws:
+            self._uuid = kws.pop('_configname')
+        else:
+            self._uuid = uuid.uuid4().hex
         self._values = kws.copy()
-        self._uuid = uuid.uuid4().hex
 
     def _apply(self):
         lines = ['[{0}]'.format(self._section)]

@@ -28,8 +28,9 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.chains.owner import BuiltInOwnerChain, OwnerNotification
+from mailman.chains.owner import BuiltInOwnerChain
 from mailman.core.chains import process
+from mailman.interfaces.chain import AcceptOwnerEvent
 from mailman.testing.helpers import (
     event_subscribers,
     get_queue_messages,
@@ -60,12 +61,13 @@ Message-ID: <ant>
         # is processed by the owner chain.
         events = []
         def catch_event(event):
-            events.append(event)
+            if isinstance(event, AcceptOwnerEvent):
+                events.append(event)
         with event_subscribers(catch_event):
             process(self._mlist, self._msg, {}, 'default-owner-chain')
         self.assertEqual(len(events), 1)
         event = events[0]
-        self.assertTrue(isinstance(event, OwnerNotification))
+        self.assertTrue(isinstance(event, AcceptOwnerEvent))
         self.assertEqual(event.mlist, self._mlist)
         self.assertEqual(event.msg['message-id'], '<ant>')
         self.assertTrue(isinstance(event.chain, BuiltInOwnerChain))

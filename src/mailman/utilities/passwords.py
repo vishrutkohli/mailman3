@@ -21,37 +21,49 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'encrypt',
-    'verify',
+    'initialize',
     ]
 
 
-import re
 
-from passlib.registry import get_crypt_handler
+from passlib.context import CryptContext
+from pkg_resources import resource_string
+from zope import event
 
-from mailman.config import config
-from mailman.testing import layers
-from mailman.utilities.modules import find_name
-
-SCHEME_RE = r'{(?P<scheme>[^}]+?)}(?P<rest>.*)'.encode()
+from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 
 
 
-def encrypt(secret):
-    hasher = find_name(config.passwords.password_scheme)
-    # For reproducibility, don't use any salt in the test suite.
-    kws = {}
-    if layers.is_testing and 'salt' in hasher.setting_kwds:
-        kws['salt'] = b''
-    hashed = hasher.encrypt(secret, **kws)
-    return b'{{{0}}}{1}'.format(hasher.name, hashed)
+class PasswordContext:
+    def __init__(self, config):
+        # Is the context coming from a file system or Python path?
+        if config.passwords.path.startswith('python:'):
+            resource_path = config.passwords.path[7:]
+            package, dot, resource = resource_path.rpartition('.')
+            config_string = resource_string(package, resource + '.cfg')
+        else:
+            with open(config.passwords.path, 'rb') as fp:
+                config_string = fp.read()
+        self._context = CryptContext.from_string(config_string)
+
+    def encrypt(self, secret):
+        return self._context.encrypt(secret)
+
+    def verify(self, hashed, password):
+        # Support hash algorithm migration.  Yes, the order of arguments is
+        # reversed, for backward compatibility with flufl.password.  XXX fix
+        # this eventually.
+        return self._context.verify_and_update(password, hashed)
 
 
-def verify(hashed, password):
-    mo = re.match(SCHEME_RE, hashed, re.IGNORECASE)
-    if not mo:
-        return False
-    scheme, secret = mo.groups(('scheme', 'rest'))
-    hasher = get_crypt_handler(scheme)
-    return hasher.verify(password, secret)
+
+# Create and register a post-processing handler for the configuration file.
+
+def _update_context(event):
+    if isinstance(event, ConfigurationUpdatedEvent):
+        # Just reset the password context.
+        event.config.password_context = PasswordContext(event.config)
+
+
+def initialize():
+    event.subscribers.append(_update_context)

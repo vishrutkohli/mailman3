@@ -110,6 +110,10 @@ def initialize_1(config_path=None):
     # o-rwx although I think in most cases it doesn't hurt if other can read
     # or write the files.
     os.umask(007)
+    # Initialize configuration event subscribers.  This must be done before
+    # setting up the configuration system.
+    from mailman.utilities.passwords import initialize as initialize_passwords
+    initialize_passwords()
     # config_path will be set if the command line argument -C is given.  That
     # case overrides all others.  When not given on the command line, the
     # configuration file is searched for in the file system.

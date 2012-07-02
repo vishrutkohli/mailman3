@@ -25,17 +25,20 @@ __all__ = [
     'TestApprovedNonASCII',
     'TestApprovedPseudoHeader',
     'TestApprovedPseudoHeaderMIME',
+    'TestPasswordHashMigration',
     ]
 
 
+import os
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
 from mailman.rules import approved
 from mailman.testing.helpers import (
+    configuration,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
-from mailman.utilities.passwords import encrypt
 
 
 
@@ -46,7 +49,8 @@ class TestApproved(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        self._mlist.moderator_password = encrypt('super secret')
+        self._mlist.moderator_password = config.password_context.encrypt(
+            'super secret')
         self._rule = approved.Approved()
         self._msg = mfs("""\
 From: anne@example.com
@@ -147,7 +151,8 @@ class TestApprovedPseudoHeader(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        self._mlist.moderator_password = encrypt('super secret')
+        self._mlist.moderator_password = config.password_context.encrypt(
+            'super secret')
         self._rule = approved.Approved()
         self._msg = mfs("""\
 From: anne@example.com
@@ -279,7 +284,8 @@ class TestApprovedPseudoHeaderMIME(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        self._mlist.moderator_password = encrypt('super secret')
+        self._mlist.moderator_password = config.password_context.encrypt(
+            'super secret')
         self._rule = approved.Approved()
         self._msg_text_template = """\
 From: anne@example.com
@@ -410,3 +416,78 @@ This is a message body with a non-ascii character =E4
         # unicode errors.  LP: #949924.
         result = self._rule.check(self._mlist, self._msg, {})
         self.assertFalse(result)
+
+
+class TestPasswordHashMigration(unittest.TestCase):
+    """Test that password hashing migrations work."""
+    # http://packages.python.org/passlib/lib/passlib.context-tutorial.html#integrating-hash-migration
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('test@example.com')
+        # The default testing hash algorithm is "roundup_plaintext" which
+        # yields hashed passwords of the form: {plaintext}abc
+        #
+        # Migration is automatically supported when a more modern password
+        # hash is chosen after the original password is set.  As long as the
+        # old password still validates, the migration happens automatically.
+        self._mlist.moderator_password = config.password_context.encrypt(
+            b'super secret')
+        self._rule = approved.Approved()
+        self._msg = mfs("""\
+From: anne@example.com
+To: test@example.com
+Subject: A Message with non-ascii body
+Message-ID: <ant>
+MIME-Version: 1.0
+
+A message body.
+""")
+
+    def test_valid_password_migrates(self):
+        # Now that the moderator password is set, change the default password
+        # hashing algorithm.  When the old password is validated, it will be
+        # automatically migrated to the new hash.
+        self.assertEqual(self._mlist.moderator_password,
+                         b'{plaintext}super secret')
+        config_file = os.path.join(config.VAR_DIR, 'passlib.config')
+        # XXX passlib seems to choose the default hashing scheme even if it is
+        # deprecated.  The default scheme is either specified explicitly, or
+        # is the first in this list.  This seems like a bug.
+        with open(config_file, 'w') as fp:
+            print("""\
+[passlib]
+schemes = roundup_plaintext, plaintext
+default = plaintext
+deprecated = roundup_plaintext
+""", file=fp)
+        with configuration('passwords', path=config_file):
+            self._msg['Approved'] = 'super secret'
+            result = self._rule.check(self._mlist, self._msg, {})
+            self.assertTrue(result)
+        self.assertEqual(self._mlist.moderator_password, b'super secret')
+
+    def test_invalid_password_does_not_migrate(self):
+        # Now that the moderator password is set, change the default password
+        # hashing algorithm.  When the old password is invalid, it will not be
+        # automatically migrated to the new hash.
+        self.assertEqual(self._mlist.moderator_password,
+                         b'{plaintext}super secret')
+        config_file = os.path.join(config.VAR_DIR, 'passlib.config')
+        # XXX passlib seems to choose the default hashing scheme even if it is
+        # deprecated.  The default scheme is either specified explicitly, or
+        # is the first in this list.  This seems like a bug.
+        with open(config_file, 'w') as fp:
+            print("""\
+[passlib]
+schemes = roundup_plaintext, plaintext
+default = plaintext
+deprecated = roundup_plaintext
+""", file=fp)
+        with configuration('passwords', path=config_file):
+            self._msg['Approved'] = 'not the password'
+            result = self._rule.check(self._mlist, self._msg, {})
+            self.assertFalse(result)
+        self.assertEqual(self._mlist.moderator_password,
+                         b'{plaintext}super secret')

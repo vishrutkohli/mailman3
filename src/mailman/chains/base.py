@@ -22,7 +22,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Chain',
-    'ChainNotification',
     'Link',
     'TerminalChainBase',
     ]
@@ -134,14 +133,3 @@ class ChainIterator:
     def __iter__(self):
         """See `IChainIterator`."""
         return self._chain.get_iterator()
-
-
-
-class ChainNotification:
-    """Base class for chain notification events."""
-
-    def __init__(self, mlist, msg, msgdata, chain):
-        self.mlist = mlist
-        self.msg = msg
-        self.msgdata = msgdata
-        self.chain = chain

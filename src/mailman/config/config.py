@@ -32,11 +32,14 @@ from lazr.config import ConfigSchema, as_boolean
 from pkg_resources import resource_stream
 from string import Template
 from zope.component import getUtility
-from zope.interface import Interface, implementer
+from zope.event import notify
+from zope.interface import implementer
 
 import mailman.templates
 
 from mailman import version
+from mailman.interfaces.configuration import (
+    ConfigurationUpdatedEvent, IConfiguration)
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.styles import IStyleManager
 from mailman.utilities.filesystem import makedirs
@@ -44,11 +47,6 @@ from mailman.utilities.modules import call_name
 
 
 SPACE = ' '
-
-
-
-class IConfiguration(Interface):
-    """Marker interface; used for adaptation in the REST API."""
 
 
 
@@ -70,6 +68,7 @@ class Configuration:
         self.handlers = {}
         self.pipelines = {}
         self.commands = {}
+        self.password_context = None
 
     def _clear(self):
         """Clear the cached configuration variables."""
@@ -138,6 +137,7 @@ class Configuration:
         # Set the default system language.
         from mailman.core.i18n import _
         _.default = self.mailman.default_language
+        notify(ConfigurationUpdatedEvent(self))
 
     def _expand_paths(self):
         """Expand all configuration paths."""

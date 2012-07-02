@@ -30,9 +30,9 @@ import re
 from email.iterators import typed_subpart_iterator
 from zope.interface import implementer
 
+from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.rules import IRule
-from mailman.utilities.passwords import verify
 
 
 EMPTYSTRING = ''
@@ -119,8 +119,14 @@ class Approved:
         else:
             for header in HEADERS:
                 del msg[header]
-        return (password is not missing and
-                verify(mlist.moderator_password, password))
+        if password is missing:
+            return False
+        is_valid, new_hash = config.password_context.verify(
+            mlist.moderator_password, password)
+        if is_valid and new_hash:
+            # Hash algorithm migration.
+            mlist.moderator_password = new_hash
+        return is_valid
 
 
 

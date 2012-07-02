@@ -20,8 +20,8 @@ which is shared among all the administrators.
 This password will not be stored in clear text, so it must be hashed using the
 configured hash protocol.
 
-    >>> from mailman.utilities.passwords import encrypt
-    >>> mlist.moderator_password = encrypt('super secret')
+    >>> mlist.moderator_password = config.password_context.encrypt(
+    ...     'super secret')
 
 The ``approved`` rule determines whether the message contains the proper
 approval or not.

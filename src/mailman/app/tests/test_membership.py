@@ -30,13 +30,11 @@ from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.membership import add_member
-from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
     AlreadySubscribedError, DeliveryMode, MemberRole, MembershipIsBannedError)
 from mailman.interfaces.usermanager import IUserManager
-from mailman.testing.helpers import reset_the_world
 from mailman.testing.layers import ConfigLayer
 
 
@@ -46,9 +44,6 @@ class AddMemberTest(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-
-    def tearDown(self):
-        reset_the_world()
 
     def test_add_member_new_user(self):
         # Test subscribing a user to a mailing list when the email address has
@@ -178,22 +173,10 @@ class AddMemberPasswordTest(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        # The default ssha scheme introduces a random salt, which is
-        # inappropriate for unit tests.
-        config.push('password scheme', """
-        [passwords]
-        password_scheme: passlib.hash.sha1_crypt
-        """)
-
-    def tearDown(self):
-        config.pop('password scheme')
-        reset_the_world()
 
     def test_add_member_password(self):
         # Test that the password stored with the new user is encrypted.
         member = add_member(self._mlist, 'anne@example.com',
                             'Anne Person', 'abc', DeliveryMode.regular,
                             system_preferences.preferred_language)
-        self.assertEqual(
-            member.user.password,
-            '{sha1_crypt}$sha1$40000$$nY5NBnPWWAD5KI4X8Jjzp7.1YhV6')
+        self.assertEqual(member.user.password, '{plaintext}abc')
