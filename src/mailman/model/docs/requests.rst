@@ -696,7 +696,7 @@ Frank Person is now a member of the mailing list.
     >>> print member.user.display_name
     Frank Person
     >>> print member.user.password
-    {CLEARTEXT}abcxyz
+    {plaintext}abcxyz
 
 
 Holding unsubscription requests

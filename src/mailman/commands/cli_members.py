@@ -29,8 +29,8 @@ import sys
 import codecs
 
 from email.utils import formataddr, parseaddr
-from flufl.password import generate
 from operator import attrgetter
+from passlib.utils import generate_password as generate
 from zope.component import getUtility
 from zope.interface import implementer
 

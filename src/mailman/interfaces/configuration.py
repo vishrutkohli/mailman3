@@ -15,38 +15,27 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""The standard -owner posting chain."""
+"""Configuration system interface."""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'BuiltInOwnerChain',
+    'ConfigurationUpdatedEvent',
+    'IConfiguration',
     ]
 
 
-import logging
-
-from zope.event import notify
-
-from mailman.chains.base import TerminalChainBase
-from mailman.config import config
-from mailman.core.i18n import _
-from mailman.interfaces.chain import AcceptOwnerEvent
-
-
-log = logging.getLogger('mailman.vette')
+from zope.interface import Interface
 
 
 
-class BuiltInOwnerChain(TerminalChainBase):
-    """Default built-in -owner address chain."""
+class IConfiguration(Interface):
+    """Marker interface; used for adaptation in the REST API."""
 
-    name = 'default-owner-chain'
-    description = _('The built-in -owner posting chain.')
 
-    def _process(self, mlist, msg, msgdata):
-        # At least for now, everything posted to -owners goes through.
-        config.switchboards['pipeline'].enqueue(msg, msgdata)
-        log.info('OWNER: %s', msg.get('message-id', 'n/a'))
-        notify(AcceptOwnerEvent(mlist, msg, msgdata, self))
+
+class ConfigurationUpdatedEvent:
+    """The system-wide global configuration was updated."""
+    def __init__(self, config):
+        self.config = config

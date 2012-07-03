@@ -22,13 +22,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'StyleManager',
+    'handle_ConfigurationUpdatedEvent',
     ]
 
 
 from operator import attrgetter
+from zope.component import getUtility
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
+from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.styles import (
     DuplicateStyleError, IStyle, IStyleManager)
 from mailman.utilities.modules import call_name
@@ -88,3 +91,9 @@ class StyleManager:
         """See `IStyleManager`."""
         # Let KeyErrors percolate up.
         del self._styles[style.name]
+
+
+
+def handle_ConfigurationUpdatedEvent(event):
+    if isinstance(event, ConfigurationUpdatedEvent):
+        getUtility(IStyleManager).populate()

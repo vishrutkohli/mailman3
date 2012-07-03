@@ -343,14 +343,14 @@ def call_api(url, data=None, method=None, username=None, password=None):
 
 @contextmanager
 def event_subscribers(*subscribers):
-    """Temporarily set the Zope event subscribers list.
+    """Temporarily extend the Zope event subscribers list.
 
     :param subscribers: A sequence of event subscribers.
     :type subscribers: sequence of callables, each receiving one argument, the
         event.
     """
     old_subscribers = event.subscribers[:]
-    event.subscribers = list(subscribers)
+    event.subscribers.extend(subscribers)
     try:
         yield
     finally:
@@ -363,8 +363,14 @@ class configuration:
 
     def __init__(self, section, **kws):
         self._section = section
+        # Most tests don't care about the name given to the temporary
+        # configuration.  Usually we'll just craft a random one, but some
+        # tests do care, so give them a hook to set it.
+        if '_configname' in kws:
+            self._uuid = kws.pop('_configname')
+        else:
+            self._uuid = uuid.uuid4().hex
         self._values = kws.copy()
-        self._uuid = uuid.uuid4().hex
 
     def _apply(self):
         lines = ['[{0}]'.format(self._section)]

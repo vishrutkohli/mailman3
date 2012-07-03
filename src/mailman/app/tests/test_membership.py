@@ -30,13 +30,11 @@ from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.membership import add_member
-from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
     AlreadySubscribedError, DeliveryMode, MemberRole, MembershipIsBannedError)
 from mailman.interfaces.usermanager import IUserManager
-from mailman.testing.helpers import reset_the_world
 from mailman.testing.layers import ConfigLayer
 
 
@@ -46,9 +44,6 @@ class AddMemberTest(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-
-    def tearDown(self):
-        reset_the_world()
 
     def test_add_member_new_user(self):
         # Test subscribing a user to a mailing list when the email address has
@@ -134,7 +129,7 @@ class AddMemberTest(unittest.TestCase):
         self.assertEqual(member.address.email, 'aperson@example.com')
         self.assertEqual(member.mailing_list, 'test@example.com')
         self.assertEqual(member.role, MemberRole.moderator)
-    
+
     def test_add_member_twice(self):
         # Adding a member with the same role twice causes an
         # AlreadySubscribedError to be raised.
@@ -178,21 +173,10 @@ class AddMemberPasswordTest(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        # The default ssha scheme introduces a random salt, which is
-        # inappropriate for unit tests.
-        config.push('password scheme', """
-        [passwords]
-        password_scheme: sha
-        """)
-
-    def tearDown(self):
-        config.pop('password scheme')
-        reset_the_world()
 
     def test_add_member_password(self):
         # Test that the password stored with the new user is encrypted.
         member = add_member(self._mlist, 'anne@example.com',
                             'Anne Person', 'abc', DeliveryMode.regular,
                             system_preferences.preferred_language)
-        self.assertEqual(
-            member.user.password, '{SHA}qZk-NkcGgWq6PiVxeFDCbJzQ2J0=')
+        self.assertEqual(member.user.password, '{plaintext}abc')

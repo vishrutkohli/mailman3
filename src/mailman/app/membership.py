@@ -27,7 +27,6 @@ __all__ = [
 
 
 from email.utils import formataddr
-from flufl.password import lookup, make_secret
 from zope.component import getUtility
 
 from mailman.app.notifications import send_goodbye_message
@@ -96,10 +95,8 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
             user.display_name = (
                 display_name if display_name else address.display_name)
             user.link(address)
-        # Encrypt the password using the currently selected scheme.  The
-        # scheme is recorded in the hashed password string.
-        scheme = lookup(config.passwords.password_scheme.upper())
-        user.password = make_secret(password, scheme)
+        # Encrypt the password using the currently selected hash scheme.
+        user.password = config.password_context.encrypt(password)
         user.preferences.preferred_language = language
         member = mlist.subscribe(address, role)
         member.preferences.delivery_mode = delivery_mode

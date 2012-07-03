@@ -22,23 +22,18 @@ from __future__ import absolute_import, unicode_literals
 __metaclass__ = type
 __all__ = [
     'DiscardChain',
-    'DiscardNotification',
     ]
 
 
 import logging
 from zope.event import notify
 
-from mailman.chains.base import ChainNotification, TerminalChainBase
+from mailman.chains.base import TerminalChainBase
 from mailman.core.i18n import _
+from mailman.interfaces.chain import DiscardEvent
 
 
 log = logging.getLogger('mailman.vette')
-
-
-
-class DiscardNotification(ChainNotification):
-    """A notification event signaling that a message is being discarded."""
 
 
 
@@ -55,5 +50,5 @@ class DiscardChain(TerminalChainBase):
         message away.
         """
         log.info('DISCARD: %s', msg.get('message-id', 'n/a'))
-        notify(DiscardNotification(mlist, msg, msgdata, self))
+        notify(DiscardEvent(mlist, msg, msgdata, self))
         # Nothing more needs to happen.

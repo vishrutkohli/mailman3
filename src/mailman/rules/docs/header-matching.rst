@@ -74,17 +74,19 @@ The header may exist and match the pattern.  By default, when the header
 matches, it gets held for moderator approval.
 ::
 
+    >>> from mailman.interfaces.chain import ChainEvent
     >>> from mailman.testing.helpers import event_subscribers
     >>> def handler(event):
-    ...     print event.__class__.__name__, \
-    ...           event.chain.name, event.msg['message-id']
+    ...     if isinstance(event, ChainEvent):
+    ...         print event.__class__.__name__, \
+    ...             event.chain.name, event.msg['message-id']
 
     >>> del msg['x-spam-score']
     >>> msg['X-Spam-Score'] = '*****'
     >>> msgdata = {}
     >>> with event_subscribers(handler):
     ...     process(mlist, msg, msgdata, 'header-match')
-    HoldNotification hold <ant>
+    HoldEvent hold <ant>
 
     >>> hits_and_misses(msgdata)
     Rule hits:
@@ -100,7 +102,7 @@ discard such messages.
     >>> with event_subscribers(handler):
     ...     with configuration('antispam', jump_chain='discard'):
     ...         process(mlist, msg, msgdata, 'header-match')
-    DiscardNotification discard <ant>
+    DiscardEvent discard <ant>
 
 These programmatically added headers can be removed by flushing the chain.
 Now, nothing with match this message.
