@@ -94,7 +94,7 @@ It is also available via the location given in the response.
     created_on: 2005-08-01T07:49:23
     display_name: Bart Person
     http_etag: "..."
-    password: {CLEARTEXT}bbb
+    password: {plaintext}bbb
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
@@ -105,7 +105,7 @@ them with user ids.  Thus, a user can be retrieved via its email address.
     created_on: 2005-08-01T07:49:23
     display_name: Bart Person
     http_etag: "..."
-    password: {CLEARTEXT}bbb
+    password: {plaintext}bbb
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
@@ -129,7 +129,7 @@ therefore cannot be retrieved.  It can be reset though.
     created_on: 2005-08-01T07:49:23
     display_name: Cris Person
     http_etag: "..."
-    password: {CLEARTEXT}...
+    password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
 
@@ -227,7 +227,7 @@ In fact, any of these addresses can be used to look up Bart's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Bart Person
     http_etag: "..."
-    password: {CLEARTEXT}bbb
+    password: {plaintext}bbb
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
@@ -235,7 +235,7 @@ In fact, any of these addresses can be used to look up Bart's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Bart Person
     http_etag: "..."
-    password: {CLEARTEXT}bbb
+    password: {plaintext}bbb
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
@@ -243,7 +243,7 @@ In fact, any of these addresses can be used to look up Bart's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Bart Person
     http_etag: "..."
-    password: {CLEARTEXT}bbb
+    password: {plaintext}bbb
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
@@ -251,6 +251,6 @@ In fact, any of these addresses can be used to look up Bart's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Bart Person
     http_etag: "..."
-    password: {CLEARTEXT}bbb
+    password: {plaintext}bbb
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3

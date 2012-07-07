@@ -17,18 +17,17 @@
 
 """Base class for terminal chains."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
     'Chain',
-    'ChainNotification',
     'Link',
     'TerminalChainBase',
     ]
 
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from mailman.config import config
 from mailman.interfaces.chain import (
@@ -36,9 +35,9 @@ from mailman.interfaces.chain import (
 
 
 
+@implementer(IChainLink)
 class Link:
     """A chain link."""
-    implements(IChainLink)
 
     def __init__(self, rule, action=None, chain=None, function=None):
         self.rule = rule
@@ -61,13 +60,12 @@ class Link:
 
 
 
+@implementer(IChain, IChainIterator)
 class TerminalChainBase:
     """A base chain that always matches and executes a method.
 
     The method is called '_process()' and must be provided by the subclass.
     """
-    implements(IChain, IChainIterator)
-
     def _process(self, mlist, msg, msgdata):
         """Process the message for the given mailing list.
 
@@ -93,9 +91,9 @@ class TerminalChainBase:
 
 
 
+@implementer(IMutableChain)
 class Chain:
     """Generic chain base class."""
-    implements(IMutableChain)
 
     def __init__(self, name, description):
         assert name not in config.chains, (
@@ -125,10 +123,9 @@ class Chain:
 
 
 
+@implementer(IChainIterator)
 class ChainIterator:
     """Generic chain iterator."""
-
-    implements(IChainIterator)
 
     def __init__(self, chain):
         self._chain = chain
@@ -136,14 +133,3 @@ class ChainIterator:
     def __iter__(self):
         """See `IChainIterator`."""
         return self._chain.get_iterator()
-
-
-
-class ChainNotification:
-    """Base class for chain notification events."""
-
-    def __init__(self, mlist, msg, msgdata, chain):
-        self.mlist = mlist
-        self.msg = msg
-        self.msgdata = msgdata
-        self.chain = chain

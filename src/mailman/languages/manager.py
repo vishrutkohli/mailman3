@@ -17,24 +17,26 @@
 
 """Language manager."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
     'LanguageManager',
     ]
 
-from zope.interface import implements
 
+from zope.component import getUtility
+from zope.interface import implementer
+
+from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.languages import ILanguageManager
 from mailman.languages.language import Language
 
 
 
+@implementer(ILanguageManager)
 class LanguageManager:
     """Language manager."""
-
-    implements(ILanguageManager)
 
     def __init__(self):
         # Mapping from 2-letter code to Language instance.
@@ -73,3 +75,18 @@ class LanguageManager:
     def clear(self):
         """See `ILanguageManager`."""
         self._languages.clear()
+
+
+
+def handle_ConfigurationUpdatedEvent(event):
+    if not isinstance(event, ConfigurationUpdatedEvent):
+        return
+    manager = getUtility(ILanguageManager)
+    for language in event.config.language_configs:
+        if language.enabled:
+            code = language.name.split('.')[1]
+            manager.add(code, language.charset, language.description)
+    # the default language must always be available.
+    assert event.config.mailman.default_language in manager, (
+        'system default language code not defined: {0}'.format(
+            event.config.mailman.default_language))

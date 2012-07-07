@@ -24,11 +24,12 @@ written.  First, the message is written to the pickle, then the metadata
 dictionary is written.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
     'Switchboard',
+    'handle_ConfigurationUpdatedEvent',
     ]
 
 
@@ -40,10 +41,11 @@ import cPickle
 import hashlib
 import logging
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from mailman.config import config
 from mailman.email.message import Message
+from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.switchboard import ISwitchboard
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
@@ -63,20 +65,9 @@ elog = logging.getLogger('mailman.error')
 
 
 
+@implementer(ISwitchboard)
 class Switchboard:
-    implements(ISwitchboard)
-
-    @staticmethod
-    def initialize():
-        """Initialize the global switchboards for input/output."""
-        for conf in config.runner_configs:
-            name = conf.name.split('.')[-1]
-            assert name not in config.switchboards, (
-                'Duplicate runner name: {0}'.format(name))
-            substitutions = config.paths
-            substitutions['name'] = name
-            path = expand(conf.path, substitutions)
-            config.switchboards[name] = Switchboard(name, path)
+    """See `ISwitchboard`."""
 
     def __init__(self, name, queue_directory,
                  slice=None, numslices=1, recover=False):
@@ -263,3 +254,19 @@ class Switchboard:
                         self.finish(filebase, preserve=True)
                     else:
                         os.rename(src, dst)
+
+
+
+def handle_ConfigurationUpdatedEvent(event):
+    """Initialize the global switchboards for input/output."""
+    if not isinstance(event, ConfigurationUpdatedEvent):
+        return
+    config = event.config
+    for conf in config.runner_configs:
+        name = conf.name.split('.')[-1]
+        assert name not in config.switchboards, (
+            'Duplicate runner name: {0}'.format(name))
+        substitutions = config.paths
+        substitutions['name'] = name
+        path = expand(conf.path, substitutions)
+        config.switchboards[name] = Switchboard(name, path)

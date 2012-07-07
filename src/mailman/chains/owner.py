@@ -29,17 +29,13 @@ import logging
 
 from zope.event import notify
 
-from mailman.chains.base import ChainNotification, TerminalChainBase
+from mailman.chains.base import TerminalChainBase
 from mailman.config import config
 from mailman.core.i18n import _
+from mailman.interfaces.chain import AcceptOwnerEvent
 
 
 log = logging.getLogger('mailman.vette')
-
-
-
-class OwnerNotification(ChainNotification):
-    """An event signaling that a message is accepted to the -owner address."""
 
 
 
@@ -53,4 +49,4 @@ class BuiltInOwnerChain(TerminalChainBase):
         # At least for now, everything posted to -owners goes through.
         config.switchboards['pipeline'].enqueue(msg, msgdata)
         log.info('OWNER: %s', msg.get('message-id', 'n/a'))
-        notify(OwnerNotification(mlist, msg, msgdata, self))
+        notify(AcceptOwnerEvent(mlist, msg, msgdata, self))

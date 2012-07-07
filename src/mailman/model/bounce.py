@@ -17,7 +17,7 @@
 
 """Bounce support."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -27,10 +27,10 @@ __all__ = [
 
 
 from storm.locals import Bool, Int, DateTime, Unicode
-from zope.interface import implements
+from zope.interface import implementer
 
-from mailman.config import config
 from mailman.database.model import Model
+from mailman.database.transaction import dbconnection
 from mailman.database.types import Enum
 from mailman.interfaces.bounce import (
     BounceContext, IBounceEvent, IBounceProcessor)
@@ -38,8 +38,9 @@ from mailman.utilities.datetime import now
 
 
 
+@implementer(IBounceEvent)
 class BounceEvent(Model):
-    implements(IBounceEvent)
+    """See `IBounceEvent`."""
 
     id = Int(primary=True)
     list_name = Unicode()
@@ -59,24 +60,27 @@ class BounceEvent(Model):
 
 
 
+@implementer(IBounceProcessor)
 class BounceProcessor:
-    implements(IBounceProcessor)
+    """See `IBounceProcessor`."""
 
-    def register(self, mlist, email, msg, where=None):
+    @dbconnection
+    def register(self, store, mlist, email, msg, where=None):
         """See `IBounceProcessor`."""
         event = BounceEvent(mlist.fqdn_listname, email, msg, where)
-        config.db.store.add(event)
+        store.add(event)
         return event
 
     @property
-    def events(self):
+    @dbconnection
+    def events(self, store):
         """See `IBounceProcessor`."""
-        for event in config.db.store.find(BounceEvent):
+        for event in store.find(BounceEvent):
             yield event
 
     @property
-    def unprocessed(self):
+    @dbconnection
+    def unprocessed(self, store):
         """See `IBounceProcessor`."""
-        for event in config.db.store.find(BounceEvent,
-                                          BounceEvent.processed == False):
+        for event in store.find(BounceEvent, BounceEvent.processed == False):
             yield event

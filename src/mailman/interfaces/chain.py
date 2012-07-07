@@ -21,16 +21,53 @@ from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'AcceptEvent',
+    'AcceptOwnerEvent',
+    'ChainEvent',
+    'DiscardEvent',
+    'HoldEvent',
     'IChain',
     'IChainIterator',
     'IChainLink',
     'IMutableChain',
     'LinkAction',
+    'RejectEvent',
     ]
 
 
 from flufl.enum import Enum
 from zope.interface import Interface, Attribute
+
+
+
+class ChainEvent:
+    """Base class for chain notification events."""
+
+    def __init__(self, mlist, msg, msgdata, chain):
+        self.mlist = mlist
+        self.msg = msg
+        self.msgdata = msgdata
+        self.chain = chain
+
+
+class AcceptEvent(ChainEvent):
+    """A notification event signaling that a message is being accepted."""
+
+
+class AcceptOwnerEvent(ChainEvent):
+    """An event signaling that a message is accepted to the -owner address."""
+
+
+class DiscardEvent(ChainEvent):
+    """A notification event signaling that a message is being discarded."""
+
+
+class HoldEvent(ChainEvent):
+    """A notification event signaling that a message is being held."""
+
+
+class RejectEvent(ChainEvent):
+    """A notification event signaling that a message is being rejected."""
 
 
 

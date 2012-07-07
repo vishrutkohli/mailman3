@@ -17,7 +17,7 @@
 
 """The 'lists' subcommand."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -28,12 +28,12 @@ __all__ = [
 
 
 from zope.component import getUtility
-from zope.interface import implements
+from zope.interface import implementer
 
 from mailman.app.lifecycle import create_list, remove_list
-from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.i18n import _
+from mailman.database.transaction import transaction, transactional
 from mailman.email.message import UserNotification
 from mailman.interfaces.address import (
     IEmailValidator, InvalidEmailAddressError)
@@ -49,10 +49,9 @@ COMMASPACE = ', '
 
 
 
+@implementer(ICLISubCommand)
 class Lists:
     """List all mailing lists"""
-
-    implements(ICLISubCommand)
 
     name = 'lists'
 
@@ -98,11 +97,11 @@ class Lists:
         # Maybe no mailing lists matched.
         if len(mailing_lists) == 0:
             if not args.quiet:
-                print _('No matching mailing lists found')
+                print(_('No matching mailing lists found'))
             return
         count = len(mailing_lists)
         if not args.quiet:
-            print _('$count matching mailing lists found:')
+            print(_('$count matching mailing lists found:'))
         # Calculate the longest identifier.
         longest = 0
         output = []
@@ -120,15 +119,14 @@ class Lists:
         else:
             format_string = '{0:{2}}'
         for identifier, description in output:
-            print format_string.format(
-                identifier, description, longest, 70 - longest)
+            print(format_string.format(
+                identifier, description, longest, 70 - longest))
 
 
 
+@implementer(ICLISubCommand)
 class Create:
     """Create a mailing list"""
-
-    implements(ICLISubCommand)
 
     name = 'create'
 
@@ -214,13 +212,13 @@ class Create:
             self.parser.error(_('Undefined domain: $domain'))
             return
         # Find the language associated with the code, then set the mailing
-        # list's preferred language to that.  The changes then must be
-        # committed to the database.
-        mlist.preferred_language = getUtility(ILanguageManager)[language_code]
-        config.db.commit()
+        # list's preferred language to that.
+        language_manager = getUtility(ILanguageManager)
+        with transaction():
+            mlist.preferred_language = language_manager[language_code]
         # Do the notification.
         if not args.quiet:
-            print _('Created mailing list: $mlist.fqdn_listname')
+            print(_('Created mailing list: $mlist.fqdn_listname'))
         if args.notify:
             d = dict(
                 listname        = mlist.fqdn_listname,
@@ -242,10 +240,9 @@ class Create:
 
 
 
+@implementer(ICLISubCommand)
 class Remove:
     """Remove a mailing list"""
-
-    implements(ICLISubCommand)
 
     name = 'remove'
 
@@ -262,11 +259,12 @@ class Remove:
             The 'fully qualified list name', i.e. the posting address of the
             mailing list."""))
 
+    @transactional
     def process(self, args):
         """See `ICLISubCommand`."""
         def log(message):
             if not args.quiet:
-                print message
+                print(message)
         assert len(args.listname) == 1, (
             'Unexpected positional arguments: %s' % args.listname)
         fqdn_listname = args.listname[0]
@@ -277,4 +275,3 @@ class Remove:
         else:
             log(_('Removed list: $fqdn_listname'))
         remove_list(fqdn_listname, mlist)
-        config.db.commit()

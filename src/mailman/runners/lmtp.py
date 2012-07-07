@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
+# XXX This module needs to be refactored to avoid direct access to the
+# config.db global.
+
 """Mailman LMTP runner (server).
 
 Most mail servers can be configured to deliver local messages via 'LMTP'[1].
@@ -31,6 +34,14 @@ so that the peer mail server can provide better diagnostics.
     http://www.faqs.org/rfcs/rfc2033.html
 """
 
+from __future__ import absolute_import, print_function, unicode_literals
+
+__metaclass__ = type
+__all__ = [
+    'LMTPRunner',
+    ]
+
+
 import email
 import smtpd
 import logging
@@ -41,7 +52,7 @@ from zope.component import getUtility
 
 from mailman.config import config
 from mailman.core.runner import Runner
-from mailman.database.transaction import txn
+from mailman.database.transaction import transactional
 from mailman.email.message import Message
 from mailman.interfaces.listmanager import IListManager
 from mailman.utilities.datetime import now
@@ -80,15 +91,15 @@ SUBADDRESS_QUEUES = dict(
     )
 
 DASH    = '-'
-CRLF    = '\r\n'
-ERR_451 = '451 Requested action aborted: error in processing'
-ERR_501 = '501 Message has defects'
-ERR_502 = '502 Error: command HELO not implemented'
-ERR_550 = '550 Requested action not taken: mailbox unavailable'
-ERR_550_MID = '550 No Message-ID header provided'
+CRLF    = b'\r\n'
+ERR_451 = b'451 Requested action aborted: error in processing'
+ERR_501 = b'501 Message has defects'
+ERR_502 = b'502 Error: command HELO not implemented'
+ERR_550 = b'550 Requested action not taken: mailbox unavailable'
+ERR_550_MID = b'550 No Message-ID header provided'
 
 # XXX Blech
-smtpd.__version__ = 'Python LMTP runner 1.0'
+smtpd.__version__ = b'Python LMTP runner 1.0'
 
 
 
@@ -154,7 +165,7 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
         Channel(self, conn, addr)
         slog.debug('LMTP accept from %s', addr)
 
-    @txn
+    @transactional
     def process_message(self, peer, mailfrom, rcpttos, data):
         try:
             # Refresh the list of list names every time we process a message
@@ -228,7 +239,7 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
                     config.switchboards[queue].enqueue(msg, msgdata)
                     slog.debug('%s subaddress: %s, queue: %s',
                                message_id, canonical_subaddress, queue)
-                    status.append('250 Ok')
+                    status.append(b'250 Ok')
             except Exception:
                 slog.exception('Queue detection: %s', msg['message-id'])
                 config.db.abort()

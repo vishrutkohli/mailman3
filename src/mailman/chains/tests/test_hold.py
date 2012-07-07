@@ -30,10 +30,9 @@ from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.chains.hold import autorespond_to_sender
-from mailman.config import config
 from mailman.interfaces.autorespond import IAutoResponseSet, Response
 from mailman.interfaces.usermanager import IUserManager
-from mailman.testing.helpers import get_queue_messages
+from mailman.testing.helpers import configuration, get_queue_messages
 from mailman.testing.layers import ConfigLayer
 
 
@@ -49,15 +48,12 @@ class TestAutorespond(unittest.TestCase):
         self.maxDiff = None
         self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
 
+    @configuration('mta', max_autoresponses_per_day=1)
     def test_max_autoresponses_per_day(self):
         # The last one we sent was the last one we should send today.  Instead
         # of sending an automatic response, send them the "no more today"
-        # message.
-        config.push('max-1', """
-        [mta]
-        max_autoresponses_per_day: 1
-        """)
-        # Simulate a response having been sent to an address already.
+        # message.  Start by simulating a response having been sent to an
+        # address already.
         anne = getUtility(IUserManager).create_address('anne@example.com')
         response_set = IAutoResponseSet(self._mlist)
         response_set.response_sent(anne, Response.hold)
