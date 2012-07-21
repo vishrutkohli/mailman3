@@ -14,6 +14,8 @@ Here is a history of user visible changes to Mailman.
 
 Architecture
 ------------
+ * `passlib`_ is now used for all password hashing instead of flufl.password.
+   The default hash is `sha512_crypt`.  (LP: #1015758)
  * Internally, all datetimes are kept in the UTC timezone, however because of
    LP: #280708, they are stored in the database in naive format.
  * `received_time` is now added to the message metadata by the LMTP runner
@@ -35,6 +37,22 @@ Architecture
    `RunnerCrashEvent` is triggered, which contains references to the queue
    runner, mailing list, message, metadata, and exception.  Interested parties
    can subscribe to that `zope.event` for notification.
+ * Events renamed and moved:
+   * `mailman.chains.accept.AcceptNotification`
+   * `mailman.chains.base.ChainNotification`
+   * `mailman.chains.discard.DiscardNotification`
+   * `mailman.chains.hold.HoldNotification`
+   * `mailman.chains.owner.OwnerNotification`
+   * `mailman.chains.reject.RejectNotification`
+   changed to (respectively):
+   * `mailman.interfaces.chains.AcceptEvent`
+   * `mailman.interfaces.chains.ChainEvent`
+   * `mailman.interfaces.chains.DiscardEvent`
+   * `mailman.interfaces.chains.HoldEvent`
+   * `mailman.interfaces.chains.AcceptOwnerEvent`
+   * `mailman.interfaces.chains.RejectEvent`
+ * A `ConfigurationUpdatedEvent` is triggered when the system-wide global
+   configuration stack is pushed or popped.
 
 Configuration
 -------------
@@ -42,9 +60,12 @@ Configuration
    every `[archiver.<name>]` section.  These are used to determine under what
    circumstances a message destined for a specific archiver should have its
    `Date:` header clobbered.  (LP: #963612)
+ * With the switch to `passlib`_, `[passwords]password_scheme` has been
+   removed.  Instead use `[passwords]path` to specify where to find the
+   `passlib.cfg` file.  See the comments in `schema.cfg` for details.
  * Configuration schema variable changes:
-   [nntp]username -> [nntp]user
-   [nntp]port (added)
+   * [nntp]username -> [nntp]user
+   * [nntp]port (added)
  * Header check specifications in the `mailman.cfg` file have changed quite
    bit.  The previous `[spam.header.foo]` sections have been removed.
    Instead, there's a new `[antispam]` section that contains a `header_checks`
@@ -65,6 +86,8 @@ Bug fixes
  * Fixed a typo when returning the configuration file's header match checks.
    (LP: #953497)
  * List-Post should be NO when posting is not allowed. (LP: #987563)
+
+.. _`passlib`: http://packages.python.org/passlib/index.html
 
 
 3.0 beta 1 -- "The Twilight Zone"

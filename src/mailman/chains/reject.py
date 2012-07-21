@@ -22,25 +22,21 @@ from __future__ import absolute_import, unicode_literals
 __metaclass__ = type
 __all__ = [
     'RejectChain',
-    'RejectNotification',
     ]
 
 
 import logging
+
 from zope.event import notify
 
 from mailman.app.bounces import bounce_message
-from mailman.chains.base import ChainNotification, TerminalChainBase
+from mailman.chains.base import TerminalChainBase
 from mailman.core.i18n import _
+from mailman.interfaces.chain import RejectEvent
 
 
 log = logging.getLogger('mailman.vette')
 SEMISPACE = '; '
-
-
-
-class RejectNotification(ChainNotification):
-    """A notification event signaling that a message is being rejected."""
 
 
 
@@ -64,4 +60,4 @@ class RejectChain(TerminalChainBase):
         # XXX Exception/reason
         bounce_message(mlist, msg)
         log.info('REJECT: %s', msg.get('message-id', 'n/a'))
-        notify(RejectNotification(mlist, msg, msgdata, self))
+        notify(RejectEvent(mlist, msg, msgdata, self))

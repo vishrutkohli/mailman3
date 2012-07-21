@@ -31,7 +31,7 @@ import time
 from flufl.i18n import PackageStrategy, registry
 
 import mailman.messages
-
+from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 
 _ = None
 
@@ -113,3 +113,9 @@ def ctime(date):
     wday = daysofweek[wday]
     mon = months[mon]
     return _('$wday $mon $day $hh:$mm:$ss $tzname $year')
+
+
+
+def handle_ConfigurationUpdatedEvent(event):
+    if isinstance(event, ConfigurationUpdatedEvent):
+        _.default = event.config.mailman.default_language

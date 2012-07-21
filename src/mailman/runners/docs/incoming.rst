@@ -143,9 +143,9 @@ chain will now hold all posted messages, so nothing will show up in the
 pipeline queue.
 ::
 
-    >>> from mailman.chains.base import ChainNotification
+    >>> from mailman.interfaces.chain import ChainEvent
     >>> def on_chain(event):
-    ...     if isinstance(event, ChainNotification):
+    ...     if isinstance(event, ChainEvent):
     ...         print event
     ...         print event.chain
     ...         print 'From: {0}\nTo: {1}\nMessage-ID: {2}'.format(
@@ -158,7 +158,7 @@ pipeline queue.
     >>> with event_subscribers(on_chain):
     ...     inject_message(mlist, msg)
     ...     incoming.run()
-    <mailman.chains.hold.HoldNotification ...>
+    <mailman.interfaces.chain.HoldEvent ...>
     <mailman.chains.hold.HoldChain ...>
     From: aperson@example.com
     To: test@example.com
@@ -193,7 +193,7 @@ new chain and set it as the mailing list's start chain.
     >>> with event_subscribers(on_chain):
     ...     inject_message(mlist, msg)
     ...     incoming.run()
-    <mailman.chains.discard.DiscardNotification ...>
+    <mailman.interfaces.chain.DiscardEvent ...>
     <mailman.chains.discard.DiscardChain ...>
     From: aperson@example.com
     To: test@example.com
@@ -222,7 +222,7 @@ just create a new chain that does.
     >>> with event_subscribers(on_chain):
     ...     inject_message(mlist, msg)
     ...     incoming.run()
-    <mailman.chains.reject.RejectNotification ...>
+    <mailman.interfaces.chain.RejectEvent ...>
     <mailman.chains.reject.RejectChain ...>
     From: aperson@example.com
     To: test@example.com

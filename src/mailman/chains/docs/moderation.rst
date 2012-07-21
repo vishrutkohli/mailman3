@@ -45,9 +45,9 @@ In order to find out whether the message is held or accepted, we can subscribe
 to Zope events that are triggered on each case.
 ::
 
-    >>> from mailman.chains.base import ChainNotification
+    >>> from mailman.interfaces.chain import ChainEvent
     >>> def on_chain(event):
-    ...     if isinstance(event, ChainNotification):
+    ...     if isinstance(event, ChainEvent):
     ...         print event
     ...         print event.chain
     ...         print 'Subject:', event.msg['subject']
@@ -74,7 +74,7 @@ built-in chain.  No rules hit and so the message is accepted.
     >>> from mailman.testing.helpers import event_subscribers
     >>> with event_subscribers(on_chain):
     ...     process(mlist, msg, {}, 'default-posting-chain')
-    <mailman.chains.accept.AcceptNotification ...>
+    <mailman.interfaces.chain.AcceptEvent ...>
     <mailman.chains.accept.AcceptChain ...>
     Subject: aardvark
     Hits:
@@ -109,7 +109,7 @@ moderator approval.
 
     >>> with event_subscribers(on_chain):
     ...     process(mlist, msg, {}, 'default-posting-chain')
-    <mailman.chains.hold.HoldNotification ...>
+    <mailman.interfaces.chain.HoldEvent ...>
     <mailman.chains.hold.HoldChain ...>
     Subject: badger
     Hits:
@@ -134,7 +134,7 @@ The list's member moderation action can also be set to `discard`...
 
     >>> with event_subscribers(on_chain):
     ...     process(mlist, msg, {}, 'default-posting-chain')
-    <mailman.chains.discard.DiscardNotification ...>
+    <mailman.interfaces.chain.DiscardEvent ...>
     <mailman.chains.discard.DiscardChain ...>
     Subject: cougar
     Hits:
@@ -158,7 +158,7 @@ The list's member moderation action can also be set to `discard`...
 
     >>> with event_subscribers(on_chain):
     ...     process(mlist, msg, {}, 'default-posting-chain')
-    <mailman.chains.reject.RejectNotification ...>
+    <mailman.interfaces.chain.RejectEvent ...>
     <mailman.chains.reject.RejectChain ...>
     Subject: dingo
     Hits:
@@ -197,7 +197,7 @@ moderator approval.
 
     >>> with event_subscribers(on_chain):
     ...     process(mlist, msg, {}, 'default-posting-chain')
-    <mailman.chains.hold.HoldNotification ...>
+    <mailman.interfaces.chain.HoldEvent ...>
     <mailman.chains.hold.HoldChain ...>
     Subject: elephant
     Hits:
