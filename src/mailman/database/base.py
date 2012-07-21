@@ -156,7 +156,7 @@ class StormBaseDatabase:
             parent, dot, child = migrations_path.rpartition('.')
         else:
             parent = migrations_path
-            child =''
+            child = ''
         # If the database does not yet exist, load the base schema.
         filenames = sorted(resource_listdir(parent, child))
         # Find out which schema migrations have already been loaded.

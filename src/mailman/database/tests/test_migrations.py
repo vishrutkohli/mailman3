@@ -31,11 +31,13 @@ import sqlite3
 import tempfile
 import unittest
 
+from pkg_resources import resource_filename
 from zope.component import getUtility
 
-from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.domain import IDomainManager
+from mailman.interfaces.listmanager import IListManager
+from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.testing.helpers import configuration, temporary_db
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.modules import call_name
@@ -66,7 +68,8 @@ class TestMigration20120407(unittest.TestCase):
         shutil.rmtree(self._tempdir)
 
     def test_sqlite_base(self):
-        # Test the SQLite base schema.
+        # Test that before the migration, the old table columns are present
+        # and the new database columns are not.
         url = 'sqlite:///' + os.path.join(self._tempdir, 'mailman.db')
         database_class = config.database['class']
         database = call_name(database_class)
@@ -74,14 +77,6 @@ class TestMigration20120407(unittest.TestCase):
             database.initialize()
         # Load all the database SQL to just before ours.
         database.load_migrations('20120406999999')
-        # Populate the test database with a domain and a mailing list.
-        with temporary_db(database):
-            getUtility(IDomainManager).add(
-                'example.com', 'An example domain.',
-                'http://lists.example.com', 'postmaster@example.com')
-            mlist = create_list('test@example.com')
-            del mlist
-        database.commit()
         # Verify that the database has not yet been migrated.
         for missing in ('archive_policy',
                         'nntp_prefix_subject_too'):
@@ -100,7 +95,8 @@ class TestMigration20120407(unittest.TestCase):
                 'select {0} from mailinglist;'.format(present))
 
     def test_sqlite_migration(self):
-        # Test the SQLite base schema.
+        # Test that after the migration, the old table columns are missing
+        # and the new database columns are present.
         url = 'sqlite:///' + os.path.join(self._tempdir, 'mailman.db')
         database_class = config.database['class']
         database = call_name(database_class)
@@ -108,14 +104,6 @@ class TestMigration20120407(unittest.TestCase):
             database.initialize()
         # Load all the database SQL to just before ours.
         database.load_migrations('20120406999999')
-        # Populate the test database with a domain and a mailing list.
-        with temporary_db(database):
-            getUtility(IDomainManager).add(
-                'example.com', 'An example domain.',
-                'http://lists.example.com', 'postmaster@example.com')
-            mlist = create_list('test@example.com')
-            del mlist
-        database.commit()
         # Load all migrations, up to and including this one.
         database.load_migrations('20120407000000')
         # Verify that the database has been migrated.
@@ -134,3 +122,49 @@ class TestMigration20120407(unittest.TestCase):
             self.assertRaises(sqlite3.OperationalError,
                               database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
+
+    def test_data_after_migration(self):
+        # Ensure that the existing data and foreign key references are
+        # preserved across a migration.  Unfortunately, this requires sample
+        # data, which kind of sucks.
+        dst = os.path.join(self._tempdir, 'mailman.db')
+        src = resource_filename('mailman.database.tests.data', 'mailman_01.db')
+        shutil.copyfile(src, dst)
+        url = 'sqlite:///' + dst
+        database_class = config.database['class']
+        database = call_name(database_class)
+        with configuration('database', url=url):
+            # Initialize the database and perform the migrations.
+            database.initialize()
+            database.load_migrations('20120407000000')
+            with temporary_db(database):
+                # Check that the domains survived the migration.  This table
+                # was not touched so it should be fine.
+                domains = list(getUtility(IDomainManager))
+                self.assertEqual(len(domains), 1)
+                self.assertEqual(domains[0].mail_host, 'example.com')
+                # There should be exactly one mailing list defined.
+                mlists = list(getUtility(IListManager).mailing_lists)
+                self.assertEqual(len(mlists), 1)
+                # Get the mailing list object and check its acceptable
+                # aliases.  This tests that foreign keys continue to work.
+                mlist = mlists[0]
+                aliases_set = IAcceptableAliasSet(mlist)
+                self.assertEqual(set(aliases_set.aliases),
+                                 set(['foo@example.com', 'bar@example.com']))
+                # Test that all the members we expect are still there.  Start
+                # with the two list delivery members.
+                addresses = set(address.email 
+                                for address in mlist.members.addresses)
+                self.assertEqual(addresses, set(['anne@example.com',
+                                                 'bart@example.com']))
+                # There is one owner.
+                owners = set(address.email 
+                             for address in mlist.owners.addresses)
+                self.assertEqual(len(owners), 1)
+                self.assertEqual(owners.pop(), 'anne@example.com')
+                # There is one moderator.
+                moderators = set(address.email
+                                 for address in mlist.moderators.addresses)
+                self.assertEqual(len(moderators), 1)
+                self.assertEqual(moderators.pop(), 'bart@example.com')

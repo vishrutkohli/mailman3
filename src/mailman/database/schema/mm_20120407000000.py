@@ -21,11 +21,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'post_reset',
+    'pre_reset',
+    'upgrade',
     ]
 
 
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.database import DatabaseError
+
+
+VERSION = '20120407000000'
+_helper = None
 
 
 
@@ -68,3 +75,14 @@ def upgrade_sqlite(database, store, version, module_path):
                                      archive_policy, id))
     store.execute('drop table mailinglist;')
     store.execute('alter table ml_backup rename to mailinglist;')
+
+
+
+def pre_reset(store):
+    global _helper
+    from mailman.testing.database import ResetHelper
+    _helper = ResetHelper(VERSION, store)
+
+
+def post_reset(store):
+    _helper.restore(store)

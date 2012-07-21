@@ -15,34 +15,33 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Load the base schema."""
+"""Database test helpers."""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'post_reset',
-    'pre_reset',
-    'upgrade',
+    'ResetHelper',
     ]
 
 
-VERSION = '00000000000000'
-_helper = None
+from mailman.model.version import Version
 
 
 
-def upgrade(database, store, version, module_path):
-    filename = '{0}.sql'.format(database.TAG)
-    database.load_schema(store, version, filename, module_path)
+class ResetHelper:
+    """Help with database resets; used by schema migrations."""
 
+    def __init__(self, version, store):
+        self.version = version
+        # Save the entry in the Version table for the test suite reset.  This
+        # will be restored below.
+        result = store.find(Version, component=version).one()
+        self.saved = result.version
 
-
-def pre_reset(store):
-    global _helper
-    from mailman.testing.database import ResetHelper
-    _helper = ResetHelper(VERSION, store)
-
-
-def post_reset(store):
-    _helper.restore(store)
+    def restore(self, store):
+        # We need to preserve the Version table entry for this migration,
+        # since its existence defines the fact that the tables have been
+        # loaded.
+        store.add(Version(component='schema', version=self.version))
+        store.add(Version(component=self.version, version=self.saved))
