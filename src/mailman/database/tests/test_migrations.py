@@ -148,6 +148,23 @@ class TestMigration20120407(unittest.TestCase):
                 self.assertEqual(len(mlists), 1)
                 # Get the mailing list object and check its acceptable
                 # aliases.  This tests that foreign keys continue to work.
-                aliases_set = IAcceptableAliasSet(mlists[0])
+                mlist = mlists[0]
+                aliases_set = IAcceptableAliasSet(mlist)
                 self.assertEqual(set(aliases_set.aliases),
                                  set(['foo@example.com', 'bar@example.com']))
+                # Test that all the members we expect are still there.  Start
+                # with the two list delivery members.
+                addresses = set(address.email 
+                                for address in mlist.members.addresses)
+                self.assertEqual(addresses, set(['anne@example.com',
+                                                 'bart@example.com']))
+                # There is one owner.
+                owners = set(address.email 
+                             for address in mlist.owners.addresses)
+                self.assertEqual(len(owners), 1)
+                self.assertEqual(owners.pop(), 'anne@example.com')
+                # There is one moderator.
+                moderators = set(address.email
+                                 for address in mlist.moderators.addresses)
+                self.assertEqual(len(moderators), 1)
+                self.assertEqual(moderators.pop(), 'bart@example.com')
