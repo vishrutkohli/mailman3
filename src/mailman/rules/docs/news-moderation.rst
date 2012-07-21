@@ -32,6 +32,6 @@ And now all messages will match the rule.
 
 When moderation is turned off, the rule does not match.
 
-    >>> mlist.news_moderation = NewsgroupModeration.none
+    >>> mlist.newsgroup_moderation = NewsgroupModeration.none
     >>> rule.check(mlist, msg, {})
     False

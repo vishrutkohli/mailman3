@@ -46,4 +46,4 @@ class ModeratedNewsgroup:
 
     def check(self, mlist, msg, msgdata):
         """See `IRule`."""
-        return mlist.news_moderation == NewsgroupModeration.moderated
+        return mlist.newsgroup_moderation == NewsgroupModeration.moderated

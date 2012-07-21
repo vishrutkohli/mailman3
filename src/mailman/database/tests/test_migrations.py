@@ -38,7 +38,7 @@ from mailman.config import config
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
-from mailman.testing.helpers import configuration
+from mailman.testing.helpers import configuration, temporary_db
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.modules import call_name
 
@@ -137,16 +137,17 @@ class TestMigration20120407(unittest.TestCase):
             # Initialize the database and perform the migrations.
             database.initialize()
             database.load_migrations('20120407000000')
-            # Check that the domains survived the migration.  This table was
-            # not touched so it should be fine.
-            domains = list(getUtility(IDomainManager))
-            self.assertEqual(len(domains), 1)
-            self.assertEqual(domains[0].mail_host, 'example.com')
-            # There should be exactly one mailing list defined.
-            mlists = list(getUtility(IListManager).mailing_lists)
-            self.assertEqual(len(mlists), 1)
-            # Get the mailing list object and check its acceptable aliases.
-            # This tests that foreign keys continue to work.
-            aliases_set = IAcceptableAliasSet(mlists)
-            self.assertEqual(set(aliases_set.aliases),
-                             set(['foo@example.com', 'bar@example.com']))
+            with temporary_db(database):
+                # Check that the domains survived the migration.  This table
+                # was not touched so it should be fine.
+                domains = list(getUtility(IDomainManager))
+                self.assertEqual(len(domains), 1)
+                self.assertEqual(domains[0].mail_host, 'example.com')
+                # There should be exactly one mailing list defined.
+                mlists = list(getUtility(IListManager).mailing_lists)
+                self.assertEqual(len(mlists), 1)
+                # Get the mailing list object and check its acceptable
+                # aliases.  This tests that foreign keys continue to work.
+                aliases_set = IAcceptableAliasSet(mlists[0])
+                self.assertEqual(set(aliases_set.aliases),
+                                 set(['foo@example.com', 'bar@example.com']))
