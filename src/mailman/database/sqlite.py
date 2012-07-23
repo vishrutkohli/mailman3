@@ -26,10 +26,22 @@ __all__ = [
 
 
 import os
+import shutil
+import tempfile
 
 from urlparse import urlparse
 
 from mailman.database.base import StormBaseDatabase
+
+
+
+class _TemporaryDB:
+    def __init__(self, database, tempdir):
+        self.database = database
+        self._tempdir = tempdir
+
+    def cleanup(self):
+        shutil.rmtree(self._tempdir)
 
 
 
@@ -41,7 +53,7 @@ class SQLiteDatabase(StormBaseDatabase):
     def _database_exists(self, store):
         """See `BaseDatabase`."""
         table_query = 'select tbl_name from sqlite_master;'
-        table_names = set(item[0] for item in 
+        table_names = set(item[0] for item in
                           store.execute(table_query))
         return 'version' in table_names
 
@@ -54,3 +66,13 @@ class SQLiteDatabase(StormBaseDatabase):
         # Ignore errors
         if fd > 0:
             os.close(fd)
+
+    @staticmethod
+    def _make_temporary():
+        from mailman.testing.helpers import configuration
+        tempdir = tempfile.mkdtemp()
+        url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
+        database = SQLiteDatabase()
+        with configuration('database', url=url):
+            database.initialize()
+        return _TemporaryDB(database, tempdir)

@@ -186,6 +186,22 @@ class StormBaseDatabase:
                 continue
             upgrade(self, self.store, version, module_path)
 
+    def load_sql(self, store, sql):
+        """Load the given SQL into the store.
+
+        :param store: The Storm store to load the schema into.
+        :type store: storm.locals.Store`
+        :param sql: The possibly multi-line SQL to load.
+        :type sql: string
+        """
+        # Discard all blank and comment lines.
+        lines = (line for line in sql.splitlines()
+                 if line.strip() != '' and line.strip()[:2] != '--')
+        sql = NL.join(lines)
+        for statement in sql.split(';'):
+            if statement.strip() != '':
+                store.execute(statement + ';')
+
     def load_schema(self, store, version, filename, module_path):
         """Load the schema from a file.
 
@@ -206,17 +222,11 @@ class StormBaseDatabase:
         """
         if filename is not None:
             contents = resource_string('mailman.database.schema', filename)
-            # Discard all blank and comment lines.
-            lines = (line for line in contents.splitlines()
-                     if line.strip() != '' and line.strip()[:2] != '--')
-            sql = NL.join(lines)
-            for statement in sql.split(';'):
-                if statement.strip() != '':
-                    store.execute(statement + ';')
+            self.load_sql(store, contents)
         # Add a marker that indicates the migration version being applied.
         store.add(Version(component='schema', version=version))
-        # Add a marker so that the module name can be found later.  This is
-        # used by the test suite to reset the database between tests.
+        # Add a marker so that the module name can be found later.  This
+        # is used by the test suite to reset the database between tests.
         store.add(Version(component=version, version=module_path))
 
     def _reset(self):
@@ -225,3 +235,7 @@ class StormBaseDatabase:
         self.store.rollback()
         ModelMeta._reset(self.store)
         self.store.commit()
+
+    @staticmethod
+    def _make_temporary():
+        raise NotImplementedError

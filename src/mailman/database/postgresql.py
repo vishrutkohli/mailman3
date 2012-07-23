@@ -26,8 +26,21 @@ __all__ = [
 
 
 from operator import attrgetter
+from urlparse import urlsplit, urlunsplit
 
+from mailman.config import config
 from mailman.database.base import StormBaseDatabase
+
+
+
+
+class _TemporaryDB:
+    def __init__(self, database):
+        self.database = database
+
+    def cleanup(self):
+        self.database.execute('ROLLBACK TO SAVEPOINT testing;')
+        self.database.execute('DROP DATABASE mmtest;')
 
 
 
@@ -40,8 +53,8 @@ class PostgreSQLDatabase(StormBaseDatabase):
         """See `BaseDatabase`."""
         table_query = ('SELECT table_name FROM information_schema.tables '
                        "WHERE table_schema = 'public'")
-        table_names = set(item[0] for item in
-                          store.execute(table_query))
+        results = store.execute(table_query)
+        table_names = set(item[0] for item in results)
         return 'version' in table_names
 
     def _post_reset(self, store):
@@ -63,3 +76,18 @@ class PostgreSQLDatabase(StormBaseDatabase):
                               max("id") IS NOT null)
                        FROM "{0}";
                 """.format(model_class.__storm_table__))
+
+    @staticmethod
+    def _make_temporary():
+        from mailman.testing.helpers import configuration
+        parts = urlsplit(config.database.url)
+        assert parts.scheme == 'postgres'
+        new_parts = list(parts)
+        new_parts[2] = '/mmtest'
+        url = urlunsplit(new_parts)
+        database = PostgreSQLDatabase()
+        database.store.execute('SAVEPOINT testing;')
+        database.store.execute('CREATE DATABASE mmtest;')
+        with configuration('database', url=url):
+            database.initialize()
+        return _TemporaryDB(database)

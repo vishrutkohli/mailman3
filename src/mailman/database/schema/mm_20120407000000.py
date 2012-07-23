@@ -15,7 +15,22 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""3.0b1 -> 3.0b2 schema migrations."""
+"""3.0b1 -> 3.0b2 schema migrations.
+
+All column changes are in the `mailinglist` table.
+
+* Renames:
+ - news_prefix_subject_too -> nntp_prefix_subject_too
+ - news_moderation         -> newsgroup_moderation
+
+* Collapsing:
+ - archive, archive_private -> archive_policy
+
+* Remove:
+ - nntp_host
+
+See https://bugs.launchpad.net/mailman/+bug/971013 for details.
+"""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
@@ -28,7 +43,6 @@ __all__ = [
 
 
 from mailman.interfaces.archiver import ArchivePolicy
-from mailman.interfaces.database import DatabaseError
 
 
 VERSION = '20120407000000'
@@ -40,9 +54,18 @@ def upgrade(database, store, version, module_path):
     if database.TAG == 'sqlite':
         upgrade_sqlite(database, store, version, module_path)
     else:
-        # XXX 2012-04-07 BAW: Implement PostgreSQL migration.
-        raise DatabaseError('Database {0} migration not support: {1}'.format(
-            database.TAG, version))
+        upgrade_postgres(database, store, version, module_path)
+
+
+
+def archive_policy(archive, archive_private):
+    """Convert archive and archive_private to archive_policy."""
+    if archive == 0:
+        return int(ArchivePolicy.never)
+    elif archive_private == 1:
+        return int(ArchivePolicy.private)
+    else:
+        return int(ArchivePolicy.public)
 
 
 
@@ -55,26 +78,53 @@ def upgrade_sqlite(database, store, version, module_path):
     database.load_schema(
         store, version, 'sqlite_{0}_01.sql'.format(version), module_path)
     results = store.execute(
-        'select id, news_prefix_subject_too, news_moderation, '
-        'archive, archive_private from mailinglist;')
+        'SELECT id, news_prefix_subject_too, news_moderation, '
+        'archive, archive_private FROM mailinglist;')
     for value in results:
         id, news_prefix, news_moderation, archive, archive_private = value
         # Figure out what the new archive_policy column value should be.
-        if archive == 0:
-            archive_policy = int(ArchivePolicy.never)
-        elif archive_private == 1:
-            archive_policy = int(ArchivePolicy.private)
-        else:
-            archive_policy = int(ArchivePolicy.public)
         store.execute(
-            'update ml_backup set '
+            'UPDATE ml_backup SET '
             '    newsgroup_moderation = {0}, '
             '    nntp_prefix_subject_too = {1}, '
             '    archive_policy = {2} '
-            'where id = {2};'.format(news_moderation, news_prefix, 
-                                     archive_policy, id))
-    store.execute('drop table mailinglist;')
-    store.execute('alter table ml_backup rename to mailinglist;')
+            'WHERE id = {3};'.format(news_moderation,
+                                     news_prefix,
+                                     archive_policy(archive, archive_private),
+                                     id))
+    store.execute('DROP TABLE mailinglist;')
+    store.execute('ALTER TABLE ml_backup RENAME TO mailinglist;')
+
+
+
+def upgrade_postgres(database, store, version, module_path):
+    # Get the old values from the mailinglist table.
+    results = store.execute(
+        'SELECT id, archive, archive_private FROM mailinglist;')
+    # Do the simple renames first.
+    store.execute(
+        'ALTER TABLE mailinglist '
+        '   RENAME COLUMN news_prefix_subject_too TO nntp_prefix_subject_too;')
+    store.execute(
+        'ALTER TABLE mailinglist '
+        '   RENAME COLUMN news_moderation TO newsgroup_moderation;')
+    # Do the column drop next.
+    store.execute('ALTER TABLE mailinglist DROP COLUMN nntp_host;')
+    # Now do the trickier collapsing of values.  Add the new columns.
+    store.execute('ALTER TABLE mailinglist ADD COLUMN archive_policy INTEGER;')
+    # Query the database for the old values of archive and archive_private in
+    # each column.  Then loop through all the results and update the new
+    # archive_policy from the old values.
+    for value in results:
+        id, archive, archive_private = value
+        store.execute('UPDATE mailinglist SET '
+                      '    archive_policy = {0} '
+                      'WHERE id = {1};'.format(
+                          archive_policy(archive, archive_private),
+                          id))
+    # Now drop the old columns.
+    store.execute('ALTER TABLE mailinglist DROP COLUMN archive;')
+    store.execute('ALTER TABLE mailinglist DROP COLUMN archive_private;')
 
 
 
