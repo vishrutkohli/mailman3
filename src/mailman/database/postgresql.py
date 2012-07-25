@@ -34,7 +34,7 @@ from mailman.database.base import StormBaseDatabase
 
 
 
-class _TemporaryDB:
+class _TestDB:
     # For the test suite; bool column values.
     TRUE = 'True'
     FALSE = 'False'
@@ -86,7 +86,7 @@ class PostgreSQLDatabase(StormBaseDatabase):
                 """.format(model_class.__storm_table__))
 
     @staticmethod
-    def _make_temporary():
+    def _make_testdb():
         from mailman.testing.helpers import configuration
         parts = urlsplit(config.database.url)
         assert parts.scheme == 'postgres'
@@ -98,8 +98,8 @@ class PostgreSQLDatabase(StormBaseDatabase):
         # after the test.
         config.db.store.execute('ABORT;')
         config.db.store.execute('CREATE DATABASE mmtest;')
-        # Now create a new, temporary database.
+        # Now create a new, test database.
         database = PostgreSQLDatabase()
         with configuration('database', url=url):
             database.initialize()
-        return _TemporaryDB(database)
+        return _TestDB(database)

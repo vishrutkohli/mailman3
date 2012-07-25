@@ -64,11 +64,11 @@ class MigrationTestBase(unittest.TestCase):
     def setUp(self):
         database_class_name = config.database['class']
         self._database_class = call_name(database_class_name)
-        self._temporary = self._database_class._make_temporary()
-        self._database = self._temporary.database
+        self._testdb = self._database_class._make_testdb()
+        self._database = self._testdb.database
 
     def tearDown(self):
-        self._temporary.cleanup()
+        self._testdb.cleanup()
 
 
 
@@ -87,7 +87,7 @@ class TestMigration20120407Schema(MigrationTestBase):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
-            self._temporary.abort()
+            self._testdb.abort()
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
@@ -122,7 +122,7 @@ class TestMigration20120407Schema(MigrationTestBase):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
-            self._temporary.abort()
+            self._testdb.abort()
 
 
 
@@ -212,7 +212,7 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # ignored.  This test sets it to 0 to ensure it's ignored.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {0}, archive_private = {0} '
-            'WHERE id = 1;'.format(self._temporary.FALSE))
+            'WHERE id = 1;'.format(self._testdb.FALSE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -225,8 +225,8 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # ignored.  This test sets it to 1 to ensure it's ignored.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {0}, archive_private = {1} '
-            'WHERE id = 1;'.format(self._temporary.FALSE,
-                                   self._temporary.TRUE))
+            'WHERE id = 1;'.format(self._testdb.FALSE,
+                                   self._testdb.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -238,7 +238,7 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # private archives.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {0}, archive_private = {0} '
-            'WHERE id = 1;'.format(self._temporary.TRUE))
+            'WHERE id = 1;'.format(self._testdb.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -250,8 +250,8 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # public archives.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {1}, archive_private = {0} '
-            'WHERE id = 1;'.format(self._temporary.FALSE,
-                                   self._temporary.TRUE))
+            'WHERE id = 1;'.format(self._testdb.FALSE,
+                                   self._testdb.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
