@@ -45,6 +45,12 @@
     />
 
   <utility
+    provides="mailman.interfaces.database.IDatabaseFactory"
+    factory="mailman.database.factory.DatabaseTemporaryFactory"
+    name="temporary"
+    />
+
+  <utility
     provides="mailman.interfaces.domain.IDomainManager"
     factory="mailman.model.domain.DomainManager"
     />

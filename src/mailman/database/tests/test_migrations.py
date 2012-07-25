@@ -33,14 +33,13 @@ from pkg_resources import resource_string
 from storm.exceptions import DatabaseError
 from zope.component import getUtility
 
-from mailman.config import config
+from mailman.interfaces.database import IDatabaseFactory
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
-from mailman.utilities.modules import call_name
 
 
 
@@ -62,13 +61,10 @@ class MigrationTestBase(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
-        database_class_name = config.database['class']
-        self._database_class = call_name(database_class_name)
-        self._testdb = self._database_class._make_testdb()
-        self._database = self._testdb.database
+        self._database = getUtility(IDatabaseFactory, 'temporary').create()
 
     def tearDown(self):
-        self._testdb.cleanup()
+        self._database._cleanup()
 
 
 
@@ -137,7 +133,7 @@ class TestMigration20120407Data(MigrationTestBase):
         # Load the previous schema's sample data.
         sample_data = resource_string(
             'mailman.database.tests.data',
-            'migration_{0}_1.sql'.format(self._database_class.TAG))
+            'migration_{0}_1.sql'.format(self._database.TAG))
         self._database.load_sql(self._database.store, sample_data)
         # Update to the current migration we're testing.
         self._database.load_migrations('20120407000000')
@@ -200,7 +196,7 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # Load the previous schema's sample data.
         sample_data = resource_string(
             'mailman.database.tests.data',
-            'migration_{0}_1.sql'.format(self._database_class.TAG))
+            'migration_{0}_1.sql'.format(self._database.TAG))
         self._database.load_sql(self._database.store, sample_data)
 
     def _upgrade(self):
@@ -213,7 +209,7 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # ignored.  This test sets it to 0 to ensure it's ignored.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {0}, archive_private = {0} '
-            'WHERE id = 1;'.format(self._testdb.FALSE))
+            'WHERE id = 1;'.format(self._database.FALSE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -226,8 +222,8 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # ignored.  This test sets it to 1 to ensure it's ignored.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {0}, archive_private = {1} '
-            'WHERE id = 1;'.format(self._testdb.FALSE,
-                                   self._testdb.TRUE))
+            'WHERE id = 1;'.format(self._database.FALSE,
+                                   self._database.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -239,7 +235,7 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # private archives.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {0}, archive_private = {0} '
-            'WHERE id = 1;'.format(self._testdb.TRUE))
+            'WHERE id = 1;'.format(self._database.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -251,8 +247,8 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         # public archives.
         self._database.store.execute(
             'UPDATE mailinglist SET archive = {1}, archive_private = {0} '
-            'WHERE id = 1;'.format(self._testdb.FALSE,
-                                   self._testdb.TRUE))
+            'WHERE id = 1;'.format(self._database.FALSE,
+                                   self._database.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):

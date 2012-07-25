@@ -35,20 +35,6 @@ from mailman.database.base import StormBaseDatabase
 
 
 
-class _TestDB:
-    # For the test suite; bool column values.
-    TRUE = 1
-    FALSE = 0
-
-    def __init__(self, database, tempdir):
-        self.database = database
-        self._tempdir = tempdir
-
-    def cleanup(self):
-        shutil.rmtree(self._tempdir)
-
-
-
 class SQLiteDatabase(StormBaseDatabase):
     """Database class for SQLite."""
 
@@ -70,13 +56,3 @@ class SQLiteDatabase(StormBaseDatabase):
         # Ignore errors
         if fd > 0:
             os.close(fd)
-
-    @staticmethod
-    def _make_testdb():
-        from mailman.testing.helpers import configuration
-        tempdir = tempfile.mkdtemp()
-        url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
-        database = SQLiteDatabase()
-        with configuration('database', url=url):
-            database.initialize()
-        return _TestDB(database, tempdir)

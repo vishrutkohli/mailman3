@@ -22,17 +22,23 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'DatabaseFactory',
+    'DatabaseTemporaryFactory',
     'DatabaseTestingFactory',
     ]
 
 
+import os
 import types
+import shutil
+import tempfile
+import functools
 
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
 from mailman.config import config
 from mailman.interfaces.database import IDatabase, IDatabaseFactory
+from mailman.testing.helpers import configuration
 from mailman.utilities.modules import call_name
 
 
@@ -77,4 +83,33 @@ class DatabaseTestingFactory:
         database.commit()
         # Make _reset() a bound method of the database instance.
         database._reset = types.MethodType(_reset, database)
+        return database
+
+
+
+def _sqlite_cleanup(self, tempdir):
+    shutil.rmtree(tempdir)
+
+
+@implementer(IDatabaseFactory)
+class DatabaseTemporaryFactory:
+    """Create a temporary database for some of the migration tests."""
+
+    @staticmethod
+    def create():
+        """See `IDatabaseFactory`."""
+        database_class_name = config.database['class']
+        database = call_name(database_class_name)
+        verifyObject(IDatabase, database)
+        if database.TAG == 'sqlite':
+            tempdir = tempfile.mkdtemp()
+            url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
+            with configuration('database', url=url):
+                database.initialize()
+            database._cleanup = types.MethodType(
+                functools.partial(_sqlite_cleanup, tempdir=tempdir), database)
+            # bool column values in SQLite must be integers.
+            database.FALSE = 0
+            database.TRUE = 1
+        # Don't load the migrations.
         return database
