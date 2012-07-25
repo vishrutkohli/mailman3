@@ -75,19 +75,20 @@ class MigrationTestBase(unittest.TestCase):
 class TestMigration20120407Schema(MigrationTestBase):
     """Test column migrations."""
 
-    def test_pre_upgrade_columns_base(self):
+    def test_pre_upgrade_columns_migration(self):
         # Test that before the migration, the old table columns are present
         # and the new database columns are not.
         #
         # Load all the migrations to just before the one we're testing.
         self._database.load_migrations('20120406999999')
+        self._database.store.commit()
         # Verify that the database has not yet been migrated.
         for missing in ('archive_policy',
                         'nntp_prefix_subject_too'):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
-            self._testdb.abort()
+            self._database.store.rollback()
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
@@ -122,7 +123,7 @@ class TestMigration20120407Schema(MigrationTestBase):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
-            self._testdb.abort()
+            self._database.store.rollback()
 
 
 

@@ -47,10 +47,6 @@ class _TestDB:
     def cleanup(self):
         shutil.rmtree(self._tempdir)
 
-    def abort(self):
-        # No abort needed.
-        pass
-
 
 
 class SQLiteDatabase(StormBaseDatabase):

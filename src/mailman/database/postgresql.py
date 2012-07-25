@@ -43,12 +43,9 @@ class _TestDB:
         self.database = database
 
     def cleanup(self):
-        self.database.store.execute('ABORT;')
+        self.database.store.rollback()
         self.database.store.close()
         config.db.store.execute('DROP DATABASE mmtest;')
-
-    def abort(self):
-        self.database.store.execute('ABORT;')
 
 
 
