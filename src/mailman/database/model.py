@@ -41,14 +41,15 @@ class ModelMeta(PropertyPublisherMeta):
         # property to enforce our table naming convention.
         self.__storm_table__ = name.lower()
         super(ModelMeta, self).__init__(name, bases, dict)
-        # By default, the table should be reset by the testing framework.
-        if not hasattr(self, 'PRESERVE'):
-            self.PRESERVE = False
         # Register the model class so that it can be more easily cleared.
-        # This is required by the test framework.
-        if name == 'Model':
-            return
-        ModelMeta._class_registry.add(self)
+        # This is required by the test framework so that the corresponding
+        # table can be reset between tests.
+        #
+        # The PRESERVE flag indicates whether the table should be reset or
+        # not.  We have to handle the actual Model base class explicitly
+        # because it does not correspond to a table in the database.
+        if not getattr(self, 'PRESERVE', False) and name != 'Model':
+            ModelMeta._class_registry.add(self)
 
     @staticmethod
     def _reset(store):
@@ -58,8 +59,7 @@ class ModelMeta(PropertyPublisherMeta):
         classes = sorted(ModelMeta._class_registry,
                          key=attrgetter('__storm_table__'))
         for model_class in classes:
-            if not model_class.PRESERVE:
-                store.find(model_class).remove()
+            store.find(model_class).remove()
 
 
 
