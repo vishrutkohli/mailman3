@@ -125,14 +125,16 @@ def upgrade_postgres(database, store, version, module_path):
     # Now drop the old columns.
     store.execute('ALTER TABLE mailinglist DROP COLUMN archive;')
     store.execute('ALTER TABLE mailinglist DROP COLUMN archive_private;')
+    # Record the migration in the version table.
+    database.load_schema(store, version, None, module_path)
 
 
 
-def pre_reset(store):
-    global _helper
-    from mailman.testing.database import ResetHelper
-    _helper = ResetHelper(VERSION, store)
+## def pre_reset(store):
+##     global _helper
+##     from mailman.testing.database import ResetHelper
+##     _helper = ResetHelper(VERSION, store)
 
 
-def post_reset(store):
-    _helper.restore(store)
+## def post_reset(store):
+##     _helper.restore(store)

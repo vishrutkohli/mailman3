@@ -38,11 +38,11 @@ def upgrade(database, store, version, module_path):
 
 
 
-def pre_reset(store):
-    global _helper
-    from mailman.testing.database import ResetHelper
-    _helper = ResetHelper(VERSION, store)
+## def pre_reset(store):
+##     global _helper
+##     from mailman.testing.database import ResetHelper
+##     _helper = ResetHelper(VERSION, store)
 
 
-def post_reset(store):
-    _helper.restore(store)
+## def post_reset(store):
+##     _helper.restore(store)

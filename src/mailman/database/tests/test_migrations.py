@@ -27,10 +27,6 @@ __all__ = [
     ]
 
 
-import os
-import shutil
-import sqlite3
-import tempfile
 import unittest
 
 from pkg_resources import resource_string
@@ -41,7 +37,7 @@ from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
-from mailman.testing.helpers import configuration, temporary_db
+from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.modules import call_name
 
@@ -73,7 +69,7 @@ class TestMigration20120407Schema(unittest.TestCase):
     def tearDown(self):
         self._temporary.cleanup()
 
-    def test_sqlite_base(self):
+    def test_pre_upgrade_columns_base(self):
         # Test that before the migration, the old table columns are present
         # and the new database columns are not.
         #
@@ -82,9 +78,12 @@ class TestMigration20120407Schema(unittest.TestCase):
         # Verify that the database has not yet been migrated.
         for missing in ('archive_policy',
                         'nntp_prefix_subject_too'):
-            self.assertRaises(sqlite3.OperationalError,
+            self.assertRaises(self._database.Error,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
+            # Avoid PostgreSQL complaint: InternalError: current transaction
+            # is aborted, commands ignored until end of transaction block.
+            self._database.store.execute('ABORT;')
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
@@ -96,7 +95,7 @@ class TestMigration20120407Schema(unittest.TestCase):
             self._database.store.execute(
                 'select {0} from mailinglist;'.format(present))
 
-    def test_sqlite_migration(self):
+    def test_post_upgrade_columns_migration(self):
         # Test that after the migration, the old table columns are missing
         # and the new database columns are present.
         #
@@ -116,9 +115,12 @@ class TestMigration20120407Schema(unittest.TestCase):
                         'news_moderation',
                         'news_prefix_subject_too',
                         'nntp_host'):
-            self.assertRaises(sqlite3.OperationalError,
+            self.assertRaises(self._database.Error,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
+            # Avoid PostgreSQL complaint: InternalError: current transaction
+            # is aborted, commands ignored until end of transaction block.
+            self._database.store.execute('ABORT;')
 
 
 
@@ -148,7 +150,8 @@ class TestMigration20120407Data(unittest.TestCase):
         self._database.load_migrations('20120406999999')
         # Load the previous schema's sample data.
         sample_data = resource_string(
-            'mailman.database.tests.data', 'migration_test_1.sql')
+            'mailman.database.tests.data',
+            'migration_{0}_1.sql'.format(database_class.TAG))
         self._database.load_sql(self._database.store, sample_data)
         # Update to the current migration we're testing.
         self._database.load_migrations('20120407000000')
@@ -230,7 +233,8 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
         self._database.load_migrations('20120406999999')
         # Load the previous schema's sample data.
         sample_data = resource_string(
-            'mailman.database.tests.data', 'migration_test_1.sql')
+            'mailman.database.tests.data',
+            'migration_{0}_1.sql'.format(database_class.TAG))
         self._database.load_sql(self._database.store, sample_data)
 
     def _upgrade(self):
@@ -244,13 +248,11 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
         # Test that the new archive_policy value is updated correctly.  In the
         # case of old column archive=0, the archive_private column is
         # ignored.  This test sets it to 0 to ensure it's ignored.
-        with configuration('database', url=self._url):
-            # Set the old archive values.
-            self._database.store.execute(
-                'UPDATE mailinglist SET archive = 0, archive_private = 0 '
-                'WHERE id = 1;')
-            # Complete the migration
-            self._upgrade()
+        self._database.store.execute(
+            'UPDATE mailinglist SET archive = False, archive_private = False '
+            'WHERE id = 1;')
+        # Complete the migration
+        self._upgrade()
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.never)
@@ -259,13 +261,11 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
         # Test that the new archive_policy value is updated correctly.  In the
         # case of old column archive=0, the archive_private column is
         # ignored.  This test sets it to 1 to ensure it's ignored.
-        with configuration('database', url=self._url):
-            # Set the old archive values.
-            self._database.store.execute(
-                'UPDATE mailinglist SET archive = 0, archive_private = 1 '
-                'WHERE id = 1;')
-            # Complete the migration
-            self._upgrade()
+        self._database.store.execute(
+            'UPDATE mailinglist SET archive = False, archive_private = True '
+            'WHERE id = 1;')
+        # Complete the migration
+        self._upgrade()
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.never)
@@ -273,13 +273,11 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
     def test_archive_policy_private(self):
         # Test that the new archive_policy value is updated correctly for
         # private archives.
-        with configuration('database', url=self._url):
-            # Set the old archive values.
-            self._database.store.execute(
-                'UPDATE mailinglist SET archive = 1, archive_private = 1 '
-                'WHERE id = 1;')
-            # Complete the migration
-            self._upgrade()
+        self._database.store.execute(
+            'UPDATE mailinglist SET archive = True, archive_private = True '
+            'WHERE id = 1;')
+        # Complete the migration
+        self._upgrade()
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.private)
@@ -287,13 +285,11 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
     def test_archive_policy_public(self):
         # Test that the new archive_policy value is updated correctly for
         # public archives.
-        with configuration('database', url=self._url):
-            # Set the old archive values.
-            self._database.store.execute(
-                'UPDATE mailinglist SET archive = 1, archive_private = 0 '
-                'WHERE id = 1;')
-            # Complete the migration
-            self._upgrade()
+        self._database.store.execute(
+            'UPDATE mailinglist SET archive = True, archive_private = False '
+            'WHERE id = 1;')
+        # Complete the migration
+        self._upgrade()
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.public)

@@ -25,6 +25,8 @@ __all__ = [
     ]
 
 
+import psycopg2
+
 from operator import attrgetter
 from urlparse import urlsplit, urlunsplit
 
@@ -39,8 +41,9 @@ class _TemporaryDB:
         self.database = database
 
     def cleanup(self):
-        self.database.execute('ROLLBACK TO SAVEPOINT testing;')
-        self.database.execute('DROP DATABASE mmtest;')
+        self.database.store.execute('ABORT;')
+        self.database.store.close()
+        config.db.store.execute('DROP DATABASE mmtest;')
 
 
 
@@ -48,6 +51,7 @@ class PostgreSQLDatabase(StormBaseDatabase):
     """Database class for PostgreSQL."""
 
     TAG = 'postgres'
+    Error = psycopg2.ProgrammingError
 
     def _database_exists(self, store):
         """See `BaseDatabase`."""
@@ -85,9 +89,13 @@ class PostgreSQLDatabase(StormBaseDatabase):
         new_parts = list(parts)
         new_parts[2] = '/mmtest'
         url = urlunsplit(new_parts)
+        # Use the existing database connection to create a new testing
+        # database.  Create a savepoint, which will make it easy to reset
+        # after the test.
+        config.db.store.execute('ABORT;')
+        config.db.store.execute('CREATE DATABASE mmtest;')
+        # Now create a new, temporary database.
         database = PostgreSQLDatabase()
-        database.store.execute('SAVEPOINT testing;')
-        database.store.execute('CREATE DATABASE mmtest;')
         with configuration('database', url=url):
             database.initialize()
         return _TemporaryDB(database)

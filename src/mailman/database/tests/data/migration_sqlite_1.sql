@@ -8,10 +8,8 @@ INSERT INTO "address" VALUES(
     2,'bart@example.com',NULL,'Bart Person',
     '2012-04-19 00:53:25.878800','2012-04-19 00:49:52.882050',2,4);
 
--- ConfigLayer.testSetUp() will already initialize the domain.
---
--- INSERT INTO "domain" VALUES(
---     1,'example.com','http://example.com',NULL,'postmaster@example.com');
+INSERT INTO "domain" VALUES(
+    1,'example.com','http://example.com',NULL,'postmaster@example.com');
 
 INSERT INTO "mailinglist" VALUES(
     -- id,list_name,mail_host,include_list_post_header,include_rfc2369_headers

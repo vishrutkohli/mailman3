@@ -172,9 +172,12 @@ class StormBaseDatabase:
             parts = module_fn.split('_')
             if len(parts) < 2:
                 continue
-            version = parts[1]
-            if len(version.strip()) == 0 or version in versions:
-                # This one is already loaded.
+            version = parts[1].strip()
+            if len(version) == 0:
+                # Not a schema migration file.
+                continue
+            if version in versions:
+                log.debug('already migrated to %s', version)
                 continue
             if until is not None and version > until:
                 # We're done.
@@ -184,6 +187,7 @@ class StormBaseDatabase:
             upgrade = getattr(sys.modules[module_path], 'upgrade', None)
             if upgrade is None:
                 continue
+            log.debug('migrating db to %s: %s', version, module_path)
             upgrade(self, self.store, version, module_path)
 
     def load_sql(self, store, sql):
