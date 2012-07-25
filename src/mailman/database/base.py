@@ -229,9 +229,6 @@ class StormBaseDatabase:
             self.load_sql(store, contents)
         # Add a marker that indicates the migration version being applied.
         store.add(Version(component='schema', version=version))
-        # Add a marker so that the module name can be found later.  This
-        # is used by the test suite to reset the database between tests.
-        store.add(Version(component=version, version=module_path))
 
     @staticmethod
     def _make_temporary():
