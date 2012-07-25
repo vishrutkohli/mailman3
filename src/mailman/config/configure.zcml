@@ -33,6 +33,18 @@
     />
 
   <utility
+    provides="mailman.interfaces.database.IDatabaseFactory"
+    factory="mailman.database.factory.DatabaseFactory"
+    name="production"
+    />
+
+  <utility
+    provides="mailman.interfaces.database.IDatabaseFactory"
+    factory="mailman.database.factory.DatabaseTestingFactory"
+    name="testing"
+    />
+
+  <utility
     provides="mailman.interfaces.domain.IDomainManager"
     factory="mailman.model.domain.DomainManager"
     />

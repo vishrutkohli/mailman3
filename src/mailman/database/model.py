@@ -25,8 +25,6 @@ __all__ = [
     ]
 
 
-import sys
-
 from operator import attrgetter
 
 from storm.properties import PropertyPublisherMeta
@@ -43,6 +41,9 @@ class ModelMeta(PropertyPublisherMeta):
         # property to enforce our table naming convention.
         self.__storm_table__ = name.lower()
         super(ModelMeta, self).__init__(name, bases, dict)
+        # By default, the table should be reset by the testing framework.
+        if not hasattr(self, 'PRESERVE'):
+            self.PRESERVE = False
         # Register the model class so that it can be more easily cleared.
         # This is required by the test framework.
         if name == 'Model':
@@ -52,38 +53,13 @@ class ModelMeta(PropertyPublisherMeta):
     @staticmethod
     def _reset(store):
         from mailman.config import config
-        from mailman.model.version import Version
         config.db._pre_reset(store)
-        # Give each schema migration a chance to do its pre-reset.  See below
-        # for calling its post reset too.
-        versions = sorted(version.version for version in
-                          store.find(Version, component='schema'))
-        migrations = {}
-        for version in versions:
-            # We have to give the migrations module that loaded this version a
-            # chance to do both pre- and post-reset operations.  The following
-            # find the actual the module path for the migration.  See
-            # StormBaseDatabase.load_schema().
-            migration = store.find(Version, component=version).one()
-            if migration is None:
-                continue
-            migrations[version] = module_path = migration.version
-            module = sys.modules[module_path]
-            pre_reset = getattr(module, 'pre_reset', None)
-            if pre_reset is not None:
-                pre_reset(store)
         # Make sure this is deterministic, by sorting on the storm table name.
         classes = sorted(ModelMeta._class_registry,
                          key=attrgetter('__storm_table__'))
         for model_class in classes:
-            store.find(model_class).remove()
-        # Now give each migration a chance to do post-reset operations.
-        for version in versions:
-            module = sys.modules[migrations[version]]
-            post_reset = getattr(module, 'post_reset', None)
-            if post_reset is not None:
-                post_reset(store)
-        config.db._post_reset(store)
+            if not model_class.PRESERVE:
+                store.find(model_class).remove()
 
 
 

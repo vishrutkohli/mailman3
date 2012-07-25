@@ -233,13 +233,6 @@ class StormBaseDatabase:
         # is used by the test suite to reset the database between tests.
         store.add(Version(component=version, version=module_path))
 
-    def _reset(self):
-        """See `IDatabase`."""
-        from mailman.database.model import ModelMeta
-        self.store.rollback()
-        ModelMeta._reset(self.store)
-        self.store.commit()
-
     @staticmethod
     def _make_temporary():
         raise NotImplementedError

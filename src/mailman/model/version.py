@@ -34,6 +34,10 @@ class Version(Model):
     component = Unicode()
     version = Unicode()
 
+    # The testing machinery will generally reset all tables, however because
+    # this table tracks schema migrations, we do not want to reset it.
+    PRESERVE = True
+
     def __init__(self, component, version):
         super(Version, self).__init__()
         self.component = component
