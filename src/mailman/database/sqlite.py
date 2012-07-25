@@ -27,7 +27,6 @@ __all__ = [
 
 import os
 import shutil
-import sqlite3
 import tempfile
 
 from urlparse import urlparse
@@ -50,7 +49,6 @@ class SQLiteDatabase(StormBaseDatabase):
     """Database class for SQLite."""
 
     TAG = 'sqlite'
-    Error = sqlite3.OperationalError
 
     def _database_exists(self, store):
         """See `BaseDatabase`."""

@@ -25,8 +25,6 @@ __all__ = [
     ]
 
 
-import psycopg2
-
 from operator import attrgetter
 from urlparse import urlsplit, urlunsplit
 
@@ -51,7 +49,6 @@ class PostgreSQLDatabase(StormBaseDatabase):
     """Database class for PostgreSQL."""
 
     TAG = 'postgres'
-    Error = psycopg2.ProgrammingError
 
     def _database_exists(self, store):
         """See `BaseDatabase`."""

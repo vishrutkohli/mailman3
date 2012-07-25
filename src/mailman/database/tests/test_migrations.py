@@ -30,6 +30,7 @@ __all__ = [
 import unittest
 
 from pkg_resources import resource_string
+from storm.exceptions import DatabaseError
 from zope.component import getUtility
 
 from mailman.config import config
@@ -78,7 +79,7 @@ class TestMigration20120407Schema(unittest.TestCase):
         # Verify that the database has not yet been migrated.
         for missing in ('archive_policy',
                         'nntp_prefix_subject_too'):
-            self.assertRaises(self._database.Error,
+            self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
             # Avoid PostgreSQL complaint: InternalError: current transaction
@@ -115,7 +116,7 @@ class TestMigration20120407Schema(unittest.TestCase):
                         'news_moderation',
                         'news_prefix_subject_too',
                         'nntp_host'):
-            self.assertRaises(self._database.Error,
+            self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
             # Avoid PostgreSQL complaint: InternalError: current transaction
