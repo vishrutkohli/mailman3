@@ -36,12 +36,20 @@ from mailman.database.base import StormBaseDatabase
 
 
 class _TemporaryDB:
+    # For the test suite; bool column values.
+    TRUE = 1
+    FALSE = 0
+
     def __init__(self, database, tempdir):
         self.database = database
         self._tempdir = tempdir
 
     def cleanup(self):
         shutil.rmtree(self._tempdir)
+
+    def abort(self):
+        # No abort needed.
+        pass
 
 
 

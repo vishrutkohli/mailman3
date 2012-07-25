@@ -44,7 +44,7 @@ from mailman.utilities.modules import call_name
 
 
 
-class TestMigration20120407Schema(unittest.TestCase):
+class MigrationTestBase(unittest.TestCase):
     """Test the dated migration (LP: #971013)
 
     Circa: 3.0b1 -> 3.0b2
@@ -63,12 +63,17 @@ class TestMigration20120407Schema(unittest.TestCase):
 
     def setUp(self):
         database_class_name = config.database['class']
-        database_class = call_name(database_class_name)
-        self._temporary = database_class._make_temporary()
+        self._database_class = call_name(database_class_name)
+        self._temporary = self._database_class._make_temporary()
         self._database = self._temporary.database
 
     def tearDown(self):
         self._temporary.cleanup()
+
+
+
+class TestMigration20120407Schema(MigrationTestBase):
+    """Test column migrations."""
 
     def test_pre_upgrade_columns_base(self):
         # Test that before the migration, the old table columns are present
@@ -82,9 +87,7 @@ class TestMigration20120407Schema(unittest.TestCase):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
-            # Avoid PostgreSQL complaint: InternalError: current transaction
-            # is aborted, commands ignored until end of transaction block.
-            self._database.store.execute('ABORT;')
+            self._temporary.abort()
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
@@ -119,46 +122,24 @@ class TestMigration20120407Schema(unittest.TestCase):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
-            # Avoid PostgreSQL complaint: InternalError: current transaction
-            # is aborted, commands ignored until end of transaction block.
-            self._database.store.execute('ABORT;')
+            self._temporary.abort()
 
 
 
-class TestMigration20120407Data(unittest.TestCase):
-    """Test the dated migration (LP: #971013)
-
-    Circa: 3.0b1 -> 3.0b2
-
-    table mailinglist:
-    * news_moderation -> newsgroup_moderation
-    * news_prefix_subject_too -> nntp_prefix_subject_too
-    * ADD archive_policy
-    * REMOVE archive
-    * REMOVE archive_private
-    * REMOVE archive_volume_frequency
-    * REMOVE nntp_host
-    """
-
-    layer = ConfigLayer
+class TestMigration20120407Data(MigrationTestBase):
+    """Test non-migrated data."""
 
     def setUp(self):
-        database_class_name = config.database['class']
-        database_class = call_name(database_class_name)
-        self._temporary = database_class._make_temporary()
-        self._database = self._temporary.database
+        MigrationTestBase.setUp(self)
         # Load all the migrations to just before the one we're testing.
         self._database.load_migrations('20120406999999')
         # Load the previous schema's sample data.
         sample_data = resource_string(
             'mailman.database.tests.data',
-            'migration_{0}_1.sql'.format(database_class.TAG))
+            'migration_{0}_1.sql'.format(self._database_class.TAG))
         self._database.load_sql(self._database.store, sample_data)
         # Update to the current migration we're testing.
         self._database.load_migrations('20120407000000')
-
-    def tearDown(self):
-        self._temporary.cleanup()
 
     def test_migration_domains(self):
         # Test that the domains table, which isn't touched, doesn't change.
@@ -208,50 +189,30 @@ class TestMigration20120407Data(unittest.TestCase):
 
 
 
-class TestMigration20120407ArchiveData(unittest.TestCase):
-    """Test the dated migration (LP: #971013)
-
-    Circa: 3.0b1 -> 3.0b2
-
-    table mailinglist:
-    * news_moderation -> newsgroup_moderation
-    * news_prefix_subject_too -> nntp_prefix_subject_too
-    * ADD archive_policy
-    * REMOVE archive
-    * REMOVE archive_private
-    * REMOVE archive_volume_frequency
-    * REMOVE nntp_host
-    """
-
-    layer = ConfigLayer
+class TestMigration20120407ArchiveData(MigrationTestBase):
+    """Test affected migration data."""
 
     def setUp(self):
-        database_class_name = config.database['class']
-        database_class = call_name(database_class_name)
-        self._temporary = database_class._make_temporary()
-        self._database = self._temporary.database
+        MigrationTestBase.setUp(self)
         # Load all the migrations to just before the one we're testing.
         self._database.load_migrations('20120406999999')
         # Load the previous schema's sample data.
         sample_data = resource_string(
             'mailman.database.tests.data',
-            'migration_{0}_1.sql'.format(database_class.TAG))
+            'migration_{0}_1.sql'.format(self._database_class.TAG))
         self._database.load_sql(self._database.store, sample_data)
 
     def _upgrade(self):
         # Update to the current migration we're testing.
         self._database.load_migrations('20120407000000')
 
-    def tearDown(self):
-        self._temporary.cleanup()
-
     def test_migration_archive_policy_never_0(self):
         # Test that the new archive_policy value is updated correctly.  In the
         # case of old column archive=0, the archive_private column is
         # ignored.  This test sets it to 0 to ensure it's ignored.
         self._database.store.execute(
-            'UPDATE mailinglist SET archive = False, archive_private = False '
-            'WHERE id = 1;')
+            'UPDATE mailinglist SET archive = {0}, archive_private = {0} '
+            'WHERE id = 1;'.format(self._temporary.FALSE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -263,8 +224,9 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
         # case of old column archive=0, the archive_private column is
         # ignored.  This test sets it to 1 to ensure it's ignored.
         self._database.store.execute(
-            'UPDATE mailinglist SET archive = False, archive_private = True '
-            'WHERE id = 1;')
+            'UPDATE mailinglist SET archive = {0}, archive_private = {1} '
+            'WHERE id = 1;'.format(self._temporary.FALSE,
+                                   self._temporary.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -275,8 +237,8 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
         # Test that the new archive_policy value is updated correctly for
         # private archives.
         self._database.store.execute(
-            'UPDATE mailinglist SET archive = True, archive_private = True '
-            'WHERE id = 1;')
+            'UPDATE mailinglist SET archive = {0}, archive_private = {0} '
+            'WHERE id = 1;'.format(self._temporary.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):
@@ -287,8 +249,9 @@ class TestMigration20120407ArchiveData(unittest.TestCase):
         # Test that the new archive_policy value is updated correctly for
         # public archives.
         self._database.store.execute(
-            'UPDATE mailinglist SET archive = True, archive_private = False '
-            'WHERE id = 1;')
+            'UPDATE mailinglist SET archive = {1}, archive_private = {0} '
+            'WHERE id = 1;'.format(self._temporary.FALSE,
+                                   self._temporary.TRUE))
         # Complete the migration
         self._upgrade()
         with temporary_db(self._database):

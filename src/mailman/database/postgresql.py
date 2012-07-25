@@ -35,6 +35,10 @@ from mailman.database.base import StormBaseDatabase
 
 
 class _TemporaryDB:
+    # For the test suite; bool column values.
+    TRUE = 'True'
+    FALSE = 'False'
+
     def __init__(self, database):
         self.database = database
 
@@ -42,6 +46,9 @@ class _TemporaryDB:
         self.database.store.execute('ABORT;')
         self.database.store.close()
         config.db.store.execute('DROP DATABASE mmtest;')
+
+    def abort(self):
+        self.database.store.execute('ABORT;')
 
 
 
