@@ -22,12 +22,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'PostgreSQLDatabase',
+    'make_temporary',
     ]
 
 
+import types
+
+from functools import partial
 from operator import attrgetter
+from urlparse import urlsplit, urlunsplit
 
 from mailman.database.base import StormBaseDatabase
+from mailman.testing.helpers import configuration
 
 
 
@@ -63,3 +69,37 @@ class PostgreSQLDatabase(StormBaseDatabase):
                               max("id") IS NOT null)
                        FROM "{0}";
                 """.format(model_class.__storm_table__))
+
+
+
+# Test suite adapter for ITemporaryDatabase.
+
+def _cleanup(self, store, tempdb_name):
+    from mailman.config import config
+    store.rollback()
+    store.close()
+    # From the original database connection, drop the now unused database.
+    config.db.store.execute('DROP DATABASE {0}'.format(tempdb_name))
+
+
+def make_temporary(database):
+    """Adapts by monkey patching an existing PostgreSQL IDatabase."""
+    from mailman.config import config
+    parts = urlsplit(config.database.url)
+    assert parts.scheme == 'postgres'
+    new_parts = list(parts)
+    new_parts[2] = '/mmtest'
+    url = urlunsplit(new_parts)
+    # Use the existing database connection to create a new testing
+    # database.
+    config.db.store.execute('ABORT;')
+    config.db.store.execute('CREATE DATABASE mmtest;')
+    with configuration('database', url=url):
+        database.initialize()
+    database._cleanup = types.MethodType(
+        partial(_cleanup, store=database.store, tempdb_name='mmtest'),
+        database)
+    # bool column values in PostgreSQL.
+    database.FALSE = 'False'
+    database.TRUE = 'True'
+    return database

@@ -24,6 +24,7 @@ __all__ = [
     'DatabaseError',
     'IDatabase',
     'IDatabaseFactory',
+    'ITemporaryDatabase',
     ]
 
 
@@ -50,19 +51,6 @@ class IDatabase(Interface):
             configuration file setting.
         """
 
-    def _make_temporary():
-        """Make a temporary database.
-
-        This is a @staticmethod used in the test framework.
-
-        :return: An object with one attribute and one method.  The attribute
-            `database` is the temporary `IDatabase`.  The method is a callable
-            named `cleanup()`, taking no arguments which should be called when
-            the temporary database is no longer necessary.  The database will
-            already be initialized, but no migrations will have been loaded
-            into it.
-        """
-
     def begin():
         """Begin the current transaction."""
 
@@ -74,6 +62,11 @@ class IDatabase(Interface):
 
     store = Attribute(
         """The underlying Storm store on which you can do queries.""")
+
+
+
+class ITemporaryDatabase(Interface):
+    """Marker interface for test suite adaptation."""
 
 
 

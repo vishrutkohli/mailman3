@@ -27,19 +27,15 @@ __all__ = [
     ]
 
 
-import os
 import types
-import shutil
-import tempfile
 
-from functools import partial
-from urlparse import urlsplit, urlunsplit
+from zope.component import getAdapter
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
 from mailman.config import config
-from mailman.interfaces.database import IDatabase, IDatabaseFactory
-from mailman.testing.helpers import configuration
+from mailman.interfaces.database import (
+    IDatabase, IDatabaseFactory, ITemporaryDatabase)
 from mailman.utilities.modules import call_name
 
 
@@ -90,16 +86,6 @@ class DatabaseTestingFactory:
 
 
 
-def _sqlite_cleanup(self, tempdir):
-    shutil.rmtree(tempdir)
-
-
-def _postgresql_cleanup(self, database, tempdb_name):
-    database.store.rollback()
-    database.store.close()
-    config.db.store.execute('DROP DATABASE {0}'.format(tempdb_name))
-
-
 @implementer(IDatabaseFactory)
 class DatabaseTemporaryFactory:
     """Create a temporary database for some of the migration tests."""
@@ -110,38 +96,6 @@ class DatabaseTemporaryFactory:
         database_class_name = config.database['class']
         database = call_name(database_class_name)
         verifyObject(IDatabase, database)
-        if database.TAG == 'sqlite':
-            tempdir = tempfile.mkdtemp()
-            url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
-            with configuration('database', url=url):
-                database.initialize()
-            database._cleanup = types.MethodType(
-                partial(_sqlite_cleanup, tempdir=tempdir), database)
-            # bool column values in SQLite must be integers.
-            database.FALSE = 0
-            database.TRUE = 1
-        elif database.TAG == 'postgres':
-            parts = urlsplit(config.database.url)
-            assert parts.scheme == 'postgres'
-            new_parts = list(parts)
-            new_parts[2] = '/mmtest'
-            url = urlunsplit(new_parts)
-            # Use the existing database connection to create a new testing
-            # database.
-            config.db.store.execute('ABORT;')
-            config.db.store.execute('CREATE DATABASE mmtest;')
-            with configuration('database', url=url):
-                database.initialize()
-            database._cleanup = types.MethodType(
-                partial(_postgresql_cleanup, 
-                        database=database, 
-                        tempdb_name='mmtest'),
-                database)
-            # bool column values in PostgreSQL.
-            database.FALSE = 'False'
-            database.TRUE = 'True'
-        else:
-            raise RuntimeError(
-                'Unsupported test database: {0}'.format(database.TAG))
-        # Don't load the migrations.
-        return database
+        adapted_database = getAdapter(
+            database, ITemporaryDatabase, database.TAG)
+        return adapted_database
