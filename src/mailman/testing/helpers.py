@@ -25,6 +25,7 @@ __all__ = [
     'TestableMaster',
     'body_line_iterator',
     'call_api',
+    'chdir',
     'configuration',
     'digest_mbox',
     'event_subscribers',
@@ -35,6 +36,7 @@ __all__ = [
     'reset_the_world',
     'specialized_message_from_string',
     'subscribe',
+    'temporary_db',
     'wait_for_webservice',
     ]
 
@@ -397,6 +399,34 @@ class configuration:
             finally:
                 self._remove()
         return wrapper
+
+
+
+@contextmanager
+def temporary_db(db):
+    real_db = config.db
+    config.db = db
+    try:
+        yield
+    finally:
+        config.db = real_db
+
+
+
+class chdir:
+    """A context manager for temporary directory changing."""
+    def __init__(self, directory):
+        self._curdir = None
+        self._directory = directory
+
+    def __enter__(self):
+        self._curdir = os.getcwd()
+        os.chdir(self._directory)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        os.chdir(self._curdir)
+        # Don't suppress exceptions.
+        return False
 
 
 

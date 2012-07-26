@@ -36,7 +36,7 @@ from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
-from mailman.interfaces.nntp import NewsModeration
+from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.styles import IStyle
 
 
@@ -56,7 +56,7 @@ class DefaultStyle:
         mlist.display_name = mlist.list_name.capitalize()
         mlist.list_id = '{0.list_name}.{0.mail_host}'.format(mlist)
         mlist.include_rfc2369_headers = True
-        mlist.include_list_post_header = True
+        mlist.allow_list_posts = True
         # Most of these were ripped from the old MailList.InitVars() method.
         mlist.volume = 1
         mlist.post_id = 1
@@ -174,10 +174,10 @@ from: .*@uplinkpro.com
         mlist.linked_newsgroup = ''
         mlist.gateway_to_news = False
         mlist.gateway_to_mail = False
-        mlist.news_prefix_subject_too = True
+        mlist.nntp_prefix_subject_too = True
         # In patch #401270, this was called newsgroup_is_moderated, but the
         # semantics weren't quite the same.
-        mlist.news_moderation = NewsModeration.none
+        mlist.newsgroup_moderation = NewsgroupModeration.none
         # Topics
         #
         # `topics' is a list of 4-tuples of the following form:

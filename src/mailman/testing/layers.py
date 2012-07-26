@@ -127,7 +127,7 @@ class ConfigLayer(MockAndMonkeyLayer):
         config.create_paths = True
         config.push('test config', test_config)
         # Initialize everything else.
-        initialize.initialize_2()
+        initialize.initialize_2(testing=True)
         initialize.initialize_3()
         # When stderr debugging is enabled, subprocess root loggers should
         # also be more verbose.

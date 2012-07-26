@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
+"""NNTP and newsgroup interfaces."""
+
+from __future__ import absolute_import, print_function, unicode_literals
+
 __metaclass__ = type
 __all__ = [
-    'NewsModeration',
+    'NewsgroupModeration',
     ]
 
 
@@ -25,7 +29,7 @@ from flufl.enum import Enum
 
 
 
-class NewsModeration(Enum):
+class NewsgroupModeration(Enum):
     # The newsgroup is not moderated.
     none = 0
     # The newsgroup is moderated, but allows for an open posting policy.

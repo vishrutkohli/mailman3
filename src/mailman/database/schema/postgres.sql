@@ -110,7 +110,8 @@ CREATE TABLE mailinglist (
     topics_enabled BOOLEAN,
     unsubscribe_policy INTEGER,
     welcome_message_uri TEXT,
-    moderation_callback TEXT,
+    -- This was accidentally added by the PostgreSQL porter.
+    -- moderation_callback TEXT,
     PRIMARY KEY (id)
     );
 

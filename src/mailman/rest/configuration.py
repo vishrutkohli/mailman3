@@ -17,7 +17,7 @@
 
 """Mailing list configuration via REST API."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -183,7 +183,7 @@ ATTRIBUTES = dict(
     fqdn_listname=GetterSetter(None),
     generic_nonmember_action=GetterSetter(int),
     mail_host=GetterSetter(None),
-    include_list_post_header=GetterSetter(as_boolean),
+    allow_list_posts=GetterSetter(as_boolean),
     include_rfc2369_headers=GetterSetter(as_boolean),
     join_address=GetterSetter(None),
     last_post_at=GetterSetter(None),

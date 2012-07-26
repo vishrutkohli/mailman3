@@ -20,6 +20,7 @@ All readable attributes for a list are available on a sub-resource.
     admin_notify_mchanges: False
     administrivia: True
     advertised: True
+    allow_list_posts: True
     anonymous_list: False
     autorespond_owner: none
     autorespond_postings: none
@@ -42,7 +43,6 @@ All readable attributes for a list are available on a sub-resource.
     fqdn_listname: test-one@example.com
     generic_nonmember_action: 1
     http_etag: "..."
-    include_list_post_header: True
     include_rfc2369_headers: True
     join_address: test-one-join@example.com
     last_post_at: None
@@ -91,7 +91,7 @@ all the writable attributes in one request.
     ...             display_name='Fnords',
     ...             description='This is my mailing list',
     ...             include_rfc2369_headers=False,
-    ...             include_list_post_header=False,
+    ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
     ...             filter_content=True,
@@ -119,6 +119,7 @@ These values are changed permanently.
     admin_notify_mchanges: True
     administrivia: False
     advertised: False
+    allow_list_posts: False
     anonymous_list: True
     autorespond_owner: respond_and_discard
     autorespond_postings: respond_and_continue
@@ -139,7 +140,6 @@ These values are changed permanently.
     display_name: Fnords
     filter_content: True
     ...
-    include_list_post_header: False
     include_rfc2369_headers: False
     ...
     posting_pipeline: virgin
@@ -171,7 +171,7 @@ must be included.  It is an error to leave one or more out...
     ...             display_name='Fnords',
     ...             description='This is my mailing list',
     ...             include_rfc2369_headers=False,
-    ...             include_list_post_header=False,
+    ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
     ...             filter_content=True,
@@ -211,7 +211,7 @@ must be included.  It is an error to leave one or more out...
     ...             display_name='Fnords',
     ...             description='This is my mailing list',
     ...             include_rfc2369_headers=False,
-    ...             include_list_post_header=False,
+    ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
     ...             filter_content=True,
@@ -244,7 +244,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             display_name='Fnords',
     ...             description='This is my mailing list',
     ...             include_rfc2369_headers=False,
-    ...             include_list_post_header=False,
+    ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
     ...             filter_content=True,
@@ -276,7 +276,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             display_name='Fnords',
     ...             description='This is my mailing list',
     ...             include_rfc2369_headers=False,
-    ...             include_list_post_header=False,
+    ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='dummy',
     ...             filter_content=True,
@@ -308,7 +308,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             display_name='Fnords',
     ...             description='This is my mailing list',
     ...             include_rfc2369_headers=False,
-    ...             include_list_post_header=False,
+    ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
     ...             filter_content=True,

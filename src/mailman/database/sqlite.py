@@ -17,19 +17,25 @@
 
 """SQLite database support."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
     'SQLiteDatabase',
+    'make_temporary',
     ]
 
 
 import os
+import types
+import shutil
+import tempfile
 
+from functools import partial
 from urlparse import urlparse
 
 from mailman.database.base import StormBaseDatabase
+from mailman.testing.helpers import configuration
 
 
 
@@ -41,7 +47,7 @@ class SQLiteDatabase(StormBaseDatabase):
     def _database_exists(self, store):
         """See `BaseDatabase`."""
         table_query = 'select tbl_name from sqlite_master;'
-        table_names = set(item[0] for item in 
+        table_names = set(item[0] for item in
                           store.execute(table_query))
         return 'version' in table_names
 
@@ -54,3 +60,25 @@ class SQLiteDatabase(StormBaseDatabase):
         # Ignore errors
         if fd > 0:
             os.close(fd)
+
+
+
+# Test suite adapter for ITemporaryDatabase.
+
+def _cleanup(self, tempdir):
+    shutil.rmtree(tempdir)
+
+
+def make_temporary(database):
+    """Adapts by monkey patching an existing SQLite IDatabase."""
+    tempdir = tempfile.mkdtemp()
+    url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
+    with configuration('database', url=url):
+        database.initialize()
+    database._cleanup = types.MethodType(
+        partial(_cleanup, tempdir=tempdir),
+        database)
+    # bool column values in SQLite must be integers.
+    database.FALSE = 0
+    database.TRUE = 1
+    return database

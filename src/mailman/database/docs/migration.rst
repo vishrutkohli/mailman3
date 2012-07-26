@@ -24,17 +24,18 @@ Migrations are applied automatically when Mailman starts up, but can also be
 applied at any time by calling in the API directly.  Once applied, a
 migration's version string is registered so it will not be applied again.
 
-We see that the base migration is already applied.
+We see that the base migration, as well as subsequent standard migrations, are
+already applied.
 
     >>> from mailman.model.version import Version
     >>> results = config.db.store.find(Version, component='schema')
     >>> results.count()
-    1
-    >>> base = results.one()
-    >>> print base.component
-    schema
-    >>> print base.version
+    2
+    >>> versions = sorted(result.version for result in results)
+    >>> for version in versions:
+    ...     print version
     00000000000000
+    20120407000000
 
 
 Migrations
@@ -55,6 +56,14 @@ specified in the configuration file.
     ... migrations_path: migrations
     ... """)
 
+.. Clean this up at the end of the doctest.
+    >>> def cleanup():
+    ...     import shutil
+    ...     from mailman.config import config
+    ...     config.pop('migrations')
+    ...     shutil.rmtree(tempdir)
+    >>> cleanups.append(cleanup)
+
 Here is an example migrations module.  The key part of this interface is the
 ``upgrade()`` method, which takes four arguments:
 
@@ -69,7 +78,7 @@ This migration module just adds a marker to the `version` table.
 
     >>> with open(os.path.join(path, '__init__.py'), 'w') as fp:
     ...     pass
-    >>> with open(os.path.join(path, 'mm_20120211000000.py'), 'w') as fp:
+    >>> with open(os.path.join(path, 'mm_20129999000000.py'), 'w') as fp:
     ...     print >> fp, """
     ... from __future__ import unicode_literals
     ... from mailman.model.version import Version
@@ -86,14 +95,15 @@ This will load the new migration, since it hasn't been loaded before.
     >>> for result in sorted(result.version for result in results):
     ...     print result
     00000000000000
-    20120211000000
+    20120407000000
+    20129999000000
     >>> test = config.db.store.find(Version, component='test').one()
     >>> print test.version
-    20120211000000
+    20129999000000
 
 Migrations will only be loaded once.
 
-    >>> with open(os.path.join(path, 'mm_20120211000001.py'), 'w') as fp:
+    >>> with open(os.path.join(path, 'mm_20129999000001.py'), 'w') as fp:
     ...     print >> fp, """
     ... from __future__ import unicode_literals
     ... from mailman.model.version import Version
@@ -115,13 +125,14 @@ The first time we load this new migration, we'll get the 801 marker.
     >>> for result in sorted(result.version for result in results):
     ...     print result
     00000000000000
-    20120211000000
-    20120211000001
+    20120407000000
+    20129999000000
+    20129999000001
     >>> test = config.db.store.find(Version, component='test')
     >>> for marker in sorted(marker.version for marker in test):
     ...     print marker
     00000000000801
-    20120211000000
+    20129999000000
 
 We do not get an 802 marker because the migration has already been loaded.
 
@@ -130,17 +141,42 @@ We do not get an 802 marker because the migration has already been loaded.
     >>> for result in sorted(result.version for result in results):
     ...     print result
     00000000000000
-    20120211000000
-    20120211000001
+    20120407000000
+    20129999000000
+    20129999000001
     >>> test = config.db.store.find(Version, component='test')
     >>> for marker in sorted(marker.version for marker in test):
     ...     print marker
     00000000000801
-    20120211000000
+    20129999000000
 
-.. Clean up the temporary directory::
 
-    >>> config.pop('migrations')
-    >>> sys.path.remove(tempdir)
-    >>> import shutil
-    >>> shutil.rmtree(tempdir)
+Partial upgrades
+================
+
+It's possible (mostly for testing purposes) to only do a partial upgrade, by
+providing a timestamp to `load_migrations()`.  To demonstrate this, we add two
+additional migrations, intended to be applied in sequential order.
+
+    >>> from shutil import copyfile
+    >>> from mailman.testing.helpers import chdir
+    >>> with chdir(path):
+    ...     copyfile('mm_20129999000000.py', 'mm_20129999000002.py')
+    ...     copyfile('mm_20129999000000.py', 'mm_20129999000003.py')
+    ...     copyfile('mm_20129999000000.py', 'mm_20129999000004.py')
+
+Now, only migrate to the ...03 timestamp.
+
+    >>> config.db.load_migrations('20129999000003')
+
+You'll notice that the ...04 version is not present.
+
+    >>> results = config.db.store.find(Version, component='schema')
+    >>> for result in sorted(result.version for result in results):
+    ...     print result
+    00000000000000
+    20120407000000
+    20129999000000
+    20129999000001
+    20129999000002
+    20129999000003

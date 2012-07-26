@@ -23,6 +23,8 @@ __metaclass__ = type
 __all__ = [
     'DatabaseError',
     'IDatabase',
+    'IDatabaseFactory',
+    'ITemporaryDatabase',
     ]
 
 
@@ -49,12 +51,6 @@ class IDatabase(Interface):
             configuration file setting.
         """
 
-    def _reset():
-        """Reset the database to its pristine state.
-
-        This is only used by the test framework.
-        """
-
     def begin():
         """Begin the current transaction."""
 
@@ -66,3 +62,22 @@ class IDatabase(Interface):
 
     store = Attribute(
         """The underlying Storm store on which you can do queries.""")
+
+
+
+class ITemporaryDatabase(Interface):
+    """Marker interface for test suite adaptation."""
+
+
+
+class IDatabaseFactory(Interface):
+    "Interface for creating new databases."""
+
+    def create():
+        """Return a new `IDatabase`.
+
+        The database will be initialized and all migrations will be loaded.
+
+        :return: A new database.
+        :rtype: IDatabase
+        """

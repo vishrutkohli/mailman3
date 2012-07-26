@@ -17,7 +17,7 @@
 
 """Interface for a mailing list."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -103,9 +103,13 @@ class IMailingList(Interface):
         mailing lists, or in headers, and so forth.  It should be as succinct
         as you can get it, while still identifying what the list is.""")
 
-    include_list_post_header = Attribute(
-        """Flag specifying whether to include the RFC 2369 List-Post header.
-        This is usually set to True, except for announce-only lists.""")
+    allow_list_posts = Attribute(
+        """Flag specifying posts to the list are generally allowed.
+
+        This controls the value of the RFC 2369 List-Post header.  This is
+        usually set to True, except for announce-only lists.  When False, the
+        List-Post is set to NO as per the RFC.
+        """)
 
     include_rfc2369_headers = Attribute(
         """Flag specifying whether to include any RFC 2369 header, including
@@ -249,6 +253,13 @@ class IMailingList(Interface):
         """
 
     # Delivery.
+
+    archive_policy = Attribute(
+        """The policy for archiving messages to this mailing list.
+
+        The value is an `ArchivePolicy` enum.  Use this to archive the mailing
+        list publicly, privately, or not at all.
+        """)
 
     last_post_at = Attribute(
         """The date and time a message was last posted to the mailing list.""")
@@ -510,6 +521,9 @@ class IMailingList(Interface):
         made.  When the action is `Action.accept`, the postings are accepted
         without any other checks.
         """)
+
+    newsgroup_moderation = Attribute(
+        """The moderation policy for the linked newsgroup, if there is one.""")
 
     # Bounces.
 

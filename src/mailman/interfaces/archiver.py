@@ -17,10 +17,11 @@
 
 """Interface for archiving schemes."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'ArchivePolicy',
     'ClobberDate',
     'IArchiver',
     ]
@@ -28,6 +29,13 @@ __all__ = [
 
 from flufl.enum import Enum
 from zope.interface import Interface, Attribute
+
+
+
+class ArchivePolicy(Enum):
+    never = 0
+    private = 1
+    public = 2
 
 
 

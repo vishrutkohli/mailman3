@@ -53,6 +53,21 @@ Architecture
    * `mailman.interfaces.chains.RejectEvent`
  * A `ConfigurationUpdatedEvent` is triggered when the system-wide global
    configuration stack is pushed or popped.
+ * The policy for archiving has now been collapsed into a single enum, called
+   ArchivePolicy.  This describes the three states of never archive, archive
+   privately, and archive_publicly. (LP: #967238)
+
+Database
+--------
+ * Schema migrations (LP: #971013)
+   - include_list_post_header -> allow_list_posts
+   - news_prefix_subject_too  -> nntp_prefix_subject_too
+   - news_moderation          -> newsgroup_moderation
+   - archive and archive_private have been collapsed into archive_policy.
+   - nntp_host has been removed.
+ * The PostgreSQL port of the schema accidentally added a moderation_callback
+   column to the mailinglist table.  Since this is unused in Mailman, it was
+   simply commented out of the base schema for PostgreSQL.
 
 Configuration
 -------------

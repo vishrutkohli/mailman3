@@ -40,6 +40,7 @@ from mailman.database.model import Model
 from mailman.database.types import Enum
 from mailman.interfaces.action import Action, FilterAction
 from mailman.interfaces.address import IAddress
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.digests import DigestFrequency
@@ -51,7 +52,7 @@ from mailman.interfaces.mailinglist import (
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError)
 from mailman.interfaces.mime import FilterType
-from mailman.interfaces.nntp import NewsModeration
+from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.user import IUser
 from mailman.model import roster
 from mailman.model.digests import OneLastDigest
@@ -79,7 +80,7 @@ class MailingList(Model):
     # List identity
     list_name = Unicode()
     mail_host = Unicode()
-    include_list_post_header = Bool()
+    allow_list_posts = Bool()
     include_rfc2369_headers = Bool()
     advertised = Bool()
     anonymous_list = Bool()
@@ -104,9 +105,7 @@ class MailingList(Model):
     admin_immed_notify = Bool()
     admin_notify_mchanges = Bool()
     administrivia = Bool()
-    archive = Bool() # XXX
-    archive_private = Bool() # XXX
-    archive_volume_frequency = Int() # XXX
+    archive_policy = Enum(ArchivePolicy)
     # Automatic responses.
     autoresponse_grace_period = TimeDelta()
     autorespond_owner = Enum(ResponseAction)
@@ -163,9 +162,8 @@ class MailingList(Model):
     mime_is_default_digest = Bool()
     moderator_password = RawStr()
     new_member_options = Int()
-    news_moderation = Enum(NewsModeration)
-    news_prefix_subject_too = Bool()
-    nntp_host = Unicode()
+    newsgroup_moderation = Enum(NewsgroupModeration)
+    nntp_prefix_subject_too = Bool()
     nondigestable = Bool()
     nonmember_rejection_notice = Unicode()
     obscure_addresses = Bool()

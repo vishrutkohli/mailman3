@@ -24,7 +24,7 @@ line argument parsing, since some of the initialization behavior is controlled
 by the command line arguments.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -40,13 +40,13 @@ import os
 import sys
 
 from pkg_resources import resource_string
+from zope.component import getUtility
 from zope.configuration import xmlconfig
-from zope.interface.verify import verifyObject
 
 import mailman.config.config
 import mailman.core.logging
 
-from mailman.interfaces.database import IDatabase
+from mailman.interfaces.database import IDatabaseFactory
 from mailman.utilities.modules import call_name
 
 # The test infrastructure uses this to prevent the search and loading of any
@@ -125,9 +125,10 @@ def initialize_1(config_path=None):
     mailman.config.config.load(config_path)
 
 
-def initialize_2(debug=False, propagate_logs=None):
+def initialize_2(debug=False, propagate_logs=None, testing=False):
     """Second initialization step.
 
+    * Database
     * Logging
     * Pre-hook
     * Rules
@@ -148,11 +149,8 @@ def initialize_2(debug=False, propagate_logs=None):
         call_name(config.mailman.pre_hook)
     # Instantiate the database class, ensure that it's of the right type, and
     # initialize it.  Then stash the object on our configuration object.
-    database_class = config.database['class']
-    database = call_name(database_class)
-    verifyObject(IDatabase, database)
-    database.initialize(debug)
-    config.db = database
+    utility_name = ('testing' if testing else 'production')
+    config.db = getUtility(IDatabaseFactory, utility_name).create()
     # Initialize the rules and chains.  Do the imports here so as to avoid
     # circular imports.
     from mailman.app.commands import initialize as initialize_commands

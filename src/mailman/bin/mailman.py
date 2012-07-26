@@ -90,13 +90,9 @@ def main():
         # No arguments or subcommands were given.
         parser.print_help()
         parser.exit()
-    # Before actually performing the subcommand, we need to initialize the
-    # Mailman system, and in particular, we must read the configuration file.
-    config_file = os.getenv('MAILMAN_CONFIG_FILE')
-    if config_file is None:
-        if args.config is not None:
-            config_file = os.path.abspath(os.path.expanduser(args.config))
-
-    initialize(config_file)
+    # Initialize the system.  Honor the -C flag if given.
+    config_path = (None if args.config is None
+                   else os.path.abspath(os.path.expanduser(args.config)))
+    initialize(config_path)
     # Perform the subcommand option.
     args.func(args)

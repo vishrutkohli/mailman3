@@ -78,7 +78,7 @@ def process(mlist, msg, msgdata):
         # misnamed.  RFC 2369 requires a value of NO if posting is not
         # allowed, i.e. for an announce-only list.
         list_post = ('<mailto:{0}>'.format(mlist.posting_address)
-                     if mlist.include_list_post_header
+                     if mlist.allow_list_posts
                      else 'NO')
         headers['List-Post'] = list_post
         # Add RFC 2369 and 5064 archiving headers, if archiving is enabled.

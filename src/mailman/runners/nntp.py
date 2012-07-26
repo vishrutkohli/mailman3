@@ -35,7 +35,7 @@ from cStringIO import StringIO
 
 from mailman.config import config
 from mailman.core.runner import Runner
-from mailman.interfaces.nntp import NewsModeration
+from mailman.interfaces.nntp import NewsgroupModeration
 
 COMMA = ','
 COMMASPACE = ', '
@@ -106,8 +106,8 @@ def prepare_message(mlist, msg, msgdata):
     # software to accept the posting, and not forward it on to the n.g.'s
     # moderation address.  The posting would not have gotten here if it hadn't
     # already been approved.  1 == open list, mod n.g., 2 == moderated
-    if mlist.news_moderation in (NewsModeration.open_moderated,
-                                 NewsModeration.moderated):
+    if mlist.newsgroup_moderation in (NewsgroupModeration.open_moderated,
+                                      NewsgroupModeration.moderated):
         del msg['approved']
         msg['Approved'] = mlist.posting_address
     # Should we restore the original, non-prefixed subject for gatewayed
@@ -116,9 +116,7 @@ def prepare_message(mlist, msg, msgdata):
     # came from mailing list user.
     stripped_subject = msgdata.get('stripped_subject',
                                    msgdata.get('original_subject'))
-    # XXX 2012-03-31 BAW: rename news_prefix_subject_too to nntp_.  This
-    # requires a schema change.
-    if not mlist.news_prefix_subject_too and stripped_subject is not None:
+    if not mlist.nntp_prefix_subject_too and stripped_subject is not None:
         del msg['subject']
         msg['subject'] = stripped_subject
     # Add the appropriate Newsgroups header.  Multiple Newsgroups headers are

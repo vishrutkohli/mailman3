@@ -16,8 +16,8 @@ directly to the mailing list.
 
 Set the list configuration variable to enable newsgroup moderation.
 
-    >>> from mailman.interfaces.nntp import NewsModeration
-    >>> mlist.news_moderation = NewsModeration.moderated
+    >>> from mailman.interfaces.nntp import NewsgroupModeration
+    >>> mlist.newsgroup_moderation = NewsgroupModeration.moderated
 
 And now all messages will match the rule.
 
@@ -32,6 +32,6 @@ And now all messages will match the rule.
 
 When moderation is turned off, the rule does not match.
 
-    >>> mlist.news_moderation = NewsModeration.none
+    >>> mlist.newsgroup_moderation = NewsgroupModeration.none
     >>> rule.check(mlist, msg, {})
     False

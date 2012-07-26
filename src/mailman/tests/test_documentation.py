@@ -38,28 +38,12 @@ import mailman
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
-from mailman.testing.helpers import call_api, specialized_message_from_string
+from mailman.testing.helpers import (
+    call_api, chdir, specialized_message_from_string)
 from mailman.testing.layers import SMTPLayer
 
 
 DOT = '.'
-
-
-
-class chdir:
-    """A context manager for temporary directory changing."""
-    def __init__(self, directory):
-        self._curdir = None
-        self._directory = directory
-
-    def __enter__(self):
-        self._curdir = os.getcwd()
-        os.chdir(self._directory)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        os.chdir(self._curdir)
-        # Don't suppress exceptions.
-        return False
 
 
 
