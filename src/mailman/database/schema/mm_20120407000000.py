@@ -112,6 +112,9 @@ def upgrade_postgres(database, store, version, module_path):
     store.execute(
         'ALTER TABLE mailinglist '
         '   RENAME COLUMN news_moderation TO newsgroup_moderation;')
+    store.execute(
+        'ALTER TABLE mailinglist '
+        '   RENAME COLUMN include_list_post_header TO allow_list_posts;')
     # Do the column drop next.
     store.execute('ALTER TABLE mailinglist DROP COLUMN nntp_host;')
     # Now do the trickier collapsing of values.  Add the new columns.
