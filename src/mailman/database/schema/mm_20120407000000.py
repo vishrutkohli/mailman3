@@ -76,20 +76,26 @@ def upgrade_sqlite(database, store, version, module_path):
     database.load_schema(
         store, version, 'sqlite_{0}_01.sql'.format(version), module_path)
     results = store.execute(
-        'SELECT id, news_prefix_subject_too, news_moderation, '
+        'SELECT id, include_list_post_header, '
+        'news_prefix_subject_too, news_moderation, '
         'archive, archive_private FROM mailinglist;')
     for value in results:
-        id, news_prefix, news_moderation, archive, archive_private = value
+        (id, list_post, 
+         news_prefix, news_moderation,
+         archive, archive_private) = value
         # Figure out what the new archive_policy column value should be.
         store.execute(
             'UPDATE ml_backup SET '
-            '    newsgroup_moderation = {0}, '
-            '    nntp_prefix_subject_too = {1}, '
-            '    archive_policy = {2} '
-            'WHERE id = {3};'.format(news_moderation,
-                                     news_prefix,
-                                     archive_policy(archive, archive_private),
-                                     id))
+            '    allow_list_posts = {0}, '
+            '    newsgroup_moderation = {1}, '
+            '    nntp_prefix_subject_too = {2}, '
+            '    archive_policy = {3} '
+            'WHERE id = {4};'.format(
+                list_post,
+                news_moderation,
+                news_prefix,
+                archive_policy(archive, archive_private),
+                id))
     store.execute('DROP TABLE mailinglist;')
     store.execute('ALTER TABLE ml_backup RENAME TO mailinglist;')
 

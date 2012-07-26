@@ -80,7 +80,7 @@ class MailingList(Model):
     # List identity
     list_name = Unicode()
     mail_host = Unicode()
-    include_list_post_header = Bool()
+    allow_list_posts = Bool()
     include_rfc2369_headers = Bool()
     advertised = Bool()
     anonymous_list = Bool()

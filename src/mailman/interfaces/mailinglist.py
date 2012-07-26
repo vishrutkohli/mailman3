@@ -103,9 +103,13 @@ class IMailingList(Interface):
         mailing lists, or in headers, and so forth.  It should be as succinct
         as you can get it, while still identifying what the list is.""")
 
-    include_list_post_header = Attribute(
-        """Flag specifying whether to include the RFC 2369 List-Post header.
-        This is usually set to True, except for announce-only lists.""")
+    allow_list_posts = Attribute(
+        """Flag specifying posts to the list are generally allowed.
+
+        This controls the value of the RFC 2369 List-Post header.  This is
+        usually set to True, except for announce-only lists.  When False, the
+        List-Post is set to NO as per the RFC.
+        """)
 
     include_rfc2369_headers = Attribute(
         """Flag specifying whether to include any RFC 2369 header, including

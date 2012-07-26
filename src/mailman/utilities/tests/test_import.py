@@ -62,8 +62,8 @@ class TestBasicImport(unittest.TestCase):
         self.assertEqual(self._mlist.mail_host, 'heresy.example.org')
 
     def test_rfc2369_headers(self):
-        self._mlist.include_list_post_header = False
+        self._mlist.allow_list_posts = False
         self._mlist.include_rfc2369_headers = False
         self._import()
-        self.assertTrue(self._mlist.include_list_post_header)
+        self.assertTrue(self._mlist.allow_list_posts)
         self.assertTrue(self._mlist.include_rfc2369_headers)

@@ -86,7 +86,7 @@ Discussion lists, to which any subscriber can post, also have a `List-Post`
 header which contains the `mailto:` URL used to send messages to the list.
 
     >>> mlist.include_rfc2369_headers = True
-    >>> mlist.include_list_post_header = True
+    >>> mlist.allow_list_posts = True
     >>> msg = message_from_string("""\
     ... From: aperson@example.com
     ...
@@ -108,7 +108,7 @@ Because the general membership cannot post to these mailing lists, the list
 owner can set a flag which adds a special `List-Post` header value, according
 to RFC 2369.
 
-    >>> mlist.include_list_post_header = False
+    >>> mlist.allow_list_posts = False
     >>> msg = message_from_string("""\
     ... From: aperson@example.com
     ...
@@ -132,7 +132,7 @@ List-Id header
 If the mailing list has a description, then it is included in the ``List-Id``
 header.
 
-    >>> mlist.include_list_post_header = True
+    >>> mlist.allow_list_posts = True
     >>> mlist.description = 'My test mailing list'
     >>> msg = message_from_string("""\
     ... From: aperson@example.com

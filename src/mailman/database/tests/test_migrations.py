@@ -21,9 +21,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'TestMigration20120407ArchiveData',
-    'TestMigration20120407Data',
+    'TestMigration20120407MigratedData',
     'TestMigration20120407Schema',
+    'TestMigration20120407UnchangedData',
     ]
 
 
@@ -38,6 +38,7 @@ from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
+from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
 
@@ -51,6 +52,7 @@ class MigrationTestBase(unittest.TestCase):
     table mailinglist:
     * news_moderation -> newsgroup_moderation
     * news_prefix_subject_too -> nntp_prefix_subject_too
+    * include_list_post_header -> allow_list_posts
     * ADD archive_policy
     * REMOVE archive
     * REMOVE archive_private
@@ -79,7 +81,8 @@ class TestMigration20120407Schema(MigrationTestBase):
         self._database.load_migrations('20120406999999')
         self._database.store.commit()
         # Verify that the database has not yet been migrated.
-        for missing in ('archive_policy',
+        for missing in ('allow_list_posts',
+                        'archive_policy',
                         'nntp_prefix_subject_too'):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
@@ -88,6 +91,7 @@ class TestMigration20120407Schema(MigrationTestBase):
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
+                        'include_list_post_header',
                         'news_moderation',
                         'news_prefix_subject_too',
                         'nntp_host'):
@@ -104,7 +108,8 @@ class TestMigration20120407Schema(MigrationTestBase):
         self._database.load_migrations('20120406999999')
         self._database.load_migrations('20120407000000')
         # Verify that the database has been migrated.
-        for present in ('archive_policy',
+        for present in ('allow_list_posts',
+                        'archive_policy',
                         'nntp_prefix_subject_too'):
             # This should not produce an exception.  Is there some better test
             # that we can perform?
@@ -113,6 +118,7 @@ class TestMigration20120407Schema(MigrationTestBase):
         for missing in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
+                        'include_list_post_header',
                         'news_moderation',
                         'news_prefix_subject_too',
                         'nntp_host'):
@@ -123,7 +129,7 @@ class TestMigration20120407Schema(MigrationTestBase):
 
 
 
-class TestMigration20120407Data(MigrationTestBase):
+class TestMigration20120407UnchangedData(MigrationTestBase):
     """Test non-migrated data."""
 
     def setUp(self):
@@ -186,7 +192,7 @@ class TestMigration20120407Data(MigrationTestBase):
 
 
 
-class TestMigration20120407ArchiveData(MigrationTestBase):
+class TestMigration20120407MigratedData(MigrationTestBase):
     """Test affected migration data."""
 
     def setUp(self):
@@ -254,3 +260,76 @@ class TestMigration20120407ArchiveData(MigrationTestBase):
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.public)
+
+    def test_news_moderation_none(self):
+        # Test that news_moderation becomes newsgroup_moderation.
+        self._database.store.execute(
+            'UPDATE mailinglist SET news_moderation = 0 '
+            'WHERE id = 1;')
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertEqual(mlist.newsgroup_moderation,
+                             NewsgroupModeration.none)
+
+    def test_news_moderation_open_moderated(self):
+        # Test that news_moderation becomes newsgroup_moderation.
+        self._database.store.execute(
+            'UPDATE mailinglist SET news_moderation = 1 '
+            'WHERE id = 1;')
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertEqual(mlist.newsgroup_moderation,
+                             NewsgroupModeration.open_moderated)
+
+    def test_news_moderation_moderated(self):
+        # Test that news_moderation becomes newsgroup_moderation.
+        self._database.store.execute(
+            'UPDATE mailinglist SET news_moderation = 2 '
+            'WHERE id = 1;')
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertEqual(mlist.newsgroup_moderation,
+                             NewsgroupModeration.moderated)
+
+    def test_nntp_prefix_subject_too_false(self):
+        # Test that news_prefix_subject_too becomes nntp_prefix_subject_too.
+        self._database.store.execute(
+            'UPDATE mailinglist SET news_prefix_subject_too = {0} '
+            'WHERE id = 1;'.format(self._database.FALSE))
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertFalse(mlist.nntp_prefix_subject_too)
+
+    def test_nntp_prefix_subject_too_true(self):
+        # Test that news_prefix_subject_too becomes nntp_prefix_subject_too.
+        self._database.store.execute(
+            'UPDATE mailinglist SET news_prefix_subject_too = {0} '
+            'WHERE id = 1;'.format(self._database.TRUE))
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertTrue(mlist.nntp_prefix_subject_too)
+
+    def test_allow_list_posts_false(self):
+        # Test that include_list_post_header -> allow_list_posts.
+        self._database.store.execute(
+            'UPDATE mailinglist SET include_list_post_header = {0} '
+            'WHERE id = 1;'.format(self._database.FALSE))
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertFalse(mlist.allow_list_posts)
+
+    def test_allow_list_posts_true(self):
+        # Test that include_list_post_header -> allow_list_posts.
+        self._database.store.execute(
+            'UPDATE mailinglist SET include_list_post_header = {0} '
+            'WHERE id = 1;'.format(self._database.TRUE))
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertTrue(mlist.allow_list_posts)

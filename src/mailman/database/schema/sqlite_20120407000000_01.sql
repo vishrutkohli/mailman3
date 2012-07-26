@@ -10,22 +10,26 @@
 -- REM archive
 -- REM archive_private
 -- REM archive_volume_frequency
+-- REM include_list_post_header
 -- REM news_moderation
 -- REM news_prefix_subject_too
 -- REM nntp_host
 --
 -- THESE COLUMNS ARE ADDED BY THE PYTHON MIGRATION LAYER:
+-- ADD allow_list_posts
 -- ADD archive_policy
 -- ADD newsgroup_moderation
 -- ADD nntp_prefix_subject_too
+
 -- LP: #971013
+-- LP: #967238
 
 CREATE TABLE ml_backup(
     id INTEGER NOT NULL,
     -- List identity
     list_name TEXT,
     mail_host TEXT,
-    include_list_post_header BOOLEAN,
+    allow_list_posts BOOLEAN,
     include_rfc2369_headers BOOLEAN,
     -- Attributes not directly modifiable via the web u/i
     created_at TIMESTAMP,

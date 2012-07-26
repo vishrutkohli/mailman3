@@ -17,7 +17,7 @@
 
 """Importer routines."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -56,6 +56,7 @@ TYPES = dict(
 # Attribute names in Mailman 2 which are renamed in Mailman 3.
 NAME_MAPPINGS = dict(
     host_name='mail_host',
+    include_list_post_header='allow_list_posts',
     real_name='display_name',
     )
 
@@ -85,5 +86,5 @@ def import_config_pck(mlist, config_dict):
             try:
                 setattr(mlist, key, value)
             except TypeError:
-                print >> sys.stderr, 'Type conversion error:', key
+                print('Type conversion error:', key, file=sys.stderr)
                 raise
