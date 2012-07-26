@@ -17,7 +17,7 @@
 
 """PostgreSQL database support."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -26,26 +26,8 @@ __all__ = [
 
 
 from operator import attrgetter
-from urlparse import urlsplit, urlunsplit
 
-from mailman.config import config
 from mailman.database.base import StormBaseDatabase
-
-
-
-
-class _TestDB:
-    # For the test suite; bool column values.
-    TRUE = 'True'
-    FALSE = 'False'
-
-    def __init__(self, database):
-        self.database = database
-
-    def cleanup(self):
-        self.database.store.rollback()
-        self.database.store.close()
-        config.db.store.execute('DROP DATABASE mmtest;')
 
 
 
@@ -81,22 +63,3 @@ class PostgreSQLDatabase(StormBaseDatabase):
                               max("id") IS NOT null)
                        FROM "{0}";
                 """.format(model_class.__storm_table__))
-
-    @staticmethod
-    def _make_testdb():
-        from mailman.testing.helpers import configuration
-        parts = urlsplit(config.database.url)
-        assert parts.scheme == 'postgres'
-        new_parts = list(parts)
-        new_parts[2] = '/mmtest'
-        url = urlunsplit(new_parts)
-        # Use the existing database connection to create a new testing
-        # database.  Create a savepoint, which will make it easy to reset
-        # after the test.
-        config.db.store.execute('ABORT;')
-        config.db.store.execute('CREATE DATABASE mmtest;')
-        # Now create a new, test database.
-        database = PostgreSQLDatabase()
-        with configuration('database', url=url):
-            database.initialize()
-        return _TestDB(database)

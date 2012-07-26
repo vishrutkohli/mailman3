@@ -26,8 +26,6 @@ __all__ = [
 
 
 import os
-import shutil
-import tempfile
 
 from urlparse import urlparse
 
