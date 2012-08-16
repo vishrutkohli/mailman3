@@ -58,6 +58,7 @@ code, and have assigned copyright for contributions to the FSF:
 * Simone Piunno
 * Claudia Schmidt
 * Andreas Schosser
+* Stephen J. Turnbull
 * Richard Wackerbarth
 
 
