@@ -24,6 +24,7 @@ __all__ = [
     ]
 
 
+from cPickle import dumps, loads
 from datetime import timedelta
 from storm.locals import AutoReload, Int, RawStr, Reference, Unicode
 from zope.component import getUtility
@@ -39,7 +40,19 @@ from mailman.interfaces.requests import IListRequests, RequestType
 
 @implementer(IPendable)
 class DataPendable(dict):
-    pass
+    def update(self, mapping):
+        # Keys and values must be strings (unicodes, but bytes values are
+        # accepted for now).  Any other types for keys are a programming
+        # error.  If we find a non-Unicode value, pickle it and encode it in
+        # such a way that it will be properly reconstituted when unpended.
+        clean_mapping = {}
+        for key, value in mapping.items():
+            assert isinstance(key, basestring)
+            if not isinstance(value, unicode):
+                key = '_pck_' + key
+                value = dumps(value).decode('raw-unicode-escape')
+            clean_mapping[key] = value
+        super(DataPendable, self).update(clean_mapping)
 
 
 
@@ -82,10 +95,6 @@ class ListRequests:
         if data is None:
             data_hash = None
         else:
-            # We're abusing the pending database as a way of storing arbitrary
-            # key/value pairs, where both are strings.  This isn't ideal but
-            # it lets us get auxiliary data almost for free.  We may need to
-            # lock this down more later.
             pendable = DataPendable()
             pendable.update(data)
             token = getUtility(IPendings).add(pendable, timedelta(days=5000))
@@ -106,7 +115,12 @@ class ListRequests:
         pendable = getUtility(IPendings).confirm(
             result.data_hash, expunge=False)
         data = dict()
-        data.update(pendable)
+        # Unpickle any non-Unicode values.
+        for key, value in pendable.items():
+            if key.startswith('_pck_'):
+                data[key[5:]] = loads(value.encode('raw-unicode-escape'))
+            else:
+                data[key] = value
         return result.key, data
 
     @dbconnection

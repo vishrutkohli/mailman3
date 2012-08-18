@@ -37,6 +37,7 @@ from mailman.runners.pipeline import PipelineRunner
 from mailman.testing.helpers import (
     make_testable_runner, specialized_message_from_string)
 from mailman.testing.layers import SMTPLayer
+from mailman.utilities.datetime import now
 
 
 
@@ -109,3 +110,14 @@ Message-ID: <alpha>
         handle_message(self._mlist, request_id, Action.hold)
         key, data = requests_db.get_request(request_id)
         self.assertEqual(key, '<alpha>')
+
+    def test_lp_1031391(self):
+        # LP: #1031391 msgdata['received_time'] gets added by the LMTP server.
+        # The value is a datetime.  If this message gets held, it will break
+        # pending requests since they require string keys and values.
+        received_time = now()
+        msgdata = dict(received_time=received_time)
+        request_id = hold_message(self._mlist, self._msg, msgdata)
+        requests_db = IListRequests(self._mlist)
+        key, data = requests_db.get_request(request_id)
+        self.assertEqual(data['received_time'], received_time)
