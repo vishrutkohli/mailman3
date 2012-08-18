@@ -102,6 +102,7 @@ Bug fixes
    (LP: #953497)
  * List-Post should be NO when posting is not allowed. (LP: #987563)
  * Non-unicode values in msgdata broke pending requests. (LP: #1031391)
+ * Show devmode in `bin/mailman info` output. (LP: #1035028)
 
 .. _`passlib`: http://packages.python.org/passlib/index.html
 

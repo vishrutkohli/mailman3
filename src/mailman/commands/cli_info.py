@@ -27,6 +27,7 @@ __all__ = [
 
 import sys
 
+from lazr.config import as_boolean
 from zope.interface import implementer
 
 from mailman.config import config
@@ -68,6 +69,9 @@ class Info:
         print('Python', sys.version, file=output)
         print('config file:', config.filename, file=output)
         print('db url:', config.db.url, file=output)
+        print('devmode:', 
+              'ENABLED' if as_boolean(config.devmode.enabled) else 'DISABLED',
+              file=output)
         print('REST root url:', path_to('/'), file=output)
         print('REST credentials: {0}:{1}'.format(
             config.webservice.admin_user, config.webservice.admin_pass),

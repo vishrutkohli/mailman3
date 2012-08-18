@@ -37,6 +37,7 @@ By passing in the ``-o/--output`` option, you can print the info to a file.
     ...
     config file: .../test.cfg
     db url: ...
+    devmode: DISABLED
     REST root url: http://localhost:9001/3.0/
     REST credentials: restadmin:restpass
 
@@ -50,6 +51,7 @@ system paths that Mailman is using.
     ... [mailman]
     ... layout: fhs
     ... """)
+    >>> cleanups.append((config.pop, 'fhs'))
     >>> config.create_paths = True
 
 The File System Hierarchy layout is the same every by definition.
@@ -73,9 +75,3 @@ The File System Hierarchy layout is the same every by definition.
         QUEUE_DIR                = /var/spool/mailman
         TEMPLATE_DIR             = .../mailman/templates
         VAR_DIR                  = /var/lib/mailman
-
-
-Clean up
-========
-
-    >>> config.pop('fhs')

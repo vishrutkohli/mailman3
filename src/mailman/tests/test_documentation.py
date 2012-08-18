@@ -34,6 +34,8 @@ import sys
 import doctest
 import unittest
 
+from inspect import isfunction, ismethod
+
 import mailman
 
 from mailman.app.lifecycle import create_list
@@ -169,7 +171,10 @@ def setup(testobj):
 
 def teardown(testobj):
     for cleanup in testobj.globs['cleanups']:
-        cleanup()
+        if isfunction(cleanup) or ismethod(cleanup):
+            cleanup()
+        else:
+            cleanup[0](*cleanup[1:])
 
 
 
