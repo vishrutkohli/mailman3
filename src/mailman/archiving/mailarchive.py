@@ -30,7 +30,7 @@ from urlparse import urljoin
 from zope.interface import implementer
 
 from mailman.config import config
-from mailman.interfaces.archiver import IArchiver
+from mailman.interfaces.archiver import ArchivePolicy, IArchiver
 
 
 
@@ -46,15 +46,15 @@ class MailArchive:
     @staticmethod
     def list_url(mlist):
         """See `IArchiver`."""
-        if mlist.archive_private:
-            return None
-        return urljoin(config.archiver.mail_archive.base_url,
-                       quote(mlist.posting_address))
+        if mlist.archive_policy is ArchivePolicy.public:
+            return urljoin(config.archiver.mail_archive.base_url,
+                           quote(mlist.posting_address))
+        return None
 
     @staticmethod
     def permalink(mlist, msg):
         """See `IArchiver`."""
-        if mlist.archive_private:
+        if mlist.archive_policy is not ArchivePolicy.public:
             return None
         # It is the LMTP server's responsibility to ensure that the message
         # has a X-Message-ID-Hash header.  If it doesn't then there's no
@@ -67,7 +67,7 @@ class MailArchive:
     @staticmethod
     def archive_message(mlist, msg):
         """See `IArchiver`."""
-        if not mlist.archive_private:
+        if mlist.archive_policy is ArchivePolicy.public:
             config.switchboards['out'].enqueue(
                 msg,
                 listname=mlist.fqdn_listname,

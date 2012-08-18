@@ -31,6 +31,7 @@ from zope.interface import implementer
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.handlers.cook_headers import uheader
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.handler import IHandler
 
 
@@ -82,7 +83,7 @@ def process(mlist, msg, msgdata):
                      else 'NO')
         headers['List-Post'] = list_post
         # Add RFC 2369 and 5064 archiving headers, if archiving is enabled.
-        if mlist.archive:
+        if mlist.archive_policy != ArchivePolicy.never:
             for archiver in config.archivers:
                 headers['List-Archive'] = '<{0}>'.format(
                     archiver.list_url(mlist))

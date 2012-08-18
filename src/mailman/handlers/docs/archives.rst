@@ -26,7 +26,8 @@ should *not* get archived.
 
 For example, no digests should ever get archived.
 
-    >>> mlist.archive = True
+    >>> from mailman.interfaces.archiver import ArchivePolicy
+    >>> mlist.archive_policy = ArchivePolicy.public
     >>> msg = message_from_string("""\
     ... Subject: A sample message
     ...
@@ -39,7 +40,7 @@ For example, no digests should ever get archived.
 If the mailing list is not configured to archive, then even regular deliveries
 won't be archived.
 
-    >>> mlist.archive = False
+    >>> mlist.archive_policy = ArchivePolicy.never
     >>> handler.process(mlist, msg, {})
     >>> switchboard.files
     []
@@ -49,7 +50,7 @@ want to be archived.  We've seen both in the wild so both are supported.  The
 ``X-No-Archive:`` header can be used to indicate that the message should not
 be archived.  Confusingly, this header's value is actually ignored.
 
-    >>> mlist.archive = True
+    >>> mlist.archive_policy = ArchivePolicy.public
     >>> msg = message_from_string("""\
     ... Subject: A sample message
     ... X-No-Archive: YES

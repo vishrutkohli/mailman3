@@ -29,6 +29,7 @@ from zope.interface import implementer
 
 from mailman.config import config
 from mailman.core.i18n import _
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.handler import IHandler
 
 
@@ -43,7 +44,8 @@ class ToArchive:
     def process(self, mlist, msg, msgdata):
         """See `IHandler`."""
         # Short circuits.
-        if msgdata.get('isdigest') or not mlist.archive:
+        if (msgdata.get('isdigest') or
+            mlist.archive_policy == ArchivePolicy.never):
             return
         # Common practice seems to favor "X-No-Archive: yes".  No other value
         # for this header seems to make sense, so we'll just test for it's

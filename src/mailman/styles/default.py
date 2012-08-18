@@ -32,6 +32,7 @@ from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.interfaces.action import Action, FilterAction
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.autorespond import ResponseAction
@@ -116,8 +117,7 @@ from: .*@uplinkpro.com
         mlist.default_member_action = Action.defer
         mlist.default_nonmember_action = Action.hold
         # Archiver
-        mlist.archive = True
-        mlist.archive_private = False
+        mlist.archive_policy = ArchivePolicy.public
         mlist.archive_volume_frequency = 1
         mlist.emergency = False
         mlist.member_moderation_notice = ''

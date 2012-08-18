@@ -72,6 +72,8 @@ To archive the message, the archiver actually mails the message to a special
 address at The Mail Archive.  The message gets no header or footer decoration.
 ::
 
+    >>> from mailman.interfaces.archiver import ArchivePolicy
+    >>> mlist.archive_policy = ArchivePolicy.public
     >>> archiver.archive_message(mlist, msg)
 
     >>> from mailman.runners.outgoing import OutgoingRunner
@@ -101,7 +103,7 @@ address at The Mail Archive.  The message gets no header or footer decoration.
 However, if the mailing list is not public, the message will never be archived
 at this service.
 
-    >>> mlist.archive_private = True
+    >>> mlist.archive_policy = ArchivePolicy.private
     >>> print archiver.list_url(mlist)
     None
     >>> print archiver.permalink(mlist, msg)
@@ -114,7 +116,7 @@ Additionally, this archiver can handle malformed ``Message-IDs``.
 ::
 
     >>> from mailman.utilities.email import add_message_hash
-    >>> mlist.archive_private = False
+    >>> mlist.archive_policy = ArchivePolicy.public
     >>> del msg['message-id']
     >>> del msg['x-message-id-hash']
     >>> msg['Message-ID'] = '12345>'

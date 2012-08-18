@@ -103,6 +103,8 @@ Bug fixes
  * List-Post should be NO when posting is not allowed. (LP: #987563)
  * Non-unicode values in msgdata broke pending requests. (LP: #1031391)
  * Show devmode in `bin/mailman info` output. (LP: #1035028)
+ * Fix residual references to the old `IMailingList` archive variables.
+   (LP: #1031393)
 
 .. _`passlib`: http://packages.python.org/passlib/index.html
 

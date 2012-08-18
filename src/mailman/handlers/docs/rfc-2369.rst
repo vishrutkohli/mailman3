@@ -7,7 +7,8 @@ headers generally start with the `List-` prefix.
 
     >>> mlist = create_list('test@example.com')
     >>> mlist.preferred_language = 'en'
-    >>> mlist.archive = False
+    >>> from mailman.interfaces.archiver import ArchivePolicy
+    >>> mlist.archive_policy = ArchivePolicy.never
 
 ..
     This is a helper function for the following section.
@@ -171,7 +172,7 @@ Archive headers
 When the mailing list is configured to enable archiving, a `List-Archive`
 header will be added.
 
-    >>> mlist.archive = True
+    >>> mlist.archive_policy = ArchivePolicy.public
 
 `RFC 5064`_ defines the `Archived-At` header which contains the url to the
 individual message in the archives.  Archivers which don't support
@@ -208,7 +209,7 @@ If the mailing list isn't being archived, neither the `List-Archive` nor
 `Archived-At` headers will be added.
 
     >>> config.pop('prototype')
-    >>> mlist.archive = False
+    >>> mlist.archive_policy = ArchivePolicy.never
     >>> msg = message_from_string("""\
     ... From: aperson@example.com
     ...
