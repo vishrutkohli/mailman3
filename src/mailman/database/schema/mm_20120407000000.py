@@ -27,6 +27,7 @@ All column changes are in the `mailinglist` table.
  - archive, archive_private -> archive_policy
 
 * Remove:
+ - generic_nonmember_action
  - nntp_host
 
 See https://bugs.launchpad.net/mailman/+bug/971013 for details.
@@ -130,7 +131,8 @@ def upgrade_postgres(database, store, version, module_path):
                           archive_policy(archive, archive_private),
                           id))
     # Now drop the old columns.
-    store.execute('ALTER TABLE mailinglist DROP COLUMN archive;')
-    store.execute('ALTER TABLE mailinglist DROP COLUMN archive_private;')
+    for column in ('archive', 'archive_private', 'generic_nonmember_action'):
+        store.execute(
+            'ALTER TABLE mailinglist DROP COLUMN {0};'.format(column))
     # Record the migration in the version table.
     database.load_schema(store, version, None, module_path)

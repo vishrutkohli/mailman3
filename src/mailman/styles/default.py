@@ -126,7 +126,6 @@ from: .*@uplinkpro.com
         mlist.reject_these_nonmembers = []
         mlist.discard_these_nonmembers = []
         mlist.forward_auto_discards = True
-        mlist.generic_nonmember_action = 1
         mlist.nonmember_rejection_notice = ''
         # Max autoresponses per day.  A mapping between addresses and a
         # 2-tuple of the date of the last autoresponse and the number of

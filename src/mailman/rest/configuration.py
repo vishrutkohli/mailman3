@@ -181,7 +181,6 @@ ATTRIBUTES = dict(
     digest_size_threshold=GetterSetter(float),
     filter_content=GetterSetter(as_boolean),
     fqdn_listname=GetterSetter(None),
-    generic_nonmember_action=GetterSetter(int),
     mail_host=GetterSetter(None),
     allow_list_posts=GetterSetter(as_boolean),
     include_rfc2369_headers=GetterSetter(as_boolean),

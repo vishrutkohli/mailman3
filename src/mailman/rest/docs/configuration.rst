@@ -41,7 +41,6 @@ All readable attributes for a list are available on a sub-resource.
     display_name: Test-one
     filter_content: False
     fqdn_listname: test-one@example.com
-    generic_nonmember_action: 1
     http_etag: "..."
     include_rfc2369_headers: True
     join_address: test-one-join@example.com
@@ -102,7 +101,6 @@ all the writable attributes in one request.
     ...             welcome_message_uri='mailman:///welcome.txt',
     ...             default_member_action='hold',
     ...             default_nonmember_action='discard',
-    ...             generic_nonmember_action=2,
     ...             ),
     ...           'PUT')
     content-length: 0
@@ -182,7 +180,6 @@ must be included.  It is an error to leave one or more out...
     ...             welcome_message_uri='welcome message',
     ...             default_member_action='accept',
     ...             default_nonmember_action='accept',
-    ...             generic_nonmember_action=2,
     ...             ),
     ...           'PUT')
     Traceback (most recent call last):

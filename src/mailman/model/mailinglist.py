@@ -148,7 +148,6 @@ class MailingList(Model):
     forward_auto_discards = Bool()
     gateway_to_mail = Bool()
     gateway_to_news = Bool()
-    generic_nonmember_action = Int()
     goodbye_message_uri = Unicode()
     header_matches = Pickle()
     header_uri = Unicode()

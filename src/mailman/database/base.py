@@ -189,6 +189,7 @@ class StormBaseDatabase:
                 continue
             log.debug('migrating db to %s: %s', version, module_path)
             upgrade(self, self.store, version, module_path)
+        self.commit()
 
     def load_sql(self, store, sql):
         """Load the given SQL into the store.
