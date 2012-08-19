@@ -105,7 +105,7 @@ Bug fixes
  * Show devmode in `bin/mailman info` output. (LP: #1035028)
  * Fix residual references to the old `IMailingList` archive variables.
    (LP: #1031393)
- * Removed obsolete `IMailingList` attribute `generic_nonmember_action.
+ * Removed obsolete `IMailingList` attribute `generic_nonmember_action`.
    (LP: #975696)
 
 .. _`passlib`: http://packages.python.org/passlib/index.html
