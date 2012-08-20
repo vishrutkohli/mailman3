@@ -180,3 +180,17 @@ You'll notice that the ...04 version is not present.
     20129999000001
     20129999000002
     20129999000003
+
+
+.. cleanup:
+    Because the Version table holds schema migration data, it will not be
+    cleaned up by the standard test suite.  This is generally not a problem
+    for SQLite since each test gets a new database file, but for PostgreSQL,
+    this will cause migration.rst to fail on subsequent runs.  So let's just
+    clean up the database explicitly.
+
+    >>> results = config.db.store.execute("""
+    ...     DELETE FROM version WHERE version.version >= '201299990000'
+    ...                            OR version.component = 'test';
+    ...     """)
+    >>> config.db.commit()

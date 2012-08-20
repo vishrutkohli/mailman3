@@ -27,6 +27,7 @@ All column changes are in the `mailinglist` table.
  - archive, archive_private -> archive_policy
 
 * Remove:
+ - archive_volume_frequency
  - generic_nonmember_action
  - nntp_host
 
@@ -116,8 +117,12 @@ def upgrade_postgres(database, store, version, module_path):
     store.execute(
         'ALTER TABLE mailinglist '
         '   RENAME COLUMN include_list_post_header TO allow_list_posts;')
-    # Do the column drop next.
-    store.execute('ALTER TABLE mailinglist DROP COLUMN nntp_host;')
+    # Do the easy column drops next.
+    for column in ('archive_volume_frequency', 
+                   'generic_nonmember_action',
+                   'nntp_host'):
+        store.execute(
+            'ALTER TABLE mailinglist DROP COLUMN {0};'.format(column))
     # Now do the trickier collapsing of values.  Add the new columns.
     store.execute('ALTER TABLE mailinglist ADD COLUMN archive_policy INTEGER;')
     # Query the database for the old values of archive and archive_private in
@@ -131,7 +136,7 @@ def upgrade_postgres(database, store, version, module_path):
                           archive_policy(archive, archive_private),
                           id))
     # Now drop the old columns.
-    for column in ('archive', 'archive_private', 'generic_nonmember_action'):
+    for column in ('archive', 'archive_private'):
         store.execute(
             'ALTER TABLE mailinglist DROP COLUMN {0};'.format(column))
     # Record the migration in the version table.
