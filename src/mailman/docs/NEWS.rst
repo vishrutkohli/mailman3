@@ -65,6 +65,7 @@ Database
    - news_moderation          -> newsgroup_moderation
    - archive and archive_private have been collapsed into archive_policy.
    - nntp_host has been removed.
+   - generic_nonmember_action has been removed (LP: #975696)
  * The PostgreSQL port of the schema accidentally added a moderation_callback
    column to the mailinglist table.  Since this is unused in Mailman, it was
    simply commented out of the base schema for PostgreSQL.
@@ -105,8 +106,6 @@ Bug fixes
  * Show devmode in `bin/mailman info` output. (LP: #1035028)
  * Fix residual references to the old `IMailingList` archive variables.
    (LP: #1031393)
- * Removed obsolete `IMailingList` attribute `generic_nonmember_action`.
-   (LP: #975696)
 
 .. _`passlib`: http://packages.python.org/passlib/index.html
 
