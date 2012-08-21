@@ -45,7 +45,7 @@ class ToArchive:
         """See `IHandler`."""
         # Short circuits.
         if (msgdata.get('isdigest') or
-            mlist.archive_policy == ArchivePolicy.never):
+            mlist.archive_policy is ArchivePolicy.never):
             return
         # Common practice seems to favor "X-No-Archive: yes".  No other value
         # for this header seems to make sense, so we'll just test for it's

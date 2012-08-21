@@ -83,7 +83,7 @@ def process(mlist, msg, msgdata):
                      else 'NO')
         headers['List-Post'] = list_post
         # Add RFC 2369 and 5064 archiving headers, if archiving is enabled.
-        if mlist.archive_policy != ArchivePolicy.never:
+        if mlist.archive_policy is not ArchivePolicy.never:
             for archiver in config.archivers:
                 headers['List-Archive'] = '<{0}>'.format(
                     archiver.list_url(mlist))
