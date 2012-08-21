@@ -248,6 +248,7 @@ left off the list!
 * Greg Stein
 * Dale Stimson
 * Students of HIT <mailman-cn@mail.cs.hit.edu.cn>
+* Alexander Sulfrian
 * Szabolcs Szigeti
 * Vizi Szilard
 * David T-G

@@ -22,6 +22,7 @@ All readable attributes for a list are available on a sub-resource.
     advertised: True
     allow_list_posts: True
     anonymous_list: False
+    archive_policy: public
     autorespond_owner: none
     autorespond_postings: none
     autorespond_requests: none
@@ -80,6 +81,7 @@ all the writable attributes in one request.
     ...             administrivia=False,
     ...             advertised=False,
     ...             anonymous_list=True,
+    ...             archive_policy='never',
     ...             autorespond_owner='respond_and_discard',
     ...             autorespond_postings='respond_and_continue',
     ...             autorespond_requests='respond_and_discard',
@@ -119,6 +121,7 @@ These values are changed permanently.
     advertised: False
     allow_list_posts: False
     anonymous_list: True
+    archive_policy: never
     autorespond_owner: respond_and_discard
     autorespond_postings: respond_and_continue
     autorespond_requests: respond_and_discard
@@ -159,6 +162,7 @@ must be included.  It is an error to leave one or more out...
     ...             administrivia=False,
     ...             advertised=False,
     ...             anonymous_list=True,
+    ...             archive_policy='public',
     ...             autorespond_owner='respond_and_discard',
     ...             autorespond_postings='respond_and_continue',
     ...             autorespond_requests='respond_and_discard',
@@ -198,6 +202,7 @@ must be included.  It is an error to leave one or more out...
     ...             administrivia=False,
     ...             advertised=False,
     ...             anonymous_list=True,
+    ...             archive_policy='public',
     ...             autorespond_owner='respond_and_discard',
     ...             autorespond_postings='respond_and_continue',
     ...             autorespond_requests='respond_and_discard',
@@ -263,6 +268,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             admin_notify_mchanges=True,
     ...             advertised=False,
     ...             anonymous_list=True,
+    ...             archive_policy='public',
     ...             autorespond_owner='respond_and_discard',
     ...             autorespond_postings='respond_and_continue',
     ...             autorespond_requests='respond_and_discard',

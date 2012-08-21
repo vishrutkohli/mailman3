@@ -30,6 +30,7 @@ from restish import http, resource
 
 from mailman.config import config
 from mailman.interfaces.action import Action
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.mailinglist import IAcceptableAliasSet, ReplyToMunging
 from mailman.rest.helpers import PATCH, etag, no_content
@@ -170,6 +171,7 @@ ATTRIBUTES = dict(
     autoresponse_owner_text=GetterSetter(unicode),
     autoresponse_postings_text=GetterSetter(unicode),
     autoresponse_request_text=GetterSetter(unicode),
+    archive_policy=GetterSetter(enum_validator(ArchivePolicy)),
     bounces_address=GetterSetter(None),
     collapse_alternatives=GetterSetter(as_boolean),
     convert_html_to_plaintext=GetterSetter(as_boolean),

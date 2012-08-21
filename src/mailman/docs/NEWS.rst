@@ -70,6 +70,11 @@ Database
    column to the mailinglist table.  Since this is unused in Mailman, it was
    simply commented out of the base schema for PostgreSQL.
 
+REST
+----
+ * Expose `archive_policy` in the REST API.  Contributed by Alexander
+   Sulfrian.  (LP: #1039129)
+
 Configuration
 -------------
  * New configuration variables `clobber_date` and `clobber_skew` supported in
