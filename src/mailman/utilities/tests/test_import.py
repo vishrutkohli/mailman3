@@ -45,7 +45,7 @@ class TestBasicImport(unittest.TestCase):
             self._pckdict = cPickle.load(fp)
 
     def tearDown(self):
-        remove_list(self._mlist.fqdn_listname, self._mlist)
+        remove_list(self._mlist)
 
     def _import(self):
         import_config_pck(self._mlist, self._pckdict)

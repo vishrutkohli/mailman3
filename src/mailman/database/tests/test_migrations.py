@@ -39,6 +39,7 @@ from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.nntp import NewsgroupModeration
+from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
 
@@ -54,10 +55,14 @@ class MigrationTestBase(unittest.TestCase):
     * news_prefix_subject_too -> nntp_prefix_subject_too
     * include_list_post_header -> allow_list_posts
     * ADD archive_policy
+    * ADD list_id
     * REMOVE archive
     * REMOVE archive_private
     * REMOVE archive_volume_frequency
     * REMOVE nntp_host
+
+    table member:
+    * mailing_list -> list_id
     """
 
     layer = ConfigLayer
@@ -83,11 +88,15 @@ class TestMigration20120407Schema(MigrationTestBase):
         # Verify that the database has not yet been migrated.
         for missing in ('allow_list_posts',
                         'archive_policy',
+                        'list_id',
                         'nntp_prefix_subject_too'):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
             self._database.store.rollback()
+        self.assertRaises(DatabaseError,
+                          self._database.store.execute,
+                          'select list_id from member;')
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
@@ -100,6 +109,8 @@ class TestMigration20120407Schema(MigrationTestBase):
             # that we can perform?
             self._database.store.execute(
                 'select {0} from mailinglist;'.format(present))
+        # Again, this should not produce an exception.
+        self._database.store.execute('select mailing_list from member;')
 
     def test_post_upgrade_columns_migration(self):
         # Test that after the migration, the old table columns are missing
@@ -111,11 +122,13 @@ class TestMigration20120407Schema(MigrationTestBase):
         # Verify that the database has been migrated.
         for present in ('allow_list_posts',
                         'archive_policy',
+                        'list_id',
                         'nntp_prefix_subject_too'):
             # This should not produce an exception.  Is there some better test
             # that we can perform?
             self._database.store.execute(
                 'select {0} from mailinglist;'.format(present))
+        self._database.store.execute('select list_id from member;')
         for missing in ('archive',
                         'archive_private',
                         'archive_volume_frequency',
@@ -128,6 +141,9 @@ class TestMigration20120407Schema(MigrationTestBase):
                               self._database.store.execute,
                               'select {0} from mailinglist;'.format(missing))
             self._database.store.rollback()
+        self.assertRaises(DatabaseError,
+                          self._database.store.execute,
+                          'select mailing_list from member;')
 
 
 
@@ -262,6 +278,21 @@ class TestMigration20120407MigratedData(MigrationTestBase):
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.public)
+
+    def test_list_id(self):
+        # Test that the mailinglist table gets a list_id column.
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertEqual(mlist.list_id, 'test.example.com')
+
+    def test_list_id_member(self):
+        # Test that the member table's mailing_list column becomes list_id.
+        self._upgrade()
+        with temporary_db(self._database):
+            service = getUtility(ISubscriptionService)
+            members = list(service.find_members(list_id='test.example.com'))
+        self.assertEqual(len(members), 4)
 
     def test_news_moderation_none(self):
         # Test that news_moderation becomes newsgroup_moderation.

@@ -30,13 +30,13 @@ role.  At a minimum, a mailing list and an address for the new user is
 required.
 
     >>> mlist = create_list('test@example.com')
-    >>> anne = service.join('test@example.com', 'anne@example.com')
+    >>> anne = service.join('test.example.com', 'anne@example.com')
     >>> anne
     <Member: anne <anne@example.com> on test@example.com as MemberRole.member>
 
 The real name of the new member can be given.
 
-    >>> bart = service.join('test@example.com', 'bart@example.com',
+    >>> bart = service.join('test.example.com', 'bart@example.com',
     ...                     'Bart Person')
     >>> bart
     <Member: Bart Person <bart@example.com>
@@ -45,7 +45,7 @@ The real name of the new member can be given.
 Other roles can also be subscribed.
 
     >>> from mailman.interfaces.member import MemberRole
-    >>> anne_owner = service.join('test@example.com', 'anne@example.com',
+    >>> anne_owner = service.join('test.example.com', 'anne@example.com',
     ...                           role=MemberRole.owner)
     >>> anne_owner
     <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>
@@ -67,7 +67,7 @@ New members can also be added by providing an existing user id instead of an
 email address.  However, the user must have a preferred email address.
 ::
 
-    >>> service.join('test@example.com', bart.user.user_id,
+    >>> service.join('test.example.com', bart.user.user_id,
     ...              role=MemberRole.owner)
     Traceback (most recent call last):
     ...
@@ -78,7 +78,7 @@ email address.  However, the user must have a preferred email address.
     >>> address = list(bart.user.addresses)[0]
     >>> address.verified_on = now()
     >>> bart.user.preferred_address = address
-    >>> service.join('test@example.com', bart.user.user_id,
+    >>> service.join('test.example.com', bart.user.user_id,
     ...              role=MemberRole.owner)
     <Member: Bart Person <bart@example.com>
              on test@example.com as MemberRole.owner>
@@ -89,7 +89,7 @@ Removing members
 
 Regular members can also be removed.
 
-    >>> cris = service.join('test@example.com', 'cris@example.com')
+    >>> cris = service.join('test.example.com', 'cris@example.com')
     >>> service.get_members()
     [<Member: anne <anne@example.com> on test@example.com
               as MemberRole.owner>,
@@ -103,7 +103,7 @@ Regular members can also be removed.
               as MemberRole.member>]
     >>> sum(1 for member in service)
     5
-    >>> service.leave('test@example.com', 'cris@example.com')
+    >>> service.leave('test.example.com', 'cris@example.com')
     >>> service.get_members()
     [<Member: anne <anne@example.com> on test@example.com
               as MemberRole.owner>,
@@ -173,7 +173,7 @@ Memberships can also be searched for by user id.
 
 You can find all the memberships for a specific mailing list.
 
-    >>> service.find_members(fqdn_listname='test@example.com')
+    >>> service.find_members(list_id='test.example.com')
     [<Member: anne <anne@example.com> on test@example.com
               as MemberRole.member>,
      <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>,
@@ -184,9 +184,11 @@ You can find all the memberships for a specific mailing list.
      <Member: Bart Person <bart@example.com> on test@example.com
               as MemberRole.owner>]
 
-You can find all the memberships for an address on a specific mailing list.
+You can find all the memberships for an address on a specific mailing list,
+but you have to give it the list id, not the fqdn listname since the former is
+stable but the latter could change if the list is moved.
 
-    >>> service.find_members('anne@example.com', 'test@example.com')
+    >>> service.find_members('anne@example.com', 'test.example.com')
     [<Member: anne <anne@example.com> on test@example.com
               as MemberRole.member>,
      <Member: anne <anne@example.com> on test@example.com
@@ -203,7 +205,7 @@ You can find all the memberships for an address with a specific role.
 
 You can also find a specific membership by all three criteria.
 
-    >>> service.find_members('anne@example.com', 'test@example.com',
+    >>> service.find_members('anne@example.com', 'test.example.com',
     ...                      MemberRole.owner)
     [<Member: anne <anne@example.com> on test@example.com
               as MemberRole.owner>]

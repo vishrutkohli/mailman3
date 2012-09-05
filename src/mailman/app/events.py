@@ -41,7 +41,7 @@ def initialize():
         domain.handle_DomainDeletingEvent,
         moderator.handle_ListDeletingEvent,
         passwords.handle_ConfigurationUpdatedEvent,
-        subscriptions.handle_ListDeletedEvent,
+        subscriptions.handle_ListDeletingEvent,
         switchboard.handle_ConfigurationUpdatedEvent,
         i18n.handle_ConfigurationUpdatedEvent,
         style_manager.handle_ConfigurationUpdatedEvent,

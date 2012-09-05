@@ -48,11 +48,11 @@ class ListManager:
         listname, at, hostname = fqdn_listname.partition('@')
         if len(hostname) == 0:
             raise InvalidEmailAddressError(fqdn_listname)
+        list_id = '{0}.{1}'.format(listname, hostname)
         notify(ListCreatingEvent(fqdn_listname))
         mlist = store.find(
             MailingList,
-            MailingList.list_name == listname,
-            MailingList.mail_host == hostname).one()
+            MailingList._list_id == list_id).one()
         if mlist:
             raise ListAlreadyExistsError(fqdn_listname)
         mlist = MailingList(fqdn_listname)
@@ -65,9 +65,13 @@ class ListManager:
     def get(self, store, fqdn_listname):
         """See `IListManager`."""
         listname, at, hostname = fqdn_listname.partition('@')
-        return store.find(MailingList,
-                          list_name=listname,
-                          mail_host=hostname).one()
+        list_id = '{0}.{1}'.format(listname, hostname)
+        return store.find(MailingList, MailingList._list_id == list_id).one()
+
+    @dbconnection
+    def get_by_list_id(self, store, list_id):
+        """See `IListManager`."""
+        return store.find(MailingList, MailingList._list_id == list_id).one()
 
     @dbconnection
     def delete(self, store, mlist):
@@ -98,6 +102,14 @@ class ListManager:
         for mail_host, list_name in result_set.values(MailingList.mail_host,
                                                       MailingList.list_name):
             yield '{0}@{1}'.format(list_name, mail_host)
+
+    @property
+    @dbconnection
+    def list_ids(self, store):
+        """See `IListManager`."""
+        result_set = store.find(MailingList)
+        for list_id in result_set.values(MailingList._list_id):
+            yield list_id
 
     @property
     @dbconnection

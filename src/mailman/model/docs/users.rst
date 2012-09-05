@@ -335,11 +335,12 @@ membership role.
     ...     return (member.address.email, member.mailing_list,
     ...             int(member.role))
     >>> for member in sorted(members, key=sortkey):
-    ...     print member.address.email, member.mailing_list, member.role
-    zperson@example.com xtest_1@example.com MemberRole.member
-    zperson@example.net xtest_3@example.com MemberRole.moderator
-    zperson@example.org xtest_2@example.com MemberRole.member
-    zperson@example.org xtest_2@example.com MemberRole.owner
+    ...     print member.address.email, member.mailing_list.list_id, \
+    ...           member.role
+    zperson@example.com xtest_1.example.com MemberRole.member
+    zperson@example.net xtest_3.example.com MemberRole.moderator
+    zperson@example.org xtest_2.example.com MemberRole.member
+    zperson@example.org xtest_2.example.com MemberRole.owner
 
 
 .. _`usermanager.txt`: usermanager.html

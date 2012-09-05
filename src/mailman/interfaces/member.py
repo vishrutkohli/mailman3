@@ -136,8 +136,11 @@ class IMember(Interface):
     member_id = Attribute(
         """The member's unique, random identifier as a UUID.""")
 
+    list_id = Attribute(
+        """The list id of the mailing list the member is subscribed to.""")
+
     mailing_list = Attribute(
-        """The mailing list subscribed to.""")
+        """The `IMailingList` that the member is subscribed to.""")
 
     address = Attribute(
         """The email address that's subscribed to the list.""")

@@ -5,11 +5,13 @@ Mailing lists
 .. XXX 2010-06-18 BAW: This documentation needs a lot more detail.
 
 The mailing list is a core object in Mailman.  It is uniquely identified in
-the system by its posting address, i.e. the email address you would send a
-message to in order to post a message to the mailing list.  This must be fully
-qualified.
+the system by its *list-id* which is derived from its posting address,
+i.e. the email address you would send a message to in order to post a message
+to the mailing list.  The list id is defined in `RFC 2369`_.
 
     >>> mlist = create_list('aardvark@example.com')
+    >>> print mlist.list_id
+    aardvark.example.com
     >>> print mlist.fqdn_listname
     aardvark@example.com
 
@@ -163,3 +165,6 @@ A user cannot subscribe to a mailing list without a preferred address.
     ...
     MissingPreferredAddressError: User must have a preferred address:
     <User "Elly Person" (2) at ...>
+
+
+.. _`RFC 2369`: http://www.faqs.org/rfcs/rfc2369.html

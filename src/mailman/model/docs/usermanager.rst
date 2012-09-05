@@ -173,8 +173,9 @@ There are now four members in the system.  Sort them by address then role.
     ...     return (member.address.email, member.role.name)
     >>> members = sorted(user_manager.members, key=sort_key)
     >>> for member in members:
-    ...     print member.mailing_list, member.address.email, member.role
-    test@example.com bperson@example.com MemberRole.member
-    test@example.com bperson@example.com MemberRole.owner
-    test@example.com eperson@example.com MemberRole.member
-    test@example.com fperson@example.com MemberRole.member
+    ...     print member.mailing_list.list_id, member.address.email, \
+    ...           member.role
+    test.example.com bperson@example.com MemberRole.member
+    test.example.com bperson@example.com MemberRole.owner
+    test.example.com eperson@example.com MemberRole.member
+    test.example.com fperson@example.com MemberRole.member

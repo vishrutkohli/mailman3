@@ -69,7 +69,7 @@ class ISubscriptionService(Interface):
         :rtype: `IMember`
         """
 
-    def find_members(subscriber=None, fqdn_listname=None, role=None):
+    def find_members(subscriber=None, list_id=None, role=None):
         """Search for and return a specific member.
 
         The members are sorted first by fully-qualified mailing list name,
@@ -80,9 +80,9 @@ class ISubscriptionService(Interface):
         :param subscriber: The email address or user id of the user getting
             subscribed.
         :type subscriber: string or int
-        :param fqdn_listname: The posting address of the mailing list to
-            search for the subscriber's memberships on.
-        :type fqdn_listname: string
+        :param list_id: The list id of the mailing list to search for the
+            subscriber's memberships on.
+        :type list_id: string
         :param role: The member role.
         :type role: `MemberRole`
         :return: The list of all memberships, which may be empty.
@@ -92,8 +92,8 @@ class ISubscriptionService(Interface):
     def __iter__():
         """See `get_members()`."""
 
-    def join(fqdn_listname, subscriber, display_name=None,
-             delivery_mode=DeliveryMode.regular, 
+    def join(list_id, subscriber, display_name=None,
+             delivery_mode=DeliveryMode.regular,
              role=MemberRole.member):
         """Subscribe to a mailing list.
 
@@ -103,9 +103,9 @@ class ISubscriptionService(Interface):
         the subscription request is still dependent on the policy of the
         mailing list.
 
-        :param fqdn_listname: The posting address of the mailing list to
-            subscribe the user to.
-        :type fqdn_listname: string
+        :param list_id: The list id of the mailing list the user is
+            subscribing to.
+        :type list_id: string
         :param subscriber: The email address or user id of the user getting
             subscribed.
         :type subscriber: string or int
@@ -130,12 +130,12 @@ class ISubscriptionService(Interface):
         :raises ValueError: when `delivery_mode` is invalid.
         """
 
-    def leave(fqdn_listname, email):
+    def leave(list_id, email):
         """Unsubscribe from a mailing list.
 
-        :param fqdn_listname: The posting address of the mailing list to
-            unsubscribe the user from.
-        :type fqdn_listname: string
+        :param list_id: The list id of the mailing list the user is
+            unsubscribing from.
+        :type list_id: string
         :param email: The email address of the user getting unsubscribed.
         :type email: string
         :raises InvalidEmailAddressError: if the email address is not valid.

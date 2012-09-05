@@ -113,6 +113,15 @@ class IListManager(Interface):
             not exist.
         """
 
+    def get_by_list_id(list_id):
+        """Return the mailing list with the given list id, if it exists.
+
+        :type fqdn_listname: Unicode.
+        :param fqdn_listname: The fully qualified name of the mailing list.
+        :return: the matching `IMailingList` or None if the named list does
+            not exist.
+        """
+
     def delete(mlist):
         """Remove the mailing list from the database.
 
@@ -133,6 +142,10 @@ class IListManager(Interface):
     names = Attribute(
         """An iterator over the fully qualified list names of all mailing
         lists managed by this list manager.""")
+
+    list_ids = Attribute(
+        """An iterator over the list ids of all mailing lists managed by this
+        list manager.""")
 
     name_components = Attribute(
         """An iterator over the 2-tuple of (list_name, mail_host) for all

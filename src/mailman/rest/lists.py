@@ -137,7 +137,7 @@ class AList(_ListBase):
         """Delete the named mailing list."""
         if self._mlist is None:
             return http.not_found()
-        remove_list(self._mlist.fqdn_listname, self._mlist)
+        remove_list(self._mlist)
         return no_content()
 
     @resource.child(member_matcher)
@@ -146,7 +146,7 @@ class AList(_ListBase):
         if self._mlist is None:
             return http.not_found()
         members = getUtility(ISubscriptionService).find_members(
-            email, self._mlist.fqdn_listname, role)
+            email, self._mlist.list_id, role)
         if len(members) == 0:
             return http.not_found()
         assert len(members) == 1, 'Too many matches'

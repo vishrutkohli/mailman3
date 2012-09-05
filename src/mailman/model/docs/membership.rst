@@ -283,8 +283,8 @@ though that the address their changing to must be verified.
     >>> gwen_address = list(gwen.addresses)[0]
     >>> gwen_member = bee.subscribe(gwen_address)
     >>> for m in bee.members.members:
-    ...     print m.member_id.int, m.mailing_list, m.address.email
-    7 bee@example.com gwen@example.com
+    ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
+    7 bee.example.com gwen@example.com
 
 Gwen gets a email address.
 
@@ -301,8 +301,8 @@ address, but the address is not yet verified.
 Her membership has not changed.
 
     >>> for m in bee.members.members:
-    ...     print m.member_id.int, m.mailing_list, m.address.email
-    7 bee@example.com gwen@example.com
+    ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
+    7 bee.example.com gwen@example.com
 
 Gwen verifies her email address, and updates her membership.
 
@@ -313,5 +313,5 @@ Gwen verifies her email address, and updates her membership.
 Now her membership reflects the new address.
 
     >>> for m in bee.members.members:
-    ...     print m.member_id.int, m.mailing_list, m.address.email
-    7 bee@example.com gperson@example.com
+    ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
+    7 bee.example.com gperson@example.com

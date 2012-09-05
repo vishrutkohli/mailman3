@@ -14,6 +14,18 @@ Here is a history of user visible changes to Mailman.
 
 Architecture
 ------------
+ * The link between members and the mailing lists they are subscribed to, is
+   now via the RFC 2369 `list_id` instead of the fqdn listname (i.e. posting
+   address).  This is because while the posting address can change if the
+   mailing list is moved to a new server, the list id is fixed.
+   (LP: #1024509)
+   + IListManager.get_by_list_id() added.
+   + IListManager.list_ids added.
+   + IMailingList.list_id added.
+   + Several internal APIs that accepted fqdn list names now require list ids,
+     e.g. ISubscriptionService.join() and .find_members().
+   + IMember.list_id attribute added; .mailing_list is now an alias that
+     retrieves and returns the IMailingList.
  * `passlib`_ is now used for all password hashing instead of flufl.password.
    The default hash is `sha512_crypt`.  (LP: #1015758)
  * Internally, all datetimes are kept in the UTC timezone, however because of
@@ -60,12 +72,15 @@ Architecture
 Database
 --------
  * Schema migrations (LP: #971013)
-   - include_list_post_header -> allow_list_posts
-   - news_prefix_subject_too  -> nntp_prefix_subject_too
-   - news_moderation          -> newsgroup_moderation
-   - archive and archive_private have been collapsed into archive_policy.
-   - nntp_host has been removed.
-   - generic_nonmember_action has been removed (LP: #975696)
+   - mailinglist.include_list_post_header -> allow_list_posts
+   - mailinglist.news_prefix_subject_too  -> nntp_prefix_subject_too
+   - mailinglist.news_moderation          -> newsgroup_moderation
+   - mailinglist.archive and mailinglist.archive_private have been collapsed
+     into archive_policy.
+   - mailinglist.nntp_host has been removed.
+   - mailinglist.generic_nonmember_action has been removed (LP: #975696)
+ * Schema migrations (LP: #1024509)
+   - member.mailing_list -> list_id
  * The PostgreSQL port of the schema accidentally added a moderation_callback
    column to the mailinglist table.  Since this is unused in Mailman, it was
    simply commented out of the base schema for PostgreSQL.

@@ -192,7 +192,8 @@ def send_probe(member, msg):
     :return: The token representing this probe in the pendings database.
     :rtype: string
     """
-    mlist = getUtility(IListManager).get(member.mailing_list)
+    mlist = getUtility(IListManager).get_by_list_id(
+        member.mailing_list.list_id)
     text = make('probe.txt', mlist, member.preferred_language.code,
                 listname=mlist.fqdn_listname,
                 address= member.address.email,

@@ -52,7 +52,7 @@ class AddMemberTest(unittest.TestCase):
                             'Anne Person', '123', DeliveryMode.regular,
                             system_preferences.preferred_language)
         self.assertEqual(member.address.email, 'aperson@example.com')
-        self.assertEqual(member.mailing_list, 'test@example.com')
+        self.assertEqual(member.list_id, 'test.example.com')
         self.assertEqual(member.role, MemberRole.member)
 
     def test_add_member_existing_user(self):
@@ -64,7 +64,7 @@ class AddMemberTest(unittest.TestCase):
                             'Anne Person', '123', DeliveryMode.regular,
                             system_preferences.preferred_language)
         self.assertEqual(member.address.email, 'aperson@example.com')
-        self.assertEqual(member.mailing_list, 'test@example.com')
+        self.assertEqual(member.list_id, 'test.example.com')
 
     def test_add_member_banned(self):
         # Test that members who are banned by specific address cannot
@@ -127,7 +127,7 @@ class AddMemberTest(unittest.TestCase):
                             system_preferences.preferred_language,
                             MemberRole.moderator)
         self.assertEqual(member.address.email, 'aperson@example.com')
-        self.assertEqual(member.mailing_list, 'test@example.com')
+        self.assertEqual(member.list_id, 'test.example.com')
         self.assertEqual(member.role, MemberRole.moderator)
 
     def test_add_member_twice(self):
@@ -159,7 +159,7 @@ class AddMemberTest(unittest.TestCase):
                               'Anne Person', '123', DeliveryMode.regular,
                               system_preferences.preferred_language,
                               MemberRole.owner)
-        self.assertEqual(member_1.mailing_list, member_2.mailing_list)
+        self.assertEqual(member_1.list_id, member_2.list_id)
         self.assertEqual(member_1.address, member_2.address)
         self.assertEqual(member_1.user, member_2.user)
         self.assertNotEqual(member_1.member_id, member_2.member_id)

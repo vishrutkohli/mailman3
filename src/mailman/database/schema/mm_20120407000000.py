@@ -31,6 +31,12 @@ All column changes are in the `mailinglist` table.
  - generic_nonmember_action
  - nntp_host
 
+* Added:
+ - list_id
+
+* Changes:
+  member.mailing_list holds the list_id not the fqdn_listname
+
 See https://bugs.launchpad.net/mailman/+bug/971013 for details.
 """
 
@@ -77,29 +83,61 @@ def upgrade_sqlite(database, store, version, module_path):
     # rename the temporary table to its place.
     database.load_schema(
         store, version, 'sqlite_{0}_01.sql'.format(version), module_path)
-    results = store.execute(
-        'SELECT id, include_list_post_header, '
-        'news_prefix_subject_too, news_moderation, '
-        'archive, archive_private FROM mailinglist;')
+    results = store.execute("""
+        SELECT id, include_list_post_header,
+        news_prefix_subject_too, news_moderation,
+        archive, archive_private, list_name, mail_host
+        FROM mailinglist;
+        """)
     for value in results:
         (id, list_post,
          news_prefix, news_moderation,
-         archive, archive_private) = value
+         archive, archive_private,
+         list_name, mail_host) = value
         # Figure out what the new archive_policy column value should be.
-        store.execute(
-            'UPDATE ml_backup SET '
-            '    allow_list_posts = {0}, '
-            '    newsgroup_moderation = {1}, '
-            '    nntp_prefix_subject_too = {2}, '
-            '    archive_policy = {3} '
-            'WHERE id = {4};'.format(
+        list_id = '{0}.{1}'.format(list_name, mail_host)
+        fqdn_listname = '{0}@{1}'.format(list_name, mail_host)
+        store.execute("""
+            UPDATE ml_backup SET
+                allow_list_posts = {0},
+                newsgroup_moderation = {1},
+                nntp_prefix_subject_too = {2},
+                archive_policy = {3},
+                list_id = '{4}'
+            WHERE id = {5};
+            """.format(
                 list_post,
                 news_moderation,
                 news_prefix,
                 archive_policy(archive, archive_private),
+                list_id,
                 id))
+        # Also update the member.mailing_list column to hold the list_id
+        # instead of the fqdn_listname.
+        store.execute("""
+            UPDATE member SET
+                mailing_list = '{0}'
+            WHERE mailing_list = '{1}';
+            """.format(list_id, fqdn_listname))
+    # Pivot the backup table to the real thing.
     store.execute('DROP TABLE mailinglist;')
     store.execute('ALTER TABLE ml_backup RENAME TO mailinglist;')
+    # Now add some indexes that were previously missing.
+    store.execute(
+        'CREATE INDEX ix_mailinglist_list_id ON mailinglist (list_id);')
+    store.execute(
+        'CREATE INDEX ix_mailinglist_fqdn_listname '
+        'ON mailinglist (list_name, mail_host);')
+    # Now, do the member table.
+    results = store.execute('SELECT id, mailing_list FROM member;')
+    for id, mailing_list in results:
+        store.execute("""
+            UPDATE mem_backup SET list_id = '{0}'
+            WHERE id = {1};
+            """.format(list_id, id))
+    # Pivot the backup table to the real thing.
+    store.execute('DROP TABLE member;')
+    store.execute('ALTER TABLE mem_backup RENAME TO member;')
 
 
 
@@ -108,17 +146,20 @@ def upgrade_postgres(database, store, version, module_path):
     results = store.execute(
         'SELECT id, archive, archive_private FROM mailinglist;')
     # Do the simple renames first.
-    store.execute(
-        'ALTER TABLE mailinglist '
-        '   RENAME COLUMN news_prefix_subject_too TO nntp_prefix_subject_too;')
-    store.execute(
-        'ALTER TABLE mailinglist '
-        '   RENAME COLUMN news_moderation TO newsgroup_moderation;')
-    store.execute(
-        'ALTER TABLE mailinglist '
-        '   RENAME COLUMN include_list_post_header TO allow_list_posts;')
+    store.execute("""
+        ALTER TABLE mailinglist
+           RENAME COLUMN news_prefix_subject_too TO nntp_prefix_subject_too;
+        """)
+    store.execute("""
+        ALTER TABLE mailinglist
+           RENAME COLUMN news_moderation TO newsgroup_moderation;
+        """)
+    store.execute("""
+        ALTER TABLE mailinglist
+           RENAME COLUMN include_list_post_header TO allow_list_posts;
+        """)
     # Do the easy column drops next.
-    for column in ('archive_volume_frequency', 
+    for column in ('archive_volume_frequency',
                    'generic_nonmember_action',
                    'nntp_host'):
         store.execute(
@@ -130,11 +171,11 @@ def upgrade_postgres(database, store, version, module_path):
     # archive_policy from the old values.
     for value in results:
         id, archive, archive_private = value
-        store.execute('UPDATE mailinglist SET '
-                      '    archive_policy = {0} '
-                      'WHERE id = {1};'.format(
-                          archive_policy(archive, archive_private),
-                          id))
+        store.execute("""
+            UPDATE mailinglist SET
+                archive_policy = {0}
+            WHERE id = {1};
+            """.format(archive_policy(archive, archive_private), id))
     # Now drop the old columns.
     for column in ('archive', 'archive_private'):
         store.execute(

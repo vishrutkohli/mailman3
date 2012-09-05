@@ -80,6 +80,7 @@ class MailingList(Model):
     # List identity
     list_name = Unicode()
     mail_host = Unicode()
+    _list_id = Unicode(name='list_id')
     allow_list_posts = Bool()
     include_rfc2369_headers = Bool()
     advertised = Bool()
@@ -199,6 +200,7 @@ class MailingList(Model):
         assert hostname, 'Bad list name: {0}'.format(fqdn_listname)
         self.list_name = listname
         self.mail_host = hostname
+        self._list_id = '{0}.{1}'.format(listname, hostname)
         # For the pending database
         self.next_request_id = 1
         # We need to set up the rosters.  Normally, this method will get
@@ -229,6 +231,11 @@ class MailingList(Model):
     def fqdn_listname(self):
         """See `IMailingList`."""
         return '{0}@{1}'.format(self.list_name, self.mail_host)
+
+    @property
+    def list_id(self):
+        """See `IMailingList`."""
+        return self._list_id
 
     @property
     def domain(self):
@@ -463,7 +470,7 @@ class MailingList(Model):
             member = store.find(
                 Member,
                 Member.role == role,
-                Member.mailing_list == self.fqdn_listname,
+                Member.list_id == self._list_id,
                 Member._address == subscriber).one()
             if member:
                 raise AlreadySubscribedError(
@@ -474,7 +481,7 @@ class MailingList(Model):
             member = store.find(
                 Member,
                 Member.role == role,
-                Member.mailing_list == self.fqdn_listname,
+                Member.list_id == self._list_id,
                 Member._user == subscriber).one()
             if member:
                 raise AlreadySubscribedError(
@@ -482,7 +489,7 @@ class MailingList(Model):
         else:
             raise ValueError('subscriber must be an address or user')
         member = Member(role=role,
-                        mailing_list=self.fqdn_listname,
+                        list_id=self._list_id,
                         subscriber=subscriber)
         member.preferences = Preferences()
         store.add(member)
