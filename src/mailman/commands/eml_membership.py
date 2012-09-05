@@ -84,7 +84,7 @@ used.
         # Is this person already a member of the list?  Search for all
         # matching memberships.
         members = getUtility(ISubscriptionService).find_members(
-            address, mlist.fqdn_listname, MemberRole.member)
+            address, mlist.list_id, MemberRole.member)
         if len(members) > 0:
             print(_('$person is already a member'), file=results)
         else:

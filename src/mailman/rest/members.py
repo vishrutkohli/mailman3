@@ -61,7 +61,7 @@ class _MemberBase(resource.Resource, CollectionMixin):
         user_id = member.user.user_id.int
         member_id = member.member_id.int
         return dict(
-            fqdn_listname=member.mailing_list,
+            list_id=member.list_id,
             address=member.address.email,
             role=role,
             user=path_to('users/{0}'.format(user_id)),
@@ -148,7 +148,7 @@ class AMember(_MemberBase):
         # an admin or user notification.
         if self._member is None:
             return http.not_found()
-        mlist = getUtility(IListManager).get(self._member.mailing_list)
+        mlist = getUtility(IListManager).get_by_list_id(self._member.list_id)
         if self._member.role is MemberRole.member:
             try:
                 delete_member(mlist, self._member.address.email, False, False)
@@ -197,7 +197,7 @@ class AllMembers(_MemberBase):
         service = getUtility(ISubscriptionService)
         try:
             validator = Validator(
-                fqdn_listname=unicode,
+                list_id=unicode,
                 subscriber=subscriber_validator,
                 display_name=unicode,
                 delivery_mode=enum_validator(DeliveryMode),
@@ -248,10 +248,10 @@ class FindMembers(_MemberBase):
         """Find a member"""
         service = getUtility(ISubscriptionService)
         validator = Validator(
-            fqdn_listname=unicode,
+            list_id=unicode,
             subscriber=unicode,
             role=enum_validator(MemberRole),
-            _optional=('fqdn_listname', 'subscriber', 'role'))
+            _optional=('list_id', 'subscriber', 'role'))
         members = service.find_members(**validator(request))
         # We can't just return the _FoundMembers instance, because
         # CollectionMixins have only a GET method, which is incompatible with

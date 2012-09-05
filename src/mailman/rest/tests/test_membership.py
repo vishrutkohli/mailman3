@@ -53,7 +53,7 @@ class TestMembership(unittest.TestCase):
         try:
             # For Python 2.6.
             call_api('http://localhost:9001/3.0/members', {
-                'fqdn_listname': 'missing@example.com',
+                'list_id': 'missing.example.com',
                 'subscriber': 'nobody@example.com',
                 })
         except HTTPError as exc:
@@ -112,7 +112,7 @@ class TestMembership(unittest.TestCase):
         try:
             # For Python 2.6.
             call_api('http://localhost:9001/3.0/members', {
-                'fqdn_listname': 'test@example.com',
+                'list_id': 'test.example.com',
                 'subscriber': 'anne@example.com',
                 })
         except HTTPError as exc:
@@ -124,7 +124,7 @@ class TestMembership(unittest.TestCase):
     def test_join_with_invalid_delivery_mode(self):
         try:
             call_api('http://localhost:9001/3.0/members', {
-                'fqdn_listname': 'test@example.com',
+                'list_id': 'test.example.com',
                 'subscriber': 'anne@example.com',
                 'display_name': 'Anne Person',
                 'delivery_mode': 'invalid-mode',
@@ -138,7 +138,7 @@ class TestMembership(unittest.TestCase):
 
     def test_join_email_contains_slash(self):
         content, response = call_api('http://localhost:9001/3.0/members', {
-            'fqdn_listname': 'test@example.com',
+            'list_id': 'test.example.com',
             'subscriber': 'hugh/person@example.com',
             'display_name': 'Hugh Person',
             })
@@ -168,7 +168,7 @@ class TestMembership(unittest.TestCase):
         self.assertEqual(entry_0['role'], 'member')
         self.assertEqual(entry_0['user'], 'http://localhost:9001/3.0/users/1')
         self.assertEqual(entry_0['address'], 'anne@example.com')
-        self.assertEqual(entry_0['fqdn_listname'], 'test@example.com')
+        self.assertEqual(entry_0['list_id'], 'test.example.com')
 
     def test_member_changes_preferred_address(self):
         with transaction():

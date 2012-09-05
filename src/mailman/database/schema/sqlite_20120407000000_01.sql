@@ -18,6 +18,7 @@
 -- THESE COLUMNS ARE ADDED BY THE PYTHON MIGRATION LAYER:
 -- ADD allow_list_posts
 -- ADD archive_policy
+-- ADD list_id
 -- ADD newsgroup_moderation
 -- ADD nntp_prefix_subject_too
 
@@ -242,5 +243,6 @@ INSERT INTO ml_backup SELECT
 
 -- Add the new columns.  They'll get inserted at the Python layer.
 ALTER TABLE ml_backup ADD COLUMN archive_policy INTEGER;
+ALTER TABLE ml_backup ADD COLUMN list_id TEXT;
 ALTER TABLE ml_backup ADD COLUMN nntp_prefix_subject_too INTEGER;
 ALTER TABLE ml_backup ADD COLUMN newsgroup_moderation INTEGER;

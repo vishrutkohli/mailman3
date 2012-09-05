@@ -170,16 +170,16 @@ Elle can get her memberships for each of her email addresses.
     entry 0:
         address: elle@example.com
         delivery_mode: regular
-        fqdn_listname: ant@example.com
         http_etag: "..."
+        list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/2
     entry 1:
         address: elle@example.com
         delivery_mode: regular
-        fqdn_listname: bee@example.com
         http_etag: "..."
+        list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -207,16 +207,16 @@ does not show up in the list of memberships for his other address.
     entry 0:
         address: elle@example.com
         delivery_mode: regular
-        fqdn_listname: ant@example.com
         http_etag: "..."
+        list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/2
     entry 1:
         address: elle@example.com
         delivery_mode: regular
-        fqdn_listname: bee@example.com
         http_etag: "..."
+        list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -229,8 +229,8 @@ does not show up in the list of memberships for his other address.
     entry 0:
         address: eperson@example.com
         delivery_mode: regular
-        fqdn_listname: bee@example.com
         http_etag: "..."
+        list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/2

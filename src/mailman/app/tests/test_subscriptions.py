@@ -52,7 +52,7 @@ class TestJoin(unittest.TestCase):
     def test_join_user_with_bogus_id(self):
         # When `subscriber` is a missing user id, an exception is raised.
         try:
-            self._service.join('test@example.com', uuid.UUID(int=99))
+            self._service.join('test.example.com', uuid.UUID(int=99))
         except MissingUserError as exc:
             self.assertEqual(exc.user_id, uuid.UUID(int=99))
         else:
@@ -62,7 +62,7 @@ class TestJoin(unittest.TestCase):
         # When `subscriber` is a string that is not an email address, an
         # exception is raised.
         try:
-            self._service.join('test@example.com', 'bogus')
+            self._service.join('test.example.com', 'bogus')
         except InvalidEmailAddressError as exc:
             self.assertEqual(exc.email, 'bogus')
         else:

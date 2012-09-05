@@ -54,6 +54,7 @@ class MigrationTestBase(unittest.TestCase):
     * news_prefix_subject_too -> nntp_prefix_subject_too
     * include_list_post_header -> allow_list_posts
     * ADD archive_policy
+    * ADD list_id
     * REMOVE archive
     * REMOVE archive_private
     * REMOVE archive_volume_frequency
@@ -83,6 +84,7 @@ class TestMigration20120407Schema(MigrationTestBase):
         # Verify that the database has not yet been migrated.
         for missing in ('allow_list_posts',
                         'archive_policy',
+                        'list_id',
                         'nntp_prefix_subject_too'):
             self.assertRaises(DatabaseError,
                               self._database.store.execute,
@@ -111,6 +113,7 @@ class TestMigration20120407Schema(MigrationTestBase):
         # Verify that the database has been migrated.
         for present in ('allow_list_posts',
                         'archive_policy',
+                        'list_id',
                         'nntp_prefix_subject_too'):
             # This should not produce an exception.  Is there some better test
             # that we can perform?
@@ -262,6 +265,13 @@ class TestMigration20120407MigratedData(MigrationTestBase):
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertEqual(mlist.archive_policy, ArchivePolicy.public)
+
+    def test_list_id(self):
+        # Test that the mailinglist table gets a list_id column.
+        self._upgrade()
+        with temporary_db(self._database):
+            mlist = getUtility(IListManager).get('test@example.com')
+            self.assertEqual(mlist.list_id, 'test.example.com')
 
     def test_news_moderation_none(self):
         # Test that news_moderation becomes newsgroup_moderation.

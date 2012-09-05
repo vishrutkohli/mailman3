@@ -67,8 +67,8 @@ class AbstractRoster:
     def _query(self, store):
         return store.find(
             Member,
-            mailing_list=self._mlist.fqdn_listname,
-            role=self.role)
+            Member.list_id == self._mlist.list_id,
+            Member.role == self.role)
 
     @property
     def members(self):
@@ -106,7 +106,7 @@ class AbstractRoster:
         """See `IRoster`."""
         results = store.find(
             Member,
-            Member.mailing_list == self._mlist.fqdn_listname,
+            Member.list_id == self._mlist.list_id,
             Member.role == self.role,
             Address.email == address,
             Member.address_id == Address.id)
@@ -162,7 +162,7 @@ class AdministratorRoster(AbstractRoster):
     def _query(self, store):
         return store.find(
             Member,
-            Member.mailing_list == self._mlist.fqdn_listname,
+            Member.list_id == self._mlist.list_id,
             Or(Member.role == MemberRole.owner,
                Member.role == MemberRole.moderator))
 
@@ -171,7 +171,7 @@ class AdministratorRoster(AbstractRoster):
         """See `IRoster`."""
         results = store.find(
                 Member,
-                Member.mailing_list == self._mlist.fqdn_listname,
+                Member.list_id == self._mlist.list_id,
                 Or(Member.role == MemberRole.moderator,
                    Member.role == MemberRole.owner),
                 Address.email == address,
@@ -208,7 +208,7 @@ class DeliveryMemberRoster(AbstractRoster):
         """
         results = store.find(
             Member,
-            And(Member.mailing_list == self._mlist.fqdn_listname,
+            And(Member.list_id == self._mlist.list_id,
                 Member.role == MemberRole.member))
         for member in results:
             if member.delivery_mode in delivery_modes:
@@ -250,7 +250,7 @@ class Subscribers(AbstractRoster):
 
     @dbconnection
     def _query(self, store):
-        return store.find(Member, mailing_list=self._mlist.fqdn_listname)
+        return store.find(Member, Member.list_id == self._mlist.list_id)
 
 
 

@@ -89,23 +89,19 @@ def create_list(fqdn_listname, owners=None):
 
 
 
-def remove_list(fqdn_listname, mailing_list=None):
+def remove_list(mlist):
     """Remove the list and all associated artifacts and subscriptions."""
+    fqdn_listname = mlist.fqdn_listname
     removeables = []
-    # mailing_list will be None when only residual archives are being removed.
-    if mailing_list is not None:
-        # Remove all subscriptions, regardless of role.
-        for member in mailing_list.subscribers.members:
-            member.unsubscribe()
-        # Delete the mailing list from the database.
-        getUtility(IListManager).delete(mailing_list)
-        # Do the MTA-specific list deletion tasks
-        call_name(config.mta.incoming).create(mailing_list)
-        # Remove the list directory.
-        removeables.append(os.path.join(config.LIST_DATA_DIR, fqdn_listname))
+    # Delete the mailing list from the database.
+    getUtility(IListManager).delete(mlist)
+    # Do the MTA-specific list deletion tasks
+    call_name(config.mta.incoming).delete(mlist)
+    # Remove the list directory.
+    removeables.append(os.path.join(config.LIST_DATA_DIR, fqdn_listname))
     # Remove any stale locks associated with the list.
     for filename in os.listdir(config.LOCK_DIR):
-        fn_listname = filename.split('.')[0]
+        fn_listname, dot, rest = filename.partition('.')
         if fn_listname == fqdn_listname:
             removeables.append(os.path.join(config.LOCK_DIR, filename))
     # Now that we know what files and directories to delete, delete them.

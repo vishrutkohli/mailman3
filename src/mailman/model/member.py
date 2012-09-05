@@ -53,7 +53,7 @@ class Member(Model):
     id = Int(primary=True)
     _member_id = UUID()
     role = Enum(MemberRole)
-    mailing_list = Unicode()
+    list_id = Unicode(name='mailing_list')
     moderation_action = Enum(Action)
 
     address_id = Int()
@@ -63,10 +63,10 @@ class Member(Model):
     user_id = Int()
     _user = Reference(user_id, 'User.id')
 
-    def __init__(self, role, mailing_list, subscriber):
+    def __init__(self, role, list_id, subscriber):
         self._member_id = uid_factory.new_uid()
         self.role = role
-        self.mailing_list = mailing_list
+        self.list_id = list_id
         if IAddress.providedBy(subscriber):
             self._address = subscriber
             # Look this up dynamically.
@@ -80,17 +80,23 @@ class Member(Model):
         if role in (MemberRole.owner, MemberRole.moderator):
             self.moderation_action = Action.accept
         elif role is MemberRole.member:
-            self.moderation_action = getUtility(IListManager).get(
-                mailing_list).default_member_action
+            self.moderation_action = getUtility(IListManager).get_by_list_id(
+                list_id).default_member_action
         else:
             assert role is MemberRole.nonmember, (
                 'Invalid MemberRole: {0}'.format(role))
-            self.moderation_action = getUtility(IListManager).get(
-                mailing_list).default_nonmember_action
+            self.moderation_action = getUtility(IListManager).get_by_list_id(
+                list_id).default_nonmember_action
 
     def __repr__(self):
         return '<Member: {0} on {1} as {2}>'.format(
-            self.address, self.mailing_list, self.role)
+            self.address, self.mailing_list.fqdn_listname, self.role)
+
+    @property
+    def mailing_list(self):
+        """See `IMember`."""
+        list_manager = getUtility(IListManager)
+        return list_manager.get_by_list_id(self.list_id)
 
     @property
     def member_id(self):

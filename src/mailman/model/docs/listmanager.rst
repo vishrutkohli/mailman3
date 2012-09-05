@@ -16,28 +16,31 @@ Creating a mailing list
 Creating the list returns the newly created IMailList object.
 
     >>> from mailman.interfaces.mailinglist import IMailingList
-    >>> mlist = list_manager.create('_xtest@example.com')
+    >>> mlist = list_manager.create('test@example.com')
     >>> IMailingList.providedBy(mlist)
     True
 
-All lists with identities have a short name, a host name, and a fully
-qualified listname.  This latter is what uniquely distinguishes the mailing
-list to the system.
+All lists with identities have a short name, a host name, a fully qualified
+listname, and an `RFC 2369`_ list id.  This latter will not change even if the
+mailing list moves to a different host, so it is what uniquely distinguishes
+the mailing list to the system.
 
     >>> print mlist.list_name
-    _xtest
+    test
     >>> print mlist.mail_host
     example.com
     >>> print mlist.fqdn_listname
-    _xtest@example.com
+    test@example.com
+    >>> print mlist.list_id
+    test.example.com
 
 If you try to create a mailing list with the same name as an existing list,
 you will get an exception.
 
-    >>> list_manager.create('_xtest@example.com')
+    >>> list_manager.create('test@example.com')
     Traceback (most recent call last):
     ...
-    ListAlreadyExistsError: _xtest@example.com
+    ListAlreadyExistsError: test@example.com
 
 It is an error to create a mailing list that isn't a fully qualified list name
 (i.e. posting address).
@@ -59,9 +62,9 @@ Use the list manager to delete a mailing list.
 
 After deleting the list, you can create it again.
 
-    >>> mlist = list_manager.create('_xtest@example.com')
+    >>> mlist = list_manager.create('test@example.com')
     >>> print mlist.fqdn_listname
-    _xtest@example.com
+    test@example.com
 
 
 Retrieving a mailing list
@@ -70,13 +73,21 @@ Retrieving a mailing list
 When a mailing list exists, you can ask the list manager for it and you will
 always get the same object back.
 
-    >>> mlist_2 = list_manager.get('_xtest@example.com')
+    >>> mlist_2 = list_manager.get('test@example.com')
+    >>> mlist_2 is mlist
+    True
+
+You can also get a mailing list by it's list id.
+
+    >>> mlist_2 = list_manager.get_by_list_id('test.example.com')
     >>> mlist_2 is mlist
     True
 
 If you try to get a list that doesn't existing yet, you get ``None``.
 
-    >>> print list_manager.get('_xtest_2@example.com')
+    >>> print list_manager.get('test_2@example.com')
+    None
+    >>> print list_manager.get_by_list_id('test_2.example.com')
     None
 
 You also get ``None`` if the list name is invalid.
@@ -93,25 +104,34 @@ iterate over the mailing list objects, the list posting addresses, or the list
 address components.
 ::
 
-    >>> mlist_3 = list_manager.create('_xtest_3@example.com')
-    >>> mlist_4 = list_manager.create('_xtest_4@example.com')
+    >>> mlist_3 = list_manager.create('test_3@example.com')
+    >>> mlist_4 = list_manager.create('test_4@example.com')
 
     >>> for name in sorted(list_manager.names):
     ...     print name
-    _xtest@example.com
-    _xtest_3@example.com
-    _xtest_4@example.com
+    test@example.com
+    test_3@example.com
+    test_4@example.com
+
+    >>> for list_id in sorted(list_manager.list_ids):
+    ...     print list_id
+    test.example.com
+    test_3.example.com
+    test_4.example.com
 
     >>> for fqdn_listname in sorted(m.fqdn_listname
     ...                             for m in list_manager.mailing_lists):
     ...     print fqdn_listname
-    _xtest@example.com
-    _xtest_3@example.com
-    _xtest_4@example.com
+    test@example.com
+    test_3@example.com
+    test_4@example.com
 
     >>> for list_name, mail_host in sorted(list_manager.name_components,
     ...                                    key=lambda (name, host): name):
     ...     print list_name, '@', mail_host
-    _xtest   @ example.com
-    _xtest_3 @ example.com
-    _xtest_4 @ example.com
+    test   @ example.com
+    test_3 @ example.com
+    test_4 @ example.com
+
+
+.. _`RFC 2369`: http://www.faqs.org/rfcs/rfc2369.html

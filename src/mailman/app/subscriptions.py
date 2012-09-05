@@ -22,7 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'SubscriptionService',
-    'handle_ListDeletedEvent',
+    'handle_ListDeletingEvent',
     ]
 
 
@@ -39,7 +39,7 @@ from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.listmanager import (
-    IListManager, ListDeletedEvent, NoSuchListError)
+    IListManager, ListDeletingEvent, NoSuchListError)
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError)
@@ -49,16 +49,12 @@ from mailman.model.member import Member
 
 
 def _membership_sort_key(member):
-    """Sort function for get_members().
+    """Sort function for find_members().
 
-    The members are sorted first by fully-qualified mailing list name,
-    then by subscribed email address, then by role.
+    The members are sorted first by unique list id, then by subscribed email
+    address, then by role.
     """
-    # member.mailing_list is already the fqdn_listname, not the IMailingList
-    # object.
-    return (member.mailing_list,
-            member.address.email,
-            int(member.role))
+    return (member.list_id, member.address.email, int(member.role))
 
 
 
@@ -70,18 +66,18 @@ class SubscriptionService:
 
     def get_members(self):
         """See `ISubscriptionService`."""
-        # {fqdn_listname -> {role -> [members]}}
+        # {list_id -> {role -> [members]}}
         by_list = {}
         user_manager = getUtility(IUserManager)
         for member in user_manager.members:
-            by_role = by_list.setdefault(member.mailing_list, {})
+            by_role = by_list.setdefault(member.list_id, {})
             members = by_role.setdefault(member.role.name, [])
             members.append(member)
         # Flatten into single list sorted as per the interface.
         all_members = []
         address_of_member = attrgetter('address.email')
-        for fqdn_listname in sorted(by_list):
-            by_role = by_list[fqdn_listname]
+        for list_id in sorted(by_list):
+            by_role = by_list[list_id]
             all_members.extend(
                 sorted(by_role.get('owner', []), key=address_of_member))
             all_members.extend(
@@ -103,14 +99,13 @@ class SubscriptionService:
             return members[0]
 
     @dbconnection
-    def find_members(self, store,
-                     subscriber=None, fqdn_listname=None, role=None):
+    def find_members(self, store, subscriber=None, list_id=None, role=None):
         """See `ISubscriptionService`."""
         # If `subscriber` is a user id, then we'll search for all addresses
         # which are controlled by the user, otherwise we'll just search for
         # the given address.
         user_manager = getUtility(IUserManager)
-        if subscriber is None and fqdn_listname is None and role is None:
+        if subscriber is None and list_id is None and role is None:
             return []
         # Querying for the subscriber is the most complicated part, because
         # the parameter can either be an email address or a user id.
@@ -136,8 +131,8 @@ class SubscriptionService:
                                 Member.address_id.is_in(address_ids)))
         # Calculate the rest of the query expression, which will get And'd
         # with the Or clause above (if there is one).
-        if fqdn_listname is not None:
-            query.append(Member.mailing_list == fqdn_listname)
+        if list_id is not None:
+            query.append(Member.list_id == list_id)
         if role is not None:
             query.append(Member.role == role)
         results = store.find(Member, And(*query))
@@ -147,14 +142,14 @@ class SubscriptionService:
         for member in self.get_members():
             yield member
 
-    def join(self, fqdn_listname, subscriber,
+    def join(self, list_id, subscriber,
              display_name=None,
              delivery_mode=DeliveryMode.regular,
              role=MemberRole.member):
         """See `ISubscriptionService`."""
-        mlist = getUtility(IListManager).get(fqdn_listname)
+        mlist = getUtility(IListManager).get_by_list_id(list_id)
         if mlist is None:
-            raise NoSuchListError(fqdn_listname)
+            raise NoSuchListError(list_id)
         # Is the subscriber an email address or user id?
         if isinstance(subscriber, basestring):
             # It's an email address, so we'll want a real name.  Make sure
@@ -181,23 +176,23 @@ class SubscriptionService:
                 raise MissingUserError(subscriber)
             return mlist.subscribe(user, role)
 
-    def leave(self, fqdn_listname, email):
+    def leave(self, list_id, email):
         """See `ISubscriptionService`."""
-        mlist = getUtility(IListManager).get(fqdn_listname)
+        mlist = getUtility(IListManager).get_by_list_id(list_id)
         if mlist is None:
-            raise NoSuchListError(fqdn_listname)
+            raise NoSuchListError(list_id)
         # XXX for now, no notification or user acknowledgment.
         delete_member(mlist, email, False, False)
 
 
 
-def handle_ListDeletedEvent(event):
-    """Delete a mailing list's members when the list is deleted."""
+def handle_ListDeletingEvent(event):
+    """Delete a mailing list's members when the list is being deleted."""
 
-    if not isinstance(event, ListDeletedEvent):
+    if not isinstance(event, ListDeletingEvent):
         return
     # Find all the members still associated with the mailing list.
     members = getUtility(ISubscriptionService).find_members(
-        fqdn_listname=event.fqdn_listname)
+        list_id=event.mailing_list.list_id)
     for member in members:
         member.unsubscribe()

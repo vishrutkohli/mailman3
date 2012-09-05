@@ -274,4 +274,4 @@ class Remove:
             return
         else:
             log(_('Removed list: $fqdn_listname'))
-        remove_list(fqdn_listname, mlist)
+        remove_list(mlist)

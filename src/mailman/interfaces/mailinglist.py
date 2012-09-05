@@ -81,6 +81,11 @@ class IMailingList(Interface):
         mail_host is 'example.com'.
         """)
 
+    list_id = Attribute("""\
+        The identity of the mailing list.  This value will never change.  It
+        is defined in RFC 2369.
+        """)
+
     fqdn_listname = Attribute("""\
         The read-only fully qualified name of the mailing list.  This is the
         guaranteed unique id for the mailing list, and it is always the
