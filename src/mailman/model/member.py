@@ -53,7 +53,7 @@ class Member(Model):
     id = Int(primary=True)
     _member_id = UUID()
     role = Enum(MemberRole)
-    list_id = Unicode(name='mailing_list')
+    list_id = Unicode()
     moderation_action = Enum(Action)
 
     address_id = Int()

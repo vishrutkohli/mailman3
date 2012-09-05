@@ -128,6 +128,16 @@ def upgrade_sqlite(database, store, version, module_path):
     store.execute(
         'CREATE INDEX ix_mailinglist_fqdn_listname '
         'ON mailinglist (list_name, mail_host);')
+    # Now, do the member table.
+    results = store.execute('SELECT id, mailing_list FROM member;')
+    for id, mailing_list in results:
+        store.execute("""
+            UPDATE mem_backup SET list_id = '{0}'
+            WHERE id = {1};
+            """.format(list_id, id))
+    # Pivot the backup table to the real thing.
+    store.execute('DROP TABLE member;')
+    store.execute('ALTER TABLE mem_backup RENAME TO member;')
 
 
 

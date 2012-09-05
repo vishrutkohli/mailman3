@@ -6,7 +6,7 @@
 -- For SQLite3 migration strategy, see
 -- http://sqlite.org/faq.html#q11
 
--- This is the base mailinglist table but with these changes:
+-- REMOVALS from the mailinglist table.
 -- REM archive
 -- REM archive_private
 -- REM archive_volume_frequency
@@ -15,7 +15,7 @@
 -- REM news_prefix_subject_too
 -- REM nntp_host
 --
--- THESE COLUMNS ARE ADDED BY THE PYTHON MIGRATION LAYER:
+-- ADDS to the mailing list table.
 -- ADD allow_list_posts
 -- ADD archive_policy
 -- ADD list_id
@@ -24,6 +24,15 @@
 
 -- LP: #971013
 -- LP: #967238
+
+-- REMOVALS from the member table.
+-- REM mailing_list
+
+-- ADDS to the member table.
+-- ADD list_id
+
+-- LP: #1024509
+
 
 CREATE TABLE ml_backup(
     id INTEGER NOT NULL,
@@ -133,7 +142,6 @@ CREATE TABLE ml_backup(
     PRIMARY KEY (id)
     );
 
-
 INSERT INTO ml_backup SELECT
     id,
     -- List identity
@@ -241,8 +249,32 @@ INSERT INTO ml_backup SELECT
     welcome_message_uri
     FROM mailinglist;
 
+CREATE TABLE mem_backup(
+    id INTEGER NOT NULL,
+    _member_id TEXT,
+    role INTEGER,
+    moderation_action INTEGER,
+    address_id INTEGER,
+    preferences_id INTEGER,
+    user_id INTEGER,
+    PRIMARY KEY (id)
+    );
+
+INSERT INTO mem_backup SELECT
+    id,
+    _member_id,
+    role,
+    moderation_action,
+    address_id,
+    preferences_id,
+    user_id
+    FROM member;
+    
+
 -- Add the new columns.  They'll get inserted at the Python layer.
 ALTER TABLE ml_backup ADD COLUMN archive_policy INTEGER;
 ALTER TABLE ml_backup ADD COLUMN list_id TEXT;
 ALTER TABLE ml_backup ADD COLUMN nntp_prefix_subject_too INTEGER;
 ALTER TABLE ml_backup ADD COLUMN newsgroup_moderation INTEGER;
+
+ALTER TABLE mem_backup ADD COLUMN list_id TEXT;

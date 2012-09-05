@@ -72,13 +72,15 @@ Architecture
 Database
 --------
  * Schema migrations (LP: #971013)
-   - include_list_post_header -> allow_list_posts
-   - news_prefix_subject_too  -> nntp_prefix_subject_too
-   - news_moderation          -> newsgroup_moderation
-   - archive and archive_private have been collapsed into archive_policy.
-   - nntp_host has been removed.
-   - generic_nonmember_action has been removed (LP: #975696)
-   - list_id added (LP: #1024509)
+   - mailinglist.include_list_post_header -> allow_list_posts
+   - mailinglist.news_prefix_subject_too  -> nntp_prefix_subject_too
+   - mailinglist.news_moderation          -> newsgroup_moderation
+   - mailinglist.archive and mailinglist.archive_private have been collapsed
+     into archive_policy.
+   - mailinglist.nntp_host has been removed.
+   - mailinglist.generic_nonmember_action has been removed (LP: #975696)
+ * Schema migrations (LP: #1024509)
+   - member.mailing_list -> list_id
  * The PostgreSQL port of the schema accidentally added a moderation_callback
    column to the mailinglist table.  Since this is unused in Mailman, it was
    simply commented out of the base schema for PostgreSQL.
