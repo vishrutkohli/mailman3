@@ -2,9 +2,10 @@
 Hooking up your mail server
 ===========================
 
-Mailman needs to be hooked up to your mail server both to accept incoming mail
-and to deliver outgoing mail.  Mailman itself never delivers messages to the
-end user; it lets its immediate upstream mail server do that.
+Mailman needs to be hooked up to your mail server (a.k.a. *mail transport
+agent* or *MTA*) both to accept incoming mail and to deliver outgoing mail.
+Mailman itself never delivers messages to the end user; it lets its immediate
+upstream mail server do that.
 
 The preferred way to allow Mailman to accept incoming messages from your mail
 server is to use the `Local Mail Transfer Protocol`_ (LMTP_) interface.  Most
@@ -32,6 +33,9 @@ Contributions are welcome!
 Postfix
 =======
 
+Postfix_ is an open source mail server by Wietse Venema.
+
+
 Mailman settings
 ----------------
 
@@ -58,9 +62,9 @@ as shown above.
 Basic Postfix connections
 -------------------------
 
-There are several ways to hook Postfix_ up to Mailman, so here are the
-simplest instructions.  The following settings should be added to Postfix's
-`main.cf` file.
+There are several ways to hook Postfix up to Mailman, so here are the simplest
+instructions.  The following settings should be added to Postfix's `main.cf`
+file.
 
 Mailman supports a technique called `Variable Envelope Return Path`_ (VERP) to
 disambiguate and accurately record bounces.  By default Mailman's VERP

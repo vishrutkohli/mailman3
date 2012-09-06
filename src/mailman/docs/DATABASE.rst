@@ -8,10 +8,10 @@ however, Storm is compatible with PostgreSQL_ and MySQL, among possibly
 others.
 
 Currently, Mailman is known to work with either the default SQLite3 database,
-or PostgreSQL.  (Volunteers to port it to MySQL are welcome!).  If you want to
-use SQLite3, you generally don't need to change anything, but if you want
-Mailman to use PostgreSQL, you'll need to set that up first, and then change a
-configuration variable in your `/etc/mailman.cfg` file.
+or PostgreSQL.  (Volunteers to port it to other databases are welcome!).  If
+you want to use SQLite3, you generally don't need to change anything, but if
+you want Mailman to use PostgreSQL, you'll need to set that up first, and then
+change a configuration variable in your `/etc/mailman.cfg` file.
 
 Two configuration variables control which database Mailman uses.  The first
 names the class implementing the database interface.  The second names the

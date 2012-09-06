@@ -9,11 +9,8 @@ Beta Release
 ============
 
 This is a beta release.  The developers believe it has sufficient
-functionality to provide full services to a mailing list, but it is not ready
-for production yet.  Interfaces and administration may differ substantially
-from the alpha series, but changes should be incremental going forward from
-beta 1.  Changes from the alpha series will be described in notes to the main
-text.
+functionality to provide full mailing list services, but it is not yet ready
+for production use.
 
 The Mailman 3 beta releases are being provided to give developers and other
 interested people an early look at the next major version, and site
@@ -40,9 +37,9 @@ $PATH or it can be accessible via the ``python2.6`` or ``python2.7`` binary.
 If your operating system does not include Python, see http://www.python.org
 downloading and installing it from source.  Python 3 is not yet supported.
 
-In this documentation, a bare ``python`` refers to the python used to invoke
-``bootstrap.py``, which might be ``python2.6`` or ``python2.7``, as well as
-the system ``python`` or an absolute path.
+In this documentation, a bare ``python`` refers to the Python executable used
+to invoke ``bootstrap.py``, which might be ``python2.6`` or ``python2.7``, as
+well as the system ``python`` or an absolute path.
 
 Mailman 3 is now based on the `zc.buildout`_ infrastructure, which greatly
 simplifies building and testing Mailman.

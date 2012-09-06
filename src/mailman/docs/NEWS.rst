@@ -10,7 +10,7 @@ Here is a history of user visible changes to Mailman.
 
 3.0 beta 2 -- "Freeze"
 ======================
-(20XX-XX-XX)
+(2012-09-05)
 
 Architecture
 ------------
@@ -19,13 +19,15 @@ Architecture
    address).  This is because while the posting address can change if the
    mailing list is moved to a new server, the list id is fixed.
    (LP: #1024509)
-   + IListManager.get_by_list_id() added.
-   + IListManager.list_ids added.
-   + IMailingList.list_id added.
-   + Several internal APIs that accepted fqdn list names now require list ids,
+
+   - IListManager.get_by_list_id() added.
+   - IListManager.list_ids added.
+   - IMailingList.list_id added.
+   - Several internal APIs that accepted fqdn list names now require list ids,
      e.g. ISubscriptionService.join() and .find_members().
-   + IMember.list_id attribute added; .mailing_list is now an alias that
+   - IMember.list_id attribute added; .mailing_list is now an alias that
      retrieves and returns the IMailingList.
+
  * `passlib`_ is now used for all password hashing instead of flufl.password.
    The default hash is `sha512_crypt`.  (LP: #1015758)
  * Internally, all datetimes are kept in the UTC timezone, however because of
@@ -72,6 +74,7 @@ Architecture
 Database
 --------
  * Schema migrations (LP: #971013)
+
    - mailinglist.include_list_post_header -> allow_list_posts
    - mailinglist.news_prefix_subject_too  -> nntp_prefix_subject_too
    - mailinglist.news_moderation          -> newsgroup_moderation
@@ -79,6 +82,7 @@ Database
      into archive_policy.
    - mailinglist.nntp_host has been removed.
    - mailinglist.generic_nonmember_action has been removed (LP: #975696)
+
  * Schema migrations (LP: #1024509)
    - member.mailing_list -> list_id
  * The PostgreSQL port of the schema accidentally added a moderation_callback
