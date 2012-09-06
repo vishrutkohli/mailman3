@@ -121,6 +121,7 @@ Documentation
 
 Bug fixes
 ---------
+ * Fixed the RFC 1153 digest footer to be compliant.  (LP: #887610)
  * Fixed a UnicodeError with non-ascii message bodies in the `approved` rule,
    given by Mark Sapiro. (LP: #949924)
  * Fixed a typo when returning the configuration file's header match checks.

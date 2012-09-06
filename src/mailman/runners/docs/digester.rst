@@ -265,11 +265,15 @@ The RFC 1153 contains the digest in a single plain text message.
     <BLANKLINE>
     ------------------------------
     <BLANKLINE>
+    Subject: Digest Footer
+    <BLANKLINE>
     _______________________________________________
     Test mailing list
     test@example.com
     http://lists.example.com/listinfo/test@example.com
     <BLANKLINE>
+    <BLANKLINE>
+    ------------------------------
     <BLANKLINE>
     End of Test Digest, Vol 1, Issue 1
     **********************************
@@ -459,11 +463,15 @@ The content can be decoded to see the actual digest text.
     "''",
     "'------------------------------'",
     "''",
+    "'Subject: Pied de page des remises group\\xc3\\xa9es'",
+    "''",
     "'_______________________________________________'",
     "'Test mailing list'",
     "'test@example.com'",
     "'http://lists.example.com/listinfo/test@example.com'",
     "''",
+    "''",
+    "'------------------------------'",
     "''",
     "'Fin de Groupe Test, Vol 1, Parution 2'",
     "'*************************************'"]

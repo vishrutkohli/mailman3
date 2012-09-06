@@ -201,7 +201,7 @@ class MIMEDigester(Digester):
             except URLError:
                 log.exception(
                     'Digest footer decorator URI not found ({0}): {1}'.format(
-                        self._mlist.fqdn_listname, 
+                        self._mlist.fqdn_listname,
                         self._mlist.digest_footer_uri))
                 footer_text = ''
             footer = MIMEText(footer_text.encode(self._charset),
@@ -281,18 +281,19 @@ class RFC1153Digester(Digester):
             except URLError:
                 log.exception(
                     'Digest footer decorator URI not found ({0}): {1}'.format(
-                        self._mlist.fqdn_listname, 
+                        self._mlist.fqdn_listname,
                         self._mlist.digest_footer_uri))
-                footer_text = ''                
-            # This is not strictly conformant RFC 1153.  The trailer is only
-            # supposed to contain two lines, i.e. the "End of ... Digest" line
-            # and the row of asterisks.  If this screws up MUAs, the solution
-            # is to add the footer as the last message in the RFC 1153 digest.
-            # I just hate the way that VM does that and I think it's confusing
-            # to users, so don't do it unless there's a clamor.
+                footer_text = ''
+            # MAS: There is no real place for the digest_footer in an RFC 1153
+            # compliant digest, so add it as an additional message with
+            # Subject: Digest Footer
             print >> self._text, self._separator30
             print >> self._text
+            print >> self._text, 'Subject: ' + _('Digest Footer')
+            print >> self._text
             print >> self._text, footer_text
+            print >> self._text
+            print >> self._text, self._separator30
             print >> self._text
         # Add the sign-off.
         sign_off = _('End of ') + self._digest_id
