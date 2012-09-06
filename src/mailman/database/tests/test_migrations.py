@@ -97,6 +97,7 @@ class TestMigration20120407Schema(MigrationTestBase):
         self.assertRaises(DatabaseError,
                           self._database.store.execute,
                           'select list_id from member;')
+        self._database.store.rollback()
         for present in ('archive',
                         'archive_private',
                         'archive_volume_frequency',

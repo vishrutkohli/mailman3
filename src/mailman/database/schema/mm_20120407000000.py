@@ -131,6 +131,11 @@ def upgrade_sqlite(database, store, version, module_path):
     # Now, do the member table.
     results = store.execute('SELECT id, mailing_list FROM member;')
     for id, mailing_list in results:
+        list_name, at, mail_host = mailing_list.partition('@')
+        if at == '':
+            list_id = mailing_list
+        else:
+            list_id = '{0}.{1}'.format(list_name, mail_host)
         store.execute("""
             UPDATE mem_backup SET list_id = '{0}'
             WHERE id = {1};
@@ -143,8 +148,10 @@ def upgrade_sqlite(database, store, version, module_path):
 
 def upgrade_postgres(database, store, version, module_path):
     # Get the old values from the mailinglist table.
-    results = store.execute(
-        'SELECT id, archive, archive_private FROM mailinglist;')
+    results = store.execute("""
+        SELECT id, archive, archive_private, list_name, mail_host 
+        FROM mailinglist;
+        """)
     # Do the simple renames first.
     store.execute("""
         ALTER TABLE mailinglist
@@ -166,19 +173,42 @@ def upgrade_postgres(database, store, version, module_path):
             'ALTER TABLE mailinglist DROP COLUMN {0};'.format(column))
     # Now do the trickier collapsing of values.  Add the new columns.
     store.execute('ALTER TABLE mailinglist ADD COLUMN archive_policy INTEGER;')
+    store.execute('ALTER TABLE mailinglist ADD COLUMN list_id TEXT;')
     # Query the database for the old values of archive and archive_private in
     # each column.  Then loop through all the results and update the new
     # archive_policy from the old values.
     for value in results:
-        id, archive, archive_private = value
+        id, archive, archive_private, list_name, mail_host = value
+        list_id = '{0}.{1}'.format(list_name, mail_host)
         store.execute("""
             UPDATE mailinglist SET
-                archive_policy = {0}
-            WHERE id = {1};
-            """.format(archive_policy(archive, archive_private), id))
+                archive_policy = {0},
+                list_id = '{1}'
+            WHERE id = {2};
+            """.format(archive_policy(archive, archive_private), list_id, id))
     # Now drop the old columns.
     for column in ('archive', 'archive_private'):
         store.execute(
             'ALTER TABLE mailinglist DROP COLUMN {0};'.format(column))
+    # Now add some indexes that were previously missing.
+    store.execute(
+        'CREATE INDEX ix_mailinglist_list_id ON mailinglist (list_id);')
+    store.execute(
+        'CREATE INDEX ix_mailinglist_fqdn_listname '
+        'ON mailinglist (list_name, mail_host);')
+    # Now, do the member table.
+    results = store.execute('SELECT id, mailing_list FROM member;')
+    store.execute('ALTER TABLE member ADD COLUMN list_id TEXT;')
+    for id, mailing_list in results:
+        list_name, at, mail_host = mailing_list.partition('@')
+        if at == '':
+            list_id = mailing_list
+        else:
+            list_id = '{0}.{1}'.format(list_name, mail_host)
+        store.execute("""
+            UPDATE member SET list_id = '{0}'
+            WHERE id = {1};
+            """.format(list_id, id))
+    store.execute('ALTER TABLE member DROP COLUMN mailing_list;')
     # Record the migration in the version table.
     database.load_schema(store, version, None, module_path)
