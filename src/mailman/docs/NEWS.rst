@@ -8,6 +8,11 @@ Copyright (C) 1998-2012 by the Free Software Foundation, Inc.
 Here is a history of user visible changes to Mailman.
 
 
+3.0 beta 3 -- "Here Again"
+==========================
+(2012-XX-XX)
+
+
 3.0 beta 2 -- "Freeze"
 ======================
 (2012-09-05)
@@ -40,7 +45,7 @@ Architecture
    they do, the implementations must acquire said lock themselves.
  * The `news` runner and queue has been renamed to the more accurate `nntp`.
    The runner has also been ported to Mailman 3 (LP: #967409).  Beta testers
-   can can safely remove `$var_dir/queue/news`.
+   can safely remove `$var_dir/queue/news`.
  * A mailing list's *moderator password* is no longer stored in the clear; it
    is hashed with the currently selected scheme.
  * An `AddressVerificationEvent` is triggered when an `IAddress` is verified
