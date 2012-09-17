@@ -27,9 +27,10 @@ __all__ = [
 
 import os
 import sys
+from ConfigParser import SafeConfigParser
 
 from lazr.config import ConfigSchema, as_boolean
-from pkg_resources import resource_stream
+from pkg_resources import resource_stream, resource_exists
 from string import Template
 from zope.component import getUtility
 from zope.event import notify
@@ -235,3 +236,31 @@ class Configuration:
         """Iterate over all the language configuration sections."""
         for section in self._config.getByCategory('language', []):
             yield section
+
+    def get_additional_config(self, name, keyname):
+        """Return an external ini-file as specified by the keyname."""
+        add_config = SafeConfigParser()
+        if resource_exists('mailman.config', '%s.cfg' % name):
+            included_config_file = resource_stream('mailman.config',
+                                                   '%s.cfg' % name)
+            add_config.readfp(included_config_file)
+        # Resolve the path value from the key name
+        path = self._config
+        for key in keyname.split("."):
+            path = getattr(path, key)
+        # Load the file
+        configured_path = os.path.expanduser(path) # TODO: allow URLs
+        if not configured_path.startswith("/"):
+            # Consider it relative to the mailman.cfg file
+            for overlay in self.overlays:
+                if os.sep in overlay.filename:
+                    configured_path = os.path.join(
+                            os.path.dirname(overlay.filename),
+                            configured_path)
+                    break
+        r = add_config.read([configured_path])
+        return add_config
+
+    def archiver_config(self, name):
+        """A shortcut to self.get_additional_config() for achivers."""
+        return self.get_additional_config(name, "archiver.%s.configure" % name)
