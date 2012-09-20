@@ -23,6 +23,7 @@ Create a mailing list in a domain and it's accessible via the API.
         display_name: Test-one
         fqdn_listname: test-one@example.com
         http_etag: "..."
+        list_id: test-one.example.com
         list_name: test-one
         mail_host: example.com
         member_count: 0
@@ -40,6 +41,7 @@ You can also query for lists from a particular domain.
         display_name: Test-one
         fqdn_listname: test-one@example.com
         http_etag: "..."
+        list_id: test-one.example.com
         list_name: test-one
         mail_host: example.com
         member_count: 0
@@ -89,6 +91,7 @@ It is also available via the location given in the response.
     display_name: Test-two
     fqdn_listname: test-two@example.com
     http_etag: "..."
+    list_id: test-two.example.com
     list_name: test-two
     mail_host: example.com
     member_count: 0

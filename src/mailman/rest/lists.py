@@ -107,6 +107,7 @@ class _ListBase(resource.Resource, CollectionMixin):
         return dict(
             display_name=mlist.display_name,
             fqdn_listname=mlist.fqdn_listname,
+            list_id=mlist.list_id,
             list_name=mlist.list_name,
             mail_host=mlist.mail_host,
             member_count=mlist.members.member_count,
