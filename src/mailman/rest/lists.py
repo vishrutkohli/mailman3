@@ -107,11 +107,12 @@ class _ListBase(resource.Resource, CollectionMixin):
         return dict(
             display_name=mlist.display_name,
             fqdn_listname=mlist.fqdn_listname,
+            list_id=mlist.list_id,
             list_name=mlist.list_name,
             mail_host=mlist.mail_host,
             member_count=mlist.members.member_count,
             volume=mlist.volume,
-            self_link=path_to('lists/{0}'.format(mlist.fqdn_listname)),
+            self_link=path_to('lists/{0}'.format(mlist.list_id)),
             )
 
     def _get_collection(self, request):
@@ -122,8 +123,15 @@ class _ListBase(resource.Resource, CollectionMixin):
 class AList(_ListBase):
     """A mailing list."""
 
-    def __init__(self, list_name):
-        self._mlist = getUtility(IListManager).get(list_name)
+    def __init__(self, list_identifier):
+        # list-id is preferred, but for backward compatibility, fqdn_listname
+        # is also accepted.  If the string contains '@', treat it as the
+        # latter.
+        manager = getUtility(IListManager)
+        if '@' in list_identifier:
+            self._mlist = manager.get(list_identifier)
+        else:
+            self._mlist = manager.get_by_list_id(list_identifier)
 
     @resource.GET()
     def mailing_list(self, request):
@@ -192,7 +200,7 @@ class AllLists(_ListBase):
         except ValueError as error:
             return http.bad_request([], str(error))
         # wsgiref wants headers to be bytes, not unicodes.
-        location = path_to('lists/{0}'.format(mlist.fqdn_listname))
+        location = path_to('lists/{0}'.format(mlist.list_id))
         # Include no extra headers or body.
         return http.created(location, [], None)
 

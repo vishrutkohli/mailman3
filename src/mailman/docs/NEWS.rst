@@ -12,6 +12,15 @@ Here is a history of user visible changes to Mailman.
 ==========================
 (2012-XX-XX)
 
+REST
+----
+ * Add list_id to JSON representation for a mailing list (given by Jimmy
+   Bergman).
+ * The canonical resource for a mailing list (and thus its self_link) is now
+   the URL with the list-id.  To reference a mailing list, the list-id url is
+   preferred, but for backward compatibility, the posting address is still
+   accepted.
+
 
 3.0 beta 2 -- "Freeze"
 ======================
