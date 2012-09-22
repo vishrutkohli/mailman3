@@ -31,10 +31,11 @@ from operator import attrgetter
 from restish import http, resource
 from zope.component import getUtility
 
-from mailman.rest.helpers import CollectionMixin, etag, path_to
+from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
 from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
 from mailman.interfaces.usermanager import IUserManager
+from mailman.utilities.datetime import now
 
 
 
@@ -76,6 +77,24 @@ class AllAddresses(_AddressBase):
 
 
 
+class _VerifyResource(resource.Resource):
+    """A helper resource for verify/unverify POSTS."""
+
+    def __init__(self, address, action):
+        self._address = address
+        self._action = action
+        assert action in ('verify', 'unverify')
+
+    @resource.POST()
+    def verify(self, request):
+        # We don't care about the POST data, just do the action.
+        if self._action == 'verify' and self._address.verified_on is None:
+            self._address.verified_on = now()
+        elif self._action == 'unverify':
+            self._address.verified_on = None
+        return no_content()
+
+
 class AnAddress(_AddressBase):
     """An address."""
 
@@ -113,6 +132,26 @@ class AnAddress(_AddressBase):
         child = Preferences(
             self._address.preferences,
             'addresses/{0}'.format(self._address.email))
+        return child, []
+
+    @resource.child()
+    def verify(self, request, segments):
+        """/addresses/<email>/verify"""
+        if len(segments) != 0:
+            return http.bad_request()
+        if self._address is None:
+            return http.not_found()
+        child = _VerifyResource(self._address, 'verify')
+        return child, []
+
+    @resource.child()
+    def unverify(self, request, segments):
+        """/addresses/<email>/verify"""
+        if len(segments) != 0:
+            return http.bad_request()
+        if self._address is None:
+            return http.not_found()
+        child = _VerifyResource(self._address, 'unverify')
         return child, []
 
 

@@ -90,7 +90,6 @@ Verifying
 
 When the address gets verified, this attribute is available in the REST
 representation.
-::
 
     >>> from mailman.utilities.datetime import now
     >>> anne.verified_on = now()
@@ -102,6 +101,47 @@ representation.
     registered_on: 2005-08-01T07:49:23
     self_link: http://localhost:9001/3.0/addresses/anne@example.com
     verified_on: 2005-08-01T07:49:23
+
+Addresses can also be verified through the REST API, by POSTing to the
+'verify' sub-resource.  The POST data is ignored.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/'
+    ...           'cris@example.com/verify', {})
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Now Cris's address is verified.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com')
+    display_name: Cris Person
+    email: cris@example.com
+    http_etag: "..."
+    original_email: cris@example.com
+    registered_on: 2005-08-01T07:49:23
+    self_link: http://localhost:9001/3.0/addresses/cris@example.com
+    verified_on: 2005-08-01T07:49:23
+
+If you should ever need to 'unverify' an address, POST to the 'unverify'
+sub-resource.  Again, the POST data is ignored.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/'
+    ...           'cris@example.com/unverify', {})
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Now Cris's address is unverified.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com')
+    display_name: Cris Person
+    email: cris@example.com
+    http_etag: "..."
+    original_email: cris@example.com
+    registered_on: 2005-08-01T07:49:23
+    self_link: http://localhost:9001/3.0/addresses/cris@example.com
 
 
 User addresses

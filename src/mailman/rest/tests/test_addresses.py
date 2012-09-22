@@ -28,11 +28,14 @@ __all__ = [
 import unittest
 
 from urllib2 import HTTPError
+from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
+from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
+from mailman.utilities.datetime import now
 
 
 
@@ -52,4 +55,73 @@ class TestAddresses(unittest.TestCase):
         except HTTPError as exc:
             self.assertEqual(exc.code, 404)
         else:
-            raise AssertionError('Expected HTTPError')
+            raise AssertionError('Expected HTTPError 404')
+
+    def test_verify_a_missing_address(self):
+        # POSTing to the 'verify' sub-resource returns a 404.
+        try:
+            call_api('http://localhost:9001/3.0/addresses/'
+                     'nobody@example.com/verify', {})
+        except HTTPError as exc:
+            self.assertEqual(exc.code, 404)
+        else:
+            raise AssertionError('Expected HTTPError 404')
+
+    def test_unverify_a_missing_address(self):
+        # POSTing to the 'unverify' sub-resource returns a 404.
+        try:
+            call_api('http://localhost:9001/3.0/addresses/'
+                     'nobody@example.com/unverify', {})
+        except HTTPError as exc:
+            self.assertEqual(exc.code, 404)
+        else:
+            raise AssertionError('Expected HTTPError 404')
+
+    def test_verify_already_verified(self):
+        # It's okay to verify an already verified; it just doesn't change the
+        # value.
+        verified_on = now()
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+            anne.verified_on = verified_on
+        response, content = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/verify', {})
+        self.assertEqual(content['status'], '204')
+        self.assertEqual(anne.verified_on, verified_on)
+
+    def test_unverify_already_unverified(self):
+        # It's okay to unverify an already unverified; it just doesn't change
+        # the value.
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+            self.assertEqual(anne.verified_on, None)
+        response, content = call_api(
+           'http://localhost:9001/3.0/addresses/anne@example.com/unverify', {})
+        self.assertEqual(content['status'], '204')
+        self.assertEqual(anne.verified_on, None)
+
+    def test_verify_bad_request(self):
+        # Too many segments after /verify.
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+            self.assertEqual(anne.verified_on, None)
+        try:
+            call_api('http://localhost:9001/3.0/addresses/'
+                     'anne@example.com/verify/foo', {})
+        except HTTPError as exc:
+            self.assertEqual(exc.code, 400)
+        else:
+            raise AssertionError('Expected HTTPError 400')
+
+    def test_unverify_bad_request(self):
+        # Too many segments after /verify.
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+            self.assertEqual(anne.verified_on, None)
+        try:
+            call_api('http://localhost:9001/3.0/addresses/'
+                     'anne@example.com/unverify/foo', {})
+        except HTTPError as exc:
+            self.assertEqual(exc.code, 400)
+        else:
+            raise AssertionError('Expected HTTPError 400')
