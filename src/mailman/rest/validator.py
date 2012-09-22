@@ -21,6 +21,7 @@ from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'PatchValidator',
     'Validator',
     'enum_validator',
     'language_validator',
@@ -31,6 +32,8 @@ __all__ = [
 from uuid import UUID
 from zope.component import getUtility
 
+from mailman.core.errors import (
+    ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
 from mailman.interfaces.languages import ILanguageManager
 
 
@@ -119,3 +122,50 @@ class Validator:
             missing = COMMASPACE.join(sorted(required_keys - value_keys))
             raise ValueError('Missing parameters: {0}'.format(missing))
         return values
+
+    def update(self, obj, request):
+        """Update the object with the values in the request.
+
+        This first validates and converts the attributes in the request, then
+        updates the given object with the newly converted values.
+
+        :param obj: The object to update.
+        :type obj: object
+        :param request: The HTTP request.
+        :raises ValueError: if conversion failed for some attribute.
+        """
+        for key, value in self.__call__(request).items():
+            self._converters[key].put(obj, key, value)
+
+
+
+class PatchValidator(Validator):
+    """Create a special validator for PATCH requests.
+
+    PATCH is different than PUT because with the latter, you're changing the
+    entire resource, so all expected attributes must exist.  With the former,
+    you're only changing a subset of the attributes, so you only validate the
+    ones that exist in the request.
+    """
+    def __init__(self, request, converters):
+        """Create a validator for the PATCH request.
+
+        :param request: The request object, which must have a .PATCH
+            attribute.
+        :param converters: A mapping of attribute names to the converter for
+            that attribute's type.  Generally, this will be a GetterSetter
+            instance, but it might be something more specific for custom data
+            types (e.g. non-basic types like unicodes).
+        :raises UnknownPATCHRequestError: if the request contains an unknown
+            attribute, i.e. one that is not in the `attributes` mapping.
+        :raises ReadOnlyPATCHRequest: if the requests contains an attribute
+            that is defined as read-only.
+        """
+        validationators = {}
+        for attribute in request.PATCH:
+            if attribute not in converters:
+                raise UnknownPATCHRequestError(attribute)
+            if converters[attribute].decoder is None:
+                raise ReadOnlyPATCHRequestError(attribute)
+            validationators[attribute] = converters[attribute]
+        super(PatchValidator, self).__init__(**validationators)

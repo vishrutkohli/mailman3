@@ -32,12 +32,34 @@ from uuid import UUID
 from zope.component import getUtility
 
 from mailman.config import config
+from mailman.core.errors import (
+    ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
 from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
-from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
+from mailman.rest.helpers import (
+    CollectionMixin, GetterSetter, PATCH, etag, no_content, path_to)
 from mailman.rest.preferences import Preferences
-from mailman.rest.validator import Validator
+from mailman.rest.validator import PatchValidator, Validator
+
+
+# Attributes of a user which can be changed via the REST API.
+class PasswordEncrypterGetterSetter(GetterSetter):
+    def __init__(self):
+        super(PasswordEncrypterGetterSetter, self).__init__(
+            config.password_context.encrypt)
+    def get(self, obj, attribute):
+        assert attribute == 'cleartext_password'
+        super(PasswordEncrypterGetterSetter, self).get(obj, 'password')
+    def put(self, obj, attribute, value):
+        assert attribute == 'cleartext_password'
+        super(PasswordEncrypterGetterSetter, self).put(obj, 'password', value)
+
+
+ATTRIBUTES = dict(
+    display_name=GetterSetter(unicode),
+    cleartext_password=PasswordEncrypterGetterSetter(),
+    )
 
 
 
@@ -165,3 +187,37 @@ class AUser(_UserBase):
             self._user.preferences,
             'users/{0}'.format(self._user.user_id.int))
         return child, []
+
+    @PATCH()
+    def patch_update(self, request):
+        """Patch the user's configuration (i.e. partial update)."""
+        if self._user is None:
+            return http.not_found()
+        try:
+            validator = PatchValidator(request, ATTRIBUTES)
+        except UnknownPATCHRequestError as error:
+            return http.bad_request(
+                [], b'Unknown attribute: {0}'.format(error.attribute))
+        except ReadOnlyPATCHRequestError as error:
+            return http.bad_request(
+                [], b'Read-only attribute: {0}'.format(error.attribute))
+        validator.update(self._user, request)
+        return no_content()
+
+    @resource.PUT()
+    def put_update(self, request):
+        """Put the user's configuration (i.e. full update)."""
+        if self._user is None:
+            return http.not_found()
+        validator = Validator(**ATTRIBUTES)
+        try:
+            validator.update(self._user, request)
+        except UnknownPATCHRequestError as error:
+            return http.bad_request(
+                [], b'Unknown attribute: {0}'.format(error.attribute))
+        except ReadOnlyPATCHRequestError as error:
+            return http.bad_request(
+                [], b'Read-only attribute: {0}'.format(error.attribute))
+        except ValueError as error:
+            return http.bad_request([], str(error))
+        return no_content()

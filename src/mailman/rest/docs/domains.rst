@@ -131,7 +131,7 @@ example.com domain does not contain any mailing lists.
     ...           })
     content-length: 0
     date: ...
-    location: http://localhost:9001/3.0/lists/test-domains@example.com
+    location: http://localhost:9001/3.0/lists/test-domains.example.com
     ...
 
     >>> dump_json('http://localhost:9001/3.0/domains/example.com/lists')
@@ -141,7 +141,7 @@ example.com domain does not contain any mailing lists.
         http_etag: "..."
         ...
         member_count: 0
-        self_link: http://localhost:9001/3.0/lists/test-domains@example.com
+        self_link: http://localhost:9001/3.0/lists/test-domains.example.com
         volume: 1
     http_etag: "..."
     start: 0

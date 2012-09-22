@@ -43,7 +43,10 @@ __all__ = [
     'MemberError',
     'MustDigestError',
     'PasswordError',
+    'RESTError',
+    'ReadOnlyPATCHRequestError',
     'RejectMessage',
+    'UnknownPATCHRequestError',
     ]
 
 
@@ -126,3 +129,22 @@ class BadPasswordSchemeError(PasswordError):
 
     def __str__(self):
         return 'A bad password scheme was given: %s' % self.scheme_name
+
+
+
+class RESTError(MailmanError):
+    """Base class for REST API errors."""
+
+
+class UnknownPATCHRequestError(RESTError):
+    """A PATCH request contained an unknown attribute."""
+
+    def __init__(self, attribute):
+        self.attribute = attribute
+
+
+class ReadOnlyPATCHRequestError(RESTError):
+    """A PATCH request contained a read-only attribute."""
+
+    def __init__(self, attribute):
+        self.attribute = attribute

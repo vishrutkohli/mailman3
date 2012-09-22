@@ -20,6 +20,9 @@ REST
    the URL with the list-id.  To reference a mailing list, the list-id url is
    preferred, but for backward compatibility, the posting address is still
    accepted.
+ * You can now PUT and PATCH on user resources to change the user's display
+   name or password.  For passwords, you pass in the clear text password and
+   Mailman will hash it before storing.
 
 
 3.0 beta 2 -- "Freeze"

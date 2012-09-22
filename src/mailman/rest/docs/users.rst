@@ -40,7 +40,7 @@ The user ids match.
     >>> json['entries'][0]['user_id'] == anne.user_id.int
     True
 
-A user might not have a real name, in which case, the attribute will not be
+A user might not have a display name, in which case, the attribute will not be
 returned in the REST API.
 
     >>> dave = user_manager.create_user('dave@example.com')
@@ -66,7 +66,8 @@ Creating users via the API
 ==========================
 
 New users can be created through the REST API.  To do so requires the initial
-email address for the user, a password, and optionally the user's full name.
+email address for the user, a password, and optionally the user's display
+name.
 ::
 
     >>> transaction.abort()
@@ -134,6 +135,75 @@ therefore cannot be retrieved.  It can be reset though.
     user_id: 4
 
 
+Updating users
+==============
+
+Users have a password and a display name.  The display name can be changed
+through the REST API.
+
+    >>> dump_json('http://localhost:9001/3.0/users/4', {
+    ...           'display_name': 'Chrissy Person',
+    ...           }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Cris's display name has been updated.
+
+    >>> dump_json('http://localhost:9001/3.0/users/4')
+    created_on: 2005-08-01T07:49:23
+    display_name: Chrissy Person
+    http_etag: "..."
+    password: {plaintext}...
+    self_link: http://localhost:9001/3.0/users/4
+    user_id: 4
+
+You can also change the user's password by passing in the new clear text
+password.  Mailman will hash this before it is stored internally.
+
+    >>> dump_json('http://localhost:9001/3.0/users/4', {
+    ...           'cleartext_password': 'clockwork angels',
+    ...           }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Even though you see *{plaintext}clockwork angels* below, it has still been
+hashed before storage.  The default hashing algorithm for the test suite is a
+plain text hash, but you can see that it works by the addition of the
+algorithm prefix.
+
+    >>> dump_json('http://localhost:9001/3.0/users/4')
+    created_on: 2005-08-01T07:49:23
+    display_name: Chrissy Person
+    http_etag: "..."
+    password: {plaintext}clockwork angels
+    self_link: http://localhost:9001/3.0/users/4
+    user_id: 4
+
+You can change both the display name and the password by PUTing the full
+resource.
+
+    >>> dump_json('http://localhost:9001/3.0/users/4', {
+    ...           'display_name': 'Christopherson Person',
+    ...           'cleartext_password': 'the garden',
+    ...           }, method='PUT')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/users/4')
+    created_on: 2005-08-01T07:49:23
+    display_name: Christopherson Person
+    http_etag: "..."
+    password: {plaintext}the garden
+    self_link: http://localhost:9001/3.0/users/4
+    user_id: 4
+
+
 Deleting users via the API
 ==========================
 
@@ -145,7 +215,17 @@ Users can also be deleted via the API.
     date: ...
     server: ...
     status: 204
+
+Cris's resource cannot be retrieved either by email address...
+
     >>> dump_json('http://localhost:9001/3.0/users/cris@example.com')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 404: 404 Not Found
+
+...or user id.
+
+    >>> dump_json('http://localhost:9001/3.0/users/4')
     Traceback (most recent call last):
     ...
     HTTPError: HTTP Error 404: 404 Not Found
@@ -167,6 +247,23 @@ user id...
 ::
 
     >>> dump_json('http://localhost:9001/3.0/users/zed@example.org')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 404: 404 Not Found
+
+You also can't update a missing user.
+
+    >>> dump_json('http://localhost:9001/3.0/users/zed@example.org', {
+    ...           'display_name': 'Is Dead',
+    ...           }, method='PATCH')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 404: 404 Not Found
+
+    >>> dump_json('http://localhost:9001/3.0/users/zed@example.org', {
+    ...           'display_name': 'Is Dead',
+    ...           'cleartext_password': 'vroom',
+    ...           }, method='PUT')
     Traceback (most recent call last):
     ...
     HTTPError: HTTP Error 404: 404 Not Found

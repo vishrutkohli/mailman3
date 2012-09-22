@@ -21,6 +21,7 @@ from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'GetterSetter',
     'PATCH',
     'etag',
     'no_content',
@@ -205,3 +206,63 @@ class PATCH(MethodDecorator):
     def __call__(self, func):
         really_wrapped_func = PATCHWrapper(func)
         return super(PATCH, self).__call__(really_wrapped_func)
+
+
+class GetterSetter:
+    """Get and set attributes on an object.
+
+    Most attributes are fairly simple - a getattr() or setattr() on the object
+    does the trick, with the appropriate encoding or decoding on the way in
+    and out.  Encoding doesn't happen here though; the standard JSON library
+    handles most types, but see ExtendedEncoder for additional support.
+
+    Others are more complicated since they aren't kept in the model as direct
+    columns in the database.  These will use subclasses of this base class.
+    Read-only attributes will have a decoder which always raises ValueError.
+    """
+
+    def __init__(self, decoder=None):
+        """Create a getter/setter for a specific attribute.
+
+        :param decoder: The callable for decoding a web request value string
+            into the specific data type needed by the object's attribute.  Use
+            None to indicate a read-only attribute.  The callable should raise
+            ValueError when the web request value cannot be converted.
+        :type decoder: callable
+        """
+        self.decoder = decoder
+
+    def get(self, obj, attribute):
+        """Return the named object attribute value.
+
+        :param obj: The object to access.
+        :type obj: object
+        :param attribute: The attribute name.
+        :type attribute: string
+        :return: The attribute value, ready for JSON encoding.
+        :rtype: object
+        """
+        return getattr(obj, attribute)
+
+    def put(self, obj, attribute, value):
+        """Set the named object attribute value.
+
+        :param obj: The object to change.
+        :type obj: object
+        :param attribute: The attribute name.
+        :type attribute: string
+        :param value: The new value for the attribute.
+        """
+        setattr(obj, attribute, value)
+
+    def __call__(self, value):
+        """Convert the value to its internal format.
+
+        :param value: The web request value to convert.
+        :type value: string
+        :return: The converted value.
+        :rtype: object
+        """
+        if self.decoder is None:
+            return value
+        return self.decoder(value)
