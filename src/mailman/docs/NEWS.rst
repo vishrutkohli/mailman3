@@ -12,6 +12,23 @@ Here is a history of user visible changes to Mailman.
 ==========================
 (2012-XX-XX)
 
+REST
+----
+ * Add list_id to JSON representation for a mailing list (given by Jimmy
+   Bergman).
+ * The canonical resource for a mailing list (and thus its self_link) is now
+   the URL with the list-id.  To reference a mailing list, the list-id url is
+   preferred, but for backward compatibility, the posting address is still
+   accepted.
+ * You can now PUT and PATCH on user resources to change the user's display
+   name or password.  For passwords, you pass in the clear text password and
+   Mailman will hash it before storing.
+ * You can now verify and unverify an email address through the REST API.
+   POST to .../addresses/<email>/verify and .../addresses/<email>/unverify
+   respectively.  The POST data is ignored.  It is not an error to verify or
+   unverify an address more than once, but verifying an already verified
+   address does not change its `.verified_on` date.  (LP: #1054730)
+
 
 3.0 beta 2 -- "Freeze"
 ======================

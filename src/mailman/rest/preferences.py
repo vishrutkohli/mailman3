@@ -30,7 +30,8 @@ from lazr.config import as_boolean
 from restish import http, resource
 
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
-from mailman.rest.helpers import PATCH, etag, no_content, path_to
+from mailman.rest.helpers import (
+    GetterSetter, PATCH, etag, no_content, path_to)
 from mailman.rest.validator import (
     Validator, enum_validator, language_validator)
 
@@ -72,7 +73,7 @@ class ReadOnlyPreferences(resource.Resource):
         resource['self_link'] = path_to(
             '{0}/preferences'.format(self._base_url))
         return http.ok([], etag(resource))
-    
+
 
 
 class Preferences(ReadOnlyPreferences):
@@ -82,22 +83,20 @@ class Preferences(ReadOnlyPreferences):
         if self._parent is None:
             return http.not_found()
         kws = dict(
-            acknowledge_posts=as_boolean,
-            delivery_mode=enum_validator(DeliveryMode),
-            delivery_status=enum_validator(DeliveryStatus),
-            preferred_language=language_validator,
-            receive_list_copy=as_boolean,
-            receive_own_postings=as_boolean,
+            acknowledge_posts=GetterSetter(as_boolean),
+            delivery_mode=GetterSetter(enum_validator(DeliveryMode)),
+            delivery_status=GetterSetter(enum_validator(DeliveryStatus)),
+            preferred_language=GetterSetter(language_validator),
+            receive_list_copy=GetterSetter(as_boolean),
+            receive_own_postings=GetterSetter(as_boolean),
             )
         if is_optional:
             # For a PUT, all attributes are optional.
             kws['_optional'] = kws.keys()
         try:
-            values = Validator(**kws)(request)
+            Validator(**kws).update(self._parent, request)
         except ValueError as error:
             return http.bad_request([], str(error))
-        for key, value in values.items():
-            setattr(self._parent, key, value)
         return no_content()
 
     @PATCH()

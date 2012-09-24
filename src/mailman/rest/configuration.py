@@ -29,78 +29,17 @@ from lazr.config import as_boolean, as_timedelta
 from restish import http, resource
 
 from mailman.config import config
+from mailman.core.errors import (
+    ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
 from mailman.interfaces.action import Action
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.mailinglist import IAcceptableAliasSet, ReplyToMunging
-from mailman.rest.helpers import PATCH, etag, no_content
-from mailman.rest.validator import Validator, enum_validator
+from mailman.rest.helpers import GetterSetter, PATCH, etag, no_content
+from mailman.rest.validator import PatchValidator, Validator, enum_validator
 
 
 
-class GetterSetter:
-    """Get and set attributes on mailing lists.
-
-    Most attributes are fairly simple - a getattr() or setattr() on the
-    mailing list does the trick, with the appropriate encoding or decoding on
-    the way in and out.  Encoding doesn't happen here though; the standard
-    JSON library handles most types, but see ExtendedEncoder in
-    mailman.rest.helpers for additional support.
-
-    Others are more complicated since they aren't kept in the model as direct
-    columns in the database.  These will use subclasses of this base class.
-    Read-only attributes will have a decoder which always raises ValueError.
-    """
-
-    def __init__(self, decoder=None):
-        """Create a getter/setter for a specific list attribute.
-
-        :param decoder: The callable for decoding a web request value string
-            into the specific data type needed by the `IMailingList`
-            attribute.  Use None to indicate a read-only attribute.  The
-            callable should raise ValueError when the web request value cannot
-            be converted.
-        :type decoder: callable
-        """
-        self.decoder = decoder
-
-    def get(self, mlist, attribute):
-        """Return the named mailing list attribute value.
-
-        :param mlist: The mailing list.
-        :type mlist: `IMailingList`
-        :param attribute: The attribute name.
-        :type attribute: string
-        :return: The attribute value, ready for JSON encoding.
-        :rtype: object
-        """
-        return getattr(mlist, attribute)
-
-    def put(self, mlist, attribute, value):
-        """Set the named mailing list attribute value.
-
-        :param mlist: The mailing list.
-        :type mlist: `IMailingList`
-        :param attribute: The attribute name.
-        :type attribute: string
-        :param value: The new value for the attribute.
-        :type request_value: object
-        """
-        setattr(mlist, attribute, value)
-
-    def __call__(self, value):
-        """Convert the value to its internal format.
-
-        :param value: The web request value to convert.
-        :type value: string
-        :return: The converted value.
-        :rtype: object
-        """
-        if self.decoder is None:
-            return value
-        return self.decoder(value)
-
-
 class AcceptableAliases(GetterSetter):
     """Resource for the acceptable aliases of a mailing list."""
 
@@ -239,19 +178,6 @@ class ListConfiguration(resource.Resource):
             resource[attribute] = value
         return http.ok([], etag(resource))
 
-    # XXX 2010-09-01 barry: Refactor {put,patch}_configuration() for common
-    # code paths.
-
-    def _set_writable_attributes(self, validator, request):
-        """Common code for setting all attributes given in the request.
-
-        Returns an HTTP 400 when a request tries to write to a read-only
-        attribute.
-        """
-        converted = validator(request)
-        for key, value in converted.items():
-            ATTRIBUTES[key].put(self._mlist, key, value)
-
     @resource.PUT()
     def put_configuration(self, request):
         """Set a mailing list configuration."""
@@ -259,7 +185,7 @@ class ListConfiguration(resource.Resource):
         if attribute is None:
             validator = Validator(**VALIDATORS)
             try:
-                self._set_writable_attributes(validator, request)
+                validator.update(self._mlist, request)
             except ValueError as error:
                 return http.bad_request([], str(error))
         elif attribute not in ATTRIBUTES:
@@ -271,7 +197,7 @@ class ListConfiguration(resource.Resource):
         else:
             validator = Validator(**{attribute: VALIDATORS[attribute]})
             try:
-                self._set_writable_attributes(validator, request)
+                validator.update(self._mlist, request)
             except ValueError as error:
                 return http.bad_request([], str(error))
         return no_content()
@@ -279,20 +205,16 @@ class ListConfiguration(resource.Resource):
     @PATCH()
     def patch_configuration(self, request):
         """Patch the configuration (i.e. partial update)."""
-        # Validate only the partial subset of attributes given in the request.
-        validationators = {}
-        for attribute in request.PATCH:
-            if attribute not in ATTRIBUTES:
-                return http.bad_request(
-                    [], b'Unknown attribute: {0}'.format(attribute))
-            elif ATTRIBUTES[attribute].decoder is None:
-                return http.bad_request(
-                    [], b'Read-only attribute: {0}'.format(attribute))
-            else:
-                validationators[attribute] = VALIDATORS[attribute]
-        validator = Validator(**validationators)
         try:
-            self._set_writable_attributes(validator, request)
+            validator = PatchValidator(request, ATTRIBUTES)
+        except UnknownPATCHRequestError as error:
+            return http.bad_request(
+                [], b'Unknown attribute: {0}'.format(error.attribute))
+        except ReadOnlyPATCHRequestError as error:
+            return http.bad_request(
+                [], b'Read-only attribute: {0}'.format(error.attribute))
+        try:
+            validator.update(self._mlist, request)
         except ValueError as error:
             return http.bad_request([], str(error))
         return no_content()

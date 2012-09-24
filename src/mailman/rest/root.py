@@ -123,8 +123,10 @@ class TopLevel(resource.Resource):
         if len(segments) == 0:
             return AllLists()
         else:
-            list_name = segments.pop(0)
-            return AList(list_name), segments
+            # list-id is preferred, but for backward compatibility,
+            # fqdn_listname is also accepted.
+            list_identifier = segments.pop(0)
+            return AList(list_identifier), segments
 
     @resource.child()
     def members(self, request, segments):
