@@ -102,17 +102,26 @@ file::
         hash:/path-to-mailman/var/data/postfix_lmtp
     local_recipient_maps =
         hash:/path-to-mailman/var/data/postfix_lmtp
+    relay_domains =
+        hash:/path-to-mailman/var/data/postfix_domains
 
 where `path-to-mailman` is replaced with the actual path that you're running
 Mailman from.  Setting `local_recipient_maps` as well as `transport_maps`
 allows Postfix to properly reject all messages destined for non-existent local
-users.
+users. Setting `relay_domains` means postfix will start to accept mails for
+newly added domains even if they are not part of `mydestination`.
 
 
-Virtual domains
----------------
+Postfix documentation
+---------------------
 
-TBD: figure out how virtual domains interact with the transport maps.
+For more information regarding how to configure Postfix, please see
+the postfix documentation at:
+
+.. _`The official Postfix documentation`:
+   http://www.postfix.org/documentation.html
+.. _`The reference page for all Postfix configuration parameters`:
+   http://www.postfix.org/postconf.5.html
 
 
 Sendmail
