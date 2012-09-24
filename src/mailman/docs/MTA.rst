@@ -111,6 +111,11 @@ allows Postfix to properly reject all messages destined for non-existent local
 users. Setting `relay_domains` means postfix will start to accept mails for
 newly added domains even if they are not part of `mydestination`.
 
+Notice that if you are not using virtual domains, then `relay_domains` isn't
+strictly needed (but it is harmless). All you need to do in this scenario
+is to make sure that postfix accepts mails for your one domain, normally
+by including it in `mydestination`.
+
 
 Postfix documentation
 ---------------------
