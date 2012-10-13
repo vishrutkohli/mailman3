@@ -42,6 +42,7 @@ from mailman.utilities.datetime import now
 
 log = logging.getLogger('mailman.error')
 ALIASTMPL = '{0:{2}}lmtp:[{1.mta.lmtp_host}]:{1.mta.lmtp_port}'
+NL = '\n'
 
 
 
@@ -67,52 +68,49 @@ class LMTP:
 
     delete = create
 
-    def regenerate(self, output=None):
-        """See `IMailTransportAgentLifecycle`.
-
-        The format for Postfix's LMTP transport map is defined here:
-        http://www.postfix.org/transport.5.html
-        """
+    def regenerate(self, directory=None):
+        """See `IMailTransportAgentLifecycle`."""
         # Acquire a lock file to prevent other processes from racing us here.
+        if directory is None:
+            directory = config.DATA_DIR
         lock_file = os.path.join(config.LOCK_DIR, 'mta')
         with Lock(lock_file):
-            # If output is a filename, open up a backing file and write the
-            # output there, then do the atomic rename dance.  First though, if
-            # it's None, we use a calculated path.
-            if output is None:
-                path = os.path.join(config.DATA_DIR, 'postfix_lmtp')
-                path_new = path + '.new'
-            elif isinstance(output, basestring):
-                path = output
-                path_new = output + '.new'
-            else:
-                path = path_new = None
-            if path_new is None:
-                self._do_write_file(output)
-                # There's nothing to rename, and we can't generate the .db
-                # file, so we're done.
-                return
-            # Write the file.
-            with open(path_new, 'w') as fp:
-                self._do_write_file(fp)
+            lmtp_path = os.path.join(directory, 'postfix_lmtp')
+            lmtp_path_new = lmtp_path + '.new'
+            with open(lmtp_path_new, 'w') as fp:
+                self._generate_lmtp_file(fp)
             # Atomically rename to the intended path.
-            os.rename(path + '.new', path)
-            # Now that the new file is in place, we must tell Postfix to
-            # generate a new .db file.
-            command = config.mta.postfix_map_cmd + ' ' + path
-            status = (os.system(command) >> 8) & 0xff
-            if status:
-                msg = 'command failure: %s, %s, %s'
-                errstr = os.strerror(status)
-                log.error(msg, command, status, errstr)
-                raise RuntimeError(msg % (command, status, errstr))
+            os.rename(lmtp_path_new, lmtp_path)
+            domains_path = os.path.join(directory, 'postfix_domains')
+            domains_path_new = domains_path + '.new'
+            with open(domains_path_new, 'w') as fp:
+                self._generate_domains_file(fp)
+            # Atomically rename to the intended path.
+            os.rename(domains_path_new, domains_path)
+            # Now, run the postmap command on both newly generated files.  If
+            # one files, still try the other one.
+            errors = []
+            for path in (lmtp_path, domains_path):
+                command = config.mta.postfix_map_cmd + ' ' + path
+                status = (os.system(command) >> 8) & 0xff
+                if status:
+                    msg = 'command failure: %s, %s, %s'
+                    errstr = os.strerror(status)
+                    log.error(msg, command, status, errstr)
+                    errors.append(msg % (command, status, errstr))
+            if errors:
+                raise RuntimeError(NL.join(errors))
 
-    def _do_write_file(self, fp):
-        """Do the actual file writes for list creation."""
-        # Sort all existing mailing list names first by domain, then by local
-        # part.  For postfix we need a dummy entry for the domain.
+    def _generate_lmtp_file(self, fp):
+        # The format for Postfix's LMTP transport map is defined here:
+        # http://www.postfix.org/transport.5.html
+        #
+        # Sort all existing mailing list names first by domain, then by
+        # local part.  For Postfix we need a dummy entry for the domain.
         list_manager = getUtility(IListManager)
+        utility = getUtility(IMailTransportAgentAliases)
         by_domain = {}
+        sort_key = attrgetter('list_name')
         for list_name, mail_host in list_manager.name_components:
             mlist = _FakeList(list_name, mail_host)
             by_domain.setdefault(mlist.mail_host, []).append(mlist)
@@ -123,17 +121,32 @@ class LMTP:
 # file.  YOU SHOULD NOT MANUALLY EDIT THIS FILE unless you know what you're
 # doing, and can keep the two files properly in sync.  If you screw it up,
 # you're on your own.
-""".format(now().replace(microsecond=0)), file=fp)
-        sort_key = attrgetter('list_name')
+    """.format(now().replace(microsecond=0)), file=fp)
         for domain in sorted(by_domain):
             print("""\
-# Aliases which are visible only in the @{0} domain.""".format(domain),
-                file=fp)
+# Aliases which are visible only in the @{0} domain.""".format(domain), 
+                  file=fp)
             for mlist in sorted(by_domain[domain], key=sort_key):
-                utility = getUtility(IMailTransportAgentAliases)
                 aliases = list(utility.aliases(mlist))
                 width = max(len(alias) for alias in aliases) + 3
                 print(ALIASTMPL.format(aliases.pop(0), config, width), file=fp)
                 for alias in aliases:
                     print(ALIASTMPL.format(alias, config, width), file=fp)
                 print(file=fp)
+
+    def _generate_domains_file(self, fp):
+        # Uniquify the domains, then sort them alphabetically.
+        domains = set()
+        for list_name, mail_host in getUtility(IListManager).name_components:
+            domains.add(mail_host)
+        print("""\
+# AUTOMATICALLY GENERATED BY MAILMAN ON {0}
+#
+# This file is generated by Mailman, and is kept in sync with the binary hash
+# file.  YOU SHOULD NOT MANUALLY EDIT THIS FILE unless you know what you're
+# doing, and can keep the two files properly in sync.  If you screw it up,
+# you're on your own.
+""".format(now().replace(microsecond=0)), file=fp)
+        for domain in sorted(domains):
+            print('{0} {0}'.format(domain), file=fp)
+        print(file=fp)

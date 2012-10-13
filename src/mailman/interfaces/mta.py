@@ -84,12 +84,12 @@ class IMailTransportAgentLifecycle(Interface):
     def delete(mlist):
         """Tell the MTA that the mailing list was deleted."""
 
-    def regenerate(output=None):
+    def regenerate(directory=None):
         """Regenerate the full aliases file.
 
-        :param output: The file name or file object to send the output to.  If
-            not given or None, and MTA specific file is used.
-        :type output: string, file object, None
+        :param directory: The directory to write the MTA specific support
+            files to.  Defaults to $DATA_DIR.
+        :type directory: string
         """
 
 

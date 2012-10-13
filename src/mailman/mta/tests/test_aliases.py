@@ -15,26 +15,38 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test the template generating utility."""
+"""Test the MTA file generating utility."""
 
 from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestAliases',
+    'TestPostfix',
     ]
 
 
+import os
+import shutil
+import tempfile
 import unittest
 
-from cStringIO import StringIO
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
+from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.mta import IMailTransportAgentAliases
 from mailman.mta.postfix import LMTP
+from mailman.testing.helpers import configuration
 from mailman.testing.layers import ConfigLayer
 
+
 NL = '\n'
+
+
+def _strip_header(contents):
+    lines = contents.splitlines()
+    return NL.join(lines[7:])
 
 
 
@@ -129,21 +141,35 @@ class TestPostfix(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
         self.utility = getUtility(IMailTransportAgentAliases)
         self.mlist = create_list('test@example.com')
-        self.output = StringIO()
         self.postfix = LMTP()
         # Python 2.7 has assertMultiLineEqual.  Let this work without bounds.
         self.maxDiff = None
         self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
 
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
+
+    @configuration('mta', postfix_map_cmd='true')
     def test_aliases(self):
         # Test the format of the Postfix alias generator.
-        self.postfix.regenerate(self.output)
-        # Strip out the variable and unimportant bits of the output.
-        lines = self.output.getvalue().splitlines()
-        output = NL.join(lines[7:])
-        self.eq(output, """\
+        self.postfix.regenerate(self.tempdir)
+        # There are two files in this directory.
+        self.assertEqual(sorted(os.listdir(self.tempdir)),
+                         ['postfix_domains', 'postfix_lmtp'])
+        # The domains file, just contains the example.com domain.  We have to
+        # ignore the file header.
+        with open(os.path.join(self.tempdir, 'postfix_domains')) as fp:
+            contents = _strip_header(fp.read())
+        self.eq(contents, """\
+example.com example.com
+""")
+        # The lmtp file contains transport mappings to the lmtp server.
+        with open(os.path.join(self.tempdir, 'postfix_lmtp')) as fp:
+            contents = _strip_header(fp.read())
+        self.eq(contents, """\
 # Aliases which are visible only in the @example.com domain.
 test@example.com               lmtp:[127.0.0.1]:9024
 test-bounces@example.com       lmtp:[127.0.0.1]:9024
@@ -156,15 +182,26 @@ test-subscribe@example.com     lmtp:[127.0.0.1]:9024
 test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
 """)
 
+    @configuration('mta', postfix_map_cmd='true')
     def test_two_lists(self):
         # Both lists need to show up in the aliases file.  LP: #874929.
         # Create a second list.
         create_list('other@example.com')
-        self.postfix.regenerate(self.output)
-        # Strip out the variable and unimportant bits of the output.
-        lines = self.output.getvalue().splitlines()
-        output = NL.join(lines[7:])
-        self.eq(output, """\
+        self.postfix.regenerate(self.tempdir)
+        # There are two files in this directory.
+        self.assertEqual(sorted(os.listdir(self.tempdir)),
+                         ['postfix_domains', 'postfix_lmtp'])
+        # Because both lists are in the same domain, there should be only one
+        # entry in the relays file.
+        with open(os.path.join(self.tempdir, 'postfix_domains')) as fp:
+            contents = _strip_header(fp.read())
+        self.eq(contents, """\
+example.com example.com
+""")
+        # The transport file contains entries for both lists.
+        with open(os.path.join(self.tempdir, 'postfix_lmtp')) as fp:
+            contents = _strip_header(fp.read())
+        self.eq(contents, """\
 # Aliases which are visible only in the @example.com domain.
 other@example.com               lmtp:[127.0.0.1]:9024
 other-bounces@example.com       lmtp:[127.0.0.1]:9024
@@ -185,4 +222,50 @@ test-owner@example.com         lmtp:[127.0.0.1]:9024
 test-request@example.com       lmtp:[127.0.0.1]:9024
 test-subscribe@example.com     lmtp:[127.0.0.1]:9024
 test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
+""")
+
+    @configuration('mta', postfix_map_cmd='true')
+    def test_two_lists_two_domains(self):
+        # Now we have two lists in two different domains.  Both lists will
+        # show up in the postfix_lmtp file, and both domains will show up in
+        # the postfix_domains file.
+        getUtility(IDomainManager).add('example.net')
+        create_list('other@example.net')
+        self.postfix.regenerate(self.tempdir)
+        # There are two files in this directory.
+        self.assertEqual(sorted(os.listdir(self.tempdir)),
+                         ['postfix_domains', 'postfix_lmtp'])
+        # Because both lists are in the same domain, there should be only one
+        # entry in the relays file.
+        with open(os.path.join(self.tempdir, 'postfix_domains')) as fp:
+            contents = _strip_header(fp.read())
+        self.eq(contents, """\
+example.com example.com
+example.net example.net
+""")
+        # The transport file contains entries for both lists.
+        with open(os.path.join(self.tempdir, 'postfix_lmtp')) as fp:
+            contents = _strip_header(fp.read())
+        self.eq(contents, """\
+# Aliases which are visible only in the @example.com domain.
+test@example.com               lmtp:[127.0.0.1]:9024
+test-bounces@example.com       lmtp:[127.0.0.1]:9024
+test-confirm@example.com       lmtp:[127.0.0.1]:9024
+test-join@example.com          lmtp:[127.0.0.1]:9024
+test-leave@example.com         lmtp:[127.0.0.1]:9024
+test-owner@example.com         lmtp:[127.0.0.1]:9024
+test-request@example.com       lmtp:[127.0.0.1]:9024
+test-subscribe@example.com     lmtp:[127.0.0.1]:9024
+test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
+
+# Aliases which are visible only in the @example.net domain.
+other@example.net               lmtp:[127.0.0.1]:9024
+other-bounces@example.net       lmtp:[127.0.0.1]:9024
+other-confirm@example.net       lmtp:[127.0.0.1]:9024
+other-join@example.net          lmtp:[127.0.0.1]:9024
+other-leave@example.net         lmtp:[127.0.0.1]:9024
+other-owner@example.net         lmtp:[127.0.0.1]:9024
+other-request@example.net       lmtp:[127.0.0.1]:9024
+other-subscribe@example.net     lmtp:[127.0.0.1]:9024
+other-unsubscribe@example.net   lmtp:[127.0.0.1]:9024
 """)

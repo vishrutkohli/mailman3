@@ -29,6 +29,17 @@ REST
    unverify an address more than once, but verifying an already verified
    address does not change its `.verified_on` date.  (LP: #1054730)
 
+Integration
+-----------
+ * Added support for Postfix `relay_domains` setting for better virtual domain
+   support.  Contributed by Jimmy Bergman.
+
+Commands
+--------
+ * `bin/mailman aliases` loses the `--output`, `--format`, and `--simple`
+   arguments, and adds a `--directory` argument.  This is necessary to support
+   the Postfix `relay_domains` support.
+
 
 3.0 beta 2 -- "Freeze"
 ======================
