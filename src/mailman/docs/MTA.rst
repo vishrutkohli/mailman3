@@ -93,7 +93,7 @@ Transport maps
 
 By default, Mailman works well with Postfix transport maps as a way to deliver
 incoming messages to Mailman's LMTP server.  Mailman will automatically write
-the correct transport map when its `bin/mailman genaliases` command is run, or
+the correct transport map when its `bin/mailman aliases` command is run, or
 whenever a mailing list is created or removed via other commands.  To connect
 Postfix to Mailman's LMTP server, add the following to Postfix's `main.cf`
 file::
@@ -102,17 +102,33 @@ file::
         hash:/path-to-mailman/var/data/postfix_lmtp
     local_recipient_maps =
         hash:/path-to-mailman/var/data/postfix_lmtp
+    relay_domains =
+        hash:/path-to-mailman/var/data/postfix_domains
 
 where `path-to-mailman` is replaced with the actual path that you're running
 Mailman from.  Setting `local_recipient_maps` as well as `transport_maps`
 allows Postfix to properly reject all messages destined for non-existent local
-users.
+users.  Setting `relay_domains`_ means Postfix will start to accept mail for
+newly added domains even if they are not part of `mydestination`_.
+
+Note that if you are not using virtual domains, then `relay_domains`_ isn't
+strictly needed (but it is harmless).  All you need to do in this scenario is
+to make sure that Postfix accepts mail for your one domain, normally by
+including it in `mydestination`.
 
 
-Virtual domains
----------------
+Postfix documentation
+---------------------
 
-TBD: figure out how virtual domains interact with the transport maps.
+For more information regarding how to configure Postfix, please see
+the Postfix documentation at:
+
+.. _`The official Postfix documentation`:
+   http://www.postfix.org/documentation.html
+.. _`The reference page for all Postfix configuration parameters`:
+   http://www.postfix.org/postconf.5.html
+.. _`relay_domains`: http://www.postfix.org/postconf.5.html#relay_domains
+.. _`mydestination`: http://www.postfix.org/postconf.5.html#mydestination
 
 
 Sendmail
