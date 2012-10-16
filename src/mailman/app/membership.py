@@ -73,7 +73,7 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
     # Let's be extra cautious.
     getUtility(IEmailValidator).validate(email)
     # Check to see if the email address is banned.
-    if getUtility(IBanManager).is_banned(email, mlist.fqdn_listname):
+    if IBanManager(mlist).is_banned(email):
         raise MembershipIsBannedError(mlist, email)
     # See if there's already a user linked with the given address.
     user_manager = getUtility(IUserManager)

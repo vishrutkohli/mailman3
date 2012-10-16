@@ -69,7 +69,7 @@ class AddMemberTest(unittest.TestCase):
     def test_add_member_banned(self):
         # Test that members who are banned by specific address cannot
         # subscribe to the mailing list.
-        getUtility(IBanManager).ban('anne@example.com', 'test@example.com')
+        IBanManager(self._mlist).ban('anne@example.com')
         self.assertRaises(
             MembershipIsBannedError,
             add_member, self._mlist, 'anne@example.com', 'Anne Person',
@@ -78,43 +78,43 @@ class AddMemberTest(unittest.TestCase):
     def test_add_member_globally_banned(self):
         # Test that members who are banned by specific address cannot
         # subscribe to the mailing list.
-        getUtility(IBanManager).ban('anne@example.com')
+        IBanManager(None).ban('anne@example.com')
         self.assertRaises(
             MembershipIsBannedError,
             add_member, self._mlist, 'anne@example.com', 'Anne Person',
             '123', DeliveryMode.regular, system_preferences.preferred_language)
 
     def test_add_member_banned_from_different_list(self):
-        # Test that members who are banned by specific address cannot
-        # subscribe to the mailing list.
-        getUtility(IBanManager).ban('anne@example.com', 'sample@example.com')
+        # Test that members who are banned by on a different list can still be
+        # subscribed to other mlists.
+        sample_list = create_list('sample@example.com')
+        IBanManager(sample_list).ban('anne@example.com')
         member = add_member(self._mlist, 'anne@example.com',
                             'Anne Person', '123', DeliveryMode.regular,
                             system_preferences.preferred_language)
         self.assertEqual(member.address.email, 'anne@example.com')
 
     def test_add_member_banned_by_pattern(self):
-        # Test that members who are banned by specific address cannot
-        # subscribe to the mailing list.
-        getUtility(IBanManager).ban('^.*@example.com', 'test@example.com')
+        # Addresses matching regexp ban patterns cannot subscribe.
+        IBanManager(self._mlist).ban('^.*@example.com')
         self.assertRaises(
             MembershipIsBannedError,
             add_member, self._mlist, 'anne@example.com', 'Anne Person',
             '123', DeliveryMode.regular, system_preferences.preferred_language)
 
     def test_add_member_globally_banned_by_pattern(self):
-        # Test that members who are banned by specific address cannot
-        # subscribe to the mailing list.
-        getUtility(IBanManager).ban('^.*@example.com')
+        # Addresses matching global regexp ban patterns cannot subscribe.
+        IBanManager(None).ban('^.*@example.com')
         self.assertRaises(
             MembershipIsBannedError,
             add_member, self._mlist, 'anne@example.com', 'Anne Person',
             '123', DeliveryMode.regular, system_preferences.preferred_language)
 
     def test_add_member_banned_from_different_list_by_pattern(self):
-        # Test that members who are banned by specific address cannot
-        # subscribe to the mailing list.
-        getUtility(IBanManager).ban('^.*@example.com', 'sample@example.com')
+        # Addresses matching regexp ban patterns on one list can still
+        # subscribe to other mailing lists.
+        sample_list = create_list('sample@example.com')
+        IBanManager(sample_list).ban('^.*@example.com')
         member = add_member(self._mlist, 'anne@example.com',
                             'Anne Person', '123', DeliveryMode.regular,
                             system_preferences.preferred_language)

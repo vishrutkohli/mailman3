@@ -149,7 +149,7 @@ def upgrade_sqlite(database, store, version, module_path):
 def upgrade_postgres(database, store, version, module_path):
     # Get the old values from the mailinglist table.
     results = store.execute("""
-        SELECT id, archive, archive_private, list_name, mail_host 
+        SELECT id, archive, archive_private, list_name, mail_host
         FROM mailinglist;
         """)
     # Do the simple renames first.

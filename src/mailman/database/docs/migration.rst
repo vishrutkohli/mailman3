@@ -30,12 +30,13 @@ already applied.
     >>> from mailman.model.version import Version
     >>> results = config.db.store.find(Version, component='schema')
     >>> results.count()
-    2
+    3
     >>> versions = sorted(result.version for result in results)
     >>> for version in versions:
     ...     print version
     00000000000000
     20120407000000
+    20121015000000
 
 
 Migrations
@@ -96,6 +97,7 @@ This will load the new migration, since it hasn't been loaded before.
     ...     print result
     00000000000000
     20120407000000
+    20121015000000
     20129999000000
     >>> test = config.db.store.find(Version, component='test').one()
     >>> print test.version
@@ -126,6 +128,7 @@ The first time we load this new migration, we'll get the 801 marker.
     ...     print result
     00000000000000
     20120407000000
+    20121015000000
     20129999000000
     20129999000001
     >>> test = config.db.store.find(Version, component='test')
@@ -142,6 +145,7 @@ We do not get an 802 marker because the migration has already been loaded.
     ...     print result
     00000000000000
     20120407000000
+    20121015000000
     20129999000000
     20129999000001
     >>> test = config.db.store.find(Version, component='test')
@@ -176,6 +180,7 @@ You'll notice that the ...04 version is not present.
     ...     print result
     00000000000000
     20120407000000
+    20121015000000
     20129999000000
     20129999000001
     20129999000002

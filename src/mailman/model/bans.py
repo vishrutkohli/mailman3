@@ -42,12 +42,12 @@ class Ban(Model):
 
     id = Int(primary=True)
     email = Unicode()
-    mailing_list = Unicode()
+    list_id = Unicode()
 
-    def __init__(self, email, mailing_list):
+    def __init__(self, email, list_id):
         super(Ban, self).__init__()
         self.email = email
-        self.mailing_list = mailing_list
+        self.list_id = list_id
 
 
 
@@ -55,55 +55,58 @@ class Ban(Model):
 class BanManager:
     """See `IBanManager`."""
 
+    def __init__(self, mailing_list=None):
+        self._list_id = (None if mailing_list is None
+                         else mailing_list.list_id)
+
     @dbconnection
-    def ban(self, store, email, mailing_list=None):
+    def ban(self, store, email):
         """See `IBanManager`."""
-        bans = store.find(Ban, email=email, mailing_list=mailing_list)
+        bans = store.find(Ban, email=email, list_id=self._list_id)
         if bans.count() == 0:
-            ban = Ban(email, mailing_list)
+            ban = Ban(email, self._list_id)
             store.add(ban)
 
     @dbconnection
-    def unban(self, store, email, mailing_list=None):
+    def unban(self, store, email):
         """See `IBanManager`."""
-        ban = store.find(Ban, email=email, mailing_list=mailing_list).one()
+        ban = store.find(Ban, email=email, list_id=self._list_id).one()
         if ban is not None:
             store.remove(ban)
 
     @dbconnection
-    def is_banned(self, store, email, mailing_list=None):
+    def is_banned(self, store, email):
         """See `IBanManager`."""
-        # A specific mailing list ban is being checked, however the email
-        # address could be banned specifically, or globally.
-        if mailing_list is not None:
-            # Try specific bans first.
-            bans = store.find(Ban, email=email, mailing_list=mailing_list)
+        list_id = self._list_id
+        if list_id is None:
+            # The client is asking for global bans.  Look up bans on the
+            # specific email address first.
+            bans = store.find(Ban, email=email, list_id=None)
             if bans.count() > 0:
                 return True
-            # Try global bans next.
-            bans = store.find(Ban, email=email, mailing_list=None)
-            if bans.count() > 0:
-                return True
-            # Now try specific mailing list bans, but with a pattern.
-            bans = store.find(Ban, mailing_list=mailing_list)
-            for ban in bans:
-                if (ban.email.startswith('^') and
-                    re.match(ban.email, email, re.IGNORECASE) is not None):
-                    return True
-            # And now try global pattern bans.
-            bans = store.find(Ban, mailing_list=None)
+            # And now look for global pattern bans.
+            bans = store.find(Ban, list_id=None)
             for ban in bans:
                 if (ban.email.startswith('^') and
                     re.match(ban.email, email, re.IGNORECASE) is not None):
                     return True
         else:
-            # The client is asking for global bans.  Look up bans on the
-            # specific email address first.
-            bans = store.find(Ban, email=email, mailing_list=None)
+            # This is a list-specific ban.
+            bans = store.find(Ban, email=email, list_id=list_id)
             if bans.count() > 0:
                 return True
-            # And now look for global pattern bans.
-            bans = store.find(Ban, mailing_list=None)
+            # Try global bans next.
+            bans = store.find(Ban, email=email, list_id=None)
+            if bans.count() > 0:
+                return True
+            # Now try specific mailing list bans, but with a pattern.
+            bans = store.find(Ban, list_id=list_id)
+            for ban in bans:
+                if (ban.email.startswith('^') and
+                    re.match(ban.email, email, re.IGNORECASE) is not None):
+                    return True
+            # And now try global pattern bans.
+            bans = store.find(Ban, list_id=None)
             for ban in bans:
                 if (ban.email.startswith('^') and
                     re.match(ban.email, email, re.IGNORECASE) is not None):

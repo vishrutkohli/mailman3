@@ -6,6 +6,18 @@
 
   <adapter
     for="mailman.interfaces.mailinglist.IMailingList"
+    provides="mailman.interfaces.bans.IBanManager"
+    factory="mailman.model.bans.BanManager"
+    />
+
+  <adapter
+    for="None"
+    provides="mailman.interfaces.bans.IBanManager"
+    factory="mailman.model.bans.BanManager"
+    />
+
+  <adapter
+    for="mailman.interfaces.mailinglist.IMailingList"
     provides="mailman.interfaces.autorespond.IAutoResponseSet"
     factory="mailman.model.autorespond.AutoResponseSet"
     />
@@ -34,11 +46,6 @@
     provides="mailman.interfaces.database.ITemporaryDatabase"
     factory="mailman.database.postgresql.make_temporary"
     name="postgres"
-    />
-
-  <utility
-    provides="mailman.interfaces.bans.IBanManager"
-    factory="mailman.model.bans.BanManager"
     />
 
   <utility

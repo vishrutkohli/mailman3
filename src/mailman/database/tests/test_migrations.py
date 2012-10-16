@@ -29,6 +29,7 @@ __all__ = [
 
 import unittest
 
+from operator import attrgetter
 from pkg_resources import resource_string
 from storm.exceptions import DatabaseError
 from zope.component import getUtility
@@ -40,30 +41,14 @@ from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.subscriptions import ISubscriptionService
+from mailman.model.bans import Ban
 from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
 
 
 
 class MigrationTestBase(unittest.TestCase):
-    """Test the dated migration (LP: #971013)
-
-    Circa: 3.0b1 -> 3.0b2
-
-    table mailinglist:
-    * news_moderation -> newsgroup_moderation
-    * news_prefix_subject_too -> nntp_prefix_subject_too
-    * include_list_post_header -> allow_list_posts
-    * ADD archive_policy
-    * ADD list_id
-    * REMOVE archive
-    * REMOVE archive_private
-    * REMOVE archive_volume_frequency
-    * REMOVE nntp_host
-
-    table member:
-    * mailing_list -> list_id
-    """
+    """Test database migrations."""
 
     layer = ConfigLayer
 
@@ -73,6 +58,30 @@ class MigrationTestBase(unittest.TestCase):
     def tearDown(self):
         self._database._cleanup()
 
+    def _missing_present(self, table, migrations, missing, present):
+        """The appropriate migrations leave columns missing and present.
+
+        :param table: The table to test columns from.
+        :param migrations: Sequence of migrations to load.
+        :param missing: Set of columns which should be missing after the
+            migrations are loaded.
+        :param present: Set of columns which should be present after the
+            migrations are loaded.
+        """
+        for migration in migrations:
+            self._database.load_migrations(migration)
+            self._database.store.commit()
+        for column in missing:
+            self.assertRaises(DatabaseError,
+                              self._database.store.execute,
+                              'select {0} from {1};'.format(column, table))
+            self._database.store.rollback()
+        for column in present:
+            # This should not produce an exception.  Is there some better test
+            # that we can perform?
+            self._database.store.execute(
+                'select {0} from {1};'.format(column, table))
+
 
 
 class TestMigration20120407Schema(MigrationTestBase):
@@ -81,70 +90,52 @@ class TestMigration20120407Schema(MigrationTestBase):
     def test_pre_upgrade_columns_migration(self):
         # Test that before the migration, the old table columns are present
         # and the new database columns are not.
-        #
-        # Load all the migrations to just before the one we're testing.
-        self._database.load_migrations('20120406999999')
-        self._database.store.commit()
-        # Verify that the database has not yet been migrated.
-        for missing in ('allow_list_posts',
-                        'archive_policy',
-                        'list_id',
-                        'nntp_prefix_subject_too'):
-            self.assertRaises(DatabaseError,
-                              self._database.store.execute,
-                              'select {0} from mailinglist;'.format(missing))
-            self._database.store.rollback()
-        self.assertRaises(DatabaseError,
-                          self._database.store.execute,
-                          'select list_id from member;')
-        self._database.store.rollback()
-        for present in ('archive',
-                        'archive_private',
-                        'archive_volume_frequency',
-                        'generic_nonmember_action',
-                        'include_list_post_header',
-                        'news_moderation',
-                        'news_prefix_subject_too',
-                        'nntp_host'):
-            # This should not produce an exception.  Is there some better test
-            # that we can perform?
-            self._database.store.execute(
-                'select {0} from mailinglist;'.format(present))
-        # Again, this should not produce an exception.
-        self._database.store.execute('select mailing_list from member;')
+        self._missing_present('mailinglist',
+                              ['20120406999999'],
+                              # New columns are missing.
+                              ('allow_list_posts',
+                               'archive_policy',
+                               'list_id',
+                               'nntp_prefix_subject_too'),
+                              # Old columns are present.
+                              ('archive',
+                              'archive_private',
+                              'archive_volume_frequency',
+                              'generic_nonmember_action',
+                              'include_list_post_header',
+                              'news_moderation',
+                              'news_prefix_subject_too',
+                              'nntp_host'))
+        self._missing_present('member',
+                              ['20120406999999'],
+                              ('list_id',),
+                              ('mailing_list',))
 
     def test_post_upgrade_columns_migration(self):
         # Test that after the migration, the old table columns are missing
         # and the new database columns are present.
-        #
-        # Load all the migrations up to and including the one we're testing.
-        self._database.load_migrations('20120406999999')
-        self._database.load_migrations('20120407000000')
-        # Verify that the database has been migrated.
-        for present in ('allow_list_posts',
-                        'archive_policy',
-                        'list_id',
-                        'nntp_prefix_subject_too'):
-            # This should not produce an exception.  Is there some better test
-            # that we can perform?
-            self._database.store.execute(
-                'select {0} from mailinglist;'.format(present))
-        self._database.store.execute('select list_id from member;')
-        for missing in ('archive',
-                        'archive_private',
-                        'archive_volume_frequency',
-                        'generic_nonmember_action',
-                        'include_list_post_header',
-                        'news_moderation',
-                        'news_prefix_subject_too',
-                        'nntp_host'):
-            self.assertRaises(DatabaseError,
-                              self._database.store.execute,
-                              'select {0} from mailinglist;'.format(missing))
-            self._database.store.rollback()
-        self.assertRaises(DatabaseError,
-                          self._database.store.execute,
-                          'select mailing_list from member;')
+        self._missing_present('mailinglist',
+                              ['20120406999999',
+                               '20120407000000'],
+                              # The old columns are missing.
+                              ('archive',
+                               'archive_private',
+                               'archive_volume_frequency',
+                               'generic_nonmember_action',
+                               'include_list_post_header',
+                               'news_moderation',
+                               'news_prefix_subject_too',
+                               'nntp_host'),
+                              # The new columns are present.
+                              ('allow_list_posts',
+                              'archive_policy',
+                              'list_id',
+                              'nntp_prefix_subject_too'))
+        self._missing_present('member',
+                              ['20120406999999',
+                               '20120407000000'],
+                              ('mailing_list',),
+                              ('list_id',))
 
 
 
@@ -367,3 +358,48 @@ class TestMigration20120407MigratedData(MigrationTestBase):
         with temporary_db(self._database):
             mlist = getUtility(IListManager).get('test@example.com')
             self.assertTrue(mlist.allow_list_posts)
+
+
+
+class TestMigration20121015Schema(MigrationTestBase):
+    """Test column migrations."""
+
+    def test_pre_upgrade_column_migrations(self):
+        self._missing_present('ban',
+                              ['20121014999999'],
+                              ('list_id',),
+                              ('mailing_list',))
+
+    def test_post_upgrade_column_migrations(self):
+        self._missing_present('ban',
+                              ['20121014999999',
+                               '20121015000000'],
+                              ('mailing_list',),
+                              ('list_id',))
+
+
+class TestMigration20121015MigratedData(MigrationTestBase):
+    """Test non-migrated data."""
+
+    def test_migration_bans(self):
+        # Load all the migrations to just before the one we're testing.
+        self._database.load_migrations('20121014999999')
+        # Insert a list-specific ban.
+        self._database.store.execute("""
+            INSERT INTO ban VALUES (
+                1, 'anne@example.com', 'test@example.com');
+            """)
+        # Insert a global ban.
+        self._database.store.execute("""
+            INSERT INTO ban VALUES (
+                2, 'bart@example.com', NULL);
+            """)
+        # Update to the current migration we're testing.
+        self._database.load_migrations('20121015000000')
+        # Now both the local and global bans should still be present.
+        bans = sorted(self._database.store.find(Ban),
+                      key=attrgetter('email'))
+        self.assertEqual(bans[0].email, 'anne@example.com')
+        self.assertEqual(bans[0].list_id, 'test.example.com')
+        self.assertEqual(bans[1].email, 'bart@example.com')
+        self.assertEqual(bans[1].list_id, None)

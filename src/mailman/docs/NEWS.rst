@@ -29,6 +29,17 @@ REST
    unverify an address more than once, but verifying an already verified
    address does not change its `.verified_on` date.  (LP: #1054730)
 
+Database
+--------
+ * The `ban` table now uses list-ids to cross-reference the mailing list,
+   since these cannot change even if the mailing list is moved or renamed.
+
+Interfaces
+----------
+ * The `IBanManager` is no longer a global utility.  Instead, you adapt an
+   `IMailingList` to an `IBanManager` to manage the bans for a specific
+   mailing list.  To manage the global bans, adapt ``None``.
+
 Integration
 -----------
  * Added support for Postfix `relay_domains` setting for better virtual domain

@@ -17,7 +17,7 @@
 
 """Manager of email address bans."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -33,49 +33,48 @@ from zope.interface import Attribute, Interface
 class IBan(Interface):
     """A specific ban.
 
-    In general, this interface isn't publicly useful.
+    In general, this interface isn't used publicly.  Instead, bans are managed
+    through the `IBanManager` interface.
     """
 
     email = Attribute('The banned email address, or pattern.')
 
-    mailing_list = Attribute(
-        """The fqdn name of the mailing list the ban applies to.
+    list_id = Attribute(
+        """The list-id of the mailing list the ban applies to.
 
-        Use None if this is a global ban.
+        Use ``None`` if this is a global ban.
         """)
 
 
 
 class IBanManager(Interface):
-    """The global manager of email address bans."""
+    """The global manager of email address bans.
 
-    def ban(email, mailing_list=None):
+        To manage bans for a specific mailing list, adapt that `IMailingList`
+        to an `IBanManager`.  To manage global bans, adapt ``None``.
+        """
+
+    def ban(email):
         """Ban an email address from subscribing to a mailing list.
 
         When an email address is banned, it will not be allowed to subscribe
-        to a the named mailing list.  This does not affect any email address
-        already subscribed to the mailing list.  With the default arguments,
-        an email address can be banned globally from subscribing to any
-        mailing list on the system.
+        to the mailing list.  This does not affect any email address that may
+        already be subscribed to a mailing list.
 
         It is also possible to add a 'ban pattern' whereby all email addresses
         matching a Python regular expression can be banned.  This is
         accomplished by using a `^` as the first character in `email`.
 
-        When an email address is already banned for the given mailing list (or
-        globally), then this method does nothing.  However, it is possible to
+        When an email address is already banned.  However, it is possible to
         extend a ban for a specific mailing list into a global ban; both bans
         would be in place and they can be removed individually.
 
         :param email: The text email address being banned or, if the string
             starts with a caret (^), the email address pattern to ban.
         :type email: str
-        :param mailing_list: The fqdn name of the mailing list to which the
-            ban applies.  If None, then the ban is global.
-        :type mailing_list: string
         """
 
-    def unban(email, mailing_list=None):
+    def unban(email):
         """Remove an email address ban.
 
         This removes a specific or global email address ban, which would have
@@ -85,12 +84,9 @@ class IBanManager(Interface):
         :param email: The text email address being unbanned or, if the string
             starts with a caret (^), the email address pattern to unban.
         :type email: str
-        :param mailing_list: The fqdn name of the mailing list to which the
-            unban applies.  If None, then the unban is global.
-        :type mailing_list: string
         """
 
-    def is_banned(email, mailing_list=None):
+    def is_banned(email):
         """Check whether a specific email address is banned.
 
         `email` must be a text email address; it cannot be a pattern.  The
@@ -100,10 +96,6 @@ class IBanManager(Interface):
 
         :param email: The text email address being checked.
         :type email: str
-        :param mailing_list: The fqdn name of the mailing list being checked.
-            Note that if not None, both specific and global bans will be
-            checked.  If None, then only global bans will be checked.
-        :type mailing_list: string
         :return: A flag indicating whether the given email address is banned
             or not.
         :rtype: bool

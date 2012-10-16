@@ -269,7 +269,7 @@ INSERT INTO mem_backup SELECT
     preferences_id,
     user_id
     FROM member;
-    
+
 
 -- Add the new columns.  They'll get inserted at the Python layer.
 ALTER TABLE ml_backup ADD COLUMN archive_policy INTEGER;
