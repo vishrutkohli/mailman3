@@ -15,7 +15,8 @@ Here is a history of user visible changes to Mailman.
 Compatibility
 -------------
  * Python 2.7 is not required.  Python 2.6 is no longer officially supported.
-   LP: #1073506
+   The code base is now also `python2.7 -3` clean, although there are still
+   some warnings in 3rd party dependencies.  LP: #1073506
 
 REST
 ----
