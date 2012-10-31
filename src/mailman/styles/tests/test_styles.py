@@ -63,28 +63,16 @@ class TestStyle(unittest.TestCase):
         # Registering a style with the same name as a previous style raises an
         # exception.
         self.manager.register(DummyStyle())
-        try:
-            self.manager.register(DummyStyle())
-        except DuplicateStyleError:
-            pass
-        else:
-            raise AssertionError('DuplicateStyleError exception expected')
+        self.assertRaises(DuplicateStyleError,
+                          self.manager.register, DummyStyle())
 
     def test_register_a_non_style(self):
         # You can't register something that doesn't implement the IStyle
         # interface.
-        try:
-            self.manager.register(object())
-        except DoesNotImplement:
-            pass
-        else:
-            raise AssertionError('DoesNotImplement exception expected')
+        self.assertRaises(DoesNotImplement,
+                          self.manager.register, object())
 
     def test_unregister_a_non_registered_style(self):
         # You cannot unregister a style that hasn't yet been registered.
-        try:
-            self.manager.unregister(DummyStyle())
-        except KeyError:
-            pass
-        else:
-            raise AssertionError('KeyError expected')
+        self.assertRaises(KeyError,
+                          self.manager.unregister, DummyStyle())

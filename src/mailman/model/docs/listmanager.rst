@@ -126,8 +126,7 @@ address components.
     test_3@example.com
     test_4@example.com
 
-    >>> for list_name, mail_host in sorted(list_manager.name_components,
-    ...                                    key=lambda (name, host): name):
+    >>> for list_name, mail_host in sorted(list_manager.name_components):
     ...     print list_name, '@', mail_host
     test   @ example.com
     test_3 @ example.com

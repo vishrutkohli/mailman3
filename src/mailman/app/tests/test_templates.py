@@ -98,49 +98,31 @@ class TestTemplateLoader(unittest.TestCase):
         self.assertEqual(content, 'Test content')
 
     def test_uri_not_found(self):
-        try:
+        with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman:///missing.txt')
-        except urllib2.URLError as error:
-            self.assertEqual(error.reason, 'No such file')
-        else:
-            raise AssertionError('Exception expected')
+        self.assertEqual(cm.exception.reason, 'No such file')
 
     def test_shorter_url_error(self):
-        try:
+        with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman:///')
-        except urllib2.URLError as error:
-            self.assertEqual(error.reason, 'No template specified')
-        else:
-            raise AssertionError('Exception expected')
+        self.assertEqual(cm.exception.reason, 'No template specified')
 
     def test_short_url_error(self):
-        try:
+        with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman://')
-        except urllib2.URLError as error:
-            self.assertEqual(error.reason, 'No template specified')
-        else:
-            raise AssertionError('Exception expected')
+        self.assertEqual(cm.exception.reason, 'No template specified')
 
     def test_bad_language(self):
-        try:
+        with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman:///xx/demo.txt')
-        except urllib2.URLError as error:
-            self.assertEqual(error.reason, 'Bad language or list name')
-        else:
-            raise AssertionError('Exception expected')
+        self.assertEqual(cm.exception.reason, 'Bad language or list name')
 
     def test_bad_mailing_list(self):
-        try:
+        with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman:///missing@example.com/demo.txt')
-        except urllib2.URLError as error:
-            self.assertEqual(error.reason, 'Bad language or list name')
-        else:
-            raise AssertionError('Exception expected')
+        self.assertEqual(cm.exception.reason, 'Bad language or list name')
 
     def test_too_many_path_components(self):
-        try:
+        with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman:///missing@example.com/en/foo/demo.txt')
-        except urllib2.URLError as error:
-            self.assertEqual(error.reason, 'No such file')
-        else:
-            raise AssertionError('Exception expected')
+        self.assertEqual(cm.exception.reason, 'No such file')

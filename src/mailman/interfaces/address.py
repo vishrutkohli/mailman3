@@ -47,11 +47,7 @@ class EmailError(MailmanError):
         self.email = email
 
     def __str__(self):
-        # This is a workaround for Python 2.6 support.  When self.email
-        # contains non-ascii characters, this will cause unprintable output in
-        # doctests.  Python 2.7 can handle it but we haven't dropped support
-        # for 2.6 yet.
-        return self.email.encode('us-ascii', 'backslashreplace')
+        return self.email
 
 
 class AddressError(MailmanError):

@@ -137,17 +137,14 @@ class AddMemberTest(unittest.TestCase):
                    'Anne Person', '123', DeliveryMode.regular,
                    system_preferences.preferred_language,
                    MemberRole.member)
-        try:
+        with self.assertRaises(AlreadySubscribedError) as cm:
             add_member(self._mlist, 'aperson@example.com',
                        'Anne Person', '123', DeliveryMode.regular,
                        system_preferences.preferred_language,
                        MemberRole.member)
-        except AlreadySubscribedError as exc:
-            self.assertEqual(exc.fqdn_listname, 'test@example.com')
-            self.assertEqual(exc.email, 'aperson@example.com')
-            self.assertEqual(exc.role, MemberRole.member)
-        else:
-            raise AssertionError('AlreadySubscribedError expected')
+        self.assertEqual(cm.exception.fqdn_listname, 'test@example.com')
+        self.assertEqual(cm.exception.email, 'aperson@example.com')
+        self.assertEqual(cm.exception.role, MemberRole.member)
 
     def test_add_member_with_different_roles(self):
         # Adding a member twice with different roles is okay.

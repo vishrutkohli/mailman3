@@ -45,10 +45,6 @@ class TestUsers(unittest.TestCase):
 
     def test_delete_bogus_user(self):
         # Try to delete a user that does not exist.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/users/99', method='DELETE')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)

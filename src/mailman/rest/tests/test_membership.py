@@ -50,41 +50,29 @@ class TestMembership(unittest.TestCase):
 
     def test_try_to_join_missing_list(self):
         # A user tries to join a non-existent list.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members', {
                 'list_id': 'missing.example.com',
                 'subscriber': 'nobody@example.com',
                 })
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-            self.assertEqual(exc.msg, 'No such list')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.msg, 'No such list')
 
     def test_try_to_leave_missing_list(self):
         # A user tries to leave a non-existent list.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/lists/missing@example.com'
                      '/member/nobody@example.com',
                      method='DELETE')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-            self.assertEqual(exc.msg, '404 Not Found')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
+        self.assertEqual(cm.exception.msg, '404 Not Found')
 
     def test_try_to_leave_list_with_bogus_address(self):
         # Try to leave a mailing list using an invalid membership address.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/1', method='DELETE')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-            self.assertEqual(exc.msg, '404 Not Found')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
+        self.assertEqual(cm.exception.msg, '404 Not Found')
 
     def test_try_to_leave_a_list_twice(self):
         with transaction():
@@ -96,45 +84,34 @@ class TestMembership(unittest.TestCase):
         # content.
         self.assertEqual(content, None)
         self.assertEqual(response.status, 204)
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api(url, method='DELETE')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-            self.assertEqual(exc.msg, '404 Not Found')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
+        self.assertEqual(cm.exception.msg, '404 Not Found')
 
     def test_try_to_join_a_list_twice(self):
         with transaction():
             anne = self._usermanager.create_address('anne@example.com')
             self._mlist.subscribe(anne)
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members', {
                 'list_id': 'test.example.com',
                 'subscriber': 'anne@example.com',
                 })
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 409)
-            self.assertEqual(exc.msg, 'Member already subscribed')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 409)
+        self.assertEqual(cm.exception.msg, 'Member already subscribed')
 
     def test_join_with_invalid_delivery_mode(self):
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members', {
                 'list_id': 'test.example.com',
                 'subscriber': 'anne@example.com',
                 'display_name': 'Anne Person',
                 'delivery_mode': 'invalid-mode',
                 })
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-            self.assertEqual(exc.msg,
-                             'Cannot convert parameters: delivery_mode')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.msg,
+                         'Cannot convert parameters: delivery_mode')
 
     def test_join_email_contains_slash(self):
         content, response = call_api('http://localhost:9001/3.0/members', {
@@ -196,47 +173,31 @@ class TestMembership(unittest.TestCase):
 
     def test_get_nonexistent_member(self):
         # /members/<bogus> returns 404
-        try:
-            # For Python 2.6
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/bogus')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_patch_nonexistent_member(self):
         # /members/<missing> PATCH returns 404
-        try:
-            # For Python 2.6
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/801', method='PATCH')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_patch_member_bogus_attribute(self):
         # /members/<id> PATCH 'bogus' returns 400
         with transaction():
             anne = self._usermanager.create_address('anne@example.com')
             self._mlist.subscribe(anne)
-        try:
-            # For Python 2.6
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/1', {
                      'powers': 'super',
                      }, method='PATCH')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-            self.assertEqual(exc.msg, 'Unexpected parameters: powers')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.msg, 'Unexpected parameters: powers')
 
     def test_member_all_without_preferences(self):
         # /members/<id>/all should return a 404 when it isn't trailed by
         # `preferences`
-        try:
-            # For Python 2.6
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/1/all')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)

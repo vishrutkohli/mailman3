@@ -48,34 +48,24 @@ class TestAddresses(unittest.TestCase):
 
     def test_membership_of_missing_address(self):
         # Try to get the memberships of a missing address.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/addresses/'
                      'nobody@example.com/memberships')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError 404')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_verify_a_missing_address(self):
         # POSTing to the 'verify' sub-resource returns a 404.
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/addresses/'
                      'nobody@example.com/verify', {})
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError 404')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_unverify_a_missing_address(self):
         # POSTing to the 'unverify' sub-resource returns a 404.
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/addresses/'
                      'nobody@example.com/unverify', {})
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError 404')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_verify_already_verified(self):
         # It's okay to verify an already verified; it just doesn't change the
@@ -105,23 +95,17 @@ class TestAddresses(unittest.TestCase):
         with transaction():
             anne = getUtility(IUserManager).create_address('anne@example.com')
             self.assertEqual(anne.verified_on, None)
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/addresses/'
                      'anne@example.com/verify/foo', {})
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-        else:
-            raise AssertionError('Expected HTTPError 400')
+        self.assertEqual(cm.exception.code, 400)
 
     def test_unverify_bad_request(self):
         # Too many segments after /verify.
         with transaction():
             anne = getUtility(IUserManager).create_address('anne@example.com')
             self.assertEqual(anne.verified_on, None)
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/addresses/'
                      'anne@example.com/unverify/foo', {})
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-        else:
-            raise AssertionError('Expected HTTPError 400')
+        self.assertEqual(cm.exception.code, 400)

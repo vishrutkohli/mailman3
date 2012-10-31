@@ -81,7 +81,7 @@ Message-ID: <ant>
         self.assertEqual(event.message['message-id'], '<ant>')
         self.assertEqual(event.metadata['listname'], 'test@example.com')
         self.assertTrue(isinstance(event.error, RuntimeError))
-        self.assertEqual(event.error.message, 'borked')
+        self.assertEqual(str(event.error), 'borked')
         self.assertTrue(isinstance(event.runner, CrashingRunner))
         # The message should also have ended up in the shunt queue.
         shunted = get_queue_messages('shunt')

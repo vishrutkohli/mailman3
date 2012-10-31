@@ -56,24 +56,16 @@ Something else.
 
     def test_not_found(self):
         # When a bogus mailing list is given, 404 should result.
-        try:
-            # For Python 2.6
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/lists/bee@example.com/held')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_bad_request_id(self):
         # Bad request when request_id is not an integer.
-        try:
-            # For Python 2.6
+        with self.assertRaises(HTTPError) as cm:
             call_api(
                 'http://localhost:9001/3.0/lists/ant@example.com/held/bogus')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
 
     def test_subscription_request_as_held_message(self):
         # Provide the request id of a subscription request using the held
@@ -85,12 +77,9 @@ Something else.
             DeliveryMode.regular, 'en')
         config.db.store.commit()
         url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{0}'
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api(url.format(subscribe_id))
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
         # But using the held_id returns a valid response.
         response, content = call_api(url.format(held_id))
         self.assertEqual(response['key'], '<alpha>')
@@ -99,10 +88,7 @@ Something else.
         # POSTing to a held message with a bad action.
         held_id = hold_message(self._mlist, self._msg)
         url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{0}'
-        try:
+        with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-            self.assertEqual(exc.msg, 'Cannot convert parameters: action')
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.msg, 'Cannot convert parameters: action')

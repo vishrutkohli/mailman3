@@ -38,38 +38,25 @@ class TestSystem(unittest.TestCase):
 
     def test_system_url_too_long(self):
         # /system/foo/bar is not allowed.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/system/foo/bar')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
 
     def test_system_url_not_preferences(self):
         # /system/foo where `foo` is not `preferences`.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/system/foo')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
 
     def test_system_preferences_are_read_only(self):
         # /system/preferences are read-only.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/system/preferences', {
                      'acknowledge_posts': True,
                      }, method='PATCH')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 405)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 405)
         # /system/preferences are read-only.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/system/preferences', {
                 'acknowledge_posts': False,
                 'delivery_mode': 'regular',
@@ -79,7 +66,4 @@ class TestSystem(unittest.TestCase):
                 'receive_list_copy': True,
                 'receive_own_postings': True,
                 }, method='PUT')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 405)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 405)

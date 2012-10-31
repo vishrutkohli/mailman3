@@ -318,9 +318,9 @@ class DigestRunner(Runner):
         """See `IRunner`."""
         volume = msgdata['volume']
         digest_number = msgdata['digest_number']
-        with nested(Mailbox(msgdata['digest_path']),
-                    _.using(mlist.preferred_language.code)) as (mailbox,
-                                                                language_code):
+        # Backslashes make me cry.
+        with Mailbox(msgdata['digest_path']) as mailbox, \
+             _.using(mlist.preferred_language.code):
             # Create the digesters.
             mime_digest = MIMEDigester(mlist, volume, digest_number)
             rfc1153_digest = RFC1153Digester(mlist, volume, digest_number)
@@ -354,7 +354,7 @@ class DigestRunner(Runner):
         # receive.
         digest_members = set(mlist.digest_members.members)
         for member in digest_members:
-            if member.delivery_status <> DeliveryStatus.enabled:
+            if member.delivery_status is not DeliveryStatus.enabled:
                 continue
             # Send the digest to the case-preserved address of the digest
             # members.

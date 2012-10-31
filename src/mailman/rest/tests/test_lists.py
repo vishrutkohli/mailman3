@@ -46,47 +46,31 @@ class TestListsMissing(unittest.TestCase):
 
     def test_missing_list_roster_member_404(self):
         # /lists/<missing>/roster/member gives 404
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/lists/missing@example.com'
                      '/roster/member')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_missing_list_roster_owner_404(self):
         # /lists/<missing>/roster/owner gives 404
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/lists/missing@example.com'
                      '/roster/owner')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_missing_list_roster_moderator_404(self):
         # /lists/<missing>/roster/member gives 404
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/lists/missing@example.com'
                      '/roster/moderator')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_missing_list_configuration_404(self):
         # /lists/<missing>/config gives 404
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api(
                 'http://localhost:9001/3.0/lists/missing@example.com/config')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
 
 

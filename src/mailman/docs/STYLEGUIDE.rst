@@ -15,7 +15,7 @@ http://barry.warsaw.us/software/STYLEGUIDE.txt
 This document contains a style guide for Python programming, as used in GNU
 Mailman.  `PEP 8`_ is the basis for this style guide so it's recommendations
 should be followed except for the differences outlined here.  This document
-assumes the use of Python 2.6 or 2.7, but not (yet) Python 3.
+assumes the use of Python 2.7, but not (yet) Python 3.
 
 * After file comments (e.g. license block), add a ``__metaclass__`` definition
   so that all classes will be new-style.  Following that, add an ``__all__``
