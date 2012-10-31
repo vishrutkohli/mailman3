@@ -32,14 +32,13 @@ mailman-developers@python.org mailing list.
 Requirements
 ============
 
-Python 2.6 or 2.7 is required.  It can either be the default 'python' on your
-$PATH or it can be accessible via the ``python2.6`` or ``python2.7`` binary.
+Python 2.7 is required.  It can either be the default 'python' on your
+$PATH or it can be accessible via the ``python2.7`` binary.
 If your operating system does not include Python, see http://www.python.org
 downloading and installing it from source.  Python 3 is not yet supported.
 
 In this documentation, a bare ``python`` refers to the Python executable used
-to invoke ``bootstrap.py``, which might be ``python2.6`` or ``python2.7``, as
-well as the system ``python`` or an absolute path.
+to invoke ``bootstrap.py``.
 
 Mailman 3 is now based on the `zc.buildout`_ infrastructure, which greatly
 simplifies building and testing Mailman.

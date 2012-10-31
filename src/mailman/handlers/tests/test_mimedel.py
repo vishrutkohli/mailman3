@@ -37,8 +37,7 @@ from mailman.interfaces.action import FilterAction
 from mailman.interfaces.member import MemberRole
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
+    LogFileMark, configuration, get_queue_messages,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 
@@ -71,25 +70,17 @@ Message-ID: <ant>
 
     def test_dispose_discard(self):
         self._mlist.filter_action = FilterAction.discard
-        try:
+        with self.assertRaises(errors.DiscardMessage) as cm:
             mime_delete.dispose(self._mlist, self._msg, {}, 'discarding')
-        except errors.DiscardMessage as error:
-            pass
-        else:
-            raise AssertionError('DiscardMessage exception expected')
-        self.assertEqual(error.message, 'discarding')
+        self.assertEqual(cm.exception.message, 'discarding')
         # There should be no messages in the 'bad' queue.
         self.assertEqual(len(get_queue_messages('bad')), 0)
 
     def test_dispose_bounce(self):
         self._mlist.filter_action = FilterAction.reject
-        try:
+        with self.assertRaises(errors.RejectMessage) as cm:
             mime_delete.dispose(self._mlist, self._msg, {}, 'rejecting')
-        except errors.RejectMessage as error:
-            pass
-        else:
-            raise AssertionError('RejectMessage exception expected')
-        self.assertEqual(error.message, 'rejecting')
+        self.assertEqual(cm.exception.message, 'rejecting')
         # There should be no messages in the 'bad' queue.
         self.assertEqual(len(get_queue_messages('bad')), 0)
 
@@ -103,13 +94,9 @@ Message-ID: <ant>
         self._mlist.subscribe(bart, MemberRole.moderator)
         # Now set the filter action and dispose the message.
         self._mlist.filter_action = FilterAction.forward
-        try:
+        with self.assertRaises(errors.DiscardMessage) as cm:
             mime_delete.dispose(self._mlist, self._msg, {}, 'forwarding')
-        except errors.DiscardMessage as error:
-            pass
-        else:
-            raise AssertionError('DiscardMessage exception expected')
-        self.assertEqual(error.message, 'forwarding')
+        self.assertEqual(cm.exception.message, 'forwarding')
         # There should now be a multipart message in the virgin queue destined
         # for the mailing list owners.
         messages = get_queue_messages('virgin')
@@ -143,46 +130,28 @@ message.
         self.assertEqual(original['subject'], 'A disposable message')
         self.assertEqual(original['message-id'], '<ant>')
 
+    @configuration('mailman', filtered_messages_are_preservable='no')
     def test_dispose_non_preservable(self):
         # Two actions can happen here, depending on a site-wide setting.  If
         # the site owner has indicated that filtered messages cannot be
         # preserved, then this is the same as discarding them.
         self._mlist.filter_action = FilterAction.preserve
-        config.push('non-preservable', """
-        [mailman]
-        filtered_messages_are_preservable: no
-        """)
-        try:
+        with self.assertRaises(errors.DiscardMessage) as cm:
             mime_delete.dispose(self._mlist, self._msg, {}, 'not preserved')
-        except errors.DiscardMessage as error:
-            pass
-        else:
-            raise AssertionError('DiscardMessage exception expected')
-        finally:
-            config.pop('non-preservable')
-        self.assertEqual(error.message, 'not preserved')
+        self.assertEqual(cm.exception.message, 'not preserved')
         # There should be no messages in the 'bad' queue.
         self.assertEqual(len(get_queue_messages('bad')), 0)
 
+    @configuration('mailman', filtered_messages_are_preservable='yes')
     def test_dispose_preservable(self):
         # Two actions can happen here, depending on a site-wide setting.  If
         # the site owner has indicated that filtered messages can be
         # preserved, then this is similar to discarding the message except
         # that a copy is preserved in the 'bad' queue.
         self._mlist.filter_action = FilterAction.preserve
-        config.push('preservable', """
-        [mailman]
-        filtered_messages_are_preservable: yes
-        """)
-        try:
+        with self.assertRaises(errors.DiscardMessage) as cm:
             mime_delete.dispose(self._mlist, self._msg, {}, 'preserved')
-        except errors.DiscardMessage as error:
-            pass
-        else:
-            raise AssertionError('DiscardMessage exception expected')
-        finally:
-            config.pop('preservable')
-        self.assertEqual(error.message, 'preserved')
+        self.assertEqual(cm.exception.message, 'preserved')
         # There should be no messages in the 'bad' queue.
         messages = get_queue_messages('bad')
         self.assertEqual(len(messages), 1)
@@ -200,13 +169,9 @@ message.
                        FilterAction.defer):
             self._mlist.filter_action = action
             mark = LogFileMark('mailman.error')
-            try:
+            with self.assertRaises(errors.DiscardMessage) as cm:
                 mime_delete.dispose(self._mlist, self._msg, {}, 'bad action')
-            except errors.DiscardMessage as error:
-                pass
-            else:
-                raise AssertionError('DiscardMessage exception expected')
-            self.assertEqual(error.message, 'bad action')
+            self.assertEqual(cm.exception.message, 'bad action')
             line = mark.readline()[:-1]
             self.assertTrue(line.endswith(
                 '{0} invalid FilterAction: test@example.com.  '

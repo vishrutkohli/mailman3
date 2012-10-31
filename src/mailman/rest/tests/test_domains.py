@@ -47,24 +47,16 @@ class TestDomains(unittest.TestCase):
 
     def test_bogus_endpoint_extension(self):
         # /domains/<domain>/lists/<anything> is not a valid endpoint.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/domains/example.com'
                      '/lists/wrong')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 400)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 400)
 
     def test_bogus_endpoint(self):
         # /domains/<domain>/<!lists> does not exist.
-        try:
-            # For Python 2.6.
+        with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/domains/example.com/wrong')
-        except HTTPError as exc:
-            self.assertEqual(exc.code, 404)
-        else:
-            raise AssertionError('Expected HTTPError')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_lists_are_deleted_when_domain_is_deleted(self):
         # /domains/<domain> DELETE removes all associated mailing lists.

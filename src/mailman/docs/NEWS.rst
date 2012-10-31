@@ -12,6 +12,11 @@ Here is a history of user visible changes to Mailman.
 ==========================
 (2012-XX-XX)
 
+Compatibility
+-------------
+ * Python 2.7 is not required.  Python 2.6 is no longer officially supported.
+   LP: #1073506
+
 REST
 ----
  * Add list_id to JSON representation for a mailing list (given by Jimmy

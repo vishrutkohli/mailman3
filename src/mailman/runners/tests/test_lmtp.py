@@ -53,22 +53,19 @@ class TestLMTP(unittest.TestCase):
 
     def test_message_id_required(self):
         # The message is rejected if it does not have a Message-ID header.
-        try:
+        with self.assertRaises(smtplib.SMTPDataError) as cm:
             self._lmtp.sendmail('anne@example.com', ['test@example.com'], """\
 From: anne@example.com
 To: test@example.com
 Subject: This has no Message-ID header
 
 """)
-        except smtplib.SMTPDataError as error:
-            pass
-        else:
-            raise AssertionError('SMTPDataError expected')
         # LMTP returns a 550: Requested action not taken: mailbox unavailable
         # (e.g., mailbox not found, no access, or command rejected for policy
         # reasons)
-        self.assertEqual(error.smtp_code, 550)
-        self.assertEqual(error.smtp_error, 'No Message-ID header provided')
+        self.assertEqual(cm.exception.smtp_code, 550)
+        self.assertEqual(cm.exception.smtp_error, 
+                         'No Message-ID header provided')
 
     def test_message_id_hash_is_added(self):
         self._lmtp.sendmail('anne@example.com', ['test@example.com'], """\

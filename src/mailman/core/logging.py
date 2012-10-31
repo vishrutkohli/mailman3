@@ -40,8 +40,8 @@ _handlers = {}
 
 
 
-# XXX I would love to simplify things and use Python 2.6's WatchedFileHandler,
-# but there are two problems.  First, it's more difficult to handle the test
+# XXX I would love to simplify things and use Python's WatchedFileHandler, but
+# there are two problems.  First, it's more difficult to handle the test
 # suite's need to reopen the file handler to a different path.  Does
 # zope.testing's logger support fix this?
 #

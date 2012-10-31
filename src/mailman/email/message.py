@@ -219,11 +219,7 @@ class UserNotification(Message):
         if mlist is not None:
             enqueue_kws['listname'] = mlist.fqdn_listname
         enqueue_kws.update(_kws)
-        # Keywords must be strings in Python 2.6.
-        str_keywords = dict()
-        for key, val in enqueue_kws.items():
-            str_keywords[str(key)] = val
-        virginq.enqueue(self, **str_keywords)
+        virginq.enqueue(self, **enqueue_kws)
 
 
 

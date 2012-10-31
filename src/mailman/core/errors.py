@@ -90,6 +90,12 @@ def _(s):
 class HandlerError(MailmanError):
     """Base class for all handler errors."""
 
+    def __init__(self, message=None):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 
 class HoldMessage(HandlerError):
     """Base class for all message-being-held short circuits."""

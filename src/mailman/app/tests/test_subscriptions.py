@@ -51,19 +51,13 @@ class TestJoin(unittest.TestCase):
 
     def test_join_user_with_bogus_id(self):
         # When `subscriber` is a missing user id, an exception is raised.
-        try:
+        with self.assertRaises(MissingUserError) as cm:
             self._service.join('test.example.com', uuid.UUID(int=99))
-        except MissingUserError as exc:
-            self.assertEqual(exc.user_id, uuid.UUID(int=99))
-        else:
-            raise AssertionError('MissingUserError expected')
+        self.assertEqual(cm.exception.user_id, uuid.UUID(int=99))
 
     def test_join_user_with_invalid_email_address(self):
         # When `subscriber` is a string that is not an email address, an
         # exception is raised.
-        try:
+        with self.assertRaises(InvalidEmailAddressError) as cm:
             self._service.join('test.example.com', 'bogus')
-        except InvalidEmailAddressError as exc:
-            self.assertEqual(exc.email, 'bogus')
-        else:
-            raise AssertionError('InvalidEmailAddressError expected')
+        self.assertEqual(cm.exception.email, 'bogus')

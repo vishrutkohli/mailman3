@@ -44,8 +44,6 @@ class TestHeaderChain(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        # Python 2.6 does not have assertListEqual().
-        self._leq = getattr(self, 'assertListEqual', self.assertEqual)
 
     @configuration('antispam', header_checks="""
     Foo: a+
@@ -71,7 +69,7 @@ class TestHeaderChain(unittest.TestCase):
                 self.assertEqual(link.rule.name[:13], 'header-match-')
                 self.assertEqual(link.action, LinkAction.defer)
                 post_checks.append((link.rule.header, link.rule.pattern))
-        self._leq(post_checks, [
+        self.assertListEqual(post_checks, [
             ('Foo', 'a+'),
             ('Bar', 'bb?'),
             ])
@@ -103,7 +101,7 @@ class TestHeaderChain(unittest.TestCase):
                 self.assertEqual(link.rule.name[:13], 'header-match-')
                 self.assertEqual(link.action, LinkAction.defer)
                 post_checks.append((link.rule.header, link.rule.pattern))
-        self._leq(post_checks, [
+        self.assertListEqual(post_checks, [
             ('Foo', 'foo'),
             ('Bar', 'bar'),
             ])

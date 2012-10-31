@@ -224,13 +224,9 @@ class TestFind(unittest.TestCase):
         self.assertEqual(self.fp.read(), 'List template')
 
     def test_template_not_found(self):
-        # Python 2.6 compatibility.
-        try:
+        with self.assertRaises(TemplateNotFoundError) as cm:
             find('missing.txt', self.mlist)
-        except TemplateNotFoundError as error:
-            self.assertEqual(error.template_file, 'missing.txt')
-        else:
-            raise AssertionError('TemplateNotFoundError expected')
+        self.assertEqual(cm.exception.template_file, 'missing.txt')
 
 
 

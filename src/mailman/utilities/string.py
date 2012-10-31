@@ -60,19 +60,7 @@ def expand(template, substitutions, template_class=Template):
     :return: The substituted string.
     :rtype: string
     """
-    # Python 2.6 requires ** dictionaries to have str, not unicode keys, so
-    # convert as necessary.  Note that string.Template uses **.  For our
-    # purposes, keys should always be ascii.  Values though can be anything.
-    cooked = substitutions.__class__()
-    for key in substitutions:
-        if isinstance(key, unicode):
-            key = key.encode('ascii')
-        cooked[key] = substitutions[key]
-    try:
-        return template_class(template).safe_substitute(cooked)
-    except (TypeError, ValueError):
-        # The template is really screwed up.
-        log.exception('broken template: %s', template)
+    return template_class(template).safe_substitute(substitutions)
 
 
 

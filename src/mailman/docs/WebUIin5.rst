@@ -7,8 +7,8 @@ Mailman 3's web UI, called Postorius.  If all goes as planned, you should be
 done within 5 minutes.  This has been tested on Ubuntu 11.04.
 
 In order to download the components necessary you need to have the `Bazaar`_
-version control system installed on your system.  Mailman and mailman.client
-need at least Python version 2.6.
+version control system installed on your system.  Mailman requires Python 2.7,
+while mailman.client needs at least Python version 2.6.
 
 It's probably a good idea to set up a virtual Python environment using
 `virtualenv`_.  `Here is a brief HOWTO`_.
