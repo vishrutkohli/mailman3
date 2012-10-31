@@ -30,7 +30,6 @@ import logging
 
 # cStringIO doesn't support unicode.
 from StringIO import StringIO
-from contextlib import nested
 from copy import deepcopy
 from email.header import Header
 from email.message import Message
@@ -319,8 +318,8 @@ class DigestRunner(Runner):
         volume = msgdata['volume']
         digest_number = msgdata['digest_number']
         # Backslashes make me cry.
-        with Mailbox(msgdata['digest_path']) as mailbox, \
-             _.using(mlist.preferred_language.code):
+        code = mlist.preferred_language.code
+        with Mailbox(msgdata['digest_path']) as mailbox, _.using(code):
             # Create the digesters.
             mime_digest = MIMEDigester(mlist, volume, digest_number)
             rfc1153_digest = RFC1153Digester(mlist, volume, digest_number)
