@@ -121,7 +121,11 @@ class Start:
         os.setsid()
         # Instead of cd'ing to root, cd to the Mailman runtime directory.
         # However, before we do that, set an environment variable used by the
-        # subprocesses to calculate their path to the $VAR_DIR.
+        # subprocesses to calculate their path to the $VAR_DIR.  Before we
+        # chdir() though, calculate the absolute path to the configuration
+        # file.
+        config_path = (os.path.abspath(args.config)
+                       if args.config else None)
         os.environ['MAILMAN_VAR_DIR'] = config.VAR_DIR
         os.chdir(config.VAR_DIR)
         # Exec the master watcher.
@@ -131,8 +135,8 @@ class Start:
             ]
         if args.force:
             execl_args.append('--force')
-        if args.config:
-            execl_args.extend(['-C', args.config])
+        if config_path:
+            execl_args.extend(['-C', config_path])
         qlog.debug('starting: %s', execl_args)
         os.execl(*execl_args)
         # We should never get here.

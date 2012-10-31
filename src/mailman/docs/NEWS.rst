@@ -55,6 +55,8 @@ Commands
  * `bin/mailman aliases` loses the `--output`, `--format`, and `--simple`
    arguments, and adds a `--directory` argument.  This is necessary to support
    the Postfix `relay_domains` support.
+ * `bin/mailman start` was passing the wrong relative path to its runner
+   subprocesses when -C was given.  LP: #982551
 
 
 3.0 beta 2 -- "Freeze"
