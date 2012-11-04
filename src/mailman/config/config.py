@@ -22,14 +22,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Configuration',
+    'external_configuration',
+    'load_external'
     ]
 
 
 import os
 import sys
 
+from ConfigParser import SafeConfigParser
 from lazr.config import ConfigSchema, as_boolean
-from pkg_resources import resource_stream
+from pkg_resources import resource_filename, resource_stream, resource_string
 from string import Template
 from zope.component import getUtility
 from zope.event import notify
@@ -39,7 +42,7 @@ import mailman.templates
 
 from mailman import version
 from mailman.interfaces.configuration import (
-    ConfigurationUpdatedEvent, IConfiguration)
+    ConfigurationUpdatedEvent, IConfiguration, MissingConfigurationFileError)
 from mailman.interfaces.languages import ILanguageManager
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.modules import call_name
@@ -235,3 +238,55 @@ class Configuration:
         """Iterate over all the language configuration sections."""
         for section in self._config.getByCategory('language', []):
             yield section
+
+
+
+def load_external(path, encoding=None):
+    """Load the configuration file named by path.
+
+    :param path: A string naming the location of the external configuration
+        file.  This is either an absolute file system path or a special
+        ``python:`` path.  When path begins with ``python:``, the rest of the
+        value must name a ``.cfg`` file located within Python's import path,
+        however the trailing ``.cfg`` suffix is implied (don't provide it
+        here).
+    :param encoding: The encoding to apply to the data read from path.  If
+        None, then bytes will be returned.
+    :return: A unicode string or bytes, depending on ``encoding``.
+    """
+    # Is the context coming from a file system or Python path?
+    if path.startswith('python:'):
+        resource_path = path[7:]
+        package, dot, resource = resource_path.rpartition('.')
+        config_string = resource_string(package, resource + '.cfg')
+    else:
+        with open(path, 'rb') as fp:
+            config_string = fp.read()
+    if encoding is None:
+        return config_string
+    return config_string.decode(encoding)
+
+
+def external_configuration(path):
+    """Parse the configuration file named by path.
+
+    :param path: A string naming the location of the external configuration
+        file.  This is either an absolute file system path or a special
+        ``python:`` path.  When path begins with ``python:``, the rest of the
+        value must name a ``.cfg`` file located within Python's import path,
+        however the trailing ``.cfg`` suffix is implied (don't provide it
+        here).
+    :return: A `ConfigParser` instance.
+    """
+    # Is the context coming from a file system or Python path?
+    if path.startswith('python:'):
+        resource_path = path[7:]
+        package, dot, resource = resource_path.rpartition('.')
+        cfg_path = resource_filename(package, resource + '.cfg')
+    else:
+        cfg_path = path
+    parser = SafeConfigParser()
+    files = parser.read(cfg_path)
+    if files != [cfg_path]:
+        raise MissingConfigurationFileError(path)
+    return parser

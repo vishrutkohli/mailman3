@@ -30,6 +30,7 @@ from urlparse import urljoin
 from zope.interface import implementer
 
 from mailman.config import config
+from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import ArchivePolicy, IArchiver
 
 
@@ -43,16 +44,20 @@ class MailArchive:
 
     name = 'mail-archive'
 
-    @staticmethod
-    def list_url(mlist):
+    def __init__(self):
+        # Read our specific configuration file
+        archiver_config = external_configuration(
+            config.archiver.mail_archive.configuration)
+        self.base_url = archiver_config.get('general', 'base_url')
+        self.recipient = archiver_config.get('general', 'recipient')
+
+    def list_url(self, mlist):
         """See `IArchiver`."""
         if mlist.archive_policy is ArchivePolicy.public:
-            return urljoin(config.archiver.mail_archive.base_url,
-                           quote(mlist.posting_address))
+            return urljoin(self.base_url, quote(mlist.posting_address))
         return None
 
-    @staticmethod
-    def permalink(mlist, msg):
+    def permalink(self, mlist, msg):
         """See `IArchiver`."""
         if mlist.archive_policy is not ArchivePolicy.public:
             return None
@@ -62,13 +67,12 @@ class MailArchive:
         message_id_hash = msg.get('x-message-id-hash')
         if message_id_hash is None:
             return None
-        return urljoin(config.archiver.mail_archive.base_url, message_id_hash)
+        return urljoin(self.base_url, message_id_hash)
 
-    @staticmethod
-    def archive_message(mlist, msg):
+    def archive_message(self, mlist, msg):
         """See `IArchiver`."""
         if mlist.archive_policy is ArchivePolicy.public:
             config.switchboards['out'].enqueue(
                 msg,
                 listname=mlist.fqdn_listname,
-                recipients=[config.archiver.mail_archive.recipient])
+                recipients=[self.recipient])

@@ -32,6 +32,7 @@ from urlparse import urljoin
 from zope.interface import implementer
 
 from mailman.config import config
+from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import IArchiver
 from mailman.utilities.string import expand
 
@@ -46,18 +47,23 @@ class MHonArc:
 
     name = 'mhonarc'
 
-    @staticmethod
-    def list_url(mlist):
+    def __init__(self):
+        # Read our specific configuration file
+        archiver_config = external_configuration(
+            config.archiver.mhonarc.configuration)
+        self.base_url = archiver_config.get('general', 'base_url')
+        self.command = archiver_config.get('general', 'command')
+
+    def list_url(self, mlist):
         """See `IArchiver`."""
         # XXX What about private MHonArc archives?
-        return expand(config.archiver.mhonarc.base_url,
+        return expand(self.base_url,
                       dict(listname=mlist.fqdn_listname,
                            hostname=mlist.domain.url_host,
                            fqdn_listname=mlist.fqdn_listname,
                            ))
 
-    @staticmethod
-    def permalink(mlist, msg):
+    def permalink(self, mlist, msg):
         """See `IArchiver`."""
         # XXX What about private MHonArc archives?
         # It is the LMTP server's responsibility to ensure that the message
@@ -66,14 +72,13 @@ class MHonArc:
         message_id_hash = msg.get('x-message-id-hash')
         if message_id_hash is None:
             return None
-        return urljoin(MHonArc.list_url(mlist), message_id_hash)
+        return urljoin(self.list_url(mlist), message_id_hash)
 
-    @staticmethod
-    def archive_message(mlist, msg):
+    def archive_message(self, mlist, msg):
         """See `IArchiver`."""
         substitutions = config.__dict__.copy()
         substitutions['listname'] = mlist.fqdn_listname
-        command = expand(config.archiver.mhonarc.command, substitutions)
+        command = expand(self.command, substitutions)
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             shell=True)

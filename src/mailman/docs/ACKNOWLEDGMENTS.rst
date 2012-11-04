@@ -101,6 +101,7 @@ left off the list!
 * Stuart Bishop
 * David Blomquist
 * Bojan
+* Aurélien Bompard
 * Søren Bondrup
 * Grant Bowman
 * Alessio Bragadini

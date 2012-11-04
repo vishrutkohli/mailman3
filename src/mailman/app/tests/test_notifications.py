@@ -74,9 +74,8 @@ Welcome to the $list_name mailing list.
         os.makedirs(path)
         with open(os.path.join(path, 'welcome.txt'), 'w') as fp:
             print('You just joined the $list_name mailing list!', file=fp)
-        # Python 2.7 has assertMultiLineEqual.  Let this work without bounds.
+        # Let assertMultiLineEqual work without bounds.
         self.maxDiff = None
-        self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
 
     def tearDown(self):
         config.pop('template config')
@@ -94,7 +93,7 @@ Welcome to the $list_name mailing list.
         message = messages[0].msg
         self.assertEqual(str(message['subject']),
                          'Welcome to the "Test List" mailing list')
-        self.eq(message.get_payload(), """\
+        self.assertMultiLineEqual(message.get_payload(), """\
 Welcome to the Test List mailing list.
 
     Posting address: test@example.com

@@ -57,13 +57,12 @@ Subject: A disposable message
 Message-ID: <ant>
 
 """)
-        # Python 2.7 has assertMultiLineEqual.  Let this work without bounds.
-        self.maxDiff = None
-        self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
         config.push('dispose', """
         [mailman]
         site_owner: noreply@example.com
         """)
+        # Let assertMultiLineEqual work without bounds.
+        self.maxDiff = None
 
     def tearDown(self):
         config.pop('dispose')
@@ -115,7 +114,7 @@ Message-ID: <ant>
         # The body of the first part provides the moderators some details.
         part0 = message.get_payload(0)
         self.assertEqual(part0.get_content_type(), 'text/plain')
-        self.eq(part0.get_payload(), """\
+        self.assertMultiLineEqual(part0.get_payload(), """\
 The attached message matched the Test mailing list's content
 filtering rules and was prevented from being forwarded on to the list
 membership.  You are receiving the only remaining copy of the discarded

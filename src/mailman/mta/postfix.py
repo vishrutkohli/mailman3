@@ -34,6 +34,7 @@ from zope.component import getUtility
 from zope.interface import implementer
 
 from mailman.config import config
+from mailman.config.config import external_configuration
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mta import (
     IMailTransportAgentAliases, IMailTransportAgentLifecycle)
@@ -59,6 +60,11 @@ class _FakeList:
 @implementer(IMailTransportAgentLifecycle)
 class LMTP:
     """Connect Mailman to Postfix via LMTP."""
+
+    def __init__(self):
+        # Locate and read the Postfix specific configuration file.
+        mta_config = external_configuration(config.mta.configuration)
+        self.postmap_command = mta_config.get('postfix', 'postmap_command')
 
     def create(self, mlist):
         """See `IMailTransportAgentLifecycle`."""
@@ -91,7 +97,7 @@ class LMTP:
             # one files, still try the other one.
             errors = []
             for path in (lmtp_path, domains_path):
-                command = config.mta.postfix_map_cmd + ' ' + path
+                command = self.postmap_command + ' ' + path
                 status = (os.system(command) >> 8) & 0xff
                 if status:
                     msg = 'command failure: %s, %s, %s'
@@ -124,7 +130,7 @@ class LMTP:
     """.format(now().replace(microsecond=0)), file=fp)
         for domain in sorted(by_domain):
             print("""\
-# Aliases which are visible only in the @{0} domain.""".format(domain), 
+# Aliases which are visible only in the @{0} domain.""".format(domain),
                   file=fp)
             for mlist in sorted(by_domain[domain], key=sort_key):
                 aliases = list(utility.aliases(mlist))

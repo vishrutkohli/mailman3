@@ -55,16 +55,15 @@ Date: Tue, 14 Jun 2011 21:12:00 -0400
 
 Nothing.
 """)
-        # Python 2.7 has assertMultiLineEqual.  Let this work without bounds.
-        self.maxDiff = None
-        self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
+        # Let assertMultiLineEqual work without bounds.
 
     def test_inject_message(self):
         # Test basic inject_message() call.
         inject_message(self.mlist, self.msg)
         items = get_queue_messages('in')
         self.assertEqual(len(items), 1)
-        self.eq(items[0].msg.as_string(), self.msg.as_string())
+        self.assertMultiLineEqual(items[0].msg.as_string(),
+                                  self.msg.as_string())
         self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          len(self.msg.as_string()))
@@ -83,7 +82,8 @@ Nothing.
         self.assertEqual(len(items), 0)
         items = get_queue_messages('virgin')
         self.assertEqual(len(items), 1)
-        self.eq(items[0].msg.as_string(), self.msg.as_string())
+        self.assertMultiLineEqual(items[0].msg.as_string(),
+                                  self.msg.as_string())
         self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          len(self.msg.as_string()))
@@ -155,7 +155,6 @@ Nothing.
 """
         # Python 2.7 has a better equality tester for message texts.
         self.maxDiff = None
-        self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
 
     def _remove_line(self, header):
         return NL.join(line for line in self.text.splitlines()
@@ -171,7 +170,7 @@ Nothing.
                          'GUXXQKNCHBFQAHGBFMGCME6HKZCUUH3K')
         # Delete that header because it is not in the original text.
         del items[0].msg['x-message-id-hash']
-        self.eq(items[0].msg.as_string(), self.text)
+        self.assertMultiLineEqual(items[0].msg.as_string(), self.text)
         self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          # Add back the X-Message-ID-Header which was in the
@@ -196,7 +195,7 @@ Nothing.
         self.assertEqual(len(items), 1)
         # Remove the X-Message-ID-Hash header which isn't in the original text.
         del items[0].msg['x-message-id-hash']
-        self.eq(items[0].msg.as_string(), self.text)
+        self.assertMultiLineEqual(items[0].msg.as_string(), self.text)
         self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          # Add back the X-Message-ID-Header which was in the
