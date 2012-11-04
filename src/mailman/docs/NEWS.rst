@@ -35,6 +35,14 @@ REST
    unverify an address more than once, but verifying an already verified
    address does not change its `.verified_on` date.  (LP: #1054730)
 
+Configuration
+-------------
+ * `[passlib]path` configuration variable renamed to `[passlib]configuration`.
+ * Postfix-specific configurations in the `[mta]` section are moved to a
+   separate file, named by the `[mta]configuration` variable.
+ * In the new `postfix.cfg` file, `postfix_map_cmd` is renamed to
+   `postmap_command`.
+
 Database
 --------
  * The `ban` table now uses list-ids to cross-reference the mailing list,

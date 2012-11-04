@@ -27,22 +27,15 @@ __all__ = [
 
 
 from passlib.context import CryptContext
-from pkg_resources import resource_string
 
+from mailman.config.config import load_external
 from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 
 
 
 class PasswordContext:
     def __init__(self, config):
-        # Is the context coming from a file system or Python path?
-        if config.passwords.path.startswith('python:'):
-            resource_path = config.passwords.path[7:]
-            package, dot, resource = resource_path.rpartition('.')
-            config_string = resource_string(package, resource + '.cfg')
-        else:
-            with open(config.passwords.path, 'rb') as fp:
-                config_string = fp.read()
+        config_string = load_external(config.passwords.configuration)
         self._context = CryptContext.from_string(config_string)
 
     def encrypt(self, secret):

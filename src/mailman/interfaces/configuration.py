@@ -23,10 +23,21 @@ __metaclass__ = type
 __all__ = [
     'ConfigurationUpdatedEvent',
     'IConfiguration',
+    'MissingConfigurationFileError',
     ]
 
 
 from zope.interface import Interface
+
+from mailman.core.errors import MailmanError
+
+
+
+class MissingConfigurationFileError(MailmanError):
+    """A named configuration file was not found."""
+
+    def __init__(self, path):
+        self.path = path
 
 
 

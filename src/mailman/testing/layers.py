@@ -114,14 +114,25 @@ class ConfigLayer(MockAndMonkeyLayer):
         # runners) we'll need a file that we can specify to the with the -C
         # option.  Craft the full test configuration string here, push it, and
         # also write it out to a temp file for -C.
+        #
+        # Create a dummy postfix.cfg file so that the test suite doesn't try
+        # to run the actual postmap command, which may not exist anyway.
+        postfix_cfg = os.path.join(cls.var_dir, 'postfix.cfg')
+        with open(postfix_cfg, 'w') as fp:
+            print(dedent("""
+            [postfix]
+            postmap_command: true
+            """), file=fp)
         test_config = dedent("""
         [mailman]
         layout: testing
         [paths.testing]
-        var_dir: %s
+        var_dir: {0}
         [devmode]
         testing: yes
-        """ % cls.var_dir)
+        [mta]
+        configuration: {1}
+        """.format(cls.var_dir, postfix_cfg))
         # Read the testing config and push it.
         test_config += resource_string('mailman.testing', 'testing.cfg')
         config.create_paths = True

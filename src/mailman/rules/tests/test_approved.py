@@ -462,7 +462,7 @@ schemes = roundup_plaintext, plaintext
 default = plaintext
 deprecated = roundup_plaintext
 """, file=fp)
-        with configuration('passwords', path=config_file):
+        with configuration('passwords', configuration=config_file):
             self._msg['Approved'] = 'super secret'
             result = self._rule.check(self._mlist, self._msg, {})
             self.assertTrue(result)
@@ -485,7 +485,7 @@ schemes = roundup_plaintext, plaintext
 default = plaintext
 deprecated = roundup_plaintext
 """, file=fp)
-        with configuration('passwords', path=config_file):
+        with configuration('passwords', configuration=config_file):
             self._msg['Approved'] = 'not the password'
             result = self._rule.check(self._mlist, self._msg, {})
             self.assertFalse(result)

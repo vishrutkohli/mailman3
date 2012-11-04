@@ -55,6 +55,6 @@ class TestPasswords(unittest.TestCase):
 [passlib]
 schemes = plaintext
 """, file=fp)
-        with configuration('passwords', path=config_file):
+        with configuration('passwords', configuration=config_file):
             self.assertEqual(config.password_context.encrypt('my password'),
                              'my password')

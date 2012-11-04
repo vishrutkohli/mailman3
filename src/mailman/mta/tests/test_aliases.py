@@ -37,7 +37,6 @@ from mailman.app.lifecycle import create_list
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.mta import IMailTransportAgentAliases
 from mailman.mta.postfix import LMTP
-from mailman.testing.helpers import configuration
 from mailman.testing.layers import ConfigLayer
 
 
@@ -145,14 +144,12 @@ class TestPostfix(unittest.TestCase):
         self.utility = getUtility(IMailTransportAgentAliases)
         self.mlist = create_list('test@example.com')
         self.postfix = LMTP()
-        # Python 2.7 has assertMultiLineEqual.  Let this work without bounds.
+        # Let assertMultiLineEqual work without bounds.
         self.maxDiff = None
-        self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
-    @configuration('mta', postfix_map_cmd='true')
     def test_aliases(self):
         # Test the format of the Postfix alias generator.
         self.postfix.regenerate(self.tempdir)
@@ -163,13 +160,13 @@ class TestPostfix(unittest.TestCase):
         # ignore the file header.
         with open(os.path.join(self.tempdir, 'postfix_domains')) as fp:
             contents = _strip_header(fp.read())
-        self.eq(contents, """\
+        self.assertMultiLineEqual(contents, """\
 example.com example.com
 """)
         # The lmtp file contains transport mappings to the lmtp server.
         with open(os.path.join(self.tempdir, 'postfix_lmtp')) as fp:
             contents = _strip_header(fp.read())
-        self.eq(contents, """\
+        self.assertMultiLineEqual(contents, """\
 # Aliases which are visible only in the @example.com domain.
 test@example.com               lmtp:[127.0.0.1]:9024
 test-bounces@example.com       lmtp:[127.0.0.1]:9024
@@ -182,7 +179,6 @@ test-subscribe@example.com     lmtp:[127.0.0.1]:9024
 test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
 """)
 
-    @configuration('mta', postfix_map_cmd='true')
     def test_two_lists(self):
         # Both lists need to show up in the aliases file.  LP: #874929.
         # Create a second list.
@@ -195,13 +191,13 @@ test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
         # entry in the relays file.
         with open(os.path.join(self.tempdir, 'postfix_domains')) as fp:
             contents = _strip_header(fp.read())
-        self.eq(contents, """\
+        self.assertMultiLineEqual(contents, """\
 example.com example.com
 """)
         # The transport file contains entries for both lists.
         with open(os.path.join(self.tempdir, 'postfix_lmtp')) as fp:
             contents = _strip_header(fp.read())
-        self.eq(contents, """\
+        self.assertMultiLineEqual(contents, """\
 # Aliases which are visible only in the @example.com domain.
 other@example.com               lmtp:[127.0.0.1]:9024
 other-bounces@example.com       lmtp:[127.0.0.1]:9024
@@ -224,7 +220,6 @@ test-subscribe@example.com     lmtp:[127.0.0.1]:9024
 test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
 """)
 
-    @configuration('mta', postfix_map_cmd='true')
     def test_two_lists_two_domains(self):
         # Now we have two lists in two different domains.  Both lists will
         # show up in the postfix_lmtp file, and both domains will show up in
@@ -239,14 +234,14 @@ test-unsubscribe@example.com   lmtp:[127.0.0.1]:9024
         # entry in the relays file.
         with open(os.path.join(self.tempdir, 'postfix_domains')) as fp:
             contents = _strip_header(fp.read())
-        self.eq(contents, """\
+        self.assertMultiLineEqual(contents, """\
 example.com example.com
 example.net example.net
 """)
         # The transport file contains entries for both lists.
         with open(os.path.join(self.tempdir, 'postfix_lmtp')) as fp:
             contents = _strip_header(fp.read())
-        self.eq(contents, """\
+        self.assertMultiLineEqual(contents, """\
 # Aliases which are visible only in the @example.com domain.
 test@example.com               lmtp:[127.0.0.1]:9024
 test-bounces@example.com       lmtp:[127.0.0.1]:9024

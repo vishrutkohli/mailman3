@@ -74,9 +74,6 @@ class TestEmailToOwner(unittest.TestCase):
         self._inq = make_testable_runner(IncomingRunner, 'in')
         self._pipelineq = make_testable_runner(PipelineRunner, 'pipeline')
         self._outq = make_testable_runner(OutgoingRunner, 'out')
-        # Python 2.7 has assertMultiLineEqual.  Let this work without bounds.
-        self.maxDiff = None
-        self.eq = getattr(self, 'assertMultiLineEqual', self.assertEqual)
 
     def test_owners_get_email(self):
         # XXX 2012-03-23 BAW: We can't use a layer here because we need both
