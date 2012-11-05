@@ -34,6 +34,8 @@ REST
    respectively.  The POST data is ignored.  It is not an error to verify or
    unverify an address more than once, but verifying an already verified
    address does not change its `.verified_on` date.  (LP: #1054730)
+ * Deleting a user through the REST API also deletes all the user's linked
+   addresses and memberships.  (LP: #1074374)
 
 Configuration
 -------------

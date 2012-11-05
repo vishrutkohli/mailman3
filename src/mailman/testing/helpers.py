@@ -23,7 +23,6 @@ __metaclass__ = type
 __all__ = [
     'LogFileMark',
     'TestableMaster',
-    'body_line_iterator',
     'call_api',
     'chdir',
     'configuration',

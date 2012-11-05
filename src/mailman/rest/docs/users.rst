@@ -230,6 +230,13 @@ Cris's resource cannot be retrieved either by email address...
     ...
     HTTPError: HTTP Error 404: 404 Not Found
 
+Cris's address records no longer exist either.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 404: 404 Not Found
+
 
 Missing users
 =============

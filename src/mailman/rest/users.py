@@ -170,10 +170,15 @@ class AUser(_UserBase):
 
     @resource.DELETE()
     def delete_user(self, request):
-        """Delete the named user."""
+        """Delete the named user, all her memberships, and addresses."""
         if self._user is None:
             return http.not_found()
-        getUtility(IUserManager).delete_user(self._user)
+        for member in self._user.memberships.members:
+            member.unsubscribe()
+        user_manager = getUtility(IUserManager)
+        for address in self._user.addresses:
+            user_manager.delete_address(address)
+        user_manager.delete_user(self._user)
         return no_content()
 
     @resource.child()
