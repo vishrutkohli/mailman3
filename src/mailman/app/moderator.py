@@ -202,7 +202,7 @@ def hold_subscription(mlist, address, display_name, password, mode, language):
                 address=address,
                 display_name=display_name,
                 password=password,
-                delivery_mode=str(mode),
+                delivery_mode=mode.name,
                 language=language)
     # Now hold this request.  We'll use the address as the key.
     requestsdb = IListRequests(mlist)
@@ -246,8 +246,7 @@ def handle_subscription(mlist, id, action, comment=None):
                 lang=getUtility(ILanguageManager)[data['language']])
     elif action is Action.accept:
         key, data = requestdb.get_request(id)
-        enum_value = data['delivery_mode'].split('.')[-1]
-        delivery_mode = DeliveryMode(enum_value)
+        delivery_mode = DeliveryMode(data['delivery_mode'])
         address = data['address']
         display_name = data['display_name']
         language = getUtility(ILanguageManager)[data['language']]

@@ -42,7 +42,7 @@ from mailman.rest.configuration import ListConfiguration
 from mailman.rest.helpers import (
     CollectionMixin, etag, no_content, path_to, restish_matcher)
 from mailman.rest.members import AMember, MemberCollection
-from mailman.rest.moderation import HeldMessages
+from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator
 
 
@@ -176,10 +176,17 @@ class AList(_ListBase):
 
     @resource.child()
     def held(self, request, segments):
-        """Return a list of held messages for the mailign list."""
+        """Return a list of held messages for the mailing list."""
         if self._mlist is None:
             return http.not_found()
         return HeldMessages(self._mlist)
+
+    @resource.child()
+    def requests(self, request, segments):
+        """Return a list of subscription/unsubscription requests."""
+        if self._mlist is None:
+            return http.not_found()
+        return SubscriptionRequests(self._mlist)
 
 
 

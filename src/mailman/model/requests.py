@@ -40,6 +40,8 @@ from mailman.interfaces.requests import IListRequests, RequestType
 
 @implementer(IPendable)
 class DataPendable(dict):
+    """See `IPendable`."""
+
     def update(self, mapping):
         # Keys and values must be strings (unicodes, but bytes values are
         # accepted for now).  Any other types for keys are a programming
@@ -58,6 +60,7 @@ class DataPendable(dict):
 
 @implementer(IListRequests)
 class ListRequests:
+    """See `IListRequests`."""
 
     def __init__(self, mailing_list):
         self.mailing_list = mailing_list

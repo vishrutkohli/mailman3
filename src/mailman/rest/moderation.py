@@ -23,6 +23,7 @@ __metaclass__ = type
 __all__ = [
     'HeldMessage',
     'HeldMessages',
+    'SubscriptionRequests',
     ]
 
 
@@ -59,6 +60,8 @@ class HeldMessage(resource.Resource, CollectionMixin):
         msg = getUtility(IMessageStore).get_message_by_id(key)
         resource = dict(
             key=key,
+            # XXX convert _mod_{subject,hold_date,reason,sender,message_id}
+            # into top level values of the resource dict.
             data=data,
             msg=msg.as_string(),
             id=request_id,
@@ -90,14 +93,15 @@ class HeldMessages(resource.Resource, CollectionMixin):
 
     def __init__(self, mlist):
         self._mlist = mlist
+        self._requests = None
 
-    def _resource_as_dict(self, req):
+    def _resource_as_dict(self, request):
         """See `CollectionMixin`."""
-        key, data = self._requests.get_request(req.id)
+        key, data = self._requests.get_request(request.id)
         return dict(
             key=key,
             data=data,
-            id=req.id,
+            id=request.id,
             )
 
     def _get_collection(self, request):
@@ -108,9 +112,54 @@ class HeldMessages(resource.Resource, CollectionMixin):
     @resource.GET()
     def requests(self, request):
         """/lists/listname/held"""
+        # `request` is a restish.http.Request object.
         resource = self._make_collection(request)
         return http.ok([], etag(resource))
 
     @resource.child('{id}')
     def message(self, request, segments, **kw):
         return HeldMessage(self._mlist, kw['id'])
+
+
+
+class SubscriptionRequests(resource.Resource, CollectionMixin):
+    """Resource for subscription and unsubscription requests."""
+
+    def __init__(self, mlist):
+        self._mlist = mlist
+        self._requests = None
+
+    def _resource_as_dict(self, request_and_type):
+        """See `CollectionMixin`."""
+        request, request_type = request_and_type
+        key, data = self._requests.get_request(request.id)
+        resource = dict(
+            key=key,
+            id=request.id,
+            )
+        # Flatten the IRequest payload into the JSON representation.
+        resource.update(data)
+        # Add a key indicating what type of subscription request this is.
+        resource['type'] = request_type.name
+        return resource
+
+    def _get_collection(self, request):
+        requests = IListRequests(self._mlist)
+        self._requests = requests
+        items = []
+        for request_type in (RequestType.subscription,
+                             RequestType.unsubscription):
+            for request in requests.of_type(request_type):
+                items.append((request, request_type))
+        return items
+
+    @resource.GET()
+    def requests(self, request):
+        """/lists/listname/requests"""
+        # `request` is a restish.http.Request object.
+        resource = self._make_collection(request)
+        return http.ok([], etag(resource))
+
+    @resource.child('{id}')
+    def subscription(self, request, segments, **kw):
+        pass

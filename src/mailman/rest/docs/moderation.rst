@@ -1,9 +1,18 @@
-=======================
-Held message moderation
-=======================
+==========
+Moderation
+==========
+
+There are two kinds of moderation tasks a list administrator may need to
+perform.  Messages which are held for approval can be accepted, rejected,
+discarded, or deferred.  Subscription (and sometimes unsubscription) requests
+can similarly be accepted, discarded, rejected, or deferred.
+
+
+Message moderation
+==================
 
 Held messages can be moderated through the REST API.  A mailing list starts
-out with no held messages.
+with no held messages.
 
     >>> ant = create_list('ant@example.com')
     >>> transaction.commit()
@@ -186,3 +195,80 @@ to the original author.
     1
     >>> print messages[0].msg['subject']
     Request to mailing list "Ant" rejected
+
+
+Subscription moderation
+=======================
+
+Subscription and unsubscription requests can be moderated via the REST API as
+well.  A mailing list starts with no pending subscription or unsubscription
+requests.
+
+    >>> ant.admin_immed_notify = False
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests')
+    http_etag: "..."
+    start: 0
+    total_size: 0
+
+When Anne tries to subscribe to the Ant list, her subscription is held for
+moderator approval.
+
+    >>> from mailman.app.moderator import hold_subscription
+    >>> from mailman.interfaces.member import DeliveryMode
+    >>> hold_subscription(
+    ...     ant, 'anne@example.com', 'Anne Person',
+    ...     'password', DeliveryMode.regular, 'en')
+    1
+    >>> transaction.commit()
+
+The subscription request is available from the mailing list.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests')
+    entry 0:
+        address: anne@example.com
+        delivery_mode: regular
+        display_name: Anne Person
+        http_etag: "..."
+        id: 1
+        key: anne@example.com
+        language: en
+        password: password
+        type: subscription
+        when: 2005-08-01T07:49:23
+    http_etag: "..."
+    start: 0
+    total_size: 1
+
+Bart tries to leave a mailing list, but he may not be allowed to.
+
+    >>> from mailman.app.membership import add_member
+    >>> from mailman.app.moderator import hold_unsubscription
+    >>> bart = add_member(ant, 'bart@example.com', 'Bart Person',
+    ...     'password', DeliveryMode.regular, 'en')
+    >>> hold_unsubscription(ant, 'bart@example.com')
+    2
+    >>> transaction.commit()
+
+The unsubscription request is also available from the mailing list.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests')
+    entry 0:
+        address: anne@example.com
+        delivery_mode: regular
+        display_name: Anne Person
+        http_etag: "..."
+        id: 1
+        key: anne@example.com
+        language: en
+        password: password
+        type: subscription
+        when: 2005-08-01T07:49:23
+    entry 1:
+        address: bart@example.com
+        http_etag: "..."
+        id: 2
+        key: bart@example.com
+        type: unsubscription
+    http_etag: "..."
+    start: 0
+    total_size: 2
