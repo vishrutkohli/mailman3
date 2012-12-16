@@ -114,7 +114,7 @@ class ListRequests:
         if request_type is not None and result.request_type != request_type:
             return None
         if result.data_hash is None:
-            return result.key, result.data_hash
+            return result.key, None
         pendable = getUtility(IPendings).confirm(
             result.data_hash, expunge=False)
         data = dict()
@@ -124,6 +124,8 @@ class ListRequests:
                 data[key[5:]] = loads(value.encode('raw-unicode-escape'))
             else:
                 data[key] = value
+        # Some APIs need the request type.
+        data['_request_type'] = result.request_type.name
         return result.key, data
 
     @dbconnection

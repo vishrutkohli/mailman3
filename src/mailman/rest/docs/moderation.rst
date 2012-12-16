@@ -11,6 +11,9 @@ can similarly be accepted, discarded, rejected, or deferred.
 Message moderation
 ==================
 
+Viewing the list of held messages
+---------------------------------
+
 Held messages can be moderated through the REST API.  A mailing list starts
 with no held messages.
 
@@ -39,16 +42,22 @@ When a message gets held for moderator approval, it shows up in this list.
 
     >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/held')
     entry 0:
-        data: {u'_mod_subject': u'Something',
-               u'_mod_message_id': u'<alpha>',
-               u'extra': 7,
-               u'_mod_fqdn_listname': u'ant@example.com',
-               u'_mod_hold_date': u'2005-08-01T07:49:23',
-               u'_mod_reason': u'Because',
-               u'_mod_sender': u'anne@example.com'}
+        extra: 7
+        hold_date: 2005-08-01T07:49:23
         http_etag: "..."
-        id: ...
-        key: <alpha>
+        message_id: <alpha>
+        msg: From: anne@example.com
+    To: ant@example.com
+    Subject: Something
+    Message-ID: <alpha>
+    X-Message-ID-Hash: GCSMSG43GYWWVUMO6F7FBUSSPNXQCJ6M
+    <BLANKLINE>
+    Something else.
+    <BLANKLINE>
+        reason: Because
+        request_id: 1
+        sender: anne@example.com
+        subject: Something
     http_etag: "..."
     start: 0
     total_size: 1
@@ -62,18 +71,11 @@ message.  This will include the text of the message.
     ...             'ant@example.com/held/{0}'.format(request_id))
 
     >>> dump_json(url(request_id))
-    data: {u'_mod_subject': u'Something',
-           u'_mod_message_id': u'<alpha>',
-           u'extra': 7,
-           u'_mod_fqdn_listname': u'ant@example.com',
-           u'_mod_hold_date': u'2005-08-01T07:49:23',
-           u'_mod_reason': u'Because',
-           u'_mod_sender': u'anne@example.com'}
+    extra: 7
+    hold_date: 2005-08-01T07:49:23
     http_etag: "..."
-    id: 1
-    key: <alpha>
-    msg:
-    From: anne@example.com
+    message_id: <alpha>
+    msg: From: anne@example.com
     To: ant@example.com
     Subject: Something
     Message-ID: <alpha>
@@ -81,6 +83,14 @@ message.  This will include the text of the message.
     <BLANKLINE>
     Something else.
     <BLANKLINE>
+    reason: Because
+    request_id: 1
+    sender: anne@example.com
+    subject: Something
+
+
+Disposing of held messages
+--------------------------
 
 Individual messages can be moderated through the API by POSTing back to the
 held message's resource.   The POST data requires an action of one of the
@@ -104,16 +114,10 @@ Let's see what happens when the above message is deferred.
 The message is still in the moderation queue.
 
     >>> dump_json(url(request_id))
-    data: {u'_mod_subject': u'Something',
-           u'_mod_message_id': u'<alpha>',
-           u'extra': 7,
-           u'_mod_fqdn_listname': u'ant@example.com',
-           u'_mod_hold_date': u'2005-08-01T07:49:23',
-           u'_mod_reason': u'Because',
-           u'_mod_sender': u'anne@example.com'}
+    extra: 7
+    hold_date: 2005-08-01T07:49:23
     http_etag: "..."
-    id: 1
-    key: <alpha>
+    message_id: <alpha>
     msg: From: anne@example.com
     To: ant@example.com
     Subject: Something
@@ -122,6 +126,10 @@ The message is still in the moderation queue.
     <BLANKLINE>
     Something else.
     <BLANKLINE>
+    reason: Because
+    request_id: 1
+    sender: anne@example.com
+    subject: Something
 
 The held message can be discarded.
 
@@ -150,7 +158,7 @@ moderation.
     >>> transaction.commit()
 
     >>> results = call_http(url(request_id))
-    >>> print results['key']
+    >>> print results['message_id']
     <bravo>
 
     >>> dump_json(url(request_id), {
@@ -178,7 +186,7 @@ to the original author.
     >>> transaction.commit()
 
     >>> results = call_http(url(request_id))
-    >>> print results['key']
+    >>> print results['message_id']
     <charlie>
 
     >>> dump_json(url(request_id), {
@@ -199,6 +207,9 @@ to the original author.
 
 Subscription moderation
 =======================
+
+Viewing subscription requests
+-----------------------------
 
 Subscription and unsubscription requests can be moderated via the REST API as
 well.  A mailing list starts with no pending subscription or unsubscription
@@ -229,15 +240,18 @@ The subscription request is available from the mailing list.
         delivery_mode: regular
         display_name: Anne Person
         http_etag: "..."
-        id: 1
-        key: anne@example.com
         language: en
         password: password
+        request_id: 1
         type: subscription
         when: 2005-08-01T07:49:23
     http_etag: "..."
     start: 0
     total_size: 1
+
+
+Viewing unsubscription requests
+-------------------------------
 
 Bart tries to leave a mailing list, but he may not be allowed to.
 
@@ -257,18 +271,101 @@ The unsubscription request is also available from the mailing list.
         delivery_mode: regular
         display_name: Anne Person
         http_etag: "..."
-        id: 1
-        key: anne@example.com
         language: en
         password: password
+        request_id: 1
         type: subscription
         when: 2005-08-01T07:49:23
     entry 1:
         address: bart@example.com
         http_etag: "..."
-        id: 2
-        key: bart@example.com
+        request_id: 2
         type: unsubscription
     http_etag: "..."
     start: 0
     total_size: 2
+
+
+Viewing individual requests
+---------------------------
+
+You can view an individual membership change request by providing the
+request id.  Anne's subscription request looks like this.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests/1')
+    address: anne@example.com
+    delivery_mode: regular
+    display_name: Anne Person
+    http_etag: "..."
+    language: en
+    password: password
+    request_id: 1
+    type: subscription
+    when: 2005-08-01T07:49:23
+
+Bart's unsubscription request looks like this.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests/2')
+    address: bart@example.com
+    http_etag: "..."
+    request_id: 2
+    type: unsubscription
+
+
+Disposing of subscription requests
+----------------------------------
+
+Similar to held messages, you can dispose of held subscription and
+unsubscription requests by POSTing back to the request's resource.  The POST
+data requires an action of one of the following:
+
+ * discard - throw the request away.
+ * reject - the request is denied and a notification is sent to the email
+            address requesting the membership change.
+ * defer - defer any action on this membership change (continue to hold it).
+ * accept - accept the membership change.
+
+Anne's subscription request is accepted.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/'
+    ...           'ant@example.com/requests/1', {
+    ...           'action': 'accept',
+    ...           })
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Anne is now a member of the mailing list.
+
+    >>> transaction.abort()
+    >>> ant.members.get_member('anne@example.com')
+    <Member: Anne Person <anne@example.com> on ant@example.com
+             as MemberRole.member>
+    >>> transaction.abort()
+
+Bart's unsubscription request is discarded.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/'
+    ...           'ant@example.com/requests/2', {
+    ...           'action': 'discard',
+    ...           })
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Bart is still a member of the mailing list.
+
+    >>> transaction.abort()
+    >>> print ant.members.get_member('bart@example.com')
+    <Member: Bart Person <bart@example.com> on ant@example.com
+             as MemberRole.member>
+    >>> transaction.abort()
+
+There are no more membership change requests.
+
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests')
+    http_etag: "..."
+    start: 0
+    total_size: 0

@@ -23,6 +23,7 @@ __metaclass__ = type
 __all__ = [
     'HeldMessage',
     'HeldMessages',
+    'MembershipChangeRequest',
     'SubscriptionRequests',
     ]
 
@@ -30,7 +31,8 @@ __all__ = [
 from restish import http, resource
 from zope.component import getUtility
 
-from mailman.app.moderator import handle_message
+from mailman.app.moderator import (
+    handle_message, handle_subscription, handle_unsubscription)
 from mailman.interfaces.action import Action
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
@@ -39,7 +41,57 @@ from mailman.rest.validator import Validator, enum_validator
 
 
 
-class HeldMessage(resource.Resource, CollectionMixin):
+class _ModerationBase:
+    """Common base class."""
+
+    def _make_resource(self, request_id):
+        requests = IListRequests(self._mlist)
+        results = requests.get_request(request_id)
+        if results is None:
+            return None
+        key, data = results
+        resource = dict(key=key, request_id=request_id)
+        # Flatten the IRequest payload into the JSON representation.
+        resource.update(data)
+        # Rename this key, and put the request_id in the resource.
+        resource['type'] = resource.pop('_request_type')
+        # This key isn't what you think it is.  Usually, it's the Pendable
+        # record's row id, which isn't helpful at all.  If it's not there,
+        # that's fine too.
+        resource.pop('id', None)
+        return resource
+
+
+
+class _HeldMessageBase(_ModerationBase):
+    """Held messages are a little different."""
+
+    def _make_resource(self, request_id):
+        resource = super(_HeldMessageBase, self)._make_resource(request_id)
+        if resource is None:
+            return None
+        # Grab the message and insert its text representation into the
+        # resource.  XXX See LP: #967954
+        key = resource.pop('key')
+        msg = getUtility(IMessageStore).get_message_by_id(key)
+        resource['msg'] = msg.as_string()
+        # Some of the _mod_* keys we want to rename and place into the JSON
+        # resource.  Others we can drop.  Since we're mutating the dictionary,
+        # we need to make a copy of the keys.  When you port this to Python 3,
+        # you'll need to list()-ify the .keys() dictionary view.
+        for key in resource.keys():
+            if key in ('_mod_subject', '_mod_hold_date', '_mod_reason',
+                       '_mod_sender', '_mod_message_id'):
+                resource[key[5:]] = resource.pop(key)
+            elif key.startswith('_mod_'):
+                del resource[key]
+        # Also, held message resources will always be this type, so ignore
+        # this key value.
+        del resource['type']
+        return resource
+
+
+class HeldMessage(_HeldMessageBase, resource.Resource):
     """Resource for moderating a held message."""
 
     def __init__(self, mlist, request_id):
@@ -48,24 +100,13 @@ class HeldMessage(resource.Resource, CollectionMixin):
 
     @resource.GET()
     def details(self, request):
-        requests = IListRequests(self._mlist)
         try:
             request_id = int(self._request_id)
         except ValueError:
             return http.bad_request()
-        results = requests.get_request(request_id, RequestType.held_message)
-        if results is None:
+        resource = self._make_resource(request_id)
+        if resource is None:
             return http.not_found()
-        key, data = results
-        msg = getUtility(IMessageStore).get_message_by_id(key)
-        resource = dict(
-            key=key,
-            # XXX convert _mod_{subject,hold_date,reason,sender,message_id}
-            # into top level values of the resource dict.
-            data=data,
-            msg=msg.as_string(),
-            id=request_id,
-            )
         return http.ok([], etag(resource))
 
     @resource.POST()
@@ -88,7 +129,7 @@ class HeldMessage(resource.Resource, CollectionMixin):
 
 
 
-class HeldMessages(resource.Resource, CollectionMixin):
+class HeldMessages(_HeldMessageBase, resource.Resource, CollectionMixin):
     """Resource for messages held for moderation."""
 
     def __init__(self, mlist):
@@ -97,12 +138,7 @@ class HeldMessages(resource.Resource, CollectionMixin):
 
     def _resource_as_dict(self, request):
         """See `CollectionMixin`."""
-        key, data = self._requests.get_request(request.id)
-        return dict(
-            key=key,
-            data=data,
-            id=request.id,
-            )
+        return self._make_resource(request.id)
 
     def _get_collection(self, request):
         requests = IListRequests(self._mlist)
@@ -122,25 +158,68 @@ class HeldMessages(resource.Resource, CollectionMixin):
 
 
 
-class SubscriptionRequests(resource.Resource, CollectionMixin):
-    """Resource for subscription and unsubscription requests."""
+class MembershipChangeRequest(resource.Resource, _ModerationBase):
+    """Resource for moderating a membership change."""
+
+    def __init__(self, mlist, request_id):
+        self._mlist = mlist
+        self._request_id = request_id
+
+    @resource.GET()
+    def details(self, request):
+        try:
+            request_id = int(self._request_id)
+        except ValueError:
+            return http.bad_request()
+        resource = self._make_resource(request_id)
+        if resource is None:
+            return http.not_found()
+        # Remove unnecessary keys.
+        del resource['key']
+        return http.ok([], etag(resource))
+
+    @resource.POST()
+    def moderate(self, request):
+        try:
+            validator = Validator(action=enum_validator(Action))
+            arguments = validator(request)
+        except ValueError as error:
+            return http.bad_request([], str(error))
+        requests = IListRequests(self._mlist)
+        try:
+            request_id = int(self._request_id)
+        except ValueError:
+            return http.bad_request()
+        results = requests.get_request(request_id)
+        if results is None:
+            return http.not_found()
+        key, data = results
+        try:
+            request_type = RequestType(data['_request_type'])
+        except ValueError:
+            return http.bad_request()
+        if request_type is RequestType.subscription:
+            handle_subscription(self._mlist, request_id, **arguments)
+        elif request_type is RequestType.unsubscription:
+            handle_unsubscription(self._mlist, request_id, **arguments)
+        else:
+            return http.bad_request()
+        return no_content()
+
+
+class SubscriptionRequests(
+        _ModerationBase, resource.Resource, CollectionMixin):
+    """Resource for membership change requests."""
 
     def __init__(self, mlist):
         self._mlist = mlist
         self._requests = None
 
-    def _resource_as_dict(self, request_and_type):
+    def _resource_as_dict(self, request):
         """See `CollectionMixin`."""
-        request, request_type = request_and_type
-        key, data = self._requests.get_request(request.id)
-        resource = dict(
-            key=key,
-            id=request.id,
-            )
-        # Flatten the IRequest payload into the JSON representation.
-        resource.update(data)
-        # Add a key indicating what type of subscription request this is.
-        resource['type'] = request_type.name
+        resource = self._make_resource(request.id)
+        # Remove unnecessary keys.
+        del resource['key']
         return resource
 
     def _get_collection(self, request):
@@ -150,7 +229,7 @@ class SubscriptionRequests(resource.Resource, CollectionMixin):
         for request_type in (RequestType.subscription,
                              RequestType.unsubscription):
             for request in requests.of_type(request_type):
-                items.append((request, request_type))
+                items.append(request)
         return items
 
     @resource.GET()
@@ -162,4 +241,4 @@ class SubscriptionRequests(resource.Resource, CollectionMixin):
 
     @resource.child('{id}')
     def subscription(self, request, segments, **kw):
-        pass
+        return MembershipChangeRequest(self._mlist, kw['id'])
