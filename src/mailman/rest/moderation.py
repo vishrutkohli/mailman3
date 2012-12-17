@@ -40,11 +40,16 @@ from mailman.rest.helpers import CollectionMixin, etag, no_content
 from mailman.rest.validator import Validator, enum_validator
 
 
+HELD_MESSAGE_REQUESTS = (RequestType.held_message,)
+MEMBERSHIP_CHANGE_REQUESTS = (RequestType.subscription,
+                              RequestType.unsubscription)
+
+
 
 class _ModerationBase:
     """Common base class."""
 
-    def _make_resource(self, request_id):
+    def _make_resource(self, request_id, expected_request_types):
         requests = IListRequests(self._mlist)
         results = requests.get_request(request_id)
         if results is None:
@@ -53,8 +58,12 @@ class _ModerationBase:
         resource = dict(key=key, request_id=request_id)
         # Flatten the IRequest payload into the JSON representation.
         resource.update(data)
-        # Rename this key, and put the request_id in the resource.
-        resource['type'] = resource.pop('_request_type')
+        # Check for a matching request type, and insert the type name into the
+        # resource.
+        request_type = RequestType(resource.pop('_request_type'))
+        if request_type not in expected_request_types:
+            return None
+        resource['type'] = request_type.name
         # This key isn't what you think it is.  Usually, it's the Pendable
         # record's row id, which isn't helpful at all.  If it's not there,
         # that's fine too.
@@ -67,7 +76,8 @@ class _HeldMessageBase(_ModerationBase):
     """Held messages are a little different."""
 
     def _make_resource(self, request_id):
-        resource = super(_HeldMessageBase, self)._make_resource(request_id)
+        resource = super(_HeldMessageBase, self)._make_resource(
+            request_id, HELD_MESSAGE_REQUESTS)
         if resource is None:
             return None
         # Grab the message and insert its text representation into the
@@ -171,7 +181,7 @@ class MembershipChangeRequest(resource.Resource, _ModerationBase):
             request_id = int(self._request_id)
         except ValueError:
             return http.bad_request()
-        resource = self._make_resource(request_id)
+        resource = self._make_resource(request_id, MEMBERSHIP_CHANGE_REQUESTS)
         if resource is None:
             return http.not_found()
         # Remove unnecessary keys.
@@ -217,7 +227,7 @@ class SubscriptionRequests(
 
     def _resource_as_dict(self, request):
         """See `CollectionMixin`."""
-        resource = self._make_resource(request.id)
+        resource = self._make_resource(request.id, MEMBERSHIP_CHANGE_REQUESTS)
         # Remove unnecessary keys.
         del resource['key']
         return resource
@@ -226,8 +236,7 @@ class SubscriptionRequests(
         requests = IListRequests(self._mlist)
         self._requests = requests
         items = []
-        for request_type in (RequestType.subscription,
-                             RequestType.unsubscription):
+        for request_type in MEMBERSHIP_CHANGE_REQUESTS:
             for request in requests.of_type(request_type):
                 items.append(request)
         return items

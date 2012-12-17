@@ -82,7 +82,7 @@ Something else.
         self.assertEqual(cm.exception.code, 404)
         # But using the held_id returns a valid response.
         response, content = call_api(url.format(held_id))
-        self.assertEqual(response['key'], '<alpha>')
+        self.assertEqual(response['message_id'], '<alpha>')
 
     def test_bad_action(self):
         # POSTing to a held message with a bad action.

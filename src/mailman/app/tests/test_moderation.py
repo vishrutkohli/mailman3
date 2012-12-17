@@ -27,15 +27,18 @@ __all__ = [
 
 import unittest
 
+from zope.component import getUtility
+
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import handle_message, hold_message
 from mailman.interfaces.action import Action
+from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests
 from mailman.runners.incoming import IncomingRunner
 from mailman.runners.outgoing import OutgoingRunner
 from mailman.runners.pipeline import PipelineRunner
 from mailman.testing.helpers import (
-    make_testable_runner, specialized_message_from_string)
+    get_queue_messages, make_testable_runner, specialized_message_from_string)
 from mailman.testing.layers import SMTPLayer
 from mailman.utilities.datetime import now
 
@@ -48,6 +51,7 @@ class TestModeration(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._request_db = IListRequests(self._mlist)
         self._msg = specialized_message_from_string("""\
 From: anne@example.com
 To: test@example.com
@@ -101,11 +105,10 @@ Message-ID: <alpha>
         request_id = hold_message(self._mlist, self._msg)
         handle_message(self._mlist, request_id, Action.defer)
         # The message is still in the pending requests.
-        requests_db = IListRequests(self._mlist)
-        key, data = requests_db.get_request(request_id)
+        key, data = self._request_db.get_request(request_id)
         self.assertEqual(key, '<alpha>')
         handle_message(self._mlist, request_id, Action.hold)
-        key, data = requests_db.get_request(request_id)
+        key, data = self._request_db.get_request(request_id)
         self.assertEqual(key, '<alpha>')
 
     def test_lp_1031391(self):
@@ -115,6 +118,37 @@ Message-ID: <alpha>
         received_time = now()
         msgdata = dict(received_time=received_time)
         request_id = hold_message(self._mlist, self._msg, msgdata)
-        requests_db = IListRequests(self._mlist)
-        key, data = requests_db.get_request(request_id)
+        key, data = self._request_db.get_request(request_id)
         self.assertEqual(data['received_time'], received_time)
+
+    def test_non_preserving_disposition(self):
+        # By default, disposed messages are not preserved.
+        request_id = hold_message(self._mlist, self._msg)
+        handle_message(self._mlist, request_id, Action.discard)
+        message_store = getUtility(IMessageStore)
+        self.assertIsNone(message_store.get_message_by_id('<alpha>'))
+
+    def test_preserving_disposition(self):
+        # Preserving a message keeps it in the store.
+        request_id = hold_message(self._mlist, self._msg)
+        handle_message(self._mlist, request_id, Action.discard, preserve=True)
+        message_store = getUtility(IMessageStore)
+        preserved_message = message_store.get_message_by_id('<alpha>')
+        self.assertEqual(preserved_message['message-id'], '<alpha>')
+
+    def test_preserve_and_forward(self):
+        # We can both preserve and forward the message.
+        request_id = hold_message(self._mlist, self._msg)
+        handle_message(self._mlist, request_id, Action.discard,
+                       preserve=True, forward=['zack@example.com'])
+        # The message is preserved in the store.
+        message_store = getUtility(IMessageStore)
+        preserved_message = message_store.get_message_by_id('<alpha>')
+        self.assertEqual(preserved_message['message-id'], '<alpha>')
+        # And the forwarded message lives in the virgin queue.
+        messages = get_queue_messages('virgin')
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0].msg['subject']),
+                         'Forward of moderated message')
+        self.assertEqual(messages[0].msgdata['recipients'],
+                         ['zack@example.com'])

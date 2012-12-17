@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestRequests',
     ]
 
 
@@ -39,6 +40,7 @@ class TestRequests(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('ant@example.com')
+        self._requests_db = IListRequests(self._mlist)
         self._msg = mfs("""\
 From: anne@example.com
 To: ant@example.com
@@ -51,16 +53,27 @@ Something else.
     def test_get_request_with_type(self):
         # get_request() takes an optional request type.
         request_id = hold_message(self._mlist, self._msg)
-        requests_db = IListRequests(self._mlist)
         # Submit a request with a non-matching type.  This should return None
         # as if there were no matches.
-        response = requests_db.get_request(
+        response = self._requests_db.get_request(
             request_id, RequestType.subscription)
         self.assertEqual(response, None)
         # Submit the same request with a matching type.
-        key, data = requests_db.get_request(
+        key, data = self._requests_db.get_request(
             request_id, RequestType.held_message)
         self.assertEqual(key, '<alpha>')
         # It should also succeed with no optional request type given.
-        key, data = requests_db.get_request(request_id)
+        key, data = self._requests_db.get_request(request_id)
         self.assertEqual(key, '<alpha>')
+
+    def test_hold_with_bogus_type(self):
+        # Calling hold_request() with a bogus request type is an error.
+        with self.assertRaises(TypeError) as cm:
+            self._requests_db.hold_request(5, 'foo')
+        self.assertEqual(cm.exception.message, 5)
+
+    def test_delete_missing_request(self):
+        # Trying to delete a missing request is an error.
+        with self.assertRaises(KeyError) as cm:
+            self._requests_db.delete_request(801)
+        self.assertEqual(cm.exception.message, 801)
