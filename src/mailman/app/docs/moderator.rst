@@ -1,4 +1,4 @@
-.. app-moderator:
+.. _app-moderator:
 
 ============================
 Application level moderation
@@ -6,7 +6,7 @@ Application level moderation
 
 At an application level, moderation involves holding messages and membership
 changes for moderator approval.  This utilizes the :ref:`lower level interface
-<model-request>` for list-centric moderation requests.
+<model-requests>` for list-centric moderation requests.
 
 Moderation is always mailing list-centric.
 

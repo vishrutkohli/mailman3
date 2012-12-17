@@ -1,4 +1,4 @@
-.. model-requests:
+.. _model-requests:
 
 ==================
 Moderator requests
