@@ -13,6 +13,7 @@ Moderation is always mailing list-centric.
     >>> mlist = create_list('ant@example.com')
     >>> mlist.preferred_language = 'en'
     >>> mlist.display_name = 'A Test List'
+    >>> mlist.admin_immed_notify = False
 
 We'll use the lower level API for diagnostic purposes.
 
@@ -74,7 +75,6 @@ The moderator can select one of several dispositions:
   * defer - defer any action on the message (continue to hold it)
   * accept - accept the message for posting.
 
-
 The most trivial is to simply defer a decision for now.
 
     >>> from mailman.interfaces.action import Action
@@ -103,7 +103,7 @@ The message is no longer available in the requests database.
     >>> print requests.get_request(2)
     None
 
-And there is one message in the *virgin* queue - the bounce.
+And there is one message in the *virgin* queue - the rejection notice.
 
     >>> from mailman.testing.helpers import get_queue_messages
     >>> messages = get_queue_messages('virgin')
@@ -141,7 +141,7 @@ The bounce gets sent to the original sender.
 Or the message can be approved.
 
     >>> msg = message_from_string("""\
-    ... From: cate@example.org
+    ... From: cris@example.org
     ... To: ant@example.com
     ... Subject: Something important
     ... Message-ID: <caribou>
@@ -159,7 +159,7 @@ however the message metadata indicates that the message has been approved.
     >>> len(messages)
     1
     >>> print messages[0].msg.as_string()
-    From: cate@example.org
+    From: cris@example.org
     To: ant@example.com
     Subject: Something important
     ...
@@ -195,9 +195,7 @@ a copy to be preserve, which skips deleting the message from the storage.
     >>> from mailman.interfaces.messages import IMessageStore
     >>> from zope.component import getUtility
     >>> message_store = getUtility(IMessageStore)
-    >>> preserved_message = getUtility(IMessageStore).get_message_by_id(
-    ...     '<dolphin>')
-    >>> print preserved_message['message-id']
+    >>> print message_store.get_message_by_id('<dolphin>')['message-id']
     <dolphin>
 
 Orthogonal to preservation, the message can also be forwarded to another
@@ -213,8 +211,9 @@ moderators.
     ...
     ... Here's something important about our mailing list.
     ... """)
-    >>> id = hold_message(mlist, msg, {}, 'Needs approval')
-    >>> handle_message(mlist, id, Action.discard, forward=['zack@example.com'])
+    >>> hold_message(mlist, msg, {}, 'Needs approval')
+    2
+    >>> handle_message(mlist, 2, Action.discard, forward=['zack@example.com'])
 
 The forwarded message is in the virgin queue, destined for the moderator.
 ::
@@ -244,46 +243,10 @@ choosing and their preferred language.
 
     >>> from mailman.app.moderator import hold_subscription
     >>> from mailman.interfaces.member import DeliveryMode
-    >>> mlist.admin_immed_notify = False
     >>> hold_subscription(mlist,
     ...     'fred@example.org', 'Fred Person',
     ...     '{NONE}abcxyz', DeliveryMode.regular, 'en')
     2
-
-In the above case the mailing list was not configured to send the list
-moderators a notice about the hold, so no email message is in the virgin
-queue.
-
-    >>> get_queue_messages('virgin')
-    []
-
-But if we set the list up to notify the list moderators immediately when a
-message is held for approval, there will be a message placed in the virgin
-queue when the message is held.
-::
-
-    >>> mlist.admin_immed_notify = True
-    >>> hold_subscription(mlist,
-    ...     'gwen@example.org', 'Gwen Person',
-    ...     '{NONE}zyxcba', DeliveryMode.regular, 'en')
-    3
-
-    >>> messages = get_queue_messages('virgin')
-    >>> len(messages)
-    1
-
-    >>> print messages[0].msg.as_string()
-    MIME-Version: 1.0
-    ...
-    Subject: New subscription request to A Test List from gwen@example.org
-    ...
-    <BLANKLINE>
-    Your authorization is required for a mailing list subscription request
-    approval:
-    <BLANKLINE>
-        For:  gwen@example.org
-        List: ant@example.com
-    ...
 
 
 Disposing of membership change requests
@@ -304,15 +267,21 @@ The held subscription can also be discarded.
     >>> print requests.get_request(2)
     None
 
-The request can be rejected, in which case a message is sent to the
-subscriber.
-::
+Gwen tries to subscribe to the mailing list, but...
 
-    >>> handle_subscription(mlist, 3, Action.reject,
-    ...                     'This is a closed list')
+    >>> hold_subscription(mlist,
+    ...     'gwen@example.org', 'Gwen Person',
+    ...     '{NONE}zyxcba', DeliveryMode.regular, 'en')
+    2
+
+...her request is rejected...
+
+    >>> handle_subscription(mlist, 2, Action.reject, 'This is a closed list')
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
+
+...and she receives a rejection notice.
 
     >>> print messages[0].msg.as_string()
     MIME-Version: 1.0
@@ -340,29 +309,6 @@ mailing list.
     ...     'abcxyz', DeliveryMode.regular, 'en')
     2
 
-A message will be sent to the moderators telling them about the held
-subscription and the fact that they may need to approve it.
-::
-
-    >>> messages = get_queue_messages('virgin')
-    >>> len(messages)
-    1
-
-    >>> print messages[0].msg.as_string()
-    MIME-Version: 1.0
-    ...
-    Subject: New subscription request to A Test List from herb@example.org
-    From: ant-owner@example.com
-    To: ant-owner@example.com
-    ...
-    <BLANKLINE>
-    Your authorization is required for a mailing list subscription request
-    approval:
-    <BLANKLINE>
-        For:  herb@example.org
-        List: ant@example.com
-    ...
-
 The moderators accept the subscription request.
 
     >>> handle_subscription(mlist, 2, Action.accept)
@@ -373,10 +319,6 @@ And now Herb is a member of the mailing list.
     Herb Person <herb@example.org>
 
 
-.. Clear the queue.
-    >>> ignore = get_queue_messages('virgin')
-
-
 Holding unsubscription requests
 ===============================
 
@@ -385,7 +327,6 @@ the unsubscribing address is required.
 
 Herb now wants to leave the mailing list, but his request must be approved.
 
-    >>> mlist.admin_immed_notify = False
     >>> from mailman.app.moderator import hold_unsubscription
     >>> hold_unsubscription(mlist, 'herb@example.org')
     2
@@ -448,11 +389,150 @@ the mailing list.
     None
 
 
-Membership change notifications
-===============================
+Notifications
+=============
 
-TBD:
+Membership change requests
+--------------------------
 
- * admin_immed_notify
- * welcome messages
- * goodbye messages
+Usually, the list administrators want to be notified when there are membership
+change requests they need to moderate.  These notifications are sent when the
+list is configured to send them.
+
+    >>> mlist.admin_immed_notify = True
+
+Iris tries to subscribe to the mailing list.
+
+    >>> hold_subscription(mlist, 'iris@example.org', 'Iris Person',
+    ...                   'password', DeliveryMode.regular, 'en')
+    2
+
+There's now a message in the virgin queue, destined for the list owner.
+
+    >>> messages = get_queue_messages('virgin')
+    >>> len(messages)
+    1
+    >>> print messages[0].msg.as_string()
+    MIME-Version: 1.0
+    ...
+    Subject: New subscription request to A Test List from iris@example.org
+    From: ant-owner@example.com
+    To: ant-owner@example.com
+    ...
+    Your authorization is required for a mailing list subscription request
+    approval:
+    <BLANKLINE>
+        For:  iris@example.org
+        List: ant@example.com
+    ...
+
+Similarly, the administrator gets notifications on unsubscription requests.
+Jeff is a member of the mailing list, and chooses to unsubscribe.
+
+    >>> hold_unsubscription(mlist, 'jeff@example.org')
+    3
+    >>> messages = get_queue_messages('virgin')
+    >>> len(messages)
+    1
+    >>> print messages[0].msg.as_string()
+    MIME-Version: 1.0
+    ...
+    Subject: New unsubscription request from A Test List by jeff@example.org
+    From: ant-owner@example.com
+    To: ant-owner@example.com
+    ...
+    Your authorization is required for a mailing list unsubscription
+    request approval:
+    <BLANKLINE>
+        By:   jeff@example.org
+        From: ant@example.com
+    ...
+
+
+Membership changes
+------------------
+
+When a new member request is accepted, the mailing list administrators can
+receive a membership change notice.
+
+    >>> mlist.admin_notify_mchanges = True
+    >>> mlist.admin_immed_notify = False
+    >>> handle_subscription(mlist, 2, Action.accept)
+    >>> messages = get_queue_messages('virgin')
+    >>> len(messages)
+    1
+    >>> print messages[0].msg.as_string()
+    MIME-Version: 1.0
+    ...
+    Subject: A Test List subscription notification
+    From: noreply@example.com
+    To: ant-owner@example.com
+    ...
+    Iris Person <iris@example.org> has been successfully subscribed to A
+    Test List.
+
+Similarly when an unsubscription request is accepted, the administrators can
+get a notification.
+
+    >>> hold_unsubscription(mlist, 'iris@example.org')
+    4
+    >>> handle_unsubscription(mlist, 4, Action.accept)
+    >>> messages = get_queue_messages('virgin')
+    >>> len(messages)
+    1
+    >>> print messages[0].msg.as_string()
+    MIME-Version: 1.0
+    ...
+    Subject: A Test List unsubscription notification
+    From: noreply@example.com
+    To: ant-owner@example.com
+    ...
+    Iris Person <iris@example.org> has been removed from A Test List.
+
+
+Welcome messages
+----------------
+
+When a member is subscribed to the mailing list via moderator approval, she
+can get a welcome message.
+
+    >>> mlist.admin_notify_mchanges = False
+    >>> mlist.send_welcome_message = True
+    >>> hold_subscription(mlist, 'kate@example.org', 'Kate Person',
+    ...                   'password', DeliveryMode.regular, 'en')
+    4
+    >>> handle_subscription(mlist, 4, Action.accept)
+    >>> messages = get_queue_messages('virgin')
+    >>> len(messages)
+    1
+    >>> print messages[0].msg.as_string()
+    MIME-Version: 1.0
+    ...
+    Subject: Welcome to the "A Test List" mailing list
+    From: ant-request@example.com
+    To: Kate Person <kate@example.org>
+    ...
+    Welcome to the "A Test List" mailing list!
+    ...
+
+
+Goodbye messages
+----------------
+
+Similarly, when the member's unsubscription request is approved, she'll get a
+goodbye message.
+
+    >>> mlist.send_goodbye_message = True
+    >>> hold_unsubscription(mlist, 'kate@example.org')
+    4
+    >>> handle_unsubscription(mlist, 4, Action.accept)
+    >>> messages = get_queue_messages('virgin')
+    >>> len(messages)
+    1
+    >>> print messages[0].msg.as_string()
+    MIME-Version: 1.0
+    ...
+    Subject: You have been unsubscribed from the A Test List mailing list
+    From: ant-bounces@example.com
+    To: kate@example.org
+    ...
