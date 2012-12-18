@@ -140,6 +140,7 @@ ATTRIBUTES = dict(
     request_address=GetterSetter(None),
     scheme=GetterSetter(None),
     send_welcome_message=GetterSetter(as_boolean),
+    subject_prefix=GetterSetter(unicode),
     volume=GetterSetter(None),
     web_host=GetterSetter(None),
     welcome_message_uri=GetterSetter(unicode),

@@ -59,6 +59,7 @@ All readable attributes for a list are available on a sub-resource.
     request_address: test-one-request@example.com
     scheme: http
     send_welcome_message: True
+    subject_prefix: [Test-one]
     volume: 1
     web_host: lists.example.com
     welcome_message_uri: mailman:///welcome.txt
@@ -100,6 +101,7 @@ all the writable attributes in one request.
     ...             collapse_alternatives=False,
     ...             reply_goes_to_list='point_to_list',
     ...             send_welcome_message=False,
+    ...             subject_prefix='[test-one]',
     ...             welcome_message_uri='mailman:///welcome.txt',
     ...             default_member_action='hold',
     ...             default_nonmember_action='discard',
@@ -147,6 +149,7 @@ These values are changed permanently.
     reply_goes_to_list: point_to_list
     ...
     send_welcome_message: False
+    subject_prefix: [test-one]
     ...
     welcome_message_uri: mailman:///welcome.txt
 
@@ -181,6 +184,7 @@ must be included.  It is an error to leave one or more out...
     ...             collapse_alternatives=False,
     ...             reply_goes_to_list='point_to_list',
     ...             send_welcome_message=True,
+    ...             subject_prefix='[test-one]',
     ...             welcome_message_uri='welcome message',
     ...             default_member_action='accept',
     ...             default_nonmember_action='accept',
@@ -216,6 +220,7 @@ must be included.  It is an error to leave one or more out...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
+    ...             subject_prefix='[test-one]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -249,6 +254,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
+    ...             subject_prefix='[test-one]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -282,6 +288,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='dummy',
+    ...             subject_prefix='[test-one]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -314,6 +321,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
+    ...             subject_prefix='[test-one]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,

@@ -20,6 +20,8 @@ Compatibility
 
 REST
 ----
+ * Allow the getting/setting of IMailingList.subject_prefix via the REST API
+   (given by Terri Oda).  (LP: #1062893)
  * Add list_id to JSON representation for a mailing list (given by Jimmy
    Bergman).
  * The canonical resource for a mailing list (and thus its self_link) is now
