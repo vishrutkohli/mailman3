@@ -20,6 +20,19 @@ Compatibility
 
 REST
 ----
+ * **API change**: The JSON representation for held messages no longer
+   includes the `data` key.  The values in this dictionary are flatted into
+   the top-level JSON representation.  The `key` key is remove since it's
+   redundant.  Use `message_id` for held messages, and `address` for held
+   subscriptions/unsubscriptions.  The following `_mod_*` keys are inserted
+   without the `_mod_` prefix:
+
+   - `_mod_subject` -> `subject`
+   - `_mod_hold_date` -> `hold_date`
+   - `_mod_reason` -> `reason`
+   - `_mod_sender` -> `sender`
+   - `_mod_message_id` -> `message_id`
+
  * Allow the getting/setting of IMailingList.subject_prefix via the REST API
    (given by Terri Oda).  (LP: #1062893)
  * Expose a REST API for membership change (subscriptions and unsubscriptions)
