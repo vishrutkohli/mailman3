@@ -60,12 +60,18 @@ Something else.
             call_api('http://localhost:9001/3.0/lists/bee@example.com/held')
         self.assertEqual(cm.exception.code, 404)
 
-    def test_bad_request_id(self):
+    def test_bad_held_message_request_id(self):
         # Bad request when request_id is not an integer.
         with self.assertRaises(HTTPError) as cm:
             call_api(
                 'http://localhost:9001/3.0/lists/ant@example.com/held/bogus')
         self.assertEqual(cm.exception.code, 400)
+
+    def test_missing_held_message_request_id(self):
+        # Bad request when the request_id is not in the database.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/ant@example.com/held/99')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_subscription_request_as_held_message(self):
         # Provide the request id of a subscription request using the held
@@ -84,10 +90,36 @@ Something else.
         response, content = call_api(url.format(held_id))
         self.assertEqual(response['message_id'], '<alpha>')
 
-    def test_bad_action(self):
+    def test_bad_held_message_action(self):
         # POSTing to a held message with a bad action.
         held_id = hold_message(self._mlist, self._msg)
         url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{0}'
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(held_id), {'action': 'bogus'})
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.msg, 'Cannot convert parameters: action')
+
+    def test_bad_subscription_request_id(self):
+        # Bad request when request_id is not an integer.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/ant@example.com/'
+                     'requests/bogus')
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_missing_subscription_request_id(self):
+        # Bad request when the request_id is not in the database.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/ant@example.com/'
+                     'requests/99')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_bad_subscription_action(self):
+        # POSTing to a held message with a bad action.
+        held_id = hold_subscription(
+            self._mlist, 'cperson@example.net', 'Cris Person', 'xyz',
+            DeliveryMode.regular, 'en')
+        config.db.store.commit()
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{0}'
         with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
         self.assertEqual(cm.exception.code, 400)
