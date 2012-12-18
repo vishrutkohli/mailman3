@@ -16,12 +16,14 @@ Compatibility
 -------------
  * Python 2.7 is not required.  Python 2.6 is no longer officially supported.
    The code base is now also `python2.7 -3` clean, although there are still
-   some warnings in 3rd party dependencies.  LP: #1073506
+   some warnings in 3rd party dependencies.  (LP: #1073506)
 
 REST
 ----
  * Allow the getting/setting of IMailingList.subject_prefix via the REST API
    (given by Terri Oda).  (LP: #1062893)
+ * Expose a REST API for membership change (subscriptions and unsubscriptions)
+   moderation.  (LP: #1090753)
  * Add list_id to JSON representation for a mailing list (given by Jimmy
    Bergman).
  * The canonical resource for a mailing list (and thus its self_link) is now
@@ -70,6 +72,10 @@ Commands
    the Postfix `relay_domains` support.
  * `bin/mailman start` was passing the wrong relative path to its runner
    subprocesses when -C was given.  LP: #982551
+
+Bugs
+----
+ * Fixed `send_goodbye_message()`.  (LP: #1091321)
 
 
 3.0 beta 2 -- "Freeze"

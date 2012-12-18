@@ -47,6 +47,24 @@ log = logging.getLogger('mailman.error')
 
 
 
+def _get_message(uri_template, mlist, language):
+    if not uri_template:
+        return ''
+    try:
+        uri = expand(uri_template, dict(
+            listname=mlist.fqdn_listname,
+            language=language.code,
+            ))
+        message = getUtility(ITemplateLoader).get(uri)
+    except URLError:
+        log.exception('Message URI not found ({0}): {1}'.format(
+            mlist.fqdn_listname, uri_template))
+        return ''
+    else:
+        return wrap(message)
+
+
+
 def send_welcome_message(mlist, address, language, delivery_mode, text=''):
     """Send a welcome message to a subscriber.
 
@@ -62,28 +80,15 @@ def send_welcome_message(mlist, address, language, delivery_mode, text=''):
     :param delivery_mode: the type of delivery the subscriber is getting
     :type delivery_mode: DeliveryMode
     """
-    if mlist.welcome_message_uri:
-        try:
-            uri = expand(mlist.welcome_message_uri, dict(
-                listname=mlist.fqdn_listname,
-                language=language.code,
-                ))
-            welcome_message = getUtility(ITemplateLoader).get(uri)
-        except URLError:
-            log.exception('Welcome message URI not found ({0}): {1}'.format(
-                mlist.fqdn_listname, mlist.welcome_message_uri))
-            welcome = ''
-        else:
-            welcome = wrap(welcome_message)
-    else:
-        welcome = ''
+    welcome_message = _get_message(mlist.welcome_message_uri,
+                                   mlist, language)
     # Find the IMember object which is subscribed to the mailing list, because
     # from there, we can get the member's options url.
     member = mlist.members.get_member(address)
     user_name = member.user.display_name
     options_url = member.options_url
     # Get the text from the template.
-    text = expand(welcome, dict(
+    text = expand(welcome_message, dict(
         fqdn_listname=mlist.fqdn_listname,
         list_name=mlist.display_name,
         listinfo_uri=mlist.script_url('listinfo'),
@@ -119,15 +124,13 @@ def send_goodbye_message(mlist, address, language):
     :param language: the language of the response
     :type language: string
     """
-    if mlist.goodbye_msg:
-        goodbye = wrap(mlist.goodbye_msg) + '\n'
-    else:
-        goodbye = ''
+    goodbye_message = _get_message(mlist.goodbye_message_uri,
+                                   mlist, language)
     msg = UserNotification(
         address, mlist.bounces_address,
         _('You have been unsubscribed from the $mlist.display_name '
           'mailing list'),
-        goodbye, language)
+        goodbye_message, language)
     msg.send(mlist, verp=as_boolean(config.mta.verp_personalized_deliveries))
 
 

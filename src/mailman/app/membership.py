@@ -131,7 +131,7 @@ def delete_member(mlist, email, admin_notif=None, userack=None):
         mailing list.
     """
     if userack is None:
-        userack = mlist.send_goodbye_msg
+        userack = mlist.send_goodbye_message
     if admin_notif is None:
         admin_notif = mlist.admin_notify_mchanges
     # Delete a member, for which we know the approval has been made.
