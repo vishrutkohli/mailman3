@@ -425,6 +425,7 @@ class Loop:
         necessary and configured to do so.
         """
         log = logging.getLogger('mailman.runner')
+        log.info('Master started')
         self._pause()
         while True:
             try:
@@ -478,6 +479,7 @@ Runner {0} reached maximum restart limit of {1:d}, not restarting.""",
                 new_pid = self._start_runner(spec)
                 new_info = (rname, slice_number, count, restarts)
                 self._kids.add(new_pid, new_info)
+        log.info('Master stopped')
 
     def cleanup(self):
         """Ensure that all children have exited."""

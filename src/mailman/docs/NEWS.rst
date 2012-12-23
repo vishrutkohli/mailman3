@@ -88,6 +88,8 @@ Other
  * Two new events are triggered on membership changes: `SubscriptionEvent`
    when a new member joins a mailing list, and an `UnsubscriptionEvent` when a
    member leaves a mailing list.  (LP: #1047286)
+ * Improve the --help text for the `start`, `stop`, `restart`, and `reopen`
+   subcommands.  (LP: #1035033)
 
 Bugs
 ----
