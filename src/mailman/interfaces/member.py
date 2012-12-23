@@ -26,10 +26,13 @@ __all__ = [
     'DeliveryStatus',
     'IMember',
     'MemberRole',
+    'MembershipChangeEvent',
     'MembershipError',
     'MembershipIsBannedError',
     'MissingPreferredAddressError',
     'NotAMemberError',
+    'SubscriptionEvent',
+    'UnsubscriptionEvent',
     ]
 
 
@@ -71,6 +74,34 @@ class MemberRole(Enum):
     owner = 2
     moderator = 3
     nonmember = 4
+
+
+
+class MembershipChangeEvent:
+    """Base class for subscription/unsubscription events."""
+
+    def __init__(self, mlist, member):
+        self.mlist = mlist
+        self.member = member
+
+
+class SubscriptionEvent(MembershipChangeEvent):
+    """Event which gets triggered when a user joins a mailing list."""
+
+    def __str__(self):
+        return '{0} joined {1}'.format(self.member.address, self.mlist.list_id)
+
+
+class UnsubscriptionEvent(MembershipChangeEvent):
+    """Event which gets triggered when a user leaves a mailing list.
+
+    One thing to keep in mind: because the IMember is deleted when the
+    unsubscription happens, this event actually gets triggered just before the
+    member is unsubscribed.
+    """
+
+    def __str__(self):
+        return '{0} left {1}'.format(self.member.address, self.mlist.list_id)
 
 
 

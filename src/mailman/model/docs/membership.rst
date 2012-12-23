@@ -315,3 +315,26 @@ Now her membership reflects the new address.
     >>> for m in bee.members.members:
     ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
     7 bee.example.com gperson@example.com
+
+
+Events
+======
+
+An event is triggered when a new member is subscribed to a mailing list.
+::
+
+    >>> from mailman.testing.helpers import event_subscribers
+    >>> def handle_event(event):
+    ...     print event
+
+    >>> cat = create_list('cat@example.com')
+    >>> herb = user_manager.create_address('herb@example.com')
+    >>> with event_subscribers(handle_event):
+    ...     member = cat.subscribe(herb)
+    herb@example.com joined cat.example.com
+
+An event is triggered when a member is unsubscribed from a mailing list.
+
+    >>> with event_subscribers(handle_event):
+    ...     member.unsubscribe()
+    herb@example.com left cat.example.com

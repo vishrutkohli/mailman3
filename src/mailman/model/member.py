@@ -27,6 +27,7 @@ __all__ = [
 from storm.locals import Int, Reference, Unicode
 from storm.properties import UUID
 from zope.component import getUtility
+from zope.event import notify
 from zope.interface import implementer
 
 from mailman.core.constants import system_preferences
@@ -36,7 +37,8 @@ from mailman.database.types import Enum
 from mailman.interfaces.action import Action
 from mailman.interfaces.address import IAddress
 from mailman.interfaces.listmanager import IListManager
-from mailman.interfaces.member import IMember, MemberRole, MembershipError
+from mailman.interfaces.member import (
+    IMember, MemberRole, MembershipError, UnsubscriptionEvent)
 from mailman.interfaces.user import IUser, UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.uid import UniqueIDFactory
@@ -186,5 +188,7 @@ class Member(Model):
     @dbconnection
     def unsubscribe(self, store):
         """See `IMember`."""
+        # Yes, this must get triggered before self is deleted.
+        notify(UnsubscriptionEvent(self.mailing_list, self))
         store.remove(self.preferences)
         store.remove(self)
