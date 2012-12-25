@@ -73,18 +73,23 @@ Interfaces
    `IMailingList` to an `IBanManager` to manage the bans for a specific
    mailing list.  To manage the global bans, adapt ``None``.
 
-Integration
------------
- * Added support for Postfix `relay_domains` setting for better virtual domain
-   support.  Contributed by Jimmy Bergman.
-
 Commands
 --------
  * `bin/mailman aliases` loses the `--output`, `--format`, and `--simple`
    arguments, and adds a `--directory` argument.  This is necessary to support
    the Postfix `relay_domains` support.
  * `bin/mailman start` was passing the wrong relative path to its runner
-   subprocesses when -C was given.  LP: #982551
+   subprocesses when -C was given.  (LP: #982551)
+
+Other
+-----
+ * Added support for Postfix `relay_domains` setting for better virtual domain
+   support.  Contributed by Jimmy Bergman.
+ * Two new events are triggered on membership changes: `SubscriptionEvent`
+   when a new member joins a mailing list, and an `UnsubscriptionEvent` when a
+   member leaves a mailing list.  (LP: #1047286)
+ * Improve the --help text for the `start`, `stop`, `restart`, and `reopen`
+   subcommands.  (LP: #1035033)
 
 Bugs
 ----

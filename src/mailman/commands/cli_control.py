@@ -48,7 +48,7 @@ qlog = logging.getLogger('mailman.runner')
 
 @implementer(ICLISubCommand)
 class Start:
-    """Start the Mailman daemons."""
+    """Start the Mailman master and runner processes."""
 
     name = 'start'
 
@@ -191,7 +191,7 @@ class SignalCommand:
 
 
 class Stop(SignalCommand):
-    """Stop the Mailman daemons."""
+    """Stop the Mailman master and runner processes."""
 
     name = 'stop'
     message = _("Shutting down Mailman's master runner")
@@ -199,7 +199,7 @@ class Stop(SignalCommand):
 
 
 class Reopen(SignalCommand):
-    """Reopen the Mailman daemons."""
+    """Signal the Mailman processes to re-open their log files.."""
 
     name = 'reopen'
     message = _('Reopening the Mailman runners')
@@ -208,7 +208,7 @@ class Reopen(SignalCommand):
 
 @implementer(ICLISubCommand)
 class Restart(SignalCommand):
-    """Stop the Mailman daemons."""
+    """Stop and restart the Mailman runner subprocesses."""
 
     name = 'restart'
     message = _('Restarting the Mailman runners')

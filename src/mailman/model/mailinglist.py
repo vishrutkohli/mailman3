@@ -33,6 +33,7 @@ from storm.locals import (
     TimeDelta, Unicode)
 from urlparse import urljoin
 from zope.component import getUtility
+from zope.event import notify
 from zope.interface import implementer
 
 from mailman.config import config
@@ -50,7 +51,8 @@ from mailman.interfaces.mailinglist import (
     IAcceptableAlias, IAcceptableAliasSet, IMailingList, Personalization,
     ReplyToMunging)
 from mailman.interfaces.member import (
-    AlreadySubscribedError, MemberRole, MissingPreferredAddressError)
+    AlreadySubscribedError, MemberRole, MissingPreferredAddressError,
+    SubscriptionEvent)
 from mailman.interfaces.mime import FilterType
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.user import IUser
@@ -493,6 +495,7 @@ class MailingList(Model):
                         subscriber=subscriber)
         member.preferences = Preferences()
         store.add(member)
+        notify(SubscriptionEvent(self, member))
         return member
 
 
