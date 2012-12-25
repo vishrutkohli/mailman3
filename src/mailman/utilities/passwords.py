@@ -35,16 +35,35 @@ from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 
 class PasswordContext:
     def __init__(self, config):
+        """Create a password context for hashing and verification.
+
+        :param config: The `IConfiguration` instance.
+        """
         config_string = load_external(config.passwords.configuration)
         self._context = CryptContext.from_string(config_string)
 
     def encrypt(self, secret):
+        """Return the secret, hashed using the current password context.
+
+        :param secret: The plain text password.
+        :type secret: string
+        :return: The hashed secret.
+        :rtype: string
+        """
         return self._context.encrypt(secret)
 
-    def verify(self, hashed, password):
-        # Support hash algorithm migration.  Yes, the order of arguments is
-        # reversed, for backward compatibility with flufl.password.  XXX fix
-        # this eventually.
+    def verify(self, password, hashed):
+        """Verify the hashed password and return the updated hash.
+
+        This is essentially a wrapper around
+        `passlib.CryptContext.verify_and_update()` using only the first two
+        arguments.
+
+        :param password: The plain text secret provided by the user.
+        :type password:
+        :param hashed: The hash string to compare to.
+        :type hashed: string
+        """
         return self._context.verify_and_update(password, hashed)
 
 

@@ -122,7 +122,7 @@ class Approved:
         if password is missing:
             return False
         is_valid, new_hash = config.password_context.verify(
-            mlist.moderator_password, password)
+            password, mlist.moderator_password)
         if is_valid and new_hash:
             # Hash algorithm migration.
             mlist.moderator_password = new_hash
