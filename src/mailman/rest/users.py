@@ -232,7 +232,6 @@ class AUser(_UserBase):
     @resource.child('login')
     def login(self, request, segments):
         """Log the user in, sort of, by verifying a given password."""
-        #import pdb; pdb.set_trace()
         if self._user is None:
             return http.not_found()
         # We do not want to encrypt the plaintext password given in the POST
