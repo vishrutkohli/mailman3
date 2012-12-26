@@ -63,6 +63,10 @@ class PasswordContext:
         :type password:
         :param hashed: The hash string to compare to.
         :type hashed: string
+        :return: 2-tuple where the first element is a flag indicating whether
+            the password verified or not, and the second value whether the
+            existing hash needs to be replaced (a str if so, else None).
+        :rtype: 2-tuple
         """
         return self._context.verify_and_update(password, hashed)
 

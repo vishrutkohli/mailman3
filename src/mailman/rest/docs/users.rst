@@ -352,3 +352,45 @@ addresses can be used to look up Fred's user record.
     http_etag: "..."
     self_link: http://localhost:9001/3.0/users/6
     user_id: 6
+
+
+Verifying passwords
+===================
+
+A user's password is stored internally in hashed form.  Logging in a user is
+the process of verifying a provided clear text password against the hashed
+internal password.
+
+When Elly was added as a user, she provided a password in the clear.  Now the
+password is hashed and getting her user record returns the hashed password.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Unless the client can run the hashing algorithm on the login text that Elly
+provided, and do its own comparison, the client should let the REST API handle
+password verification.
+
+This time, Elly successfully logs into Mailman.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5/login', {
+    ...           'cleartext_password': 'supersekrit',
+    ...           }, method='POST')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+But this time, she is unsuccessful.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5/login', {
+    ...           'cleartext_password': 'not-the-password',
+    ...           }, method='POST')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 403: 403 Forbidden
