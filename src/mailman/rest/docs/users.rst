@@ -3,9 +3,12 @@ Users
 =====
 
 The REST API can be used to add and remove users, add and remove user
-addresses, and change their preferred address, password, or name.  Users are
-different than members; the latter represents an email address subscribed to a
-specific mailing list.  Users are just people that Mailman knows about.
+addresses, and change their preferred address, password, or name.  The API can
+also be used to verify a user's password.
+
+Users are different than members; the latter represents an email address
+subscribed to a specific mailing list.  Users are just people that Mailman
+knows about.
 
 There are no users yet.
 
@@ -14,15 +17,18 @@ There are no users yet.
     start: 0
     total_size: 0
 
-When there are users in the database, they can be retrieved as a collection.
-::
+Anne is added, with an email address.  Her user record gets a `user_id`.
 
     >>> from zope.component import getUtility
     >>> from mailman.interfaces.usermanager import IUserManager
     >>> user_manager = getUtility(IUserManager)
-
     >>> anne = user_manager.create_user('anne@example.com', 'Anne Person')
     >>> transaction.commit()
+    >>> anne.user_id.int
+    1
+
+Anne's user record is returned as an entry into the collection of all users.
+
     >>> dump_json('http://localhost:9001/3.0/users')
     entry 0:
         created_on: 2005-08-01T07:49:23
@@ -33,12 +39,6 @@ When there are users in the database, they can be retrieved as a collection.
     http_etag: "..."
     start: 0
     total_size: 1
-
-The user ids match.
-
-    >>> json = call_http('http://localhost:9001/3.0/users')
-    >>> json['entries'][0]['user_id'] == anne.user_id.int
-    True
 
 A user might not have a display name, in which case, the attribute will not be
 returned in the REST API.
@@ -68,7 +68,6 @@ Creating users via the API
 New users can be created through the REST API.  To do so requires the initial
 email address for the user, a password, and optionally the user's display
 name.
-::
 
     >>> transaction.abort()
     >>> dump_json('http://localhost:9001/3.0/users', {
