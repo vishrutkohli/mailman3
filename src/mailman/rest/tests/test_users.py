@@ -46,10 +46,89 @@ class TestUsers(unittest.TestCase):
         with transaction():
             self._mlist = create_list('test@example.com')
 
-    def test_delete_bogus_user(self):
-        # Try to delete a user that does not exist.
+    def test_get_missing_user_by_id(self):
+        # You can't GET a missing user by user id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_get_missing_user_by_address(self):
+        # You can't GET a missing user by address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/missing@example.org')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_patch_missing_user_by_id(self):
+        # You can't PATCH a missing user by user id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99', {
+                     'display_name': 'Bob Dobbs',
+                     }, method='PATCH')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_patch_missing_user_by_address(self):
+        # You can't PATCH a missing user by user address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/bob@example.org', {
+                     'display_name': 'Bob Dobbs',
+                     }, method='PATCH')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_put_missing_user_by_id(self):
+        # You can't PUT a missing user by user id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99', {
+                     'display_name': 'Bob Dobbs',
+                     'cleartext_password': 'abc123',
+                     }, method='PUT')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_put_missing_user_by_address(self):
+        # You can't PUT a missing user by user address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/bob@example.org', {
+                     'display_name': 'Bob Dobbs',
+                     'cleartext_password': 'abc123',
+                     }, method='PUT')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_delete_missing_user_by_id(self):
+        # You can't DELETE a missing user by user id.
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/users/99', method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_delete_missing_user_by_address(self):
+        # You can't DELETE a missing user by user address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/bob@example.com',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_existing_user_error(self):
+        # Creating a user twice results in an error.
+        call_api('http://localhost:9001/3.0/users', {
+                 'email': 'anne@example.com',
+                 })
+        # The second try returns an error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users', {
+                     'email': 'anne@example.com',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Address already exists: anne@example.com')
+
+    def test_addresses_of_missing_user_id(self):
+        # Trying to get the /addresses of a missing user id results in error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/801/addresses')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_addresses_of_missing_user_address(self):
+        # Trying to get the /addresses of a missing user id results in error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/z@example.net/addresses')
         self.assertEqual(cm.exception.code, 404)
 
 

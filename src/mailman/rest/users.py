@@ -119,8 +119,8 @@ class AllUsers(_UserBase):
         try:
             user = getUtility(IUserManager).create_user(**arguments)
         except ExistingAddressError as error:
-            return http.bad_request([], b'Address already exists {0}'.format(
-                error.email))
+            return http.bad_request(
+                [], b'Address already exists: {0}'.format(error.address))
         if password is None:
             # This will have to be reset since it cannot be retrieved.
             password = generate(int(config.passwords.password_length))
@@ -166,6 +166,8 @@ class AUser(_UserBase):
     @resource.child()
     def addresses(self, request, segments):
         """/users/<uid>/addresses"""
+        if self._user is None:
+            return http.not_found()
         return UserAddresses(self._user)
 
     @resource.DELETE()
