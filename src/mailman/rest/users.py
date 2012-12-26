@@ -119,8 +119,8 @@ class AllUsers(_UserBase):
         try:
             user = getUtility(IUserManager).create_user(**arguments)
         except ExistingAddressError as error:
-            return http.bad_request([], b'Address already exists {0}'.format(
-                error.email))
+            return http.bad_request(
+                [], b'Address already exists: {0}'.format(error.address))
         if password is None:
             # This will have to be reset since it cannot be retrieved.
             password = generate(int(config.passwords.password_length))
@@ -166,6 +166,8 @@ class AUser(_UserBase):
     @resource.child()
     def addresses(self, request, segments):
         """/users/<uid>/addresses"""
+        if self._user is None:
+            return http.not_found()
         return UserAddresses(self._user)
 
     @resource.DELETE()
@@ -226,3 +228,24 @@ class AUser(_UserBase):
         except ValueError as error:
             return http.bad_request([], str(error))
         return no_content()
+
+    @resource.child('login')
+    def login(self, request, segments):
+        """Log the user in, sort of, by verifying a given password."""
+        if self._user is None:
+            return http.not_found()
+        # We do not want to encrypt the plaintext password given in the POST
+        # data.  That would hash the password, but we need to have the
+        # plaintext in order to pass into passlib.
+        validator = Validator(cleartext_password=GetterSetter(unicode))
+        try:
+            values = validator(request)
+        except ValueError as error:
+            return http.bad_request([], str(error))
+        is_valid, new_hash = config.password_context.verify(
+            values['cleartext_password'], self._user.password)
+        if is_valid:
+            if new_hash is not None:
+                self._user.password = new_hash
+            return no_content()
+        return http.forbidden()

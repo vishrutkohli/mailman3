@@ -21,20 +21,23 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'TestUsers',
     'TestLP1074374',
+    'TestLogin',
+    'TestUsers',
     ]
 
 
+import os
 import unittest
 
 from urllib2 import HTTPError
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
 from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
-from mailman.testing.helpers import call_api
+from mailman.testing.helpers import call_api, configuration
 from mailman.testing.layers import RESTLayer
 
 
@@ -46,10 +49,105 @@ class TestUsers(unittest.TestCase):
         with transaction():
             self._mlist = create_list('test@example.com')
 
-    def test_delete_bogus_user(self):
-        # Try to delete a user that does not exist.
+    def test_get_missing_user_by_id(self):
+        # You can't GET a missing user by user id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_get_missing_user_by_address(self):
+        # You can't GET a missing user by address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/missing@example.org')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_patch_missing_user_by_id(self):
+        # You can't PATCH a missing user by user id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99', {
+                     'display_name': 'Bob Dobbs',
+                     }, method='PATCH')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_patch_missing_user_by_address(self):
+        # You can't PATCH a missing user by user address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/bob@example.org', {
+                     'display_name': 'Bob Dobbs',
+                     }, method='PATCH')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_put_missing_user_by_id(self):
+        # You can't PUT a missing user by user id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99', {
+                     'display_name': 'Bob Dobbs',
+                     'cleartext_password': 'abc123',
+                     }, method='PUT')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_put_missing_user_by_address(self):
+        # You can't PUT a missing user by user address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/bob@example.org', {
+                     'display_name': 'Bob Dobbs',
+                     'cleartext_password': 'abc123',
+                     }, method='PUT')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_delete_missing_user_by_id(self):
+        # You can't DELETE a missing user by user id.
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/users/99', method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_delete_missing_user_by_address(self):
+        # You can't DELETE a missing user by user address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/bob@example.com',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_existing_user_error(self):
+        # Creating a user twice results in an error.
+        call_api('http://localhost:9001/3.0/users', {
+                 'email': 'anne@example.com',
+                 })
+        # The second try returns an error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users', {
+                     'email': 'anne@example.com',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Address already exists: anne@example.com')
+
+    def test_addresses_of_missing_user_id(self):
+        # Trying to get the /addresses of a missing user id results in error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/801/addresses')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_addresses_of_missing_user_address(self):
+        # Trying to get the /addresses of a missing user id results in error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/z@example.net/addresses')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_login_missing_user_by_id(self):
+        # Verify a password for a non-existing user, by id.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/99/login', {
+                     'cleartext_password': 'wrong',
+                     })
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_login_missing_user_by_address(self):
+        # Verify a password for a non-existing user, by address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/z@example.org/login', {
+                     'cleartext_password': 'wrong',
+                     })
         self.assertEqual(cm.exception.code, 404)
 
 
@@ -135,3 +233,67 @@ class TestLP1074374(unittest.TestCase):
         self.assertEqual(member['delivery_mode'], 'regular')
         self.assertEqual(member['list_id'], 'test.example.com')
         self.assertEqual(member['role'], 'member')
+
+
+
+class TestLogin(unittest.TestCase):
+    """Test user 'login' (really just password verification)."""
+
+    layer = RESTLayer
+
+    def setUp(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            self.anne = user_manager.create_user(
+                'anne@example.com', 'Anne Person')
+            self.anne.password = config.password_context.encrypt('abc123')
+
+    def test_wrong_parameter(self):
+        # A bad request because it is mistyped the required attribute.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/1/login', {
+                     'hashed_password': 'bad hash',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_not_enough_parameters(self):
+        # A bad request because it is missing the required attribute.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/1/login', {
+                     })
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_too_many_parameters(self):
+        # A bad request because it has too many attributes.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/1/login', {
+                     'cleartext_password': 'abc123',
+                     'display_name': 'Annie Personhood',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_successful_login_updates_password(self):
+        # Passlib supports updating the hash when the hash algorithm changes.
+        # When a user logs in successfully, the password will be updated if
+        # necessary.
+        #
+        # Start by hashing Anne's password with a different hashing algorithm
+        # than the one that the REST runner uses by default during testing.
+        config_file = os.path.join(config.VAR_DIR, 'passlib-tmp.config')
+        with open(config_file, 'w') as fp:
+            print("""\
+[passlib]
+schemes = hex_md5
+""", file=fp)
+        with configuration('passwords', configuration=config_file):
+            with transaction():
+                self.anne.password = config.password_context.encrypt('abc123')
+                # Just ensure Anne's password is hashed correctly.
+                self.assertEqual(self.anne.password,
+                                 'e99a18c428cb38d5f260853678922e03')
+        # Now, Anne logs in with a successful password.  This should change it
+        # back to the plaintext hash.
+        call_api('http://localhost:9001/3.0/users/1/login', {
+                 'cleartext_password': 'abc123',
+                 })
+        self.assertEqual(self.anne.password, '{plaintext}abc123')

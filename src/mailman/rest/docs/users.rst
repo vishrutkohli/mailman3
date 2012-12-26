@@ -3,9 +3,12 @@ Users
 =====
 
 The REST API can be used to add and remove users, add and remove user
-addresses, and change their preferred address, password, or name.  Users are
-different than members; the latter represents an email address subscribed to a
-specific mailing list.  Users are just people that Mailman knows about.
+addresses, and change their preferred address, password, or name.  The API can
+also be used to verify a user's password.
+
+Users are different than members; the latter represents an email address
+subscribed to a specific mailing list.  Users are just people that Mailman
+knows about.
 
 There are no users yet.
 
@@ -14,15 +17,18 @@ There are no users yet.
     start: 0
     total_size: 0
 
-When there are users in the database, they can be retrieved as a collection.
-::
+Anne is added, with an email address.  Her user record gets a `user_id`.
 
     >>> from zope.component import getUtility
     >>> from mailman.interfaces.usermanager import IUserManager
     >>> user_manager = getUtility(IUserManager)
-
     >>> anne = user_manager.create_user('anne@example.com', 'Anne Person')
     >>> transaction.commit()
+    >>> int(anne.user_id.int)
+    1
+
+Anne's user record is returned as an entry into the collection of all users.
+
     >>> dump_json('http://localhost:9001/3.0/users')
     entry 0:
         created_on: 2005-08-01T07:49:23
@@ -34,16 +40,10 @@ When there are users in the database, they can be retrieved as a collection.
     start: 0
     total_size: 1
 
-The user ids match.
-
-    >>> json = call_http('http://localhost:9001/3.0/users')
-    >>> json['entries'][0]['user_id'] == anne.user_id.int
-    True
-
 A user might not have a display name, in which case, the attribute will not be
 returned in the REST API.
 
-    >>> dave = user_manager.create_user('dave@example.com')
+    >>> bart = user_manager.create_user('bart@example.com')
     >>> transaction.commit()
     >>> dump_json('http://localhost:9001/3.0/users')
     entry 0:
@@ -62,19 +62,14 @@ returned in the REST API.
     total_size: 2
 
 
-Creating users via the API
-==========================
+Creating users
+==============
 
-New users can be created through the REST API.  To do so requires the initial
-email address for the user, a password, and optionally the user's display
-name.
-::
+New users can be created by POSTing to the users collection.  At a minimum,
+the user's email address must be provided.
 
-    >>> transaction.abort()
     >>> dump_json('http://localhost:9001/3.0/users', {
-    ...           'email': 'bart@example.com',
-    ...           'display_name': 'Bart Person',
-    ...           'password': 'bbb',
+    ...           'email': 'cris@example.com',
     ...           })
     content-length: 0
     date: ...
@@ -82,43 +77,43 @@ name.
     server: ...
     status: 201
 
-The user exists in the database.
-::
+Cris is now a user known to the system, but he has no display name.
 
-    >>> bart = user_manager.get_user('bart@example.com')
-    >>> bart
-    <User "Bart Person" (3) at ...>
+    >>> user_manager.get_user('cris@example.com')
+    <User "" (3) at ...>
 
-It is also available via the location given in the response.
+Cris's user record can also be accessed via the REST API, using her user id.
+Note that because no password was given when the record was created, a random
+one was assigned to her.
 
     >>> dump_json('http://localhost:9001/3.0/users/3')
     created_on: 2005-08-01T07:49:23
-    display_name: Bart Person
     http_etag: "..."
-    password: {plaintext}bbb
+    password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
 Because email addresses just have an ``@`` sign in then, there's no confusing
-them with user ids.  Thus, a user can be retrieved via its email address.
+them with user ids.  Thus, Cris's record can be retrieved via her email
+address.
 
-    >>> dump_json('http://localhost:9001/3.0/users/bart@example.com')
+    >>> dump_json('http://localhost:9001/3.0/users/cris@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Bart Person
     http_etag: "..."
-    password: {plaintext}bbb
+    password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
 
-Users can be created without a password.  A *user friendly* password will be
-assigned to them automatically, but this password will be encrypted and
-therefore cannot be retrieved.  It can be reset though.
-::
+
+Providing a display name
+------------------------
+
+When a user is added, a display name can be provided.
 
     >>> transaction.abort()
     >>> dump_json('http://localhost:9001/3.0/users', {
-    ...           'email': 'cris@example.com',
-    ...           'display_name': 'Cris Person',
+    ...           'email': 'dave@example.com',
+    ...           'display_name': 'Dave Person',
     ...           })
     content-length: 0
     date: ...
@@ -126,40 +121,73 @@ therefore cannot be retrieved.  It can be reset though.
     server: ...
     status: 201
 
+Dave's user record includes his display name.
+
     >>> dump_json('http://localhost:9001/3.0/users/4')
     created_on: 2005-08-01T07:49:23
-    display_name: Cris Person
+    display_name: Dave Person
     http_etag: "..."
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
 
 
+Providing passwords
+-------------------
+
+To avoid getting assigned a random, and irretrievable password (but one which
+can be reset), you can provide a password when the user is created.  By
+default, the password is provided in plain text, and it is hashed by Mailman
+before being stored.
+
+    >>> transaction.abort()
+    >>> dump_json('http://localhost:9001/3.0/users', {
+    ...           'email': 'elly@example.com',
+    ...           'display_name': 'Elly Person',
+    ...           'password': 'supersekrit',
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/users/5
+    server: ...
+    status: 201
+
+When we view Elly's user record, we can tell that her password has been hashed
+because it has the hash algorithm prefix (i.e. the *{plaintext}* marker).
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+
 Updating users
 ==============
 
-Users have a password and a display name.  The display name can be changed
-through the REST API.
+Dave's display name can be changed through the REST API.
 
     >>> dump_json('http://localhost:9001/3.0/users/4', {
-    ...           'display_name': 'Chrissy Person',
+    ...           'display_name': 'David Person',
     ...           }, method='PATCH')
     content-length: 0
     date: ...
     server: ...
     status: 204
 
-Cris's display name has been updated.
+Dave's display name has been updated.
 
-    >>> dump_json('http://localhost:9001/3.0/users/4')
+    >>> dump_json('http://localhost:9001/3.0/users/dave@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Chrissy Person
+    display_name: David Person
     http_etag: "..."
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
 
-You can also change the user's password by passing in the new clear text
+Dave can also be assigned a new password by providing in the new cleartext
 password.  Mailman will hash this before it is stored internally.
 
     >>> dump_json('http://localhost:9001/3.0/users/4', {
@@ -170,14 +198,14 @@ password.  Mailman will hash this before it is stored internally.
     server: ...
     status: 204
 
-Even though you see *{plaintext}clockwork angels* below, it has still been
-hashed before storage.  The default hashing algorithm for the test suite is a
-plain text hash, but you can see that it works by the addition of the
-algorithm prefix.
+As described above, even though you see *{plaintext}clockwork angels* below,
+it has still been hashed before storage.  The default hashing algorithm for
+the test suite is a plain text hash, but you can see that it works by the
+addition of the algorithm prefix.
 
     >>> dump_json('http://localhost:9001/3.0/users/4')
     created_on: 2005-08-01T07:49:23
-    display_name: Chrissy Person
+    display_name: David Person
     http_etag: "..."
     password: {plaintext}clockwork angels
     self_link: http://localhost:9001/3.0/users/4
@@ -187,7 +215,7 @@ You can change both the display name and the password by PUTing the full
 resource.
 
     >>> dump_json('http://localhost:9001/3.0/users/4', {
-    ...           'display_name': 'Christopherson Person',
+    ...           'display_name': 'David Personhood',
     ...           'cleartext_password': 'the garden',
     ...           }, method='PUT')
     content-length: 0
@@ -195,9 +223,11 @@ resource.
     server: ...
     status: 204
 
-    >>> dump_json('http://localhost:9001/3.0/users/4')
+Dave's user record has been updated.
+
+    >>> dump_json('http://localhost:9001/3.0/users/dave@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Christopherson Person
+    display_name: David Personhood
     http_etag: "..."
     password: {plaintext}the garden
     self_link: http://localhost:9001/3.0/users/4
@@ -225,7 +255,7 @@ Cris's resource cannot be retrieved either by email address...
 
 ...or user id.
 
-    >>> dump_json('http://localhost:9001/3.0/users/4')
+    >>> dump_json('http://localhost:9001/3.0/users/3')
     Traceback (most recent call last):
     ...
     HTTPError: HTTP Error 404: 404 Not Found
@@ -238,123 +268,129 @@ Cris's address records no longer exist either.
     HTTPError: HTTP Error 404: 404 Not Found
 
 
-Missing users
-=============
-
-It is of course an error to attempt to access a non-existent user, either by
-user id...
-::
-
-    >>> dump_json('http://localhost:9001/3.0/users/99')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
-...or by email address.
-::
-
-    >>> dump_json('http://localhost:9001/3.0/users/zed@example.org')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
-You also can't update a missing user.
-
-    >>> dump_json('http://localhost:9001/3.0/users/zed@example.org', {
-    ...           'display_name': 'Is Dead',
-    ...           }, method='PATCH')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
-    >>> dump_json('http://localhost:9001/3.0/users/zed@example.org', {
-    ...           'display_name': 'Is Dead',
-    ...           'cleartext_password': 'vroom',
-    ...           }, method='PUT')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
-
 User addresses
 ==============
 
-Bart may have any number of email addresses associated with their user
-account.  We can find out all of these through the API.  The addresses are
-sorted in lexical order by original (i.e. case-preserved) email address.
-::
+Fred may have any number of email addresses associated with his user account,
+and we can find them all through the API.
 
-    >>> bart.register('bperson@example.com')
-    <Address: bperson@example.com [not verified] at ...>
-    >>> bart.register('bart.person@example.com')
-    <Address: bart.person@example.com [not verified] at ...>
-    >>> bart.register('Bart.Q.Person@example.com')
-    <Address: Bart.Q.Person@example.com [not verified]
-              key: bart.q.person@example.com at ...>
+Through some other means, Fred registers a bunch of email addresses and
+associates them with his user account.
+
+    >>> fred = user_manager.create_user('fred@example.com', 'Fred Person')
+    >>> fred.register('fperson@example.com')
+    <Address: fperson@example.com [not verified] at ...>
+    >>> fred.register('fred.person@example.com')
+    <Address: fred.person@example.com [not verified] at ...>
+    >>> fred.register('Fred.Q.Person@example.com')
+    <Address: Fred.Q.Person@example.com [not verified]
+              key: fred.q.person@example.com at ...>
     >>> transaction.commit()
 
-    >>> dump_json('http://localhost:9001/3.0/users/3/addresses')
+When we access Fred's addresses via the REST API, they are sorted in lexical
+order by original (i.e. case-preserved) email address.
+
+    >>> dump_json('http://localhost:9001/3.0/users/fred@example.com/addresses')
     entry 0:
-        email: bart.q.person@example.com
+        email: fred.q.person@example.com
         http_etag: "..."
-        original_email: Bart.Q.Person@example.com
+        original_email: Fred.Q.Person@example.com
         registered_on: 2005-08-01T07:49:23
         self_link:
-            http://localhost:9001/3.0/addresses/bart.q.person@example.com
+            http://localhost:9001/3.0/addresses/fred.q.person@example.com
     entry 1:
-        email: bart.person@example.com
+        email: fperson@example.com
         http_etag: "..."
-        original_email: bart.person@example.com
+        original_email: fperson@example.com
         registered_on: 2005-08-01T07:49:23
-        self_link: http://localhost:9001/3.0/addresses/bart.person@example.com
+        self_link: http://localhost:9001/3.0/addresses/fperson@example.com
     entry 2:
-        display_name: Bart Person
-        email: bart@example.com
+        email: fred.person@example.com
         http_etag: "..."
-        original_email: bart@example.com
+        original_email: fred.person@example.com
         registered_on: 2005-08-01T07:49:23
-        self_link: http://localhost:9001/3.0/addresses/bart@example.com
+        self_link: http://localhost:9001/3.0/addresses/fred.person@example.com
     entry 3:
-        email: bperson@example.com
+        display_name: Fred Person
+        email: fred@example.com
         http_etag: "..."
-        original_email: bperson@example.com
+        original_email: fred@example.com
         registered_on: 2005-08-01T07:49:23
-        self_link: http://localhost:9001/3.0/addresses/bperson@example.com
+        self_link: http://localhost:9001/3.0/addresses/fred@example.com
     http_etag: "..."
     start: 0
     total_size: 4
 
-In fact, any of these addresses can be used to look up Bart's user record.
+In fact, since these are all associated with Fred's user account, any of the
+addresses can be used to look up Fred's user record.
 ::
 
-    >>> dump_json('http://localhost:9001/3.0/users/bart@example.com')
+    >>> dump_json('http://localhost:9001/3.0/users/fred@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Bart Person
+    display_name: Fred Person
     http_etag: "..."
-    password: {plaintext}bbb
-    self_link: http://localhost:9001/3.0/users/3
-    user_id: 3
+    self_link: http://localhost:9001/3.0/users/6
+    user_id: 6
 
-    >>> dump_json('http://localhost:9001/3.0/users/bart.person@example.com')
+    >>> dump_json('http://localhost:9001/3.0/users/fred.person@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Bart Person
+    display_name: Fred Person
     http_etag: "..."
-    password: {plaintext}bbb
-    self_link: http://localhost:9001/3.0/users/3
-    user_id: 3
+    self_link: http://localhost:9001/3.0/users/6
+    user_id: 6
 
-    >>> dump_json('http://localhost:9001/3.0/users/bperson@example.com')
+    >>> dump_json('http://localhost:9001/3.0/users/fperson@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Bart Person
+    display_name: Fred Person
     http_etag: "..."
-    password: {plaintext}bbb
-    self_link: http://localhost:9001/3.0/users/3
-    user_id: 3
+    self_link: http://localhost:9001/3.0/users/6
+    user_id: 6
 
-    >>> dump_json('http://localhost:9001/3.0/users/Bart.Q.Person@example.com')
+    >>> dump_json('http://localhost:9001/3.0/users/Fred.Q.Person@example.com')
     created_on: 2005-08-01T07:49:23
-    display_name: Bart Person
+    display_name: Fred Person
     http_etag: "..."
-    password: {plaintext}bbb
-    self_link: http://localhost:9001/3.0/users/3
-    user_id: 3
+    self_link: http://localhost:9001/3.0/users/6
+    user_id: 6
+
+
+Verifying passwords
+===================
+
+A user's password is stored internally in hashed form.  Logging in a user is
+the process of verifying a provided clear text password against the hashed
+internal password.
+
+When Elly was added as a user, she provided a password in the clear.  Now the
+password is hashed and getting her user record returns the hashed password.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Unless the client can run the hashing algorithm on the login text that Elly
+provided, and do its own comparison, the client should let the REST API handle
+password verification.
+
+This time, Elly successfully logs into Mailman.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5/login', {
+    ...           'cleartext_password': 'supersekrit',
+    ...           }, method='POST')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+But this time, she is unsuccessful.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5/login', {
+    ...           'cleartext_password': 'not-the-password',
+    ...           }, method='POST')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 403: 403 Forbidden

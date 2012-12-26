@@ -53,6 +53,10 @@ REST
    address does not change its `.verified_on` date.  (LP: #1054730)
  * Deleting a user through the REST API also deletes all the user's linked
    addresses and memberships.  (LP: #1074374)
+ * A user's password can be verified by POSTing to .../user/<id>/login.  The
+   data must contain a single parameter `cleartext_password` and if this
+   matches, a 204 (No Content) will be returned, otherwise a 403 (Forbidden)
+   is returned.  (LP: #1065447)
 
 Configuration
 -------------
