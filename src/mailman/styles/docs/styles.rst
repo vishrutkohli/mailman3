@@ -3,58 +3,37 @@ List styles
 ===========
 
 List styles are a way to name and apply a template of attribute settings to
-new mailing lists.  Every style has a name, which must be unique within the
-context of a specific style manager.  There is usually only one global style
-manager.
+new mailing lists.  Every style has a name, which must be unique.
 
-Styles also have a priority, which allows you to specify the order in which
-multiple styles will be applied.  A style has a `match` function which is used
-to determine whether the style should be applied to a particular mailing list
-or not.  And finally, application of a style to a mailing list can really
-modify the mailing list any way it wants.
+Styles are generally only applied when a mailing list is created, although
+there is no reason why styles can't be applied to an existing mailing list.
+However, when a style changes, the mailing lists using that style are not
+automatically updated.  Instead, think of styles as the initial set of
+defaults for just about any mailing list attribute.  In fact, application of a
+style to a mailing list can really modify the mailing list in any way.
 
-Let's start with a vanilla mailing list and a default style manager.
-::
+To start with, there is only one style, the default style.
+
+    >>> from zope.component import getUtility
+    >>> from mailman.interfaces.styles import IStyleManager
+    >>> manager = getUtility(IStyleManager)
+    >>> for style in manager.styles:
+    ...     print style.name
+    default
+
+When you create a mailing list through the low-level `IListManager` API, no
+style is applied.
 
     >>> from mailman.interfaces.listmanager import IListManager
-    >>> from zope.component import getUtility
-    >>> mlist = getUtility(IListManager).create('_xtest@example.com')
+    >>> mlist = getUtility(IListManager).create('ant@example.com')
+    >>> print mlist.style_name
+    None
 
-    >>> from mailman.styles.manager import StyleManager
-    >>> style_manager = StyleManager()
-    >>> style_manager.populate()
-    >>> styles = sorted(style.name for style in style_manager.styles)
-    >>> len(styles)
-    1
-    >>> print styles[0]
-    default
+By applying a style, the style name gets assigned.
 
-
-The default style
-=================
-
-There is a default style which implements a legacy style roughly corresponding
-to discussion mailing lists.  This style matches when no other styles match,
-and it has the lowest priority.  The low priority means that it is matched
-last and if it matches, it is applied last.
-
-    >>> default_style = style_manager.get('default')
-    >>> print default_style.name
-    default
-    >>> default_style.priority
-    0
-
-Given a mailing list, you can ask the style manager to find all the styles
-that match the list.  The registered styles will be sorted by decreasing
-priority and each style's ``match()`` method will be called in turn.  The
-sorted list of matching styles will be returned -- but not applied -- by the
-style manager's ``lookup()`` method.
-
-    >>> matched_styles = [style.name for style in style_manager.lookup(mlist)]
-    >>> len(matched_styles)
-    1
-    >>> print matched_styles[0]
-    default
+    >>> manager.get('default').apply(mlist)
+    >>> print mlist.list_id, mlist.style_name
+    ant.example.com default
 
 
 Registering styles
@@ -66,71 +45,28 @@ New styles must implement the ``IStyle`` interface.
     >>> from mailman.interfaces.styles import IStyle
     >>> @implementer(IStyle)
     ... class TestStyle:
-    ...     name = 'test'
-    ...     priority = 10
+    ...     name = 'a-test-style'
     ...     def apply(self, mailing_list):
     ...         # Just does something very simple.
+    ...         mailing_list.style_name = self.name
     ...         mailing_list.style_thing = 'thing 1'
-    ...     def match(self, mailing_list, styles):
-    ...         # Applies to any test list
-    ...         if 'test' in mailing_list.fqdn_listname:
-    ...             styles.append(self)
 
 You can register a new style with the style manager.
 
-    >>> style_manager.register(TestStyle())
+    >>> manager.register(TestStyle())
 
-And now if you look up matching styles, you should find only the new test
-style.  This is because the default style only gets applied when no other
-styles match the mailing list.
+All registered styles are returned in alphabetical order by style name.
 
-    >>> matched_styles = sorted(
-    ...     style.name for style in style_manager.lookup(mlist))
-    >>> len(matched_styles)
-    1
-    >>> print matched_styles[0]
-    test
-    >>> for style in style_manager.lookup(mlist):
-    ...     style.apply(mlist)
-    >>> print mlist.style_thing
-    thing 1
+    >>> for style in manager.styles:
+    ...     print style.name
+    a-test-style
+    default
 
+You can also ask the style manager for the style, by name.
 
-Style priority
-==============
-
-When multiple styles match a particular mailing list, they are applied in
-descending order of priority.  In other words, a priority zero style would be
-applied last.
-::
-
-    >>> class AnotherTestStyle(TestStyle):
-    ...     name = 'another'
-    ...     priority = 5
-    ...     # Use the base class's match() method.
-    ...     def apply(self, mailing_list):
-    ...         mailing_list.style_thing = 'thing 2'
-
-    >>> mlist.style_thing = 'thing 0'
-    >>> print mlist.style_thing
-    thing 0
-    >>> style_manager.register(AnotherTestStyle())
-    >>> for style in style_manager.lookup(mlist):
-    ...     style.apply(mlist)
-    >>> print mlist.style_thing
-    thing 2
-
-You can change the priority of a style, and if you reapply the styles, they
-will take effect in the new priority order.
-
-    >>> style_1 = style_manager.get('test')
-    >>> style_1.priority = 5
-    >>> style_2 = style_manager.get('another')
-    >>> style_2.priority = 10
-    >>> for style in style_manager.lookup(mlist):
-    ...     style.apply(mlist)
-    >>> print mlist.style_thing
-    thing 1
+    >>> test_style = manager.get('a-test-style')
+    >>> print test_style.name
+    a-test-style
 
 
 Unregistering styles
@@ -138,10 +74,59 @@ Unregistering styles
 
 You can unregister a style, making it unavailable in the future.
 
-    >>> style_manager.unregister(style_2)
-    >>> matched_styles = sorted(
-    ...     style.name for style in style_manager.lookup(mlist))
-    >>> len(matched_styles)
-    1
-    >>> print matched_styles[0]
-    test
+    >>> manager.unregister(test_style)
+    >>> for style in manager.styles:
+    ...     print style.name
+    default
+
+Asking for a missing style returns None.
+
+    >>> print manager.get('a-test-style')
+    None
+
+
+.. _list-creation-styles:
+
+Apply styles at list creation
+=============================
+
+You can specify a style to apply when creating a list through the high-level
+API.  Let's start by registering the test style.
+
+    >>> manager.register(test_style)
+
+Now, when we use the high level API, we can ask for the style to be applied.
+
+    >>> from mailman.app.lifecycle import create_list
+    >>> mlist = create_list('bee@example.com', style_name=test_style.name)
+    >>> print mlist.list_id, mlist.style_name
+    bee.example.com a-test-style
+
+The style has been applied.
+
+    >>> print mlist.style_thing
+    thing 1
+
+If no style name is provided when creating the list, the system default style
+(which may or may not be the style named 'default') is applied.
+
+    >>> @implementer(IStyle)
+    ... class AnotherStyle:
+    ...     name = 'another-style'
+    ...     def apply(self, mailing_list):
+    ...         # Just does something very simple.
+    ...         mailing_list.style_name = self.name
+    ...         mailing_list.style_thing = 'thing 2'
+    >>> another_style = AnotherStyle()
+
+We'll set up the system default to apply this newly registered style if no
+other style is explicitly given.
+
+    >>> from mailman.testing.helpers import configuration
+    >>> with configuration('styles', default=another_style.name):
+    ...     manager.register(another_style)
+    ...     mlist = create_list('cat@example.com')
+    >>> print mlist.style_name
+    another-style
+    >>> print mlist.style_thing
+    thing 2

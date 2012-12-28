@@ -43,9 +43,6 @@ class IStyle(Interface):
     name = Attribute(
         """The name of this style.  Must be unique.""")
 
-    priority = Attribute(
-        """The priority of this style, as an integer.""")
-
     def apply(mailing_list):
         """Apply the style to the mailing list.
 
@@ -53,49 +50,27 @@ class IStyle(Interface):
         :param mailing_list: the mailing list to apply the style to.
         """
 
-    def match(mailing_list, styles):
-        """Give this style a chance to match the mailing list.
-
-        If the style's internal matching rules match the `mailing_list`, then
-        the style may append itself to the `styles` list.  This list will be
-        ordered when returned from `IStyleManager.lookup()`.
-
-        :type mailing_list: `IMailingList`.
-        :param mailing_list: the mailing list object.
-        :param styles: ordered list of `IStyles` matched so far.
-        """
-
-
 
 class IStyleManager(Interface):
-    """A manager of styles and style chains."""
+    """A manager of styles."""
 
     def get(name):
         """Return the named style or None.
 
-        :type name: Unicode
+        :type name: string
         :param name: A style name.
         :return: the named `IStyle` or None if the style doesn't exist.
         """
 
-    def lookup(mailing_list):
-        """Return a list of styles for the given mailing list.
-
-        Use various registered rules to find an `IStyle` for the given mailing
-        list.  The returned styles are ordered by their priority.
-
-        Style matches can be registered and reordered by plugins.
-
-        :type mailing_list: `IMailingList`.
-        :param mailing_list: The mailing list object to find a style for.
-        :return: ordered list of `IStyles`.  Zero is the lowest priority.
-        """
-
     styles = Attribute(
-        """An iterator over all the styles known by this manager.
+        'An iterator over all the styles known by this manager.')
 
-        Styles are ordered by their priority, which may be changed.
-        """)
+    def populate():
+        """Populate the styles from the configuration files.
+
+        This clears the current set of styles and resets them from those
+        defined in the configuration files.
+        """
 
     def register(style):
         """Register a style with this manager.
@@ -110,11 +85,4 @@ class IStyleManager(Interface):
 
         :param style: an IStyle.
         :raises KeyError: If the style's name is not currently registered.
-        """
-
-    def populate():
-        """Populate the styles from the configuration files.
-
-        This clears the current set of styles and resets them from those
-        defined in the configuration files.
         """

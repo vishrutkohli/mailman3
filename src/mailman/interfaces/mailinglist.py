@@ -132,6 +132,9 @@ class IMailingList(Interface):
         """Advertise this mailing list when people ask for an overview of the
         available mailing lists.""")
 
+    style_name = Attribute(
+        """The name of the last style applied, or None.""")
+
     # Contact addresses
 
     posting_address = Attribute(

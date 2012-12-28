@@ -34,7 +34,6 @@ from mailman.app.lifecycle import create_list
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
-from mailman.testing.helpers import reset_the_world
 from mailman.testing.layers import ConfigLayer
 
 
@@ -45,9 +44,6 @@ class TestJoin(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('test@example.com')
         self._service = getUtility(ISubscriptionService)
-
-    def tearDown(self):
-        reset_the_world()
 
     def test_join_user_with_bogus_id(self):
         # When `subscriber` is a missing user id, an exception is raised.

@@ -243,14 +243,10 @@ class TestStyle:
     """See `IStyle`."""
 
     name = 'test'
-    priority = 10
 
     def apply(self, mailing_list):
         """See `IStyle`."""
         mailing_list.preferred_language = 'en'
-
-    def match(self, mailing_list, styles):
-        styles.append(self)
 
 
 
@@ -271,7 +267,7 @@ class TestBounceRunnerBug876774(unittest.TestCase):
         self._style_manager = getUtility(IStyleManager)
         self._style_manager.register(self._style)
         # Now we can create the mailing list.
-        self._mlist = create_list('test@example.com')
+        self._mlist = create_list('test@example.com', style_name='test')
         self._bounceq = config.switchboards['bounces']
         self._processor = getUtility(IBounceProcessor)
         self._runner = make_testable_runner(BounceRunner, 'bounces')

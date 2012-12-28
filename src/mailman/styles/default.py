@@ -47,7 +47,6 @@ class DefaultStyle:
     """The default (i.e. legacy) style."""
 
     name = 'default'
-    priority = 0    # the lowest priority style
 
     def apply(self, mailing_list):
         """See `IStyle`."""
@@ -55,6 +54,7 @@ class DefaultStyle:
         mlist = mailing_list
         # List identity.
         mlist.display_name = mlist.list_name.capitalize()
+        mlist.style_name = self.name
         mlist.include_rfc2369_headers = True
         mlist.allow_list_posts = True
         # Most of these were ripped from the old MailList.InitVars() method.
@@ -217,9 +217,3 @@ from: .*@uplinkpro.com
         mlist.owner_chain = 'default-owner-chain'
         # The default pipeline to send -owner email through.
         mlist.owner_pipeline = 'default-owner-pipeline'
-
-    def match(self, mailing_list, styles):
-        """See `IStyle`."""
-        # If no other styles have matched, then the default style matches.
-        if len(styles) == 0:
-            styles.append(self)

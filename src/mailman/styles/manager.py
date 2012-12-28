@@ -26,7 +26,6 @@ __all__ = [
     ]
 
 
-from operator import attrgetter
 from zope.component import getUtility
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
@@ -34,7 +33,7 @@ from zope.interface.verify import verifyObject
 from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.styles import (
     DuplicateStyleError, IStyle, IStyleManager)
-from mailman.utilities.modules import call_name
+from mailman.utilities.modules import find_components
 
 
 
@@ -50,35 +49,27 @@ class StyleManager:
         self._styles.clear()
         # Avoid circular imports.
         from mailman.config import config
-        # Install all the styles described by the configuration files.
-        for section in config.style_configs:
-            class_path = section['class']
-            style = call_name(class_path)
-            assert section.name.startswith('style'), (
-                'Bad style section name: %s' % section.name)
-            style.name = section.name[6:]
-            style.priority = int(section.priority)
-            self.register(style)
+        # Calculate the Python import paths to search.
+        paths = filter(None, (path.strip()
+                              for path in config.styles.paths.splitlines()))
+        for path in paths:
+            for style_class in find_components(path, IStyle):
+                style = style_class()
+                verifyObject(IStyle, style)
+                assert style.name not in self._styles, (
+                    'Duplicate style "{0}" found in {1}'.format(
+                        style.name, style_class))
+                self._styles[style.name] = style
 
     def get(self, name):
         """See `IStyleManager`."""
         return self._styles.get(name)
 
-    def lookup(self, mailing_list):
-        """See `IStyleManager`."""
-        matched_styles = []
-        for style in self.styles:
-            style.match(mailing_list, matched_styles)
-        for style in matched_styles:
-            yield style
-
     @property
     def styles(self):
         """See `IStyleManager`."""
-        for style in sorted(self._styles.values(),
-                            key=attrgetter('priority'),
-                            reverse=True):
-            yield style
+        for style_name in sorted(self._styles):
+            yield self._styles[style_name]
 
     def register(self, style):
         """See `IStyleManager`."""

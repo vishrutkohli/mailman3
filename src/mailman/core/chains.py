@@ -28,10 +28,10 @@ __all__ = [
 
 from zope.interface.verify import verifyObject
 
-from mailman.app.finder import find_components
 from mailman.chains.base import Chain, TerminalChainBase
 from mailman.config import config
 from mailman.interfaces.chain import LinkAction, IChain
+from mailman.utilities.modules import find_components
 
 
 

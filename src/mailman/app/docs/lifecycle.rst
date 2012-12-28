@@ -12,64 +12,10 @@ which performs additional tasks such as:
  * validating the list's posting address (which also serves as the list's
    fully qualified name);
  * ensuring that the list's domain is registered;
- * applying all matching styles to the new list;
+ * :ref:`applying a list style <list-creation-styles>` to the new list;
  * creating and assigning list owners;
  * notifying watchers of list creation;
  * creating ancillary artifacts (such as the list's on-disk directory)
-
-
-Posting address validation
-==========================
-
-If you try to use the higher-level interface to create a mailing list with a
-bogus posting address, you get an exception.
-
-    >>> create_list('not a valid address')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: not a valid address
-
-If the posting address is valid, but the domain has not been registered with
-Mailman yet, you get an exception.
-
-    >>> create_list('test@example.org')
-    Traceback (most recent call last):
-    ...
-    BadDomainSpecificationError: example.org
-
-
-Creating a list applies its styles
-==================================
-
-Start by registering a test style.
-::
-
-    >>> from zope.interface import implementer
-    >>> from mailman.interfaces.styles import IStyle
-    >>> @implementer(IStyle)
-    ... class TestStyle(object):
-    ...     name = 'test'
-    ...     priority = 10
-    ...     def apply(self, mailing_list):
-    ...         # Just does something very simple.
-    ...         mailing_list.msg_footer = 'test footer'
-    ...     def match(self, mailing_list, styles):
-    ...         # Applies to any test list
-    ...         if 'test' in mailing_list.fqdn_listname:
-    ...             styles.append(self)
-
-    >>> from zope.component import getUtility
-    >>> from mailman.interfaces.styles import IStyleManager
-    >>> getUtility(IStyleManager).register(TestStyle())
-
-Using the higher level interface for creating a list, applies all matching
-list styles.
-
-    >>> mlist_1 = create_list('test_1@example.com')
-    >>> print mlist_1.fqdn_listname
-    test_1@example.com
-    >>> print mlist_1.msg_footer
-    test footer
 
 
 Creating a list with owners
@@ -77,7 +23,7 @@ Creating a list with owners
 
 You can also specify a list of owner email addresses.  If these addresses are
 not yet known, they will be registered, and new users will be linked to them.
-However the addresses are not verified.
+::
 
     >>> owners = [
     ...     'aperson@example.com',
@@ -85,12 +31,9 @@ However the addresses are not verified.
     ...     'cperson@example.com',
     ...     'dperson@example.com',
     ...     ]
-    >>> mlist_2 = create_list('test_2@example.com', owners)
-    >>> print mlist_2.fqdn_listname
-    test_2@example.com
-    >>> print mlist_2.msg_footer
-    test footer
-    >>> dump_list(address.email for address in mlist_2.owners.addresses)
+
+    >>> ant = create_list('ant@example.com', owners)
+    >>> dump_list(address.email for address in ant.owners.addresses)
     aperson@example.com
     bperson@example.com
     cperson@example.com
@@ -99,37 +42,33 @@ However the addresses are not verified.
 None of the owner addresses are verified.
 
     >>> any(address.verified_on is not None
-    ...     for address in mlist_2.owners.addresses)
+    ...     for address in ant.owners.addresses)
     False
 
 However, all addresses are linked to users.
 
-    >>> # The owners have no names yet
-    >>> len(list(mlist_2.owners.users))
-    4
+    >>> from mailman.interfaces.usermanager import IUserManager
+    >>> from zope.component import getUtility
+    >>> user_manager = getUtility(IUserManager)
+    >>> for address in owners:
+    ...     user = user_manager.get_user(address)
+    ...     print int(user.user_id.int), list(user.addresses)[0]
+    1 aperson@example.com
+    2 bperson@example.com
+    3 cperson@example.com
+    4 dperson@example.com
 
 If you create a mailing list with owner addresses that are already known to
 the system, they won't be created again.
-::
 
-    >>> from mailman.interfaces.usermanager import IUserManager
-    >>> user_manager = getUtility(IUserManager)
-
-    >>> user_a = user_manager.get_user('aperson@example.com')
-    >>> user_b = user_manager.get_user('bperson@example.com')
-    >>> user_c = user_manager.get_user('cperson@example.com')
-    >>> user_d = user_manager.get_user('dperson@example.com')
-    >>> user_a.display_name = 'Anne Person'
-    >>> user_b.display_name = 'Bart Person'
-    >>> user_c.display_name = 'Caty Person'
-    >>> user_d.display_name = 'Dirk Person'
-
-    >>> mlist_3 = create_list('test_3@example.com', owners)
-    >>> dump_list(user.display_name for user in mlist_3.owners.users)
-    Anne Person
-    Bart Person
-    Caty Person
-    Dirk Person
+    >>> bee = create_list('bee@example.com', owners)
+    >>> from operator import attrgetter
+    >>> for user in sorted(bee.owners.users, key=attrgetter('user_id')):
+    ...     print int(user.user_id.int), list(user.addresses)[0]
+    1 aperson@example.com
+    2 bperson@example.com
+    3 cperson@example.com
+    4 dperson@example.com
 
 
 Deleting a list
@@ -140,17 +79,16 @@ artifacts.
 ::
 
     >>> from mailman.app.lifecycle import remove_list
-    >>> remove_list(mlist_2)
+    >>> remove_list(bee)
 
     >>> from mailman.interfaces.listmanager import IListManager
-    >>> from zope.component import getUtility
-    >>> print getUtility(IListManager).get('test_2@example.com')
+    >>> print getUtility(IListManager).get('bee@example.com')
     None
 
 We should now be able to completely recreate the mailing list.
 
-    >>> mlist_2a = create_list('test_2@example.com', owners)
-    >>> dump_list(address.email for address in mlist_2a.owners.addresses)
+    >>> buzz = create_list('bee@example.com', owners)
+    >>> dump_list(address.email for address in bee.owners.addresses)
     aperson@example.com
     bperson@example.com
     cperson@example.com

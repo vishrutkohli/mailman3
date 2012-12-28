@@ -18,6 +18,9 @@
 """3.0b2 -> 3.0b3 schema migrations.
 
 * bans.mailing_list -> bans.list_id
+
+Added:
+* mailinglist.style
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -84,5 +87,6 @@ def upgrade_postgres(database, store, version, module_path):
             WHERE id = {1};
             """.format(_make_listid(mailing_list), id))
     store.execute('ALTER TABLE ban DROP COLUMN mailing_list;')
+    store.execute('ALTER TABLE mailinglist ADD COLUMN style_name;')
     # Record the migration in the version table.
     database.load_schema(store, version, None, module_path)

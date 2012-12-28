@@ -24,6 +24,8 @@ __all__ = [
     'TestMigration20120407MigratedData',
     'TestMigration20120407Schema',
     'TestMigration20120407UnchangedData',
+    'TestMigration20121015MigratedData',
+    'TestMigration20121015Schema',
     ]
 
 
@@ -151,8 +153,10 @@ class TestMigration20120407UnchangedData(MigrationTestBase):
             'mailman.database.tests.data',
             'migration_{0}_1.sql'.format(self._database.TAG))
         self._database.load_sql(self._database.store, sample_data)
-        # Update to the current migration we're testing.
-        self._database.load_migrations('20120407000000')
+        # XXX 2012-12-28: We have to load the last migration defined in the
+        # system, otherwise the ORM model will not match the SQL table
+        # definitions and we'll get OperationalErrors from SQLite.
+        self._database.load_migrations('20121015000000')
 
     def test_migration_domains(self):
         # Test that the domains table, which isn't touched, doesn't change.
@@ -216,8 +220,10 @@ class TestMigration20120407MigratedData(MigrationTestBase):
         self._database.load_sql(self._database.store, sample_data)
 
     def _upgrade(self):
-        # Update to the current migration we're testing.
-        self._database.load_migrations('20120407000000')
+        # XXX 2012-12-28: We have to load the last migration defined in the
+        # system, otherwise the ORM model will not match the SQL table
+        # definitions and we'll get OperationalErrors from SQLite.
+        self._database.load_migrations('20121015000000')
 
     def test_migration_archive_policy_never_0(self):
         # Test that the new archive_policy value is updated correctly.  In the
@@ -369,6 +375,10 @@ class TestMigration20121015Schema(MigrationTestBase):
                               ['20121014999999'],
                               ('list_id',),
                               ('mailing_list',))
+        self._missing_present('mailinglist',
+                              ['20121014999999'],
+                              ('style_name',),
+                              ())
 
     def test_post_upgrade_column_migrations(self):
         self._missing_present('ban',
@@ -376,6 +386,11 @@ class TestMigration20121015Schema(MigrationTestBase):
                                '20121015000000'],
                               ('mailing_list',),
                               ('list_id',))
+        self._missing_present('mailinglist',
+                              ['20121014999999',
+                               '20121015000000'],
+                              (),
+                              ('style_name',))
 
 
 class TestMigration20121015MigratedData(MigrationTestBase):

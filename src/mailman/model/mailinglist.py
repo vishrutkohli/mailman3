@@ -87,6 +87,7 @@ class MailingList(Model):
     include_rfc2369_headers = Bool()
     advertised = Bool()
     anonymous_list = Bool()
+    style_name = Unicode()
     # Attributes not directly modifiable via the web u/i
     created_at = DateTime()
     admin_member_chunksize = Int()
