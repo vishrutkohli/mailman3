@@ -375,10 +375,6 @@ class TestMigration20121015Schema(MigrationTestBase):
                               ['20121014999999'],
                               ('list_id',),
                               ('mailing_list',))
-        self._missing_present('mailinglist',
-                              ['20121014999999'],
-                              ('style_name',),
-                              ())
 
     def test_post_upgrade_column_migrations(self):
         self._missing_present('ban',
@@ -386,13 +382,9 @@ class TestMigration20121015Schema(MigrationTestBase):
                                '20121015000000'],
                               ('mailing_list',),
                               ('list_id',))
-        self._missing_present('mailinglist',
-                              ['20121014999999',
-                               '20121015000000'],
-                              (),
-                              ('style_name',))
 
 
+
 class TestMigration20121015MigratedData(MigrationTestBase):
     """Test non-migrated data."""
 

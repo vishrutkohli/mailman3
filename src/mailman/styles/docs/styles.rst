@@ -26,14 +26,14 @@ style is applied.
 
     >>> from mailman.interfaces.listmanager import IListManager
     >>> mlist = getUtility(IListManager).create('ant@example.com')
-    >>> print mlist.style_name
+    >>> print mlist.display_name
     None
 
-By applying a style, the style name gets assigned.
+The default style sets the list's display name.
 
     >>> manager.get('default').apply(mlist)
-    >>> print mlist.list_id, mlist.style_name
-    ant.example.com default
+    >>> print mlist.display_name
+    Ant
 
 
 Registering styles
@@ -48,8 +48,7 @@ New styles must implement the ``IStyle`` interface.
     ...     name = 'a-test-style'
     ...     def apply(self, mailing_list):
     ...         # Just does something very simple.
-    ...         mailing_list.style_name = self.name
-    ...         mailing_list.style_thing = 'thing 1'
+    ...         mailing_list.display_name = 'TEST STYLE LIST'
 
 You can register a new style with the style manager.
 
@@ -99,13 +98,11 @@ Now, when we use the high level API, we can ask for the style to be applied.
 
     >>> from mailman.app.lifecycle import create_list
     >>> mlist = create_list('bee@example.com', style_name=test_style.name)
-    >>> print mlist.list_id, mlist.style_name
-    bee.example.com a-test-style
 
 The style has been applied.
 
-    >>> print mlist.style_thing
-    thing 1
+    >>> print mlist.display_name
+    TEST STYLE LIST
 
 If no style name is provided when creating the list, the system default style
 (which may or may not be the style named 'default') is applied.
@@ -115,8 +112,7 @@ If no style name is provided when creating the list, the system default style
     ...     name = 'another-style'
     ...     def apply(self, mailing_list):
     ...         # Just does something very simple.
-    ...         mailing_list.style_name = self.name
-    ...         mailing_list.style_thing = 'thing 2'
+    ...         mailing_list.display_name = 'ANOTHER STYLE LIST'
     >>> another_style = AnotherStyle()
 
 We'll set up the system default to apply this newly registered style if no
@@ -126,7 +122,5 @@ other style is explicitly given.
     >>> with configuration('styles', default=another_style.name):
     ...     manager.register(another_style)
     ...     mlist = create_list('cat@example.com')
-    >>> print mlist.style_name
-    another-style
-    >>> print mlist.style_thing
-    thing 2
+    >>> print mlist.display_name
+    ANOTHER STYLE LIST

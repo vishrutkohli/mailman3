@@ -87,7 +87,6 @@ class MailingList(Model):
     include_rfc2369_headers = Bool()
     advertised = Bool()
     anonymous_list = Bool()
-    style_name = Unicode()
     # Attributes not directly modifiable via the web u/i
     created_at = DateTime()
     admin_member_chunksize = Int()
@@ -211,9 +210,9 @@ class MailingList(Model):
         # that's not the case when the constructor is called.  So, set up the
         # rosters explicitly.
         self.__storm_loaded__()
-        self.personalize = Personalization.none
-        self.display_name = string.capwords(
-            SPACE.join(listname.split(UNDERSCORE)))
+        ## self.personalize = Personalization.none
+        ## self.display_name = string.capwords(
+        ##     SPACE.join(listname.split(UNDERSCORE)))
         makedirs(self.data_path)
 
     def __storm_loaded__(self):

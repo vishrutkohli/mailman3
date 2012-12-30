@@ -14,7 +14,7 @@ Here is a history of user visible changes to Mailman.
 
 Compatibility
 -------------
- * Python 2.7 is not required.  Python 2.6 is no longer officially supported.
+ * Python 2.7 is now required.  Python 2.6 is no longer officially supported.
    The code base is now also `python2.7 -3` clean, although there are still
    some warnings in 3rd party dependencies.  (LP: #1073506)
 
@@ -33,6 +33,9 @@ REST
    - `_mod_sender` -> `sender`
    - `_mod_message_id` -> `message_id`
 
+ * List styles are supported through the REST API.  Get the list of available
+   styles (by name) via `.../lists/styles`.  Create a list in a specific style
+   by using POST data `style_name=<style>`.  (LP: #675692)
  * Allow the getting/setting of IMailingList.subject_prefix via the REST API
    (given by Terri Oda).  (LP: #1062893)
  * Expose a REST API for membership change (subscriptions and unsubscriptions)

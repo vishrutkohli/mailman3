@@ -20,4 +20,3 @@ INSERT INTO ban_backup SELECT
     FROM ban;
 
 ALTER TABLE ban_backup ADD COLUMN list_id TEXT;
-ALTER TABLE mailinglist ADD COLUMN style_name TEXT;

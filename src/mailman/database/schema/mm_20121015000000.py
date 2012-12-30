@@ -87,6 +87,5 @@ def upgrade_postgres(database, store, version, module_path):
             WHERE id = {1};
             """.format(_make_listid(mailing_list), id))
     store.execute('ALTER TABLE ban DROP COLUMN mailing_list;')
-    store.execute('ALTER TABLE mailinglist ADD COLUMN style_name;')
     # Record the migration in the version table.
     database.load_schema(store, version, None, module_path)
