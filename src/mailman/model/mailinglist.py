@@ -88,7 +88,6 @@ class MailingList(Model):
     anonymous_list = Bool()
     # Attributes not directly modifiable via the web u/i
     created_at = DateTime()
-    admin_member_chunksize = Int()
     # Attributes which are directly modifiable via the web u/i.  The more
     # complicated attributes are currently stored as pickles, though that
     # will change as the schema and implementation is developed.

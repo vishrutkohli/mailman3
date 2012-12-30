@@ -81,6 +81,7 @@ Database
    - `mailinglist.unsubscribe_policy`
    - `mailinglist.subscribe_auto_approval`
    - `mailinglist.private_roster`
+   - `mailinglist.admin_member_chunksize`
 
 Interfaces
 ----------

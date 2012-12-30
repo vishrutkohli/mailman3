@@ -28,6 +28,7 @@ ALTER TABLE ban_backup ADD COLUMN list_id TEXT;
 -- REM unsubscribe_policy
 -- REM subscribe_auto_approval
 -- REM private_roster
+-- REM admin_member_chunksize
 
 CREATE TABLE ml_backup (
     id INTEGER NOT NULL,
@@ -36,7 +37,6 @@ CREATE TABLE ml_backup (
     allow_list_posts BOOLEAN,
     include_rfc2369_headers BOOLEAN,
     created_at TIMESTAMP,
-    admin_member_chunksize INTEGER,
     next_request_id INTEGER,
     next_digest_number INTEGER,
     digest_last_sent_at TIMESTAMP,
@@ -137,7 +137,6 @@ INSERT INTO ml_backup SELECT
     allow_list_posts,
     include_rfc2369_headers,
     created_at,
-    admin_member_chunksize,
     next_request_id,
     next_digest_number,
     digest_last_sent_at,

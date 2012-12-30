@@ -96,8 +96,10 @@ def upgrade_postgres(database, store, version, module_path):
     store.execute('ALTER TABLE mailinglist DROP COLUMN send_reminders;')
     store.execute('ALTER TABLE mailinglist DROP COLUMN subscribe_policy;')
     store.execute('ALTER TABLE mailinglist DROP COLUMN unsubscribe_policy;')
-    store.execute('ALTER TABLE mailinglist DROP COLUMN private_roster;')
     store.execute(
         'ALTER TABLE mailinglist DROP COLUMN subscribe_auto_approval;')
+    store.execute('ALTER TABLE mailinglist DROP COLUMN private_roster;')
+    store.execute(
+        'ALTER TABLE mailinglist DROP COLUMN admin_member_chunksize;')
     # Record the migration in the version table.
     database.load_schema(store, version, None, module_path)

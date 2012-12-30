@@ -380,7 +380,8 @@ class TestMigration20121015Schema(MigrationTestBase):
                               (),
                               ('new_member_options', 'send_reminders',
                                'subscribe_policy', 'unsubscribe_policy',
-                               'subscribe_auto_approval', 'private_roster'),
+                               'subscribe_auto_approval', 'private_roster',
+                               'admin_member_chunksize'),
                               )
 
     def test_post_upgrade_column_migrations(self):
@@ -394,7 +395,8 @@ class TestMigration20121015Schema(MigrationTestBase):
                                '20121015000000'],
                               ('new_member_options', 'send_reminders',
                                'subscribe_policy', 'unsubscribe_policy',
-                               'subscribe_auto_approval', 'private_roster'),
+                               'subscribe_auto_approval', 'private_roster',
+                               'admin_member_chunksize'),
                               ())
 
 
