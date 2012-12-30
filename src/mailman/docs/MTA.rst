@@ -21,7 +21,7 @@ for the popular open source mail servers.
 
 Note that Mailman provides lots of configuration variables that you can use to
 tweak performance for your operating environment.  See the
-`src/mailman/config/schema.cfg` file for details.
+``src/mailman/config/schema.cfg`` file for details.
 
 
 Exim
@@ -40,7 +40,7 @@ Mailman settings
 ----------------
 
 You need to tell Mailman that you are using the Postfix mail server.  In your
-`mailman.cfg` file, add the following section::
+``mailman.cfg`` file, add the following section::
 
     [mta]
     incoming: mailman.mta.postfix.LMTP
@@ -51,8 +51,8 @@ You need to tell Mailman that you are using the Postfix mail server.  In your
     smtp_port: 25
 
 Some of these settings are already the default, so take a look at Mailman's
-`src/mailman/config/schema.cfg` file for details.  You'll need to change the
-`lmtp_host` and `smtp_host` to the appropriate host names of course.
+``src/mailman/config/schema.cfg`` file for details.  You'll need to change the
+``lmtp_host`` and ``smtp_host`` to the appropriate host names of course.
 Generally, Postfix will listen for incoming SMTP connections on port 25.
 Postfix will deliver via LMTP over port 24 by default, however if you are not
 running Mailman as root, you'll need to change this to a higher port number,
@@ -63,7 +63,7 @@ Basic Postfix connections
 -------------------------
 
 There are several ways to hook Postfix up to Mailman, so here are the simplest
-instructions.  The following settings should be added to Postfix's `main.cf`
+instructions.  The following settings should be added to Postfix's ``main.cf``
 file.
 
 Mailman supports a technique called `Variable Envelope Return Path`_ (VERP) to
@@ -76,14 +76,14 @@ handle Mailman's VERP'd messages::
 
 In older versions of Postfix, unknown local recipients generated a temporary
 failure.  It's much better (and the default in newer Postfix releases) to
-treat them as permanent failures.  You can add this to your `main.cf` file if
-needed (use the `postconf`_ to check the defaults)::
+treat them as permanent failures.  You can add this to your ``main.cf`` file
+if needed (use the `postconf`_ command to check the defaults)::
 
     unknown_local_recipient_reject_code = 550
 
-While generally not necessary if you set `recipient_delimiter` as described
-above, it's better for Postfix to not treat `owner-` and `-request` addresses
-specially::
+While generally not necessary if you set ``recipient_delimiter`` as described
+above, it's better for Postfix to not treat ``owner-`` and ``-request``
+addresses specially::
 
     owner_request_special = no
 
@@ -93,9 +93,9 @@ Transport maps
 
 By default, Mailman works well with Postfix transport maps as a way to deliver
 incoming messages to Mailman's LMTP server.  Mailman will automatically write
-the correct transport map when its `bin/mailman aliases` command is run, or
+the correct transport map when its ``bin/mailman aliases`` command is run, or
 whenever a mailing list is created or removed via other commands.  To connect
-Postfix to Mailman's LMTP server, add the following to Postfix's `main.cf`
+Postfix to Mailman's LMTP server, add the following to Postfix's ``main.cf``
 file::
 
     transport_maps =
@@ -105,8 +105,8 @@ file::
     relay_domains =
         hash:/path-to-mailman/var/data/postfix_domains
 
-where `path-to-mailman` is replaced with the actual path that you're running
-Mailman from.  Setting `local_recipient_maps` as well as `transport_maps`
+where ``path-to-mailman`` is replaced with the actual path that you're running
+Mailman from.  Setting ``local_recipient_maps`` as well as ``transport_maps``
 allows Postfix to properly reject all messages destined for non-existent local
 users.  Setting `relay_domains`_ means Postfix will start to accept mail for
 newly added domains even if they are not part of `mydestination`_.
@@ -114,7 +114,7 @@ newly added domains even if they are not part of `mydestination`_.
 Note that if you are not using virtual domains, then `relay_domains`_ isn't
 strictly needed (but it is harmless).  All you need to do in this scenario is
 to make sure that Postfix accepts mail for your one domain, normally by
-including it in `mydestination`.
+including it in ``mydestination``.
 
 
 Postfix documentation

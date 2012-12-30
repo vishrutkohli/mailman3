@@ -23,8 +23,8 @@ and there is a community driven wiki at
 
     http://wiki.list.org
 
-For more information on Mailman, see the above web sites, or the documentation
-provided with this software.  Start at src/mailman/docs/README.txt.
+For more information on Mailman, see the above web sites, or the
+:ref:`documentation provided with this software <start-here>`.
 
 
 Table of Contents
@@ -40,6 +40,7 @@ Table of Contents
     src/mailman/docs/8-miles-high
     src/mailman/docs/WebUIin5
     src/mailman/docs/ArchiveUIin5
+    src/mailman/docs/DEVELOP
 
 
 Mailman modules
@@ -50,20 +51,20 @@ These documents are generated from the doctest suite.
 .. toctree::
     :glob:
 
-    src/mailman/bin/docs/*
-    src/mailman/commands/docs/*
-    src/mailman/database/docs/*
     src/mailman/model/docs/*
+    src/mailman/runners/docs/*
+    src/mailman/chains/docs/*
+    src/mailman/rules/docs/*
+    src/mailman/handlers/docs/*
+    src/mailman/rest/docs/*
     src/mailman/core/docs/*
     src/mailman/app/docs/*
     src/mailman/styles/docs/*
-    src/mailman/runners/docs/*
-    src/mailman/handlers/docs/*
-    src/mailman/rest/docs/*
-    src/mailman/chains/docs/*
-    src/mailman/rules/docs/*
     src/mailman/archiving/docs/*
     src/mailman/mta/docs/*
+    src/mailman/database/docs/*
+    src/mailman/bin/docs/*
+    src/mailman/commands/docs/*
     src/mailman/docs/NEWS
     src/mailman/docs/STYLEGUIDE
     src/mailman/docs/ACKNOWLEDGMENTS
