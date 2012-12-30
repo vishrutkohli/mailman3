@@ -69,7 +69,6 @@ class DefaultStyle:
         mlist.admin_immed_notify = True
         mlist.admin_notify_mchanges = False
         mlist.require_explicit_destination = True
-        mlist.send_reminders = True
         mlist.send_welcome_message = True
         mlist.send_goodbye_message = True
         mlist.bounce_matching_headers = """

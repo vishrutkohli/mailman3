@@ -378,7 +378,8 @@ class TestMigration20121015Schema(MigrationTestBase):
         self._missing_present('mailinglist',
                               ['20121014999999'],
                               (),
-                              ('new_member_options',))
+                              ('new_member_options', 'send_reminders'),
+                              )
 
     def test_post_upgrade_column_migrations(self):
         self._missing_present('ban',
@@ -389,7 +390,7 @@ class TestMigration20121015Schema(MigrationTestBase):
         self._missing_present('mailinglist',
                               ['20121014999999',
                                '20121015000000'],
-                              ('new_member_options',),
+                              ('new_member_options', 'send_reminders'),
                               ())
 
 

@@ -23,6 +23,7 @@ ALTER TABLE ban_backup ADD COLUMN list_id TEXT;
 
 -- REMOVALS from the mailinglist table.
 -- REM new_member_options
+-- REM send_reminders
 
 CREATE TABLE ml_backup (
     id INTEGER NOT NULL,
@@ -113,7 +114,6 @@ CREATE TABLE ml_backup (
     respond_to_post_requests BOOLEAN,
     scrub_nondigest BOOLEAN,
     send_goodbye_message BOOLEAN,
-    send_reminders BOOLEAN,
     send_welcome_message BOOLEAN,
     subject_prefix TEXT,
     subscribe_auto_approval BLOB,
@@ -219,7 +219,6 @@ INSERT INTO ml_backup SELECT
     respond_to_post_requests,
     scrub_nondigest,
     send_goodbye_message,
-    send_reminders,
     send_welcome_message,
     subject_prefix,
     subscribe_auto_approval,

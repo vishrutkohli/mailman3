@@ -183,7 +183,6 @@ class MailingList(Model):
     respond_to_post_requests = Bool()
     scrub_nondigest = Bool()
     send_goodbye_message = Bool()
-    send_reminders = Bool()
     send_welcome_message = Bool()
     subject_prefix = Unicode()
     subscribe_auto_approval = Pickle()
