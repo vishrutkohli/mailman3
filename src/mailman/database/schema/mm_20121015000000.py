@@ -68,9 +68,12 @@ def upgrade_sqlite(database, store, version, module_path):
             UPDATE ban_backup SET list_id = '{0}'
             WHERE id = {1};
             """.format(_make_listid(mailing_list), id))
-    # Pivot the backup table to the real thing.
+    # Pivot the bans backup table to the real thing.
     store.execute('DROP TABLE ban;')
     store.execute('ALTER TABLE ban_backup RENAME TO ban;')
+    # Pivot the mailinglist backup table to the real thing.
+    store.execute('DROP TABLE mailinglist;')
+    store.execute('ALTER TABLE ml_backup RENAME TO mailinglist;')
 
 
 
@@ -87,5 +90,6 @@ def upgrade_postgres(database, store, version, module_path):
             WHERE id = {1};
             """.format(_make_listid(mailing_list), id))
     store.execute('ALTER TABLE ban DROP COLUMN mailing_list;')
+    store.execute('ALTER TABLE mailinglist DROP COLUMN new_member_options;')
     # Record the migration in the version table.
     database.load_schema(store, version, None, module_path)

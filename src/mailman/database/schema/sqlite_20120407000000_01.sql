@@ -34,7 +34,7 @@
 -- LP: #1024509
 
 
-CREATE TABLE ml_backup(
+CREATE TABLE ml_backup (
     id INTEGER NOT NULL,
     -- List identity
     list_name TEXT,

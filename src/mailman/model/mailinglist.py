@@ -26,7 +26,6 @@ __all__ = [
 
 
 import os
-import string
 
 from storm.locals import (
     And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, Store,
@@ -163,7 +162,6 @@ class MailingList(Model):
     member_moderation_notice = Unicode()
     mime_is_default_digest = Bool()
     moderator_password = RawStr()
-    new_member_options = Int()
     newsgroup_moderation = Enum(NewsgroupModeration)
     nntp_prefix_subject_too = Bool()
     nondigestable = Bool()

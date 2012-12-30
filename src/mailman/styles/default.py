@@ -59,7 +59,6 @@ class DefaultStyle:
         # Most of these were ripped from the old MailList.InitVars() method.
         mlist.volume = 1
         mlist.post_id = 1
-        mlist.new_member_options = 256
         mlist.respond_to_post_requests = True
         mlist.advertised = True
         mlist.max_num_recipients = 10
