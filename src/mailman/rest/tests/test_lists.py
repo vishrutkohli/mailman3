@@ -112,3 +112,50 @@ class TestLists(unittest.TestCase):
             'http://localhost:9001/3.0/lists/test@example.com')
         self.assertEqual(response.status, 200)
         self.assertEqual(resource['member_count'], 2)
+
+    def test_query_for_lists_in_missing_domain(self):
+        # You cannot ask all the mailing lists in a non-existent domain.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/no.example.org/lists')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_cannot_create_list_in_missing_domain(self):
+        # You cannot create a mailing list in a domain that does not exist.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists', {
+                     'fqdn_listname': 'ant@no-domain.example.org',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Domain does not exist: no-domain.example.org')
+
+    def test_cannot_create_duplicate_list(self):
+        # You cannot create a list that already exists.
+        call_api('http://localhost:9001/3.0/lists', {
+                 'fqdn_listname': 'ant@example.com',
+                 })
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists', {
+                     'fqdn_listname': 'ant@example.com',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Mailing list exists')
+
+    def test_cannot_delete_missing_list(self):
+        # You cannot delete a list that does not exist.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/bee.example.com',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_cannot_delete_already_deleted_list(self):
+        # You cannot delete a list twice.
+        call_api('http://localhost:9001/3.0/lists', {
+                 'fqdn_listname': 'ant@example.com',
+                 })
+        call_api('http://localhost:9001/3.0/lists/ant.example.com',
+                 method='DELETE')
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/ant.example.com',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)

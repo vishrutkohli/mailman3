@@ -35,7 +35,7 @@ REST
 
  * List styles are supported through the REST API.  Get the list of available
    styles (by name) via `.../lists/styles`.  Create a list in a specific style
-   by using POST data `style_name=<style>`.  (LP: #675692)
+   by using POST data `style_name=<style>`.  (LP: #975692)
  * Allow the getting/setting of IMailingList.subject_prefix via the REST API
    (given by Terri Oda).  (LP: #1062893)
  * Expose a REST API for membership change (subscriptions and unsubscriptions)

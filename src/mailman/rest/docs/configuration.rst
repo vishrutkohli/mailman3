@@ -4,7 +4,7 @@ Mailing list configuration
 
 Mailing lists can be configured via the REST API.
 
-    >>> mlist = create_list('test-one@example.com')
+    >>> mlist = create_list('ant@example.com')
     >>> transaction.commit()
 
 
@@ -13,8 +13,7 @@ Reading a configuration
 
 All readable attributes for a list are available on a sub-resource.
 
-    >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config')
+    >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/config')
     acceptable_aliases: []
     admin_immed_notify: True
     admin_notify_mchanges: False
@@ -30,7 +29,7 @@ All readable attributes for a list are available on a sub-resource.
     autoresponse_owner_text:
     autoresponse_postings_text:
     autoresponse_request_text:
-    bounces_address: test-one-bounces@example.com
+    bounces_address: ant-bounces@example.com
     collapse_alternatives: True
     convert_html_to_plaintext: False
     created_at: 20...T...
@@ -39,27 +38,27 @@ All readable attributes for a list are available on a sub-resource.
     description:
     digest_last_sent_at: None
     digest_size_threshold: 30.0
-    display_name: Test-one
+    display_name: Ant
     filter_content: False
-    fqdn_listname: test-one@example.com
+    fqdn_listname: ant@example.com
     http_etag: "..."
     include_rfc2369_headers: True
-    join_address: test-one-join@example.com
+    join_address: ant-join@example.com
     last_post_at: None
-    leave_address: test-one-leave@example.com
-    list_name: test-one
+    leave_address: ant-leave@example.com
+    list_name: ant
     mail_host: example.com
     next_digest_number: 1
     no_reply_address: noreply@example.com
-    owner_address: test-one-owner@example.com
+    owner_address: ant-owner@example.com
     post_id: 1
-    posting_address: test-one@example.com
+    posting_address: ant@example.com
     posting_pipeline: default-posting-pipeline
     reply_goes_to_list: no_munging
-    request_address: test-one-request@example.com
+    request_address: ant-request@example.com
     scheme: http
     send_welcome_message: True
-    subject_prefix: [Test-one]
+    subject_prefix: [Ant]
     volume: 1
     web_host: lists.example.com
     welcome_message_uri: mailman:///welcome.txt
@@ -74,7 +73,7 @@ all the writable attributes in one request.
 
     >>> from mailman.interfaces.action import Action
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(
     ...             acceptable_aliases=['one@example.com', 'two@example.com'],
     ...             admin_immed_notify=False,
@@ -101,7 +100,7 @@ all the writable attributes in one request.
     ...             collapse_alternatives=False,
     ...             reply_goes_to_list='point_to_list',
     ...             send_welcome_message=False,
-    ...             subject_prefix='[test-one]',
+    ...             subject_prefix='[ant]',
     ...             welcome_message_uri='mailman:///welcome.txt',
     ...             default_member_action='hold',
     ...             default_nonmember_action='discard',
@@ -115,8 +114,8 @@ all the writable attributes in one request.
 These values are changed permanently.
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config')
-    acceptable_aliases: [u'one@example.com', u'two@example.com']
+    ...           'ant@example.com/config')
+    acceptable_aliases: ['one@example.com', 'two@example.com']
     admin_immed_notify: False
     admin_notify_mchanges: True
     administrivia: False
@@ -149,7 +148,7 @@ These values are changed permanently.
     reply_goes_to_list: point_to_list
     ...
     send_welcome_message: False
-    subject_prefix: [test-one]
+    subject_prefix: [ant]
     ...
     welcome_message_uri: mailman:///welcome.txt
 
@@ -157,7 +156,7 @@ If you use ``PUT`` to change a list's configuration, all writable attributes
 must be included.  It is an error to leave one or more out...
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(
     ...             #acceptable_aliases=['one', 'two'],
     ...             admin_immed_notify=False,
@@ -184,7 +183,7 @@ must be included.  It is an error to leave one or more out...
     ...             collapse_alternatives=False,
     ...             reply_goes_to_list='point_to_list',
     ...             send_welcome_message=True,
-    ...             subject_prefix='[test-one]',
+    ...             subject_prefix='[ant]',
     ...             welcome_message_uri='welcome message',
     ...             default_member_action='accept',
     ...             default_nonmember_action='accept',
@@ -197,7 +196,7 @@ must be included.  It is an error to leave one or more out...
 ...or to add an unknown one.
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(
     ...             a_mailing_list_attribute=False,
     ...             acceptable_aliases=['one', 'two'],
@@ -220,7 +219,7 @@ must be included.  It is an error to leave one or more out...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
-    ...             subject_prefix='[test-one]',
+    ...             subject_prefix='[ant]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -233,7 +232,7 @@ must be included.  It is an error to leave one or more out...
 It is also an error to spell an attribute value incorrectly...
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(
     ...             admin_immed_notify='Nope',
     ...             acceptable_aliases=['one', 'two'],
@@ -254,7 +253,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
-    ...             subject_prefix='[test-one]',
+    ...             subject_prefix='[ant]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -267,7 +266,7 @@ It is also an error to spell an attribute value incorrectly...
 ...or to name a pipeline that doesn't exist...
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(
     ...             acceptable_aliases=['one', 'two'],
     ...             admin_immed_notify=False,
@@ -288,7 +287,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='dummy',
-    ...             subject_prefix='[test-one]',
+    ...             subject_prefix='[ant]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -301,7 +300,7 @@ It is also an error to spell an attribute value incorrectly...
 ...or to name an invalid auto-response enumeration value.
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(
     ...             acceptable_aliases=['one', 'two'],
     ...             admin_immed_notify=False,
@@ -321,7 +320,7 @@ It is also an error to spell an attribute value incorrectly...
     ...             allow_list_posts=False,
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
-    ...             subject_prefix='[test-one]',
+    ...             subject_prefix='[ant]',
     ...             filter_content=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
@@ -338,7 +337,7 @@ Changing a partial configuration
 Using ``PATCH``, you can change just one attribute.
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config',
+    ...           'ant@example.com/config',
     ...           dict(display_name='My List'),
     ...           'PATCH')
     content-length: 0
@@ -372,7 +371,7 @@ emails.  By default, a mailing list has no acceptable aliases.
     >>> IAcceptableAliasSet(mlist).clear()
     >>> transaction.commit()
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config/acceptable_aliases')
+    ...           'ant@example.com/config/acceptable_aliases')
     acceptable_aliases: []
     http_etag: "..."
 
@@ -380,7 +379,7 @@ We can add a few by ``PUT``-ing them on the sub-resource.  The keys in the
 dictionary are ignored.
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'test-one@example.com/config/acceptable_aliases',
+    ...           'ant@example.com/config/acceptable_aliases',
     ...           dict(acceptable_aliases=['foo@example.com',
     ...                                    'bar@example.net']),
     ...           'PUT')
@@ -393,7 +392,7 @@ Aliases are returned as a list on the ``aliases`` key.
 
     >>> response = call_http(
     ...     'http://localhost:9001/3.0/lists/'
-    ...     'test-one@example.com/config/acceptable_aliases')
+    ...     'ant@example.com/config/acceptable_aliases')
     >>> for alias in response['acceptable_aliases']:
     ...     print alias
     bar@example.net
