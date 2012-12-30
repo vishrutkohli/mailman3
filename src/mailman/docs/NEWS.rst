@@ -73,8 +73,13 @@ Database
 --------
  * The `ban` table now uses list-ids to cross-reference the mailing list,
    since these cannot change even if the mailing list is moved or renamed.
- * The columns `mailinglist.new_member_options` and
-   `mailinglist.send_reminders` were unused, and have been removed.
+ * The following columns were unused and have been removed:
+
+   - `mailinglist.new_member_options`
+   - `mailinglist.send_reminders`
+   - `mailinglist.subscribe_policy`
+   - `mailinglist.unsubscribe_policy`
+   - `mailinglist.subscribe_auto_approval`
 
 Interfaces
 ----------

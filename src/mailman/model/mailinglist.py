@@ -185,12 +185,9 @@ class MailingList(Model):
     send_goodbye_message = Bool()
     send_welcome_message = Bool()
     subject_prefix = Unicode()
-    subscribe_auto_approval = Pickle()
-    subscribe_policy = Int()
     topics = Pickle()
     topics_bodylines_limit = Int()
     topics_enabled = Bool()
-    unsubscribe_policy = Int()
     welcome_message_uri = Unicode()
 
     def __init__(self, fqdn_listname):
