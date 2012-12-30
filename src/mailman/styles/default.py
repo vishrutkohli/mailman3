@@ -84,7 +84,6 @@ from: .*@uplinkpro.com
         mlist.info = ''
         mlist.welcome_message_uri = 'mailman:///welcome.txt'
         mlist.goodbye_message_uri = ''
-        mlist.private_roster = 1
         mlist.obscure_addresses = True
         mlist.admin_member_chunksize = 30
         mlist.administrivia = True

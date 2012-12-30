@@ -24,6 +24,10 @@ ALTER TABLE ban_backup ADD COLUMN list_id TEXT;
 -- REMOVALS from the mailinglist table.
 -- REM new_member_options
 -- REM send_reminders
+-- REM subscribe_policy
+-- REM unsubscribe_policy
+-- REM subscribe_auto_approval
+-- REM private_roster
 
 CREATE TABLE ml_backup (
     id INTEGER NOT NULL,
@@ -105,7 +109,6 @@ CREATE TABLE ml_backup (
     posting_chain TEXT,
     posting_pipeline TEXT,
     preferred_language TEXT,
-    private_roster BOOLEAN,
     display_name TEXT,
     reject_these_nonmembers BLOB,
     reply_goes_to_list INTEGER,
@@ -207,7 +210,6 @@ INSERT INTO ml_backup SELECT
     posting_chain,
     posting_pipeline,
     preferred_language,
-    private_roster,
     display_name,
     reject_these_nonmembers,
     reply_goes_to_list,

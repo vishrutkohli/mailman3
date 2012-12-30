@@ -80,6 +80,7 @@ Database
    - `mailinglist.subscribe_policy`
    - `mailinglist.unsubscribe_policy`
    - `mailinglist.subscribe_auto_approval`
+   - `mailinglist.private_roster`
 
 Interfaces
 ----------

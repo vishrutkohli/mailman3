@@ -174,7 +174,6 @@ class MailingList(Model):
     posting_chain = Unicode()
     posting_pipeline = Unicode()
     _preferred_language = Unicode(name='preferred_language')
-    private_roster = Bool()
     display_name = Unicode()
     reject_these_nonmembers = Pickle()
     reply_goes_to_list = Enum(ReplyToMunging)
