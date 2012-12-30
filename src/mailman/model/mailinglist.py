@@ -210,9 +210,6 @@ class MailingList(Model):
         # that's not the case when the constructor is called.  So, set up the
         # rosters explicitly.
         self.__storm_loaded__()
-        ## self.personalize = Personalization.none
-        ## self.display_name = string.capwords(
-        ##     SPACE.join(listname.split(UNDERSCORE)))
         makedirs(self.data_path)
 
     def __storm_loaded__(self):
