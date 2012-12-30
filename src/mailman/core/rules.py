@@ -27,9 +27,9 @@ __all__ = [
 
 from zope.interface.verify import verifyObject
 
-from mailman.app.finder import find_components
 from mailman.config import config
 from mailman.interfaces.rules import IRule
+from mailman.utilities.modules import find_components
 
 
 

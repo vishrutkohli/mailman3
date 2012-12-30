@@ -26,7 +26,6 @@ __all__ = [
 
 
 import os
-import string
 
 from storm.locals import (
     And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, Store,
@@ -89,7 +88,6 @@ class MailingList(Model):
     anonymous_list = Bool()
     # Attributes not directly modifiable via the web u/i
     created_at = DateTime()
-    admin_member_chunksize = Int()
     # Attributes which are directly modifiable via the web u/i.  The more
     # complicated attributes are currently stored as pickles, though that
     # will change as the schema and implementation is developed.
@@ -163,7 +161,6 @@ class MailingList(Model):
     member_moderation_notice = Unicode()
     mime_is_default_digest = Bool()
     moderator_password = RawStr()
-    new_member_options = Int()
     newsgroup_moderation = Enum(NewsgroupModeration)
     nntp_prefix_subject_too = Bool()
     nondigestable = Bool()
@@ -176,7 +173,6 @@ class MailingList(Model):
     posting_chain = Unicode()
     posting_pipeline = Unicode()
     _preferred_language = Unicode(name='preferred_language')
-    private_roster = Bool()
     display_name = Unicode()
     reject_these_nonmembers = Pickle()
     reply_goes_to_list = Enum(ReplyToMunging)
@@ -185,15 +181,11 @@ class MailingList(Model):
     respond_to_post_requests = Bool()
     scrub_nondigest = Bool()
     send_goodbye_message = Bool()
-    send_reminders = Bool()
     send_welcome_message = Bool()
     subject_prefix = Unicode()
-    subscribe_auto_approval = Pickle()
-    subscribe_policy = Int()
     topics = Pickle()
     topics_bodylines_limit = Int()
     topics_enabled = Bool()
-    unsubscribe_policy = Int()
     welcome_message_uri = Unicode()
 
     def __init__(self, fqdn_listname):
@@ -210,9 +202,6 @@ class MailingList(Model):
         # that's not the case when the constructor is called.  So, set up the
         # rosters explicitly.
         self.__storm_loaded__()
-        self.personalize = Personalization.none
-        self.display_name = string.capwords(
-            SPACE.join(listname.split(UNDERSCORE)))
         makedirs(self.data_path)
 
     def __storm_loaded__(self):

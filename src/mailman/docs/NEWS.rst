@@ -14,7 +14,7 @@ Here is a history of user visible changes to Mailman.
 
 Compatibility
 -------------
- * Python 2.7 is not required.  Python 2.6 is no longer officially supported.
+ * Python 2.7 is now required.  Python 2.6 is no longer officially supported.
    The code base is now also `python2.7 -3` clean, although there are still
    some warnings in 3rd party dependencies.  (LP: #1073506)
 
@@ -33,6 +33,9 @@ REST
    - `_mod_sender` -> `sender`
    - `_mod_message_id` -> `message_id`
 
+ * List styles are supported through the REST API.  Get the list of available
+   styles (by name) via `.../lists/styles`.  Create a list in a specific style
+   by using POST data `style_name=<style>`.  (LP: #975692)
  * Allow the getting/setting of IMailingList.subject_prefix via the REST API
    (given by Terri Oda).  (LP: #1062893)
  * Expose a REST API for membership change (subscriptions and unsubscriptions)
@@ -65,11 +68,23 @@ Configuration
    separate file, named by the `[mta]configuration` variable.
  * In the new `postfix.cfg` file, `postfix_map_cmd` is renamed to
    `postmap_command`.
+ * The default list style is renamed to `legacy-default` and a new
+   `legacy-announce` style is added.  This is similar to the `legacy-default`
+   except set up for announce-only lists.
 
 Database
 --------
  * The `ban` table now uses list-ids to cross-reference the mailing list,
    since these cannot change even if the mailing list is moved or renamed.
+ * The following columns were unused and have been removed:
+
+   - `mailinglist.new_member_options`
+   - `mailinglist.send_reminders`
+   - `mailinglist.subscribe_policy`
+   - `mailinglist.unsubscribe_policy`
+   - `mailinglist.subscribe_auto_approval`
+   - `mailinglist.private_roster`
+   - `mailinglist.admin_member_chunksize`
 
 Interfaces
 ----------

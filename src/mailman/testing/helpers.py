@@ -154,6 +154,7 @@ def digest_mbox(mlist):
 
 
 
+# Remember, Master is mailman.bin.master.Loop.
 class TestableMaster(Master):
     """A testable master loop watcher."""
 

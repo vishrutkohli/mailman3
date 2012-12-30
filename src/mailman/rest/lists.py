@@ -197,12 +197,14 @@ class AllLists(_ListBase):
     def create(self, request):
         """Create a new mailing list."""
         try:
-            validator = Validator(fqdn_listname=unicode)
+            validator = Validator(fqdn_listname=unicode,
+                                  style_name=unicode,
+                                  _optional=('style_name',))
             mlist = create_list(**validator(request))
         except ListAlreadyExistsError:
             return http.bad_request([], b'Mailing list exists')
         except BadDomainSpecificationError as error:
-            return http.bad_request([], b'Domain does not exist {0}'.format(
+            return http.bad_request([], b'Domain does not exist: {0}'.format(
                 error.domain))
         except ValueError as error:
             return http.bad_request([], str(error))

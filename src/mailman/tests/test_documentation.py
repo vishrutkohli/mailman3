@@ -46,6 +46,7 @@ from mailman.testing.layers import SMTPLayer
 
 
 DOT = '.'
+COMMASPACE = ', '
 
 
 
@@ -133,14 +134,19 @@ def dump_json(url, data=None, method=None, username=None, password=None):
     if results is None:
         return
     for key in sorted(results):
+        value = results[key]
         if key == 'entries':
-            for i, entry in enumerate(results[key]):
+            for i, entry in enumerate(value):
                 # entry is a dictionary.
                 print 'entry %d:' % i
                 for entry_key in sorted(entry):
                     print '    {0}: {1}'.format(entry_key, entry[entry_key])
+        elif isinstance(value, list):
+            printable_value = COMMASPACE.join(
+                "'{0}'".format(s) for s in sorted(value))
+            print '{0}: [{1}]'.format(key, printable_value)
         else:
-            print '{0}: {1}'.format(key, results[key])
+            print '{0}: {1}'.format(key, value)
 
 
 

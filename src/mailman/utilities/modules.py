@@ -22,11 +22,16 @@ from __future__ import absolute_import, unicode_literals
 __metaclass__ = type
 __all__ = [
     'call_name',
+    'find_components',
     'find_name',
+    'scan_module',
     ]
 
 
+import os
 import sys
+
+from pkg_resources import resource_listdir
 
 
 
@@ -43,6 +48,7 @@ def find_name(dotted_name):
     return getattr(sys.modules[package_path], object_name)
 
 
+
 def call_name(dotted_name, *args, **kws):
     """Imports and calls the named object in package space.
 
@@ -57,3 +63,50 @@ def call_name(dotted_name, *args, **kws):
     """
     named_callable = find_name(dotted_name)
     return named_callable(*args, **kws)
+
+
+
+def scan_module(module, interface):
+    """Return all the items in a module that conform to an interface.
+
+    :param module: A module object.  The module's `__all__` will be scanned.
+    :type module: module
+    :param interface: The interface that returned objects must conform to.
+    :type interface: `Interface`
+    :return: The sequence of matching components.
+    :rtype: objects implementing `interface`
+    """
+    missing = object()
+    for name in module.__all__:
+        component = getattr(module, name, missing)
+        assert component is not missing, (
+            '%s has bad __all__: %s' % (module, name))
+        if interface.implementedBy(component):
+            yield component
+
+
+
+def find_components(package, interface):
+    """Find components which conform to a given interface.
+
+    Search all the modules in a given package, returning an iterator over all
+    objects found that conform to the given interface.
+
+    :param package: The package path to search.
+    :type package: string
+    :param interface: The interface that returned objects must conform to.
+    :type interface: `Interface`
+    :return: The sequence of matching components.
+    :rtype: objects implementing `interface`
+    """
+    for filename in resource_listdir(package, ''):
+        basename, extension = os.path.splitext(filename)
+        if extension != '.py':
+            continue
+        module_name = '{0}.{1}'.format(package, basename)
+        __import__(module_name, fromlist='*')
+        module = sys.modules[module_name]
+        if not hasattr(module, '__all__'):
+            continue
+        for component in scan_module(module, interface):
+            yield component

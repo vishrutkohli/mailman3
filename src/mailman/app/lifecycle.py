@@ -47,7 +47,7 @@ log = logging.getLogger('mailman.error')
 
 
 
-def create_list(fqdn_listname, owners=None):
+def create_list(fqdn_listname, owners=None, style_name=None):
     """Create the named list and apply styles.
 
     The mailing may not exist yet, but the domain specified in `fqdn_listname`
@@ -57,6 +57,9 @@ def create_list(fqdn_listname, owners=None):
     :type fqdn_listname: string
     :param owners: The mailing list owners.
     :type owners: list of string email addresses
+    :param style_name: The name of the style to apply to the newly created
+        list.  If not given, the default is taken from the configuration file.
+    :type style_name: string
     :return: The new mailing list.
     :rtype: `IMailingList`
     :raises BadDomainSpecificationError: when the hostname part of
@@ -66,13 +69,16 @@ def create_list(fqdn_listname, owners=None):
     """
     if owners is None:
         owners = []
-    # This raises I
+    # This raises InvalidEmailAddressError if the address is not a valid
+    # posting address.  Let these percolate up.
     getUtility(IEmailValidator).validate(fqdn_listname)
     listname, domain = fqdn_listname.split('@', 1)
     if domain not in getUtility(IDomainManager):
         raise BadDomainSpecificationError(domain)
     mlist = getUtility(IListManager).create(fqdn_listname)
-    for style in getUtility(IStyleManager).lookup(mlist):
+    style = getUtility(IStyleManager).get(
+        config.styles.default if style_name is None else style_name)
+    if style is not None:
         style.apply(mlist)
     # Coordinate with the MTA, as defined in the configuration file.
     call_name(config.mta.incoming).create(mlist)
