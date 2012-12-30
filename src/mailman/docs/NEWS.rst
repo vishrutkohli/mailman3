@@ -68,6 +68,9 @@ Configuration
    separate file, named by the `[mta]configuration` variable.
  * In the new `postfix.cfg` file, `postfix_map_cmd` is renamed to
    `postmap_command`.
+ * The default list style is renamed to `legacy-default` and a new
+   `legacy-announce` style is added.  This is similar to the `legacy-default`
+   except set up for announce-only lists.
 
 Database
 --------

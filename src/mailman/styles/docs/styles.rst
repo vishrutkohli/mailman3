@@ -1,3 +1,5 @@
+.. _list-styles:
+
 ===========
 List styles
 ===========
@@ -12,14 +14,15 @@ automatically updated.  Instead, think of styles as the initial set of
 defaults for just about any mailing list attribute.  In fact, application of a
 style to a mailing list can really modify the mailing list in any way.
 
-To start with, there is only one style, the default style.
+To start with, there are a few legacy styles.
 
     >>> from zope.component import getUtility
     >>> from mailman.interfaces.styles import IStyleManager
     >>> manager = getUtility(IStyleManager)
     >>> for style in manager.styles:
     ...     print style.name
-    default
+    legacy-announce
+    legacy-default
 
 When you create a mailing list through the low-level `IListManager` API, no
 style is applied.
@@ -29,9 +32,9 @@ style is applied.
     >>> print mlist.display_name
     None
 
-The default style sets the list's display name.
+The legacy default style sets the list's display name.
 
-    >>> manager.get('default').apply(mlist)
+    >>> manager.get('legacy-default').apply(mlist)
     >>> print mlist.display_name
     Ant
 
@@ -59,7 +62,8 @@ All registered styles are returned in alphabetical order by style name.
     >>> for style in manager.styles:
     ...     print style.name
     a-test-style
-    default
+    legacy-announce
+    legacy-default
 
 You can also ask the style manager for the style, by name.
 
@@ -76,7 +80,8 @@ You can unregister a style, making it unavailable in the future.
     >>> manager.unregister(test_style)
     >>> for style in manager.styles:
     ...     print style.name
-    default
+    legacy-announce
+    legacy-default
 
 Asking for a missing style returns None.
 
@@ -105,7 +110,7 @@ The style has been applied.
     TEST STYLE LIST
 
 If no style name is provided when creating the list, the system default style
-(which may or may not be the style named 'default') is applied.
+(taken from the configuration file) is applied.
 
     >>> @implementer(IStyle)
     ... class AnotherStyle:
