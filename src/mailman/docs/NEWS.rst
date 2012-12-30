@@ -10,7 +10,7 @@ Here is a history of user visible changes to Mailman.
 
 3.0 beta 3 -- "Here Again"
 ==========================
-(2012-XX-XX)
+(2012-12-31)
 
 Compatibility
 -------------
