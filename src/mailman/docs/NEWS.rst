@@ -8,6 +8,11 @@ Copyright (C) 1998-2012 by the Free Software Foundation, Inc.
 Here is a history of user visible changes to Mailman.
 
 
+3.0 beta 4 -- "Time and Motion"
+===============================
+(2013-XX-XX)
+
+
 3.0 beta 3 -- "Here Again"
 ==========================
 (2012-12-31)
