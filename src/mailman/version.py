@@ -18,7 +18,7 @@
 """Mailman version strings."""
 
 # Mailman version.
-VERSION = '3.0.0b2+'
+VERSION = '3.0.0b3'
 CODENAME = 'Here Again'
 
 # And as a hex number in the manner of PY_VERSION_HEX.
