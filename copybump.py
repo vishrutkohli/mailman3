@@ -15,7 +15,6 @@ MODE = (stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
 
 def do_file(path, owner):
-    print('=>', path)
     permissions = os.stat(path).st_mode & MODE
     with open(path) as in_file, open(path + '.out', 'w') as out_file:
         try:
@@ -32,6 +31,7 @@ def do_file(path, owner):
                     continue
                 print('# Copyright (C) {}-{} {}'.format(
                       start, this_year, owner), file=out_file)
+                print('=>', path)
                 for line in in_file:
                     out_file.write(line)
         except UnicodeDecodeError:
