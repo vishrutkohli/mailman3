@@ -93,7 +93,6 @@ case second `m'.  Any other spelling is incorrect.""",
         'console_scripts' : list(scripts),
         },
     install_requires = [
-        'argparse',
         'flufl.bounce',
         'flufl.enum',
         'flufl.i18n',
