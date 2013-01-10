@@ -90,9 +90,17 @@ class Switchboard:
             'Not a power of 2: {0}'.format(numslices))
         self.name = name
         self.queue_directory = queue_directory
+        self.non_queue_runner={'lmtp','rest'}
         # If configured to, create the directory if it doesn't yet exist.
         if config.create_paths:
-            makedirs(self.queue_directory, 0770)
+            for directory in self.queue_directory.split():
+            	is_non_queue_runner=False
+            	for queue in self.non_queue_runner:
+            		if queue in directory:
+            			is_non_queue_runner=True
+            			break
+            	if not(is_non_queue_runner):
+            		makedirs(directory,0770)
         # Fast track for no slices
         self._lower = None
         self._upper = None
@@ -142,12 +150,13 @@ class Switchboard:
         # object or not.
         data['_parsemsg'] = (protocol == 0)
         # Write to the pickle file the message object and metadata.
-        with open(tmpfile, 'w') as fp:
-            fp.write(msgsave)
-            cPickle.dump(data, fp, protocol)
-            fp.flush()
-            os.fsync(fp.fileno())
-        os.rename(tmpfile, filename)
+        if self.name not in self.non_queue_runner:
+        	with open(tmpfile, 'w') as fp:
+            		fp.write(msgsave)
+            		cPickle.dump(data, fp, protocol)
+            		fp.flush()
+            		os.fsync(fp.fileno())
+       	        os.rename(tmpfile, filename)
         return filebase
 
     def dequeue(self, filebase):
