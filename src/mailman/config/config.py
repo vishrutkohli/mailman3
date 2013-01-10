@@ -156,7 +156,7 @@ class Configuration:
             log_dir                 = category.log_dir,
             messages_dir            = category.messages_dir,
             archive_dir             = category.archive_dir,
-            queue_dir               = category.queue_dir,
+          #  queue_dir               = category.queue_dir,
             var_dir                 = var_dir,
             template_dir            = (
                 os.path.dirname(mailman.templates.__file__)
