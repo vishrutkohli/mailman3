@@ -49,6 +49,7 @@ import asyncore
 
 from email.utils import parseaddr
 from zope.component import getUtility
+from mailman.interfaces.messages import IMessageStore
 
 from mailman.config import config
 from mailman.core.runner import Runner
@@ -97,6 +98,7 @@ ERR_501 = b'501 Message has defects'
 ERR_502 = b'502 Error: command HELO not implemented'
 ERR_550 = b'550 Requested action not taken: mailbox unavailable'
 ERR_550_MID = b'550 No Message-ID header provided'
+ERR_DUP = b'Duplicate Message ID'
 
 # XXX Blech
 smtpd.__version__ = b'Python LMTP runner 1.0'
@@ -181,10 +183,13 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
         # Do basic post-processing of the message, checking it for defects or
         # other missing information.
         message_id = msg.get('message-id')
+        message_store = getUtility(IMessageStore)
         if message_id is None:
             return ERR_550_MID
         if msg.defects:
             return ERR_501
+        if message_store.get_message_by_id(message_id):
+            return ERR_DUP
         msg.original_size = len(data)
         add_message_hash(msg)
         msg['X-MailFrom'] = mailfrom
