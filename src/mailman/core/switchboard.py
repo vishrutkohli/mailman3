@@ -150,13 +150,12 @@ class Switchboard:
         # object or not.
         data['_parsemsg'] = (protocol == 0)
         # Write to the pickle file the message object and metadata.
-        if self.name not in self.non_queue_runner:
-        	with open(tmpfile, 'w') as fp:
-            		fp.write(msgsave)
-            		cPickle.dump(data, fp, protocol)
-            		fp.flush()
-            		os.fsync(fp.fileno())
-       	        os.rename(tmpfile, filename)
+        with open(tmpfile, 'w') as fp:
+          	fp.write(msgsave)
+            	cPickle.dump(data, fp, protocol)
+            	fp.flush()
+            	os.fsync(fp.fileno())
+       	os.rename(tmpfile, filename)
         return filebase
 
     def dequeue(self, filebase):
