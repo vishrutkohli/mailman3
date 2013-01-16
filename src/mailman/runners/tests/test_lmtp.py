@@ -27,9 +27,11 @@ __all__ = [
 
 import smtplib
 import unittest
+import os
 
 from datetime import datetime
 
+from mailman.config import config
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
 from mailman.testing.helpers import get_lmtp_client, get_queue_messages
@@ -109,3 +111,8 @@ Message-ID: <ant>
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].msgdata['received_time'],
                          datetime(2005, 8, 1, 7, 49, 23))
+                         
+    def test_lmtp_queue_directory(self):
+        # Lmtp is a non queue runner, so it should not have a directory in var/queue
+        is_directory = os.path.isdir(os.path.join(config.paths['QUEUE_DIR'],'lmtp'))     
+        self.assertEqual(is_directory,False)                     

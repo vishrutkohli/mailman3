@@ -25,9 +25,11 @@ __all__ = [
 
 
 import unittest
+import os
 
 from urllib2 import HTTPError
 
+from mailman.config import config
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 
@@ -67,3 +69,8 @@ class TestSystem(unittest.TestCase):
                 'receive_own_postings': True,
                 }, method='PUT')
         self.assertEqual(cm.exception.code, 405)
+        
+    def test_rest_queue_directory(self):
+        # Rest is a non queue runner, so it should not have a directory in var/queue
+        is_directory = os.path.isdir(os.path.join(config.paths['QUEUE_DIR'],'rest'))     
+        self.assertEqual(is_directory,False)    

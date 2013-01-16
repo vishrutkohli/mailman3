@@ -93,14 +93,7 @@ class Switchboard:
         self.non_queue_runner={'lmtp','rest'}
         # If configured to, create the directory if it doesn't yet exist.
         if config.create_paths:
-            for directory in self.queue_directory.split():
-            	is_non_queue_runner=False
-            	for queue in self.non_queue_runner:
-            		if queue in directory:
-            			is_non_queue_runner=True
-            			break
-            	if not(is_non_queue_runner):
-            		makedirs(directory,0770)
+            makedirs(self.queue_directory,0770)
         # Fast track for no slices
         self._lower = None
         self._upper = None
@@ -274,7 +267,9 @@ def handle_ConfigurationUpdatedEvent(event):
         name = conf.name.split('.')[-1]
         assert name not in config.switchboards, (
             'Duplicate runner name: {0}'.format(name))
-        substitutions = config.paths
-        substitutions['name'] = name
-        path = expand(conf.path, substitutions)
-        config.switchboards[name] = Switchboard(name, path)
+        # Path is empty for non queue runners. hence check for path and create switchboard instance only for queu runner.
+        if conf.path:
+            substitutions = config.paths
+            substitutions['name'] = name
+            path = expand(conf.path, substitutions)
+            config.switchboards[name] = Switchboard(name, path)

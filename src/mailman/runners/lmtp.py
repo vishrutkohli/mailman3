@@ -98,7 +98,6 @@ ERR_501 = b'501 Message has defects'
 ERR_502 = b'502 Error: command HELO not implemented'
 ERR_550 = b'550 Requested action not taken: mailbox unavailable'
 ERR_550_MID = b'550 No Message-ID header provided'
-ERR_DUP = b'Duplicate Message ID'
 
 # XXX Blech
 smtpd.__version__ = b'Python LMTP runner 1.0'
@@ -155,6 +154,9 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
     # Only __init__ is called on startup. Asyncore is responsible for later
     # connections from the MTA.  slice and numslices are ignored and are
     # necessary only to satisfy the API.
+    
+    is_non_queue_runner = True
+    
     def __init__(self, slice=None, numslices=1):
         localaddr = config.mta.lmtp_host, int(config.mta.lmtp_port)
         # Do not call Runner's constructor because there's no QDIR to create
@@ -188,8 +190,6 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
             return ERR_550_MID
         if msg.defects:
             return ERR_501
-        if message_store.get_message_by_id(message_id):
-            return ERR_DUP
         msg.original_size = len(data)
         add_message_hash(msg)
         msg['X-MailFrom'] = mailfrom
