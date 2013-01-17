@@ -67,7 +67,6 @@ class Runner:
         section = getattr(config, 'runner.' + name)
         substitutions = config.paths
         substitutions['name'] = name
-        self.queue_directory = expand(section.path, substitutions)
         numslices = int(section.instances)
         # Check whether the runner is queue runner or not; non queue runner should not have queue_directory or switchboard instance.
         if self.is_non_queue_runner:
