@@ -64,7 +64,7 @@ Subject: This has no Message-ID header
         # (e.g., mailbox not found, no access, or command rejected for policy
         # reasons)
         self.assertEqual(cm.exception.smtp_code, 550)
-        self.assertEqual(cm.exception.smtp_error, 
+        self.assertEqual(cm.exception.smtp_error,
                          'No Message-ID header provided')
 
     def test_message_id_hash_is_added(self):
