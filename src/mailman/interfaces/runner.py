@@ -51,6 +51,10 @@ class IRunner(Interface):
     def stop():
         """Stop the runner on the next iteration through the loop."""
 
+    is_queue_runner = Attribute("""\
+        A boolean variable describing whether the runner is a queue runner.
+        """)
+
     queue_directory = Attribute(
         'The queue directory.  Overridden in subclasses.')
 

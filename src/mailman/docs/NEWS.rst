@@ -12,6 +12,11 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2013-XX-XX)
 
+Bugs
+----
+ * Non-queue runners should not create ``var/queue`` subdirectories.  Fixed by
+   Sandesh Kumar Agrawal. (LP: #1095422)
+
 
 3.0 beta 3 -- "Here Again"
 ==========================

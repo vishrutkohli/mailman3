@@ -266,7 +266,10 @@ def handle_ConfigurationUpdatedEvent(event):
         name = conf.name.split('.')[-1]
         assert name not in config.switchboards, (
             'Duplicate runner name: {0}'.format(name))
-        substitutions = config.paths
-        substitutions['name'] = name
-        path = expand(conf.path, substitutions)
-        config.switchboards[name] = Switchboard(name, path)
+        # Path is empty for non-queue runners.  Check for path and create
+        # switchboard instances only for queue runners.
+        if conf.path:
+            substitutions = config.paths
+            substitutions['name'] = name
+            path = expand(conf.path, substitutions)
+            config.switchboards[name] = Switchboard(name, path)

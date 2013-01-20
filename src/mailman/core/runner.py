@@ -52,6 +52,7 @@ elog = logging.getLogger('mailman.error')
 @implementer(IRunner)
 class Runner:
     intercept_signals = True
+    is_queue_runner = True
 
     def __init__(self, name, slice=None):
         """Create a runner.
@@ -66,10 +67,16 @@ class Runner:
         section = getattr(config, 'runner.' + name)
         substitutions = config.paths
         substitutions['name'] = name
-        self.queue_directory = expand(section.path, substitutions)
         numslices = int(section.instances)
-        self.switchboard = Switchboard(
-            name, self.queue_directory, slice, numslices, True)
+        # Check whether the runner is queue runner or not; non-queue runner
+        # should not have queue_directory or switchboard instance.
+        if self.is_queue_runner:
+            self.queue_directory = expand(section.path, substitutions)
+            self.switchboard = Switchboard(
+                name, self.queue_directory, slice, numslices, True)
+        else:
+            self.queue_directory = None
+            self.switchboard= None
         self.sleep_time = as_timedelta(section.sleep_time)
         # sleep_time is a timedelta; turn it into a float for time.sleep().
         self.sleep_float = (86400 * self.sleep_time.days +

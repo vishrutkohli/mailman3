@@ -153,6 +153,9 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
     # Only __init__ is called on startup. Asyncore is responsible for later
     # connections from the MTA.  slice and numslices are ignored and are
     # necessary only to satisfy the API.
+
+    is_queue_runner = False
+
     def __init__(self, slice=None, numslices=1):
         localaddr = config.mta.lmtp_host, int(config.mta.lmtp_port)
         # Do not call Runner's constructor because there's no QDIR to create

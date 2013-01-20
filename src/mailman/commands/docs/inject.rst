@@ -34,11 +34,9 @@ It's easy to find out which queues are available.
         command
         digest
         in
-        lmtp
         nntp
         out
         pipeline
-        rest
         retry
         shunt
         virgin

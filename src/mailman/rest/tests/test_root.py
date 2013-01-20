@@ -21,13 +21,16 @@ from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestSystem',
     ]
 
 
 import unittest
+import os
 
 from urllib2 import HTTPError
 
+from mailman.config import config
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 
@@ -67,3 +70,9 @@ class TestSystem(unittest.TestCase):
                 'receive_own_postings': True,
                 }, method='PUT')
         self.assertEqual(cm.exception.code, 405)
+
+    def test_queue_directory(self):
+        # The REST runner is not queue runner, so it should not have a
+        # directory in var/queue.
+        queue_directory = os.path.join(config.QUEUE_DIR, 'rest')
+        self.assertFalse(os.path.isdir(queue_directory))
