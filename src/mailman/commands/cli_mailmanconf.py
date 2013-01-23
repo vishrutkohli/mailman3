@@ -76,6 +76,8 @@ class Mailmanconf:
                 self.__print_full_syntax(section, key, self.__get_value(section, key), output)
 
     def __section_exists(self, section):
+        # not all the attributes in config are actual sections,
+        # so we have to additionally check a sections type
         return hasattr(config, section) and isinstance(getattr(config, section), Section)
 
     def process(self, args):
@@ -86,29 +88,30 @@ class Mailmanconf:
             # We don't need to close output because that will happen
             # automatically when the script exits.
             output = open(args.output, 'w')
-        # Both section and key are given, we can directly look up the value
-        if args.section is not None and args.key is not None:
-            if self.__section_exists(args.section) and hasattr(getattr(config, args.section), args.key):
-                print(self.__get_value(args.section, args.key))
-        elif args.section is not None and args.key is None:
-                # not all the attributes in config are actual sections,
-                # so we have to check their types first and display an
-                # error if the given section is not really a section
-            if self.__section_exists(args.section):
-                self.__print_values_for_section(args.section, output)
+        section = args.section
+        key = args.key
+        # Case 1: Both section and key are given, we can directly look up the value
+        if section is not None and key is not None:
+            if self.__section_exists(section) and hasattr(getattr(config, section), key):
+                print(self.__get_value(section, key))
+        # Case 2: Section is given, key is not given
+        elif section is not None and key is None:
+            if self.__section_exists(section):
+                self.__print_values_for_section(section, output)
             else:
-                self.__show_section_error(args.section)
-        elif args.section is None and args.key is not None:
-            for section in config.schema._section_schemas:
+                self.__show_section_error(section)
+        # Case 3: Section is not given, key is given
+        elif section is None and key is not None:
+            for current_section in config.schema._section_schemas:
                 # We have to ensure that the current section actually exists and
                 # that it contains the given key
-                if self.__section_exists(section) and hasattr(getattr(config, section), args.key):
-                    self.__print_full_syntax(section, args.key, self.__get_value(section, args.key), output)
-        # Just display all the sections and their corresponding key/value pairs.
-        # However, we have to make sure that the current sections and key
-        # which are being looked up actually exist before trying to print them.
-        elif args.section is None and args.key is None:
-            section_schemas = config.schema._section_schemas
-            for section in section_schemas:
-                if self.__section_exists(section):
-                    self.__print_values_for_section(section, output)
+                if self.__section_exists(current_section) and hasattr(getattr(config, current_section), key):
+                    self.__print_full_syntax(current_section, key, self.__get_value(current_section, key), output)
+        # Case 4: Neither section nor key are given, 
+        # just display all the sections and their corresponding key/value pairs.
+        elif section is None and key is None:
+            for current_section in config.schema._section_schemas:
+                # However, we have to make sure that the current sections and key
+                # which are being looked up actually exist before trying to print them
+                if self.__section_exists(current_section):
+                    self.__print_values_for_section(current_section, output)
