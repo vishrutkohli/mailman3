@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test some additional corner cases for starting/stopping."""
+"""Test the mailmanconf subcommand."""
 
 from __future__ import absolute_import, unicode_literals
 
@@ -46,7 +46,7 @@ class FakeParser:
 
 
 
-class TestStart(unittest.TestCase):
+class TestMailmanconf(unittest.TestCase):
     """Test the mailmanconf subcommand."""
 
     def setUp(self):
