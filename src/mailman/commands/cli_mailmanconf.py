@@ -57,17 +57,26 @@ class Mailmanconf:
             '-k', '--key',
             action='store', help=_("Key to use for the lookup (optional)."))
 
-    def __get_section(self, section):
-        return getattr(config, section)
-    
     def __get_value(self, section, key):
         return getattr(getattr(config, section), key)
 
     def __print_full_syntax(self, section, key, value, output):
         print('[{0}] {1}: {2}'.format(section, key, value), file=output)
 
+    def __show_key_error(self, key):
+        self.parser.error('No such key: %s' % key)
+
     def __show_section_error(self, section):
-        self.parser.error('No such section: {0}'.format(section))
+        self.parser.error('No such section: %s' % section)
+
+    def __print_values_for_section(self, section, output):
+        current_section = getattr(config, section)
+        for key in current_section:
+            if hasattr(current_section, key):
+                self.__print_full_syntax(section, key, self.__get_value(section, key), output)
+
+    def __section_exists(self, section):
+        return hasattr(config, section) and isinstance(getattr(config, section), Section)
 
     def process(self, args):
         """See `ICLISubCommand`."""
@@ -79,32 +88,21 @@ class Mailmanconf:
             output = open(args.output, 'w')
         # Both section and key are given, we can directly look up the value
         if args.section is not None and args.key is not None:
-            try:
-                section = self.__get_section(args.section)
-            except AttributeError:
-                self.__show_section_error(args.section)
-            try:
-                value = self.__get_key(section, args.key)
-            except AttributeError:
-                self.parser.error('No such key: {0}'.format(args.key))
-            print(value, file=output)
+            if self.__section_exists(args.section) and hasattr(getattr(config, args.section), args.key):
+                print(self.__get_value(args.section, args.key))
         elif args.section is not None and args.key is None:
-            try:
                 # not all the attributes in config are actual sections,
                 # so we have to check their types first and display an
                 # error if the given section is not really a section
-                if isinstance(getattr(config, args.section), Section):
-                    for key in getattr(config, args.section):
-                        self.__print_full_syntax(args.section, key, self.__get_value(args.section, key), output)
-                else:
-                    self.__show_section_error(args.section)
-            except AttributeError:
+            if self.__section_exists(args.section):
+                self.__print_values_for_section(args.section, output)
+            else:
                 self.__show_section_error(args.section)
         elif args.section is None and args.key is not None:
             for section in config.schema._section_schemas:
                 # We have to ensure that the current section actually exists and
                 # that it contains the given key
-                if hasattr(config, section) and hasattr(getattr(config, section), args.key):
+                if self.__section_exists(section) and hasattr(getattr(config, section), args.key):
                     self.__print_full_syntax(section, args.key, self.__get_value(section, args.key), output)
         # Just display all the sections and their corresponding key/value pairs.
         # However, we have to make sure that the current sections and key
@@ -112,8 +110,5 @@ class Mailmanconf:
         elif args.section is None and args.key is None:
             section_schemas = config.schema._section_schemas
             for section in section_schemas:
-                if hasattr(config, section):
-                    current_section = getattr(config, section)
-                    for key in current_section:
-                        if hasattr(current_section, key):
-                            self.__print_full_syntax(section, key, self.__get_value(section, key), output)
+                if self.__section_exists(section):
+                    self.__print_values_for_section(section, output)
