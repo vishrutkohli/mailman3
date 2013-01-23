@@ -63,8 +63,8 @@ class Mailmanconf:
     def __print_full_syntax(self, section, key, value, output):
         print('[{0}] {1}: {2}'.format(section, key, value), file=output)
 
-    def __show_key_error(self, key):
-        self.parser.error('No such key: %s' % key)
+    def __show_key_error(self, section, key):
+        self.parser.error('Section %s: No such key: %s' % (section, key))
 
     def __show_section_error(self, section):
         self.parser.error('No such section: %s' % section)
@@ -92,7 +92,11 @@ class Mailmanconf:
         key = args.key
         # Case 1: Both section and key are given, we can directly look up the value
         if section is not None and key is not None:
-            if self.__section_exists(section) and hasattr(getattr(config, section), key):
+            if not self.__section_exists(section):
+                self.__show_section_error(section)
+            elif not hasattr(getattr(config, section), key):
+                self.__show_key_error(section, key)
+            else:
                 print(self.__get_value(section, key))
         # Case 2: Section is given, key is not given
         elif section is not None and key is None:
