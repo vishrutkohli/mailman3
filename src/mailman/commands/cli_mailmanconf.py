@@ -52,10 +52,17 @@ class Mailmanconf:
             used."""))
         command_parser.add_argument(
             '-s', '--section',
-            action='store', help=_("Section to use for the lookup (optional)."))
+            action='store', help=_("""\
+            Section to use for the lookup. If no key is given,
+            all the key-value pairs of the given section will be displayed.
+            """))
         command_parser.add_argument(
             '-k', '--key',
-            action='store', help=_("Key to use for the lookup (optional)."))
+            action='store', help=_("""\
+            Key to use for the lookup. If no section is given,
+            all the key-values pair from any section matching the given key
+            will be displayed.
+            """))
 
     def _get_value(self, section, key):
         return getattr(getattr(config, section), key)

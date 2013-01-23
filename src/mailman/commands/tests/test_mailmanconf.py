@@ -73,3 +73,4 @@ class TestStart(unittest.TestCase):
             pass
         self.assertEqual(self.command.parser.message,
                          'Section mailman: No such key: thiskeydoesnotexist')
+        
