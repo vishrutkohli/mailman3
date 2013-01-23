@@ -57,25 +57,25 @@ class Mailmanconf:
             '-k', '--key',
             action='store', help=_("Key to use for the lookup (optional)."))
 
-    def __get_value(self, section, key):
+    def _get_value(self, section, key):
         return getattr(getattr(config, section), key)
 
-    def __print_full_syntax(self, section, key, value, output):
+    def _print_full_syntax(self, section, key, value, output):
         print('[{0}] {1}: {2}'.format(section, key, value), file=output)
 
-    def __show_key_error(self, section, key):
+    def _show_key_error(self, section, key):
         self.parser.error('Section %s: No such key: %s' % (section, key))
 
-    def __show_section_error(self, section):
+    def _show_section_error(self, section):
         self.parser.error('No such section: %s' % section)
 
-    def __print_values_for_section(self, section, output):
+    def _print_values_for_section(self, section, output):
         current_section = getattr(config, section)
         for key in current_section:
             if hasattr(current_section, key):
-                self.__print_full_syntax(section, key, self.__get_value(section, key), output)
+                self._print_full_syntax(section, key, self._get_value(section, key), output)
 
-    def __section_exists(self, section):
+    def _section_exists(self, section):
         # not all the attributes in config are actual sections,
         # so we have to additionally check a sections type
         return hasattr(config, section) and isinstance(getattr(config, section), Section)
@@ -92,30 +92,30 @@ class Mailmanconf:
         key = args.key
         # Case 1: Both section and key are given, we can directly look up the value
         if section is not None and key is not None:
-            if not self.__section_exists(section):
-                self.__show_section_error(section)
+            if not self._section_exists(section):
+                self._show_section_error(section)
             elif not hasattr(getattr(config, section), key):
-                self.__show_key_error(section, key)
+                self._show_key_error(section, key)
             else:
-                print(self.__get_value(section, key))
+                print(self._get_value(section, key))
         # Case 2: Section is given, key is not given
         elif section is not None and key is None:
-            if self.__section_exists(section):
-                self.__print_values_for_section(section, output)
+            if self._section_exists(section):
+                self._print_values_for_section(section, output)
             else:
-                self.__show_section_error(section)
+                self._show_section_error(section)
         # Case 3: Section is not given, key is given
         elif section is None and key is not None:
             for current_section in config.schema._section_schemas:
                 # We have to ensure that the current section actually exists and
                 # that it contains the given key
-                if self.__section_exists(current_section) and hasattr(getattr(config, current_section), key):
-                    self.__print_full_syntax(current_section, key, self.__get_value(current_section, key), output)
+                if self._section_exists(current_section) and hasattr(getattr(config, current_section), key):
+                    self._print_full_syntax(current_section, key, self._get_value(current_section, key), output)
         # Case 4: Neither section nor key are given, 
         # just display all the sections and their corresponding key/value pairs.
         elif section is None and key is None:
             for current_section in config.schema._section_schemas:
                 # However, we have to make sure that the current sections and key
                 # which are being looked up actually exist before trying to print them
-                if self.__section_exists(current_section):
-                    self.__print_values_for_section(current_section, output)
+                if self._section_exists(current_section):
+                    self._print_values_for_section(current_section, output)
