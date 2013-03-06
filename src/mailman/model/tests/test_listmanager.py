@@ -125,3 +125,17 @@ Message-ID: <argon>
         self.assertEqual(request, None)
         saved_message = getUtility(IMessageStore).get_message_by_id('<argon>')
         self.assertEqual(saved_message.as_string(), msg.as_string())
+
+
+
+class TestListCreation(unittest.TestCase):
+    layer = ConfigLayer
+
+    def test_create_list_case_folding(self):
+        # LP: #1117176 describes a problem where list names created in upper
+        # case are not actually usable by the LMTP server.
+        manager = getUtility(IListManager)
+        manager.create('my-LIST@example.com')
+        self.assertIsNone(manager.get('my-LIST@example.com'))
+        mlist = manager.get('my-list@example.com')
+        self.assertEqual(mlist.list_id, 'my-list.example.com')

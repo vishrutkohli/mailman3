@@ -16,6 +16,8 @@ Bugs
 ----
  * Non-queue runners should not create ``var/queue`` subdirectories.  Fixed by
    Sandesh Kumar Agrawal. (LP: #1095422)
+ * Creation of lists with upper case names should be coerced to lower case.
+   (LP: #1117176)
 
 
 3.0 beta 3 -- "Here Again"
