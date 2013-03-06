@@ -45,6 +45,7 @@ class ListManager:
     @dbconnection
     def create(self, store, fqdn_listname):
         """See `IListManager`."""
+        fqdn_listname = fqdn_listname.lower()
         listname, at, hostname = fqdn_listname.partition('@')
         if len(hostname) == 0:
             raise InvalidEmailAddressError(fqdn_listname)

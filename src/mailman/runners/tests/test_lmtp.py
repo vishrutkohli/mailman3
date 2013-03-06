@@ -117,3 +117,30 @@ Message-ID: <ant>
         # directory in var/queue.
         queue_directory = os.path.join(config.QUEUE_DIR, 'lmtp')
         self.assertFalse(os.path.isdir(queue_directory))
+
+
+
+class TestBugs(unittest.TestCase):
+    """Test some LMTP related bugs."""
+
+    layer = LMTPLayer
+
+    def setUp(self):
+        self._lmtp = get_lmtp_client(quiet=True)
+        self._lmtp.lhlo('remote.example.org')
+
+    def test_lp1117176(self):
+        # Upper cased list names can't be sent to via LMTP.
+        with transaction():
+            create_list('my-LIST@example.com')
+        self._lmtp.sendmail('anne@example.com', ['my-list@example.com'], """\
+From: anne@example.com
+To: my-list@example.com
+Subject: My subject
+Message-ID: <alpha>
+
+""")
+        messages = get_queue_messages('in')
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].msgdata['listname'],
+                         'my-list@example.com')
