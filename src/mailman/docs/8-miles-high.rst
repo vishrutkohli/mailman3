@@ -66,8 +66,8 @@ The `virgin` queue is a special queue for messages created by Mailman.
 
    digraph pipeline {
    node [shape=box, style=rounded, group=0]
-   { "MIME\ndelete" -> "cleanse headers" -> "add headers" -> \
-     "calculate\nrecipients" -> "to digest" -> "to archive" -> \
+   { "MIME\ndelete" -> "cleanse headers" -> "add headers" -> 
+     "calculate\nrecipients" -> "to digest" -> "to archive" ->
      "to outgoing" }
    node [shape=box, color=lightblue, style=filled, group=1]
    { rank=same; PIPELINE -> "MIME\ndelete" }
@@ -91,48 +91,54 @@ The default set of rules looks something like this:
 .. graphviz::
 
    digraph chain_rules {
-     rankdir=LR    /* This gives the right orientation of the columns. */
-     rank=same
-     subgraph in { IN [shape=box, color=lightblue, style=filled] }
-     subgraph rules {
-       rankdir=TB
-       rank=same
-       node [shape=record]
-       approved [group=0, label="<f0> approved | {<f1> | <f2>}"]
-       emergency [group=0, label="<f0> emergency | {<f1> | <f2>}"]
-       loop [group=0, label="<f0> loop | {<f1> | <f2>}"]
-       modmember [group=0, label="<f0> member\nmoderated | {<f1> | <f2>}"]
-       administrivia [group=0, label="<f0> administrivia | <f1>"]
-       maxsize [group=0, label="<f0> max\ size | {<f1> | <f2>}"]
-       any [group=0, label="<f0> any | {<f1> | <f2>}"]
-       truth [label="<f0> truth | <f1>"]
-       approved:f1 -> emergency:f0 [weight=100]
-       emergency:f1 -> loop:f0
-       loop:f1 -> modmember:f0
-       modmember:f1 -> administrivia:f0
-       administrivia:f1 -> maxsize:f0
-       maxsize:f1 -> any:f0
-       any:f1 -> truth:f0
-     }
-     subgraph queues {
-       rankdir=TB
-       rank=same
-       node [shape=box, style=filled];
-       DISCARD [shape=invhouse, color=black, style=solid];
-       MODERATION [color=wheat];
-       HOLD [color=wheat];
-     }
-     { PIPELINE [shape=box, style=filled, color=cyan]; }
+        rankdir=LR;    /* This gives the right orientation of the columns. */
+        rank=same;
+        subgraph in { IN [shape=box, color=lightblue, style=filled]; }
+        subgraph rules {
+          rankdir=TB;
+          node [shape=record];
+          approved [label="<in> approved | { <no> | <yes> }"];
+          emergency [label="<in> emergency | { <no> | <yes> }"];
+          loop [label="<in> loop | { <no> | <yes> }"];
+          modmember [label="<in> member\nmoderated | { <no> | <yes> }"];
+          administrivia [group="0", label="<in> administrivia | <always> "];
+          maxsize [label="<in> max\ size | {<in> no | <yes>}"];
+          any [label="<in> any | {<no> | <yes>}"];
+          truth [label="<in> truth | <always>"];
 
-     IN -> approved:f0
-     approved:f2 -> PIPELINE [minlen=2]
-     loop:f2 -> DISCARD
-     modmember:f2 -> MODERATION
+        }
 
-     emergency:f2:e -> HOLD
-     maxsize:f2 -> MODERATION
-     any:f2 -> MODERATION
-     truth:f1 -> PIPELINE [minlen=2]
+        subgraph queues {
+          rankdir=TB;
+          node [shape=box, style=filled];
+          DISCARD [shape=invhouse, color=black, style=solid];
+          MODERATION [color=wheat];
+          HOLD [color=wheat];
+        }
+        { PIPELINE [shape=box, style=filled, color=cyan]; }
+
+        IN -> approved:in;
+        approved:no -> emergency:in [weight="100"];
+        approved:yes -> PIPELINE [minlen=2];
+
+        emergency:no -> loop:in;
+        emergency:yes -> HOLD;
+
+        loop:no -> modmember:in;
+        loop:yes -> DISCARD;
+
+        modmember:no -> administrivia:in;
+        modmember:yes -> MODERATION;
+
+        administrivia:always -> maxsize:in;
+
+        maxsize:no -> any:in;
+        maxsize:yes -> MODERATION;
+
+        any:no -> truth:in;
+        any:yes -> MODERATION;
+
+        truth:always -> PIPELINE [minlen=2];
    }
 
 
