@@ -137,10 +137,14 @@ def paginate(default_count=None):
             # Set indices
             list_start = 0
             list_end = None
+            # get the result
+            result = function(*args, **kwargs)
+            # slice list only if count is not None
             if count is not None:
                 list_start = int((page - 1) * count)
                 list_end = int(page * count)
-            return function(*args, **kwargs)[list_start:list_end]
+                return result[list_start:list_end]
+            return result
         return wrapper
     return dec
 
