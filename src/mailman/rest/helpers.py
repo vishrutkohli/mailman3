@@ -38,8 +38,10 @@ from cStringIO import StringIO
 from datetime import datetime, timedelta
 from flufl.enum import Enum
 from lazr.config import as_boolean
+from restish import http
 from restish.http import Response
 from restish.resource import MethodDecorator
+from urllib2 import HTTPError
 from webob.multidict import MultiDict
 
 from mailman.config import config
@@ -103,6 +105,44 @@ def etag(resource):
     etag = hashlib.sha1(repr(resource)).hexdigest()
     resource['http_etag'] = '"{0}"'.format(etag)
     return json.dumps(resource, cls=ExtendedEncoder)
+
+
+def paginate(default_count=None):
+    """Method decorator to paginate through collection result lists.
+
+    Use this to return only a slice of a collection, specified either
+    in the request itself or by the ``default_count`` argument.
+    ``default_count=None`` will return the whole collection if the request
+    contains no count/page parameters.
+
+    :param default_count: The default page length if no count is specified.
+    :type default_count: int
+    :returns: Decorator function.
+    """
+    def dec(function):
+        def wrapper(*args, **kwargs):
+            # args[0] is self.
+            # restish Request object is expected as second arg.
+            request = args[1]
+            try:
+                count = int(request.GET['count'])
+                page = int(request.GET['page'])
+            # Wrong parameter types or not GET attributer in GET request.
+            except (AttributeError, ValueError, TypeError):
+                return http.bad_request([], b'Invalid parameters')
+            # No count/page params: Use defaults.
+            except KeyError:
+                count = default_count
+                page = 1
+            # Set indices
+            list_start = 0
+            list_end = None
+            if count is not None:
+                list_start = int((page - 1) * count)
+                list_end = int(page * count)
+            return function(*args, **kwargs)[list_start:list_end]
+        return wrapper
+    return dec
 
 
 

@@ -43,7 +43,7 @@ from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    CollectionMixin, PATCH, etag, no_content, path_to)
+    CollectionMixin, PATCH, etag, no_content, path_to, paginate)
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
@@ -69,6 +69,7 @@ class _MemberBase(resource.Resource, CollectionMixin):
             delivery_mode=member.delivery_mode,
             )
 
+    @paginate()
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(getUtility(ISubscriptionService))

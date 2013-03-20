@@ -38,7 +38,7 @@ from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, PATCH, etag, no_content, path_to)
+    CollectionMixin, GetterSetter, PATCH, etag, no_content, path_to, paginate)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
@@ -86,6 +86,7 @@ class _UserBase(resource.Resource, CollectionMixin):
             resource['display_name'] = user.display_name
         return resource
 
+    @paginate()
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(getUtility(IUserManager).users)
