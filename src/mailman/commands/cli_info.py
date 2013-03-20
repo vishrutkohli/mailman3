@@ -69,7 +69,7 @@ class Info:
         print('Python', sys.version, file=output)
         print('config file:', config.filename, file=output)
         print('db url:', config.db.url, file=output)
-        print('devmode:', 
+        print('devmode:',
               'ENABLED' if as_boolean(config.devmode.enabled) else 'DISABLED',
               file=output)
         print('REST root url:', path_to('/'), file=output)
