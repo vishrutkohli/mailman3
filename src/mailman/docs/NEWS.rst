@@ -19,6 +19,11 @@ Bugs
  * Creation of lists with upper case names should be coerced to lower case.
    (LP: #1117176)
 
+REST
+----
+ * Add ``reply_to_address`` and ``first_strip_reply_to`` as writable
+   attributes of a mailing list's configuration.  (LP: #1157881)
+
 Configuration
 -------------
  * When creating the initial file system layout in ``var``, e.g. via
