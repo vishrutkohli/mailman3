@@ -246,6 +246,7 @@ left off the list!
 * Pasi Sjöholm
 * Chris Snell
 * Mikhail Sobolev
+* David Soto
 * Greg Stein
 * Dale Stimson
 * Students of HIT <mailman-cn@mail.cs.hit.edu.cn>
