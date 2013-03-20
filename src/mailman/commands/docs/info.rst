@@ -54,7 +54,8 @@ system paths that Mailman is using.
     >>> cleanups.append((config.pop, 'fhs'))
     >>> config.create_paths = True
 
-The File System Hierarchy layout is the same every by definition.
+The `Filesystem Hierarchy Standard`_ layout is the same everywhere by
+definition.
 
     >>> command.process(args)
     GNU Mailman 3...
@@ -75,3 +76,6 @@ The File System Hierarchy layout is the same every by definition.
         QUEUE_DIR                = /var/spool/mailman
         TEMPLATE_DIR             = .../mailman/templates
         VAR_DIR                  = /var/lib/mailman
+
+
+.. _`Filesystem Hierarchy Standard`: http://www.pathname.com/fhs/

@@ -19,6 +19,14 @@ Bugs
  * Creation of lists with upper case names should be coerced to lower case.
    (LP: #1117176)
 
+Configuration
+-------------
+ * When creating the initial file system layout in ``var``, e.g. via
+   ``bin/mailman info``, add an ``var/etc/mailman.cfg`` file if one does not
+   already exist.  Also, when initializing the system, look for that file as
+   the configuration file, just after ``./mailman.cfg`` and before
+   ``~/.mailman.cfg``.  (LP: #1157861)
+
 
 3.0 beta 3 -- "Here Again"
 ==========================
