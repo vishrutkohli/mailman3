@@ -40,6 +40,7 @@ All readable attributes for a list are available on a sub-resource.
     digest_size_threshold: 30.0
     display_name: Ant
     filter_content: False
+    first_strip_reply_to: False
     fqdn_listname: ant@example.com
     http_etag: "..."
     include_rfc2369_headers: True
@@ -55,6 +56,7 @@ All readable attributes for a list are available on a sub-resource.
     posting_address: ant@example.com
     posting_pipeline: default-posting-pipeline
     reply_goes_to_list: no_munging
+    reply_to_address:
     request_address: ant-request@example.com
     scheme: http
     send_welcome_message: True
@@ -70,6 +72,8 @@ Changing the full configuration
 Not all of the readable attributes can be set through the web interface.  The
 ones that can, can either be set via ``PUT`` or ``PATCH``.  ``PUT`` changes
 all the writable attributes in one request.
+
+When using PUT, all writable attributes must be included.
 
     >>> from mailman.interfaces.action import Action
     >>> dump_json('http://localhost:9001/3.0/lists/'
@@ -96,9 +100,11 @@ all the writable attributes in one request.
     ...             digest_size_threshold=10.5,
     ...             posting_pipeline='virgin',
     ...             filter_content=True,
+    ...             first_strip_reply_to=True,
     ...             convert_html_to_plaintext=True,
     ...             collapse_alternatives=False,
     ...             reply_goes_to_list='point_to_list',
+    ...             reply_to_address='bee@example.com',
     ...             send_welcome_message=False,
     ...             subject_prefix='[ant]',
     ...             welcome_message_uri='mailman:///welcome.txt',
@@ -141,194 +147,18 @@ These values are changed permanently.
     digest_size_threshold: 10.5
     display_name: Fnords
     filter_content: True
+    first_strip_reply_to: True
     ...
     include_rfc2369_headers: False
     ...
     posting_pipeline: virgin
     reply_goes_to_list: point_to_list
+    reply_to_address: bee@example.com
     ...
     send_welcome_message: False
     subject_prefix: [ant]
     ...
     welcome_message_uri: mailman:///welcome.txt
-
-If you use ``PUT`` to change a list's configuration, all writable attributes
-must be included.  It is an error to leave one or more out...
-
-    >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'ant@example.com/config',
-    ...           dict(
-    ...             #acceptable_aliases=['one', 'two'],
-    ...             admin_immed_notify=False,
-    ...             admin_notify_mchanges=True,
-    ...             administrivia=False,
-    ...             advertised=False,
-    ...             anonymous_list=True,
-    ...             archive_policy='public',
-    ...             autorespond_owner='respond_and_discard',
-    ...             autorespond_postings='respond_and_continue',
-    ...             autorespond_requests='respond_and_discard',
-    ...             autoresponse_grace_period='45d',
-    ...             autoresponse_owner_text='the owner',
-    ...             autoresponse_postings_text='the mailing list',
-    ...             autoresponse_request_text='the robot',
-    ...             display_name='Fnords',
-    ...             description='This is my mailing list',
-    ...             include_rfc2369_headers=False,
-    ...             allow_list_posts=False,
-    ...             digest_size_threshold=10.5,
-    ...             posting_pipeline='virgin',
-    ...             filter_content=True,
-    ...             convert_html_to_plaintext=True,
-    ...             collapse_alternatives=False,
-    ...             reply_goes_to_list='point_to_list',
-    ...             send_welcome_message=True,
-    ...             subject_prefix='[ant]',
-    ...             welcome_message_uri='welcome message',
-    ...             default_member_action='accept',
-    ...             default_nonmember_action='accept',
-    ...             ),
-    ...           'PUT')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 400: Missing parameters: acceptable_aliases
-
-...or to add an unknown one.
-
-    >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'ant@example.com/config',
-    ...           dict(
-    ...             a_mailing_list_attribute=False,
-    ...             acceptable_aliases=['one', 'two'],
-    ...             admin_immed_notify=False,
-    ...             admin_notify_mchanges=True,
-    ...             administrivia=False,
-    ...             advertised=False,
-    ...             anonymous_list=True,
-    ...             archive_policy='public',
-    ...             autorespond_owner='respond_and_discard',
-    ...             autorespond_postings='respond_and_continue',
-    ...             autorespond_requests='respond_and_discard',
-    ...             autoresponse_grace_period='45d',
-    ...             autoresponse_owner_text='the owner',
-    ...             autoresponse_postings_text='the mailing list',
-    ...             autoresponse_request_text='the robot',
-    ...             display_name='Fnords',
-    ...             description='This is my mailing list',
-    ...             include_rfc2369_headers=False,
-    ...             allow_list_posts=False,
-    ...             digest_size_threshold=10.5,
-    ...             posting_pipeline='virgin',
-    ...             subject_prefix='[ant]',
-    ...             filter_content=True,
-    ...             convert_html_to_plaintext=True,
-    ...             collapse_alternatives=False,
-    ...             ),
-    ...           'PUT')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 400: Unexpected parameters: a_mailing_list_attribute
-
-It is also an error to spell an attribute value incorrectly...
-
-    >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'ant@example.com/config',
-    ...           dict(
-    ...             admin_immed_notify='Nope',
-    ...             acceptable_aliases=['one', 'two'],
-    ...             admin_notify_mchanges=True,
-    ...             administrivia=False,
-    ...             advertised=False,
-    ...             anonymous_list=True,
-    ...             autorespond_owner='respond_and_discard',
-    ...             autorespond_postings='respond_and_continue',
-    ...             autorespond_requests='respond_and_discard',
-    ...             autoresponse_grace_period='45d',
-    ...             autoresponse_owner_text='the owner',
-    ...             autoresponse_postings_text='the mailing list',
-    ...             autoresponse_request_text='the robot',
-    ...             display_name='Fnords',
-    ...             description='This is my mailing list',
-    ...             include_rfc2369_headers=False,
-    ...             allow_list_posts=False,
-    ...             digest_size_threshold=10.5,
-    ...             posting_pipeline='virgin',
-    ...             subject_prefix='[ant]',
-    ...             filter_content=True,
-    ...             convert_html_to_plaintext=True,
-    ...             collapse_alternatives=False,
-    ...             ),
-    ...           'PUT')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 400: Cannot convert parameters: admin_immed_notify
-
-...or to name a pipeline that doesn't exist...
-
-    >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'ant@example.com/config',
-    ...           dict(
-    ...             acceptable_aliases=['one', 'two'],
-    ...             admin_immed_notify=False,
-    ...             admin_notify_mchanges=True,
-    ...             advertised=False,
-    ...             anonymous_list=True,
-    ...             archive_policy='public',
-    ...             autorespond_owner='respond_and_discard',
-    ...             autorespond_postings='respond_and_continue',
-    ...             autorespond_requests='respond_and_discard',
-    ...             autoresponse_grace_period='45d',
-    ...             autoresponse_owner_text='the owner',
-    ...             autoresponse_postings_text='the mailing list',
-    ...             autoresponse_request_text='the robot',
-    ...             display_name='Fnords',
-    ...             description='This is my mailing list',
-    ...             include_rfc2369_headers=False,
-    ...             allow_list_posts=False,
-    ...             digest_size_threshold=10.5,
-    ...             posting_pipeline='dummy',
-    ...             subject_prefix='[ant]',
-    ...             filter_content=True,
-    ...             convert_html_to_plaintext=True,
-    ...             collapse_alternatives=False,
-    ...             ),
-    ...           'PUT')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 400: Cannot convert parameters: posting_pipeline
-
-...or to name an invalid auto-response enumeration value.
-
-    >>> dump_json('http://localhost:9001/3.0/lists/'
-    ...           'ant@example.com/config',
-    ...           dict(
-    ...             acceptable_aliases=['one', 'two'],
-    ...             admin_immed_notify=False,
-    ...             admin_notify_mchanges=True,
-    ...             advertised=False,
-    ...             anonymous_list=True,
-    ...             autorespond_owner='do_not_respond',
-    ...             autorespond_postings='respond_and_continue',
-    ...             autorespond_requests='respond_and_discard',
-    ...             autoresponse_grace_period='45d',
-    ...             autoresponse_owner_text='the owner',
-    ...             autoresponse_postings_text='the mailing list',
-    ...             autoresponse_request_text='the robot',
-    ...             display_name='Fnords',
-    ...             description='This is my mailing list',
-    ...             include_rfc2369_headers=False,
-    ...             allow_list_posts=False,
-    ...             digest_size_threshold=10.5,
-    ...             posting_pipeline='virgin',
-    ...             subject_prefix='[ant]',
-    ...             filter_content=True,
-    ...             convert_html_to_plaintext=True,
-    ...             collapse_alternatives=False,
-    ...             ),
-    ...           'PUT')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 400: Cannot convert parameters: autorespond_owner
 
 
 Changing a partial configuration
