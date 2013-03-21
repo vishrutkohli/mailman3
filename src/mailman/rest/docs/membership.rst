@@ -203,6 +203,46 @@ We can also get just the members of a single mailing list.
     total_size: 2
 
 
+Paginating over member records
+------------------------------
+
+Instead of returning all the member records at once, it's possible to return
+them in pages by adding the GET parameters ``count`` and ``page`` to the
+request URI.  Page 1 is the first page and ``count`` defines the size of the
+page.
+
+    >>> dump_json(
+    ...     'http://localhost:9001/3.0/lists/ant@example.com/roster/member'
+    ...     '?count=1&page=1')
+    entry 0:
+        address: aperson@example.com
+        delivery_mode: regular
+        http_etag: ...
+        list_id: ant.example.com
+        role: member
+        self_link: http://localhost:9001/3.0/members/4
+        user: http://localhost:9001/3.0/users/3
+    http_etag: ...
+    start: 0
+    total_size: 1
+
+This works with members of a single list as well as with all members.
+
+    >>> dump_json(
+    ...     'http://localhost:9001/3.0/members?count=1&page=1')
+    entry 0:
+        address: aperson@example.com
+        delivery_mode: regular
+        http_etag: ...
+        list_id: ant.example.com
+        role: member
+        self_link: http://localhost:9001/3.0/members/4
+        user: http://localhost:9001/3.0/users/3
+    http_etag: ...
+    start: 0
+    total_size: 1
+
+
 Owners and moderators
 =====================
 

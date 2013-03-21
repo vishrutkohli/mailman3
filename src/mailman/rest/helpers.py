@@ -38,6 +38,7 @@ from cStringIO import StringIO
 from datetime import datetime, timedelta
 from flufl.enum import Enum
 from lazr.config import as_boolean
+from restish import http
 from restish.http import Response
 from restish.resource import MethodDecorator
 from webob.multidict import MultiDict
@@ -101,8 +102,41 @@ def etag(resource):
     """
     assert 'http_etag' not in resource, 'Resource already etagged'
     etag = hashlib.sha1(repr(resource)).hexdigest()
+
     resource['http_etag'] = '"{0}"'.format(etag)
     return json.dumps(resource, cls=ExtendedEncoder)
+
+
+def paginate(method):
+    """Method decorator to paginate through collection result lists.
+
+    Use this to return only a slice of a collection, specified in the request
+    itself.  The request should use query parameters `count` and `page` to
+    specify the slice they want.  The slice will start at index
+    ``(page - 1) * count`` and end (exclusive) at ``(page * count)``.
+
+    Decorated methods must take ``self`` and ``request`` as the first two
+    arguments.
+    """
+    def wrapper(self, request, *args, **kwargs):
+        try:
+            count = int(request.GET['count'])
+            page = int(request.GET['page'])
+            if count < 0 or page < 0:
+                return http.bad_request([], b'Invalid parameters')
+        # Wrong parameter types or no GET attribute in request object.
+        except (AttributeError, ValueError, TypeError):
+            return http.bad_request([], b'Invalid parameters')
+        # No count/page params.
+        except KeyError:
+            count = page = None
+        result = method(self, request, *args, **kwargs)
+        if count is None and page is None:
+            return result
+        list_start = int((page - 1) * count)
+        list_end = int(page * count)
+        return result[list_start:list_end]
+    return wrapper
 
 
 

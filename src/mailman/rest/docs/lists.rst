@@ -50,6 +50,51 @@ You can also query for lists from a particular domain.
     total_size: 1
 
 
+Paginating over list records
+----------------------------
+
+Instead of returning all the list records at once, it's possible to return
+them in pages by adding the GET parameters ``count`` and ``page`` to the
+request URI.  Page 1 is the first page and ``count`` defines the size of the
+page.
+::
+
+    >>> mlist = create_list('bird@example.com')
+    >>> transaction.commit()
+
+    >>> dump_json('http://localhost:9001/3.0/domains/example.com/lists'
+    ...           '?count=1&page=1')
+    entry 0:
+        display_name: Ant
+        fqdn_listname: ant@example.com
+        http_etag: "..."
+        list_id: ant.example.com
+        list_name: ant
+        mail_host: example.com
+        member_count: 0
+        self_link: http://localhost:9001/3.0/lists/ant.example.com
+        volume: 1
+    http_etag: "..."
+    start: 0
+    total_size: 1
+
+    >>> dump_json('http://localhost:9001/3.0/domains/example.com/lists'
+    ...           '?count=1&page=2')
+    entry 0:
+        display_name: Bird
+        fqdn_listname: bird@example.com
+        http_etag: "..."
+        list_id: bird.example.com
+        list_name: bird
+        mail_host: example.com
+        member_count: 0
+        self_link: http://localhost:9001/3.0/lists/bird.example.com
+        volume: 1
+    http_etag: "..."
+    start: 0
+    total_size: 1
+
+
 Creating lists via the API
 ==========================
 
