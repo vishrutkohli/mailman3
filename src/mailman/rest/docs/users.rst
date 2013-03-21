@@ -62,6 +62,34 @@ returned in the REST API.
     total_size: 2
 
 
+Paginating over user records
+----------------------------
+
+It's possible to return pagable chunks of all user records by adding 
+the GET params ``count`` and ``page`` to the request URI.
+
+    >>> dump_json('http://localhost:9001/3.0/users?count=1&page=1')
+    entry 0:
+        created_on: 2005-08-01T07:49:23
+        display_name: Anne Person
+        http_etag: "..."
+        self_link: http://localhost:9001/3.0/users/1
+        user_id: 1
+    http_etag: "..."
+    start: 0
+    total_size: 1
+
+    >>> dump_json('http://localhost:9001/3.0/users?count=1&page=2')
+    entry 0:
+        created_on: 2005-08-01T07:49:23
+        http_etag: "..."
+        self_link: http://localhost:9001/3.0/users/2
+        user_id: 2
+    http_etag: "..."
+    start: 0
+    total_size: 1
+
+
 Creating users
 ==============
 
