@@ -62,7 +62,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate()
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect two items
+        # Expect 5 items
         page = get_collection(None, FakeRequest())
         self.assertEqual(page, ['one', 'two', 'three', 'four', 'five'])
 
@@ -72,7 +72,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate()
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect two items
+        # Expect 2 items
         page = get_collection(None, FakeRequest(2, 1))
         self.assertEqual(page, ['one', 'two'])
 
@@ -82,7 +82,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate()
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect two items
+        # Expect 2 items
         page = get_collection(None, FakeRequest(2, 2))
         self.assertEqual(page, ['three', 'four'])
 
@@ -92,7 +92,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate()
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect two items
+        # Expect last item
         page = get_collection(None, FakeRequest(2, 3))
         self.assertEqual(page, ['five'])
 
@@ -102,7 +102,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate()
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect two items
+        # Expect empty list
         page = get_collection(None, FakeRequest(2, 4))
         self.assertEqual(page, [])
 
@@ -111,6 +111,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate()
         def get_collection(self, request):
             return []
+        # Expect Bad Request
         response = get_collection(None, FakeRequest('two', 1))
         self.assertEqual(response.status, '400 Bad Request')
 
@@ -123,5 +124,6 @@ class TestPaginateHelper(unittest.TestCase):
         del request.GET
         # Assert request obj has no GET attr.
         self.assertTrue(getattr(request, 'GET', None) is None)
+        # Expect Bad Request
         response = get_collection(None, request)
         self.assertEqual(response.status, '400 Bad Request')
