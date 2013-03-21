@@ -206,8 +206,10 @@ We can also get just the members of a single mailing list.
 Paginating over member records
 ------------------------------
 
-Instead of returning all member records at once, it's possible to return
-the as pages.
+Instead of returning all the member records at once, it's possible to return
+them in pages by adding the GET parameters ``count`` and ``page`` to the
+request URI.  Page 1 is the first page and ``count`` defines the size of the
+page.
 
     >>> dump_json(
     ...     'http://localhost:9001/3.0/lists/ant@example.com/roster/member'

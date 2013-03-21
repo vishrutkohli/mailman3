@@ -40,7 +40,7 @@ from mailman.interfaces.member import MemberRole
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.rest.configuration import ListConfiguration
 from mailman.rest.helpers import (
-    CollectionMixin, etag, no_content, path_to, restish_matcher, paginate)
+    CollectionMixin, etag, no_content, paginate, path_to, restish_matcher)
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator

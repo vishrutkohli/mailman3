@@ -65,8 +65,11 @@ returned in the REST API.
 Paginating over user records
 ----------------------------
 
-It's possible to return pagable chunks of all user records by adding 
-the GET params ``count`` and ``page`` to the request URI.
+Instead of returning all the user records at once, it's possible to return
+them in pages by adding the GET parameters ``count`` and ``page`` to the
+request URI.  Page 1 is the first page and ``count`` defines the size of the
+page.
+::
 
     >>> dump_json('http://localhost:9001/3.0/users?count=1&page=1')
     entry 0:

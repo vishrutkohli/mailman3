@@ -53,9 +53,11 @@ You can also query for lists from a particular domain.
 Paginating over list records
 ----------------------------
 
-List records, as well as user and member records can be requested in page
-chunks that are defined with the GET params ``count`` and ``page``, with 
-``count`` defining the length of the collection to be returned.
+Instead of returning all the list records at once, it's possible to return
+them in pages by adding the GET parameters ``count`` and ``page`` to the
+request URI.  Page 1 is the first page and ``count`` defines the size of the
+page.
+::
 
     >>> mlist = create_list('bird@example.com')
     >>> transaction.commit()

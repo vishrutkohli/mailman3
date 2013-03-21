@@ -41,7 +41,6 @@ from lazr.config import as_boolean
 from restish import http
 from restish.http import Response
 from restish.resource import MethodDecorator
-from urllib2 import HTTPError
 from webob.multidict import MultiDict
 
 from mailman.config import config
@@ -103,6 +102,7 @@ def etag(resource):
     """
     assert 'http_etag' not in resource, 'Resource already etagged'
     etag = hashlib.sha1(repr(resource)).hexdigest()
+
     resource['http_etag'] = '"{0}"'.format(etag)
     return json.dumps(resource, cls=ExtendedEncoder)
 
@@ -110,39 +110,32 @@ def etag(resource):
 def paginate(method):
     """Method decorator to paginate through collection result lists.
 
-    Use this to return only a slice of a collection, specified either
-    in the request itself or by the ``default_count`` argument.
-    ``default_count=None`` will return the whole collection if the request
-    contains no count/page parameters.
+    Use this to return only a slice of a collection, specified in the request
+    itself.  The request should use query parameters `count` and `page` to
+    specify the slice they want.  The slice will start at index
+    ``(page - 1) * count`` and end (exclusive) at ``(page * count)``.
 
-    :param default_count: The default page length if no count is specified.
-    :type default_count: int
-    :returns: Decorator function.
+    Decorated methods must take ``self`` and ``request`` as the first two
+    arguments.
     """
-    def wrapper(*args, **kwargs):
-        # args[0] is self.
-        # restish Request object is expected to be the second arg.
-        request = args[1]
-        # get the result
-        result = method(*args, **kwargs)
+    def wrapper(self, request, *args, **kwargs):
         try:
             count = int(request.GET['count'])
             page = int(request.GET['page'])
-            # Set indices
-            list_start = 0
-            list_end = None
-            # slice list only if count is not None
-            if count is not None:
-                list_start = int((page - 1) * count)
-                list_end = int(page * count)
-                return result[list_start:list_end]
+            if count < 0 or page < 0:
+                return http.bad_request([], b'Invalid parameters')
         # Wrong parameter types or no GET attribute in request object.
         except (AttributeError, ValueError, TypeError):
             return http.bad_request([], b'Invalid parameters')
-        # No count/page params
+        # No count/page params.
         except KeyError:
-            pass
-        return result
+            count = page = None
+        result = method(self, request, *args, **kwargs)
+        if count is None and page is None:
+            return result
+        list_start = int((page - 1) * count)
+        list_end = int(page * count)
+        return result[list_start:list_end]
     return wrapper
 
 

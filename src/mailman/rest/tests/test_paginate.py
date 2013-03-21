@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2013 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -27,18 +27,14 @@ __all__ = [
 
 import unittest
 
-from urllib2 import HTTPError
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
-from mailman.interfaces.listmanager import IListManager
 from mailman.rest.helpers import paginate
-from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 
 
-class FakeRequest:
+
+class _FakeRequest:
     """Fake restish.http.Request object."""
 
     def __init__(self, count=None, page=None):
@@ -49,7 +45,10 @@ class FakeRequest:
             self.GET['page'] = page
 
 
+
 class TestPaginateHelper(unittest.TestCase):
+    """Test the @paginate decorator."""
+
     layer = RESTLayer
 
     def setUp(self):
@@ -57,73 +56,90 @@ class TestPaginateHelper(unittest.TestCase):
             self._mlist = create_list('test@example.com')
 
     def test_no_pagination(self):
-        # No pagination params in request
-        # Collection with 5 items.
+        # When there is no pagination params in the request, all 5 items in
+        # the collection are returned.
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
         # Expect 5 items
-        page = get_collection(None, FakeRequest())
+        page = get_collection(None, _FakeRequest())
         self.assertEqual(page, ['one', 'two', 'three', 'four', 'five'])
 
     def test_valid_pagination_request_page_one(self):
-        # ?count=2&page=1 is a valid GET query string.
-        # Collection with 5 items.
+        # ?count=2&page=1 returns the first page, with two items in it.
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect 2 items
-        page = get_collection(None, FakeRequest(2, 1))
+        page = get_collection(None, _FakeRequest(2, 1))
         self.assertEqual(page, ['one', 'two'])
 
     def test_valid_pagination_request_page_two(self):
-        # ?count=2&page=2 is a valid GET query string.
-        # Collection with 5 items.
+        # ?count=2&page=2 returns the second page, where a page has two items
+        # in it.
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect 2 items
-        page = get_collection(None, FakeRequest(2, 2))
+        page = get_collection(None, _FakeRequest(2, 2))
         self.assertEqual(page, ['three', 'four'])
 
     def test_2nd_index_larger_than_total(self):
-        # ?count=2&page=3 is a valid GET query string.
-        # Collection with 5 items.
+        # ?count=2&page=3 returns the third page with page size 2, but the
+        # last page only has one item in it.
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect last item
-        page = get_collection(None, FakeRequest(2, 3))
+        page = get_collection(None, _FakeRequest(2, 3))
         self.assertEqual(page, ['five'])
 
     def test_out_of_range_returns_empty_list(self):
-        # ?count=2&page=3 is a valid GET query string.
-        # Collection with 5 items.
+        # ?count=2&page=4 returns the fourth page, which doesn't exist, so an
+        # empty collection is returned.
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        # Expect empty list
-        page = get_collection(None, FakeRequest(2, 4))
+        page = get_collection(None, _FakeRequest(2, 4))
         self.assertEqual(page, [])
 
     def test_count_as_string_returns_bad_request(self):
-        # ?count=two&page=2 are not valid values.
+        # ?count=two&page=2 are not valid values, so a bad request occurs.
         @paginate
         def get_collection(self, request):
             return []
-        # Expect Bad Request
-        response = get_collection(None, FakeRequest('two', 1))
+        response = get_collection(None, _FakeRequest('two', 1))
         self.assertEqual(response.status, '400 Bad Request')
 
     def test_no_get_attr_returns_bad_request(self):
-        # ?count=two&page=2 are not valid values.
+        # ?count=two&page=2 are not valid values so a bad request is returned.
         @paginate
         def get_collection(self, request):
             return []
-        request = FakeRequest()
+        request = _FakeRequest()
         del request.GET
-        # Assert request obj has no GET attr.
-        self.assertTrue(getattr(request, 'GET', None) is None)
-        # Expect Bad Request
+        # The request object has no GET attribute.
+        self.assertIsNone(getattr(request, 'GET', None))
         response = get_collection(None, request)
+        self.assertEqual(response.status, '400 Bad Request')
+
+    def test_negative_count(self):
+        # ?count=-1&page=1
+        @paginate
+        def get_collection(self, request):
+            return ['one', 'two', 'three', 'four', 'five']
+        response = get_collection(None, _FakeRequest(-1, 1))
+        self.assertEqual(response.status, '400 Bad Request')
+
+    def test_negative_page(self):
+        # ?count=1&page=-1
+        @paginate
+        def get_collection(self, request):
+            return ['one', 'two', 'three', 'four', 'five']
+        response = get_collection(None, _FakeRequest(1, -1))
+        self.assertEqual(response.status, '400 Bad Request')
+
+    def test_negative_page_and_count(self):
+        # ?count=1&page=-1
+        @paginate
+        def get_collection(self, request):
+            return ['one', 'two', 'three', 'four', 'five']
+        response = get_collection(None, _FakeRequest(-1, -1))
         self.assertEqual(response.status, '400 Bad Request')

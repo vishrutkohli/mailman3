@@ -38,7 +38,7 @@ from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, PATCH, etag, no_content, path_to, paginate)
+    CollectionMixin, GetterSetter, PATCH, etag, no_content, paginate, path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
