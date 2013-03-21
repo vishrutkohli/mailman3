@@ -127,7 +127,7 @@ def paginate(default_count=None):
             try:
                 count = int(request.GET['count'])
                 page = int(request.GET['page'])
-            # Wrong parameter types or not GET attributer in GET request.
+            # Wrong parameter types or no GET attribute in request object.
             except (AttributeError, ValueError, TypeError):
                 return http.bad_request([], b'Invalid parameters')
             # No count/page params: Use defaults.
