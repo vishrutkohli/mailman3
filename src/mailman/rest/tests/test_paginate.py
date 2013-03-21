@@ -59,7 +59,7 @@ class TestPaginateHelper(unittest.TestCase):
     def test_no_pagination(self):
         # No pagination params in request
         # Collection with 5 items.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
         # Expect 5 items
@@ -69,7 +69,7 @@ class TestPaginateHelper(unittest.TestCase):
     def test_valid_pagination_request_page_one(self):
         # ?count=2&page=1 is a valid GET query string.
         # Collection with 5 items.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
         # Expect 2 items
@@ -79,7 +79,7 @@ class TestPaginateHelper(unittest.TestCase):
     def test_valid_pagination_request_page_two(self):
         # ?count=2&page=2 is a valid GET query string.
         # Collection with 5 items.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
         # Expect 2 items
@@ -89,7 +89,7 @@ class TestPaginateHelper(unittest.TestCase):
     def test_2nd_index_larger_than_total(self):
         # ?count=2&page=3 is a valid GET query string.
         # Collection with 5 items.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
         # Expect last item
@@ -99,7 +99,7 @@ class TestPaginateHelper(unittest.TestCase):
     def test_out_of_range_returns_empty_list(self):
         # ?count=2&page=3 is a valid GET query string.
         # Collection with 5 items.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
         # Expect empty list
@@ -108,7 +108,7 @@ class TestPaginateHelper(unittest.TestCase):
 
     def test_count_as_string_returns_bad_request(self):
         # ?count=two&page=2 are not valid values.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return []
         # Expect Bad Request
@@ -117,7 +117,7 @@ class TestPaginateHelper(unittest.TestCase):
 
     def test_no_get_attr_returns_bad_request(self):
         # ?count=two&page=2 are not valid values.
-        @paginate()
+        @paginate
         def get_collection(self, request):
             return []
         request = FakeRequest()

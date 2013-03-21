@@ -69,7 +69,7 @@ class _MemberBase(resource.Resource, CollectionMixin):
             delivery_mode=member.delivery_mode,
             )
 
-    @paginate()
+    @paginate
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(getUtility(ISubscriptionService))

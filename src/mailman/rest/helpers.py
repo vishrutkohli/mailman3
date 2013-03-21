@@ -107,7 +107,7 @@ def etag(resource):
     return json.dumps(resource, cls=ExtendedEncoder)
 
 
-def paginate(default_count=None):
+def paginate(method):
     """Method decorator to paginate through collection result lists.
 
     Use this to return only a slice of a collection, specified either
@@ -119,34 +119,31 @@ def paginate(default_count=None):
     :type default_count: int
     :returns: Decorator function.
     """
-    def dec(function):
-        def wrapper(*args, **kwargs):
-            # args[0] is self.
-            # restish Request object is expected as second arg.
-            request = args[1]
-            try:
-                count = int(request.GET['count'])
-                page = int(request.GET['page'])
-            # Wrong parameter types or no GET attribute in request object.
-            except (AttributeError, ValueError, TypeError):
-                return http.bad_request([], b'Invalid parameters')
-            # No count/page params: Use defaults.
-            except KeyError:
-                count = default_count
-                page = 1
+    def wrapper(*args, **kwargs):
+        # args[0] is self.
+        # restish Request object is expected to be the second arg.
+        request = args[1]
+        # get the result
+        result = method(*args, **kwargs)
+        try:
+            count = int(request.GET['count'])
+            page = int(request.GET['page'])
             # Set indices
             list_start = 0
             list_end = None
-            # get the result
-            result = function(*args, **kwargs)
             # slice list only if count is not None
             if count is not None:
                 list_start = int((page - 1) * count)
                 list_end = int(page * count)
                 return result[list_start:list_end]
-            return result
-        return wrapper
-    return dec
+        # Wrong parameter types or no GET attribute in request object.
+        except (AttributeError, ValueError, TypeError):
+            return http.bad_request([], b'Invalid parameters')
+        # No count/page params
+        except KeyError:
+            pass
+        return result
+    return wrapper
 
 
 

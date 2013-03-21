@@ -86,7 +86,7 @@ class _UserBase(resource.Resource, CollectionMixin):
             resource['display_name'] = user.display_name
         return resource
 
-    @paginate()
+    @paginate
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(getUtility(IUserManager).users)
