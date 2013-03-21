@@ -88,7 +88,6 @@ class DateFactory:
         return (tz_now.replace(tzinfo=None)
                 if strip_tzinfo
                 else tz_now)
-        
 
     def today(self):
         return (self.predictable_today
