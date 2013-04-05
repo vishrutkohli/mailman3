@@ -65,9 +65,19 @@ class Conf:
             key-values pair from any section matching the given key will be
             displayed.
             """))
+        command_parser.add_argument(
+            '-x', '--sort',
+            default=False, action='store_true',
+            help=_("Sort the output by sections and keys."))
 
     def _get_value(self, section, key):
         return getattr(getattr(config, section), key)
+
+    def _sections(self, to_sort):
+        sections = config.schema._section_schemas
+        if to_sort:
+            sections = sorted(sections)
+        return sections
 
     def _print_full_syntax(self, section, key, value, output):
         print('[{}] {}: {}'.format(section, key, value), file=output)
@@ -78,8 +88,10 @@ class Conf:
     def _show_section_error(self, section):
         self.parser.error('No such section: {}'.format(section))
 
-    def _print_values_for_section(self, section, output):
+    def _print_values_for_section(self, section, output, to_sort):
         current_section = getattr(config, section)
+        if to_sort:
+            current_section = sorted(current_section)
         for key in current_section:
             self._print_full_syntax(section, key,
                                     self._get_value(section, key), output)
@@ -94,6 +106,7 @@ class Conf:
         # Process the command, ignoring the closing of the output file.
         section = args.section
         key = args.key
+        to_sort = args.sort
         # Case 1: Both section and key are given, so we can directly look up
         # the value.
         if section is not None and key is not None:
@@ -111,7 +124,7 @@ class Conf:
                 self._show_section_error(section)
         # Case 3: Section is not given, key is given.
         elif section is None and key is not None:
-            for current_section in config.schema._section_schemas:
+            for current_section in self._sections(to_sort):
                 # We have to ensure that the current section actually exists
                 # and that it contains the given key.
                 if (self._section_exists(current_section) and
@@ -124,12 +137,12 @@ class Conf:
         # Case 4: Neither section nor key are given, just display all the
         # sections and their corresponding key/value pairs.
         elif section is None and key is None:
-            for current_section in config.schema._section_schemas:
+            for current_section in self._sections(to_sort):
                 # However, we have to make sure that the current sections and
                 # key which are being looked up actually exist before trying
                 # to print them.
                 if self._section_exists(current_section):
-                    self._print_values_for_section(current_section, output)
+                    self._print_values_for_section(current_section, output, to_sort)
 
     def process(self, args):
         """See `ICLISubCommand`."""
