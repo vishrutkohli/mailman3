@@ -14,6 +14,7 @@ a specific key-value pair, or several key-value pairs.
     ...     key = None
     ...     section = None
     ...     output = None
+    ...     sort = None
     >>> from mailman.commands.cli_conf import Conf
     >>> command = Conf()
 

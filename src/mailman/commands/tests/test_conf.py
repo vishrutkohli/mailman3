@@ -40,6 +40,7 @@ class FakeArgs:
     section = None
     key = None
     output = None
+    sort = False
 
 
 class FakeParser:

@@ -119,7 +119,7 @@ class Conf:
         # Case 2: Section is given, key is not given.
         elif section is not None and key is None:
             if self._section_exists(section):
-                self._print_values_for_section(section, output)
+                self._print_values_for_section(section, output, to_sort)
             else:
                 self._show_section_error(section)
         # Case 3: Section is not given, key is given.
