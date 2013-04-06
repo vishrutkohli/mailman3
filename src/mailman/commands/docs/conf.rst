@@ -14,7 +14,7 @@ a specific key-value pair, or several key-value pairs.
     ...     key = None
     ...     section = None
     ...     output = None
-    ...     sort = None
+    ...     sort = False
     >>> from mailman.commands.cli_conf import Conf
     >>> command = Conf()
 
@@ -65,5 +65,12 @@ If you specify both a section and a key, you will get the corresponding value.
     >>> command.process(FakeArgs)
     noreply@example.com
 
+You can also sort the output. The output will be first sorted by section, then by key.
+
+    >>> FakeArgs.section = 'shell'
+    >>> FakeArgs.sort = True
+    [shell] banner: Welcome to the GNU Mailman shell
+    [shell] prompt: >>>
+    [shell] use_ipython: no
 
 .. _`Postfix command postconf(1)`: http://www.postfix.org/postconf.1.html
