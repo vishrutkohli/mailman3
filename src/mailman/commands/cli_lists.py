@@ -90,7 +90,7 @@ class Lists:
             mlist = list_manager.get(fqdn_name)
             if args.advertised and not mlist.advertised:
                 continue
-            domains = getattr(args, 'domains', None)
+            domains = getattr(args, 'domain', None)
             if domains and mlist.mail_host not in domains:
                 continue
             mailing_lists.append(mlist)
