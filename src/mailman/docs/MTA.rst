@@ -9,25 +9,21 @@ upstream mail server do that.
 
 The preferred way to allow Mailman to accept incoming messages from your mail
 server is to use the `Local Mail Transfer Protocol`_ (LMTP_) interface.  Most
-open source mail server support LMTP for local delivery, and this is much more
+open source mail servers support LMTP for local delivery.  This is much more
 efficient than spawning a process just to do the delivery.
 
-Your mail server should also accept `Simple Mail Transfer Protocol`_ (SMTP_)
+Your mail server must also accept `Simple Mail Transfer Protocol`_ (SMTP_)
 connections from Mailman, for all outgoing messages.
 
 The specific instructions for hooking your mail server up to Mailman differs
-depending on which mail server you're using.  The following are instructions
-for the popular open source mail servers.
+depending on which mail server you're using.  Following are instructions for
+Postfix.  We would really appreciate contributions of configurations for Exim
+and Sendmail, and welcome information about other popular open source mail
+servers.
 
 Note that Mailman provides lots of configuration variables that you can use to
 tweak performance for your operating environment.  See the
 ``src/mailman/config/schema.cfg`` file for details.
-
-
-Exim
-====
-
-Contributions are welcome!
 
 
 Postfix
@@ -129,6 +125,12 @@ the Postfix documentation at:
    http://www.postfix.org/postconf.5.html
 .. _`relay_domains`: http://www.postfix.org/postconf.5.html#relay_domains
 .. _`mydestination`: http://www.postfix.org/postconf.5.html#mydestination
+
+
+Exim
+====
+
+Contributions are welcome!
 
 
 Sendmail
