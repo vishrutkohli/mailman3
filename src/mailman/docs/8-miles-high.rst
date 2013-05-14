@@ -37,10 +37,12 @@ processing queues.
      node [shape=box, color=lightblue, style=filled];
      msg [shape=ellipse, color=black, fillcolor=white];
      lmtpd [label="LMTP\nSERVER"];
+     rts [label="Return\nto Sender"];
      msg -> MTA [label="SMTP"];
      MTA -> lmtpd [label="LMTP"];
      lmtpd -> MTA [label="reject"];
      lmtpd -> IN -> PIPELINE [label=".pck"];
+     IN -> rts;
      lmtpd -> BOUNCES [label=".pck"];
      lmtpd -> COMMAND [label=".pck"];
    }
@@ -49,7 +51,9 @@ The `in` queue is processed by *filter chains* (explained below) to determine
 whether the post (or administrative request) will be processed.  If not
 allowed, the message pickle is discarded, rejected (returned to sender), or
 held (saved for moderator approval -- not shown).  Otherwise the message is
-added to the `pipeline` (i.e. posting) queue.
+added to the `pipeline` (i.e. posting) queue.  (Note that rejecting at this
+stage is *not* equivalent to rejecting during LMTP processing.  This issue is
+currently unresolved.)
 
 Each of the `command`, `bounce`, and `pipeline` queues is processed by a
 *pipeline of handlers* as in Mailman 2's pipeline.  (Some functions such as
@@ -60,7 +64,8 @@ Handlers may copy messages to other queues (*e.g.*, `archive`), and eventually
 posted messages for distribution to the list membership end up in the `out`
 queue for injection into the MTA.
 
-The `virgin` queue is a special queue for messages created by Mailman.
+The `virgin` queue (not depicted above) is a special queue for messages created
+by Mailman.
 
 .. graphviz::
 
@@ -97,12 +102,13 @@ The default set of rules looks something like this:
         subgraph rules {
           rankdir=TB;
           node [shape=record];
-          approved [label="<in> approved | { <no> | <yes> }"];
-          emergency [label="<in> emergency | { <no> | <yes> }"];
-          loop [label="<in> loop | { <no> | <yes> }"];
-          modmember [label="<in> member\nmoderated | { <no> | <yes> }"];
-          administrivia [group="0", label="<in> administrivia | <always> "];
-          maxsize [label="<in> max\ size | {<in> no | <yes>}"];
+          approved [label="<in> approved | { <no> no | <yes> }"];
+          emergency [label="<in> emergency | { <no> no | <yes> }"];
+          loop [label="<in> loop | { <no> no | <yes> }"];
+          modmember [label="<in> member\nmoderated | { <no> no | <yes> }"];
+          administrivia [group="0",
+                        label="<in> administrivia | { <no> no | <yes> }"];
+          maxsize [label="<in> max\ size | {<no> no | <yes>}"];
           any [label="<in> any | {<no> | <yes>}"];
           truth [label="<in> truth | <always>"];
 
@@ -114,6 +120,7 @@ The default set of rules looks something like this:
           DISCARD [shape=invhouse, color=black, style=solid];
           MODERATION [color=wheat];
           HOLD [color=wheat];
+          action [color=wheat];
         }
         { PIPELINE [shape=box, style=filled, color=cyan]; }
 
@@ -130,7 +137,8 @@ The default set of rules looks something like this:
         modmember:no -> administrivia:in;
         modmember:yes -> MODERATION;
 
-        administrivia:always -> maxsize:in;
+        administrivia:no -> maxsize:in;
+        administrivia:yes -> action;
 
         maxsize:no -> any:in;
         maxsize:yes -> MODERATION;
@@ -145,7 +153,7 @@ The default set of rules looks something like this:
 Configuration
 =============
 
-Uses `lazr.config`_, essentially an "ini"-style configuration format.
+Mailman 3 uses `lazr.config`_, essentially an "ini"-style configuration format.
 
 Each Runner's configuration object knows whether it should be started
 when the Mailman daemon starts, and what queue the Runner manages.
