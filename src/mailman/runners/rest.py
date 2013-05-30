@@ -40,7 +40,7 @@ log = logging.getLogger('mailman.http')
 
 
 class RESTRunner(Runner):
-    intercept_signals = False
+    #intercept_signals = False
     is_queue_runner = False
 
     def run(self):

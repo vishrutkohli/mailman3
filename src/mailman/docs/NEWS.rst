@@ -18,6 +18,8 @@ Bugs
    Sandesh Kumar Agrawal. (LP: #1095422)
  * Creation of lists with upper case names should be coerced to lower case.
    (LP: #1117176)
+ * Fix REST server crash on `mailman reopen` due to no interception of
+   signals.  (LP: #1184376)
 
 REST
 ----
