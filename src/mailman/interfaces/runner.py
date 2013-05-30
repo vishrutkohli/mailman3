@@ -63,6 +63,8 @@ class IRunner(Interface):
         through the main loop.
         """)
 
+    # BAW 2013-05-30: but see LP: #1184376 for why this perhaps should be
+    # removed entirely.
     intercept_signals = Attribute("""\
         Should the runner mechanism intercept signals?
 
