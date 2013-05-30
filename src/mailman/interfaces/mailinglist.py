@@ -98,7 +98,8 @@ class IMailingList(Interface):
 
     display_name = Attribute("""\
         The short human-readable descriptive name for the mailing list.  This
-        is used in locations such as the message footers and Subject prefix.
+        is used in locations such as the message footers and as the default
+        value for the Subject prefix.
         """)
 
     description = Attribute("""\
@@ -107,6 +108,17 @@ class IMailingList(Interface):
         This description is used when the mailing list is listed with other
         mailing lists, or in headers, and so forth.  It should be as succinct
         as you can get it, while still identifying what the list is.""")
+
+    subject_prefix = Attribute("""\
+        The text to insert at the front of the Subject field.
+
+        When messages posted to this mailing list are sent to the list
+        subscribers, the Subject header may be rewritten to include an
+        identifying prefix.  Typically this prefix will appear in square
+        brackets and the default value inside the brackets is taken as the
+        list's display name.  However, any value can be used, including the
+        empty string to prevent Subject header rewriting.
+        """)
 
     allow_list_posts = Attribute(
         """Flag specifying posts to the list are generally allowed.

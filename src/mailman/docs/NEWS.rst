@@ -12,15 +12,6 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2013-XX-XX)
 
-Bugs
-----
- * Non-queue runners should not create ``var/queue`` subdirectories.  Fixed by
-   Sandesh Kumar Agrawal. (LP: #1095422)
- * Creation of lists with upper case names should be coerced to lower case.
-   (LP: #1117176)
- * Fix REST server crash on `mailman reopen` due to no interception of
-   signals.  (LP: #1184376)
-
 REST
 ----
  * Add ``reply_to_address`` and ``first_strip_reply_to`` as writable
@@ -35,6 +26,17 @@ Configuration
    already exist.  Also, when initializing the system, look for that file as
    the configuration file, just after ``./mailman.cfg`` and before
    ``~/.mailman.cfg``.  (LP: #1157861)
+
+Bugs
+----
+ * Non-queue runners should not create ``var/queue`` subdirectories.  Fixed by
+   Sandesh Kumar Agrawal. (LP: #1095422)
+ * Creation of lists with upper case names should be coerced to lower case.
+   (LP: #1117176)
+ * Fix REST server crash on `mailman reopen` due to no interception of
+   signals.  (LP: #1184376)
+ * Add `subject_prefix` to the `IMailingList` interface, and clarify the
+   docstring for `display_name`.  (LP: #1181498)
 
 
 3.0 beta 3 -- "Here Again"
