@@ -26,6 +26,7 @@ __all__ = [
 
 
 import time
+import signal
 import logging
 import traceback
 
@@ -37,6 +38,7 @@ from zope.interface import implementer
 
 from mailman.config import config
 from mailman.core.i18n import _
+from mailman.core.logging import reopen
 from mailman.core.switchboard import Switchboard
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager
@@ -46,12 +48,12 @@ from mailman.utilities.string import expand
 
 dlog = logging.getLogger('mailman.debug')
 elog = logging.getLogger('mailman.error')
+rlog = logging.getLogger('mailman.runner')
 
 
 
 @implementer(IRunner)
 class Runner:
-    intercept_signals = True
     is_queue_runner = True
 
     def __init__(self, name, slice=None):
@@ -85,9 +87,31 @@ class Runner:
         self.max_restarts = int(section.max_restarts)
         self.start = as_boolean(section.start)
         self._stop = False
+        self.status = 0
 
     def __repr__(self):
         return '<{0} at {1:#x}>'.format(self.__class__.__name__, id(self))
+
+    def signal_handler(self, signum, frame):
+        signame = {
+            signal.SIGTERM: 'SIGTERM',
+            signal.SIGINT: 'SIGINT',
+            signal.SIGUSR1: 'SIGUSR1',
+            }.get(signum, signum)
+        if signum in (signal.SIGTERM, signal.SIGINT, signal.SIGUSR1):
+            self.stop()
+            self.status = signum
+            rlog.info('%s runner caught %s.  Stopping.', self.name, signame)
+        elif signum == signal.SIGHUP:
+            reopen()
+            rlog.info('%s runner caught SIGHUP.  Reopening logs.', self.name)
+
+    def set_signals(self):
+        """See `IRunner`."""
+        signal.signal(signal.SIGHUP, self.signal_handler)
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+        signal.signal(signal.SIGUSR1, self.signal_handler)
 
     def stop(self):
         """See `IRunner`."""

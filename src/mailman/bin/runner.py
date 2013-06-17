@@ -29,115 +29,37 @@ import os
 import sys
 import signal
 import logging
+import argparse
 import traceback
 
 from mailman.config import config
 from mailman.core.i18n import _
-from mailman.core.logging import reopen
-from mailman.options import Options
+from mailman.core.initialize import initialize
 from mailman.utilities.modules import find_name
+from mailman.version import MAILMAN_VERSION_FULL
 
 
 log = None
 
 
 
-def r_callback(option, opt, value, parser):
+class ROptionAction(argparse.Action):
     """Callback for -r/--runner option."""
-    dest = getattr(parser.values, option.dest)
-    parts = value.split(':')
-    if len(parts) == 1:
-        runner = parts[0]
-        rslice = rrange = 1
-    elif len(parts) == 3:
-        runner = parts[0]
-        try:
-            rslice = int(parts[1])
-            rrange = int(parts[2])
-        except ValueError:
-            parser.print_help()
-            print >> sys.stderr, _('Bad runner specification: $value')
-            sys.exit(1)
-    else:
-        parser.print_help()
-        print >> sys.stderr, _('Bad runner specification: $value')
-        sys.exit(1)
-    dest.append((runner, rslice, rrange))
-
-
-
-class ScriptOptions(Options):
-    """Options for bin/runner."""
-    usage = _("""\
-Start one or more runners.
-
-The runner named on the command line is started, and it can either run through
-its main loop once (for those runners that support this) or continuously.  The
-latter is how the master runner starts all its subprocesses.
-
-When more than one runner is specified on the command line, they are each run
-in round-robin fashion.  All runners must support running its main loop once.
-In other words, the first named runner is run once.  When that runner is done,
-the next one is run to consume all the files in *its* directory, and so on.
-The number of total iterations can be given on the command line.  This mode of
-operation is primarily for debugging purposes.
-
-Usage: %prog [options]
-
--r is required unless -l or -h is given, and its argument must be one of the
-names displayed by the -l switch.
-
-Normally, this script should be started from 'bin/mailman start'.  Running it
-separately or with -o is generally useful only for debugging.  When run this
-way, the environment variable $MAILMAN_UNDER_MASTER_CONTROL will be set which
-subtly changes some error handling behavior.
-""")
-
-    def add_options(self):
-        """See `Options`."""
-        self.parser.add_option(
-            '-r', '--runner',
-            metavar='runner[:slice:range]', dest='runners',
-            type='string', default=[],
-            action='callback', callback=r_callback,
-            help=_("""\
-Start the named runner, which must be one of the strings returned by the -l
-option.
-
-For runners that manage a queue directory, optional slice:range if given, is
-used to assign multiple runner processes to that queue.  range is the total
-number of runners for the queue while slice is the number of this runner from
-[0..range).  For runners that do not manage a queue, slice and range are
-ignored.
-
-When using the slice:range form, you must ensure that each runner for the
-queue is given the same range value.  If slice:runner is not given, then 1:1
-is used.
-
-Multiple -r options may be given, in which case each runner will run once in
-round-robin fashion.  The special runner 'All' is shorthand for running all
-named runners listed by the -l option."""))
-        self.parser.add_option(
-            '-o', '--once',
-            default=False, action='store_true', help=_("""\
-Run each named runner exactly once through its main loop.  Otherwise, each
-runner runs indefinitely, until the process receives signal.  This is not
-compatible with runners that cannot be run once."""))
-        self.parser.add_option(
-            '-l', '--list',
-            default=False, action='store_true',
-            help=_('List the available runner names and exit.'))
-        self.parser.add_option(
-            '-v', '--verbose',
-            default=0, action='count', help=_("""\
-Display more debugging information to the log file."""))
-
-    def sanity_check(self):
-        """See `Options`."""
-        if self.arguments:
-            self.parser.error(_('Unexpected arguments'))
-        if not self.options.runners and not self.options.list:
-            self.parser.error(_('No runner name given.'))
+    def __call__(self, parser, namespace, values, option_string=None):
+        parts = values.split(':')
+        if len(parts) == 1:
+            runner = parts[0]
+            rslice = rrange = 1
+        elif len(parts) == 3:
+            runner = parts[0]
+            try:
+                rslice = int(parts[1])
+                rrange = int(parts[2])
+            except ValueError:
+                parser.error(_('Bad runner specification: $value'))
+        else:
+            parser.error(_('Bad runner specification: $value'))
+        setattr(namespace, self.dest, (runner, rslice, rrange))
 
 
 
@@ -175,53 +97,90 @@ def make_runner(name, slice, range, once=False):
 
 
 
-def set_signals(loop):
-    """Set up the signal handlers.
-
-    Signals caught are: SIGTERM, SIGINT, SIGUSR1 and SIGHUP.  The latter is
-    used to re-open the log files.  SIGTERM and SIGINT are treated exactly the
-    same -- they cause the runner to exit with no restart from the master.
-    SIGUSR1 also causes the runner to exit, but the master watcher will
-    restart it in that case.
-
-    :param loop: A runner instance.
-    :type loop: `IRunner`
-    """
-    def sigterm_handler(signum, frame):
-        # Exit the runner cleanly
-        loop.stop()
-        loop.status = signal.SIGTERM
-        log.info('%s runner caught SIGTERM.  Stopping.', loop.name())
-    signal.signal(signal.SIGTERM, sigterm_handler)
-    def sigint_handler(signum, frame):
-        # Exit the runner cleanly
-        loop.stop()
-        loop.status = signal.SIGINT
-        log.info('%s runner caught SIGINT.  Stopping.', loop.name())
-    signal.signal(signal.SIGINT, sigint_handler)
-    def sigusr1_handler(signum, frame):
-        # Exit the runner cleanly
-        loop.stop()
-        loop.status = signal.SIGUSR1
-        log.info('%s runner caught SIGUSR1.  Stopping.', loop.name())
-    signal.signal(signal.SIGUSR1, sigusr1_handler)
-    # SIGHUP just tells us to rotate our log files.
-    def sighup_handler(signum, frame):
-        reopen()
-        log.info('%s runner caught SIGHUP.  Reopening logs.', loop.name())
-    signal.signal(signal.SIGHUP, sighup_handler)
-
-
-
 def main():
     global log
 
-    options = ScriptOptions()
-    options.initialize()
+    parser = argparse.ArgumentParser(
+        description=_("""\
+        Start a runner
 
+        The runner named on the command line is started, and it can
+        either run through its main loop once (for those runners that
+        support this) or continuously.  The latter is how the master
+        runner starts all its subprocesses.
+
+        -r is required unless -l or -h is given, and its argument must
+        be one of the names displayed by the -l switch.
+
+        Normally, this script should be started from 'bin/mailman
+        start'.  Running it separately or with -o is generally useful
+        only for debugging.  When run this way, the environment variable
+        $MAILMAN_UNDER_MASTER_CONTROL will be set which subtly changes
+        some error handling behavior.
+        """))
+    parser.add_argument(
+        '--version',
+        action='version', version=MAILMAN_VERSION_FULL,
+        help=_('Print this version string and exit'))
+    parser.add_argument(
+        '-C', '--config',
+        help=_("""\
+        Configuration file to use.  If not given, the environment variable
+        MAILMAN_CONFIG_FILE is consulted and used if set.  If neither are
+        given, a default configuration file is loaded."""))
+    parser.add_argument(
+        '-r', '--runner',
+        metavar='runner[:slice:range]', dest='runner',
+        action=ROptionAction, default=None,
+        help=_("""\
+        Start the named runner, which must be one of the strings
+        returned by the -l option.
+
+        For runners that manage a queue directory, optional
+        `slice:range` if given is used to assign multiple runner
+        processes to that queue.  range is the total number of runners
+        for the queue while slice is the number of this runner from
+        [0..range).  For runners that do not manage a queue, slice and
+        range are ignored.
+
+        When using the `slice:range` form, you must ensure that each
+        runner for the queue is given the same range value.  If
+        `slice:runner` is not given, then 1:1 is used.
+        """))
+    parser.add_argument(
+        '-o', '--once',
+        default=False, action='store_true', help=_("""\
+        Run the named runner exactly once through its main loop.
+        Otherwise, the runner runs indefinitely until the process
+        receives a signal.  This is not compatible with runners that
+        cannot be run once."""))
+    parser.add_argument(
+        '-l', '--list',
+        default=False, action='store_true',
+        help=_('List the available runner names and exit.'))
+    parser.add_argument(
+        '-v', '--verbose',
+        default=False, action='store_true', help=_("""\
+        Display more debugging information to the log file."""))
+
+    args = parser.parse_args()
+    if args.runner is None and not args.list:
+        parser.error(_('No runner name given.'))
+
+    # Initialize the system.  Honor the -C flag if given.
+    config_path = (None if args.config is None
+                   else os.path.abspath(os.path.expanduser(args.config)))
+    initialize(config_path, args.verbose)
     log = logging.getLogger('mailman.runner')
+    if args.verbose:
+        console = logging.StreamHandler(sys.stderr)
+        formatter = logging.Formatter(config.logging.root.format,
+                                      config.logging.root.datefmt)
+        console.setFormatter(formatter)
+        logging.getLogger().addHandler(console)
+        logging.getLogger().setLevel(logging.DEBUG)
 
-    if options.options.list:
+    if args.list:
         descriptions = {}
         for section in config.runner_configs:
             ignore, dot, shortname = section.name.rpartition('.')
@@ -234,56 +193,10 @@ def main():
             print _('$name runs $classname')
         sys.exit(0)
 
-    # Fast track for one infinite runner.
-    if len(options.options.runners) == 1 and not options.options.once:
-        runner = make_runner(*options.options.runners[0])
-        class Loop:
-            status = 0
-            def __init__(self, runner):
-                self._runner = runner
-            def name(self):
-                return self._runner.__class__.__name__
-            def stop(self):
-                self._runner.stop()
-        loop = Loop(runner)
-        if runner.intercept_signals:
-            set_signals(loop)
-        # Now start up the main loop
-        log.info('%s runner started.', loop.name())
-        runner.run()
-        log.info('%s runner exiting.', loop.name())
-    else:
-        # Anything else we have to handle a bit more specially.
-        runners = []
-        for runner, rslice, rrange in options.options.runners:
-            runner = make_runner(runner, rslice, rrange, once=True)
-            runners.append(runner)
-        # This class is used to manage the main loop.
-        class Loop:
-            status = 0
-            def __init__(self):
-                self._isdone = False
-            def name(self):
-                return 'Main loop'
-            def stop(self):
-                self._isdone = True
-            def isdone(self):
-                return self._isdone
-        loop = Loop()
-        if runner.intercept_signals:
-            set_signals(loop)
-        log.info('Main runner loop started.')
-        while not loop.isdone():
-            for runner in runners:
-                # In case the SIGTERM came in the middle of this iteration.
-                if loop.isdone():
-                    break
-                if options.options.verbose:
-                    log.info('Now doing a %s runner iteration',
-                             runner.__class__.__bases__[0].__name__)
-                runner.run()
-            if options.options.once:
-                break
-        log.info('Main runner loop exiting.')
-    # All done
-    sys.exit(loop.status)
+    runner = make_runner(*args.runner, once=args.once)
+    runner.set_signals()
+    # Now start up the main loop
+    log.info('%s runner started.', runner.name)
+    runner.run()
+    log.info('%s runner exiting.', runner.name)
+    sys.exit(runner.status)

@@ -63,15 +63,16 @@ class IRunner(Interface):
         through the main loop.
         """)
 
-    # BAW 2013-05-30: but see LP: #1184376 for why this perhaps should be
-    # removed entirely.
-    intercept_signals = Attribute("""\
-        Should the runner mechanism intercept signals?
+    def set_signals():
+        """Set up the signal handlers necessary to control the runner.
 
-        In general, the runner catches SIGINT, SIGTERM, SIGUSR1, and SIGHUP to
-        manage the process.  Some runners need to manage their own signals,
-        and set this attribute to False.
-        """)
+        The runner should catch the following signals:
+        - SIGTERM and SIGINT: treated exactly the same, they cause the runner
+          to exit with no restart from the master.
+        - SIGUSR1: Also causes the runner to exit, but the master watcher will
+          retart it.
+        - SIGHUP: Re-open the log files.
+        """
 
     def _one_iteration():
         """The work done in one iteration of the main loop.

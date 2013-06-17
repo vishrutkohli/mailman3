@@ -130,6 +130,9 @@ Commands
    the Postfix `relay_domains` support.
  * `bin/mailman start` was passing the wrong relative path to its runner
    subprocesses when -C was given.  (LP: #982551)
+ * `bin/runner` command has been simplified and its command line options
+   reduced.  Now, only one `-r/--runner` option may be provided and the
+   round-robin feature has been removed.
 
 Other
 -----
@@ -144,6 +147,8 @@ Other
 Bugs
 ----
  * Fixed `send_goodbye_message()`.  (LP: #1091321)
+ * Fixed REST server crash on `reopen` command.  Identification and test
+   provided by Aurélien Bompard.  (LP: #1184376)
 
 
 3.0 beta 2 -- "Freeze"

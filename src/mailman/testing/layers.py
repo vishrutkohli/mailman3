@@ -45,11 +45,9 @@ import logging
 import datetime
 import tempfile
 
-from base64 import b64encode
-from lazr.config import as_boolean, as_timedelta
+from lazr.config import as_boolean
 from pkg_resources import resource_string
 from textwrap import dedent
-from urllib2 import Request, URLError, urlopen
 from zope.component import getUtility
 
 from mailman.config import config
@@ -59,7 +57,7 @@ from mailman.core.logging import get_handler
 from mailman.database.transaction import transaction
 from mailman.interfaces.domain import IDomainManager
 from mailman.testing.helpers import (
-    TestableMaster, get_lmtp_client, reset_the_world)
+    TestableMaster, get_lmtp_client, reset_the_world, wait_for_webservice)
 from mailman.testing.mta import ConnectionCountingController
 from mailman.utilities.string import expand
 
@@ -315,29 +313,10 @@ class RESTLayer(SMTPLayer):
 
     server = None
 
-    @staticmethod
-    def _wait_for_rest_server():
-        until = datetime.datetime.now() + as_timedelta(config.devmode.wait)
-        while datetime.datetime.now() < until:
-            try:
-                request = Request('http://localhost:9001/3.0/system')
-                basic_auth = '{0}:{1}'.format(config.webservice.admin_user,
-                                              config.webservice.admin_pass)
-                request.add_header('Authorization',
-                                   'Basic ' + b64encode(basic_auth))
-                fp = urlopen(request)
-            except URLError:
-                pass
-            else:
-                fp.close()
-                break
-        else:
-            raise RuntimeError('REST server did not start up')
-
     @classmethod
     def setUp(cls):
         assert cls.server is None, 'Layer already set up'
-        cls.server = TestableMaster(cls._wait_for_rest_server)
+        cls.server = TestableMaster(wait_for_webservice)
         cls.server.start('rest')
 
     @classmethod

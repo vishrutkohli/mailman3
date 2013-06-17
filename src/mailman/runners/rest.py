@@ -25,11 +25,9 @@ __all__ = [
     ]
 
 
-import sys
-import errno
-import select
 import signal
 import logging
+import threading
 
 from mailman.core.runner import Runner
 from mailman.rest.wsgiapp import make_server
@@ -40,25 +38,47 @@ log = logging.getLogger('mailman.http')
 
 
 class RESTRunner(Runner):
-    #intercept_signals = False
+    # Don't install the standard signal handlers because as defined, they
+    # won't actually stop the TCPServer started by .serve_forever().
     is_queue_runner = False
 
+    def __init__(self, name, slice=None):
+        """See `IRunner`."""
+        super(RESTRunner, self).__init__(name, slice)
+        # Both the REST server and the signal handlers must run in the main
+        # thread; the former because of SQLite requirements (objects created
+        # in one thread cannot be shared with the other threads), and the
+        # latter because of Python's signal handling semantics.
+        #
+        # Unfortunately, we cannot issue a TCPServer shutdown in the main
+        # thread, because that will cause a deadlock.  Yay.   So what we do is
+        # to use the signal handler to notify a shutdown thread that the
+        # shutdown should happen.  That thread will wake up and stop the main
+        # server.
+        self._server = make_server()
+        self._event = threading.Event()
+        def stopper(event, server):
+            event.wait()
+            server.shutdown()
+        self._thread = threading.Thread(
+            target=stopper, args=(self._event, self._server))
+        self._thread.start()
+
     def run(self):
-        log.info('Starting REST server')
-        # Handle SIGTERM the same way as SIGINT.
-        def stop_server(signum, frame):
-            log.info('REST server shutdown')
-            sys.exit(signal.SIGTERM)
-        signal.signal(signal.SIGTERM, stop_server)
-        try:
-            make_server().serve_forever()
-        except KeyboardInterrupt:
-            log.info('REST server interrupted')
-            sys.exit(signal.SIGINT)
-        except select.error as (errcode, message):
-            if errcode == errno.EINTR:
-                log.info('REST server exiting')
-                sys.exit(errno.EINTR)
-            raise
-        except:
-            raise
+        """See `IRunner`."""
+        self._server.serve_forever()
+
+    def signal_handler(self, signum, frame):
+        super(RESTRunner, self).signal_handler(signum, frame)
+        if signum in (signal.SIGTERM, signal.SIGINT, signal.SIGUSR1):
+            # Set the flag that will terminate the TCPserver loop.
+            self._event.set()
+
+    def _one_iteration(self):
+        # Just keep going
+        if self._thread.is_alive():
+            self._thread.join(timeout=0.1)
+        return 1
+
+    def _snooze(self, filecnt):
+        pass

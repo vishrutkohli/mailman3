@@ -155,8 +155,8 @@ def process(mlist, msg, msgdata):
         # above code?
         # Also skip Cc if this is an anonymous list as list posting address
         # is already in From and Reply-To in this case.
-        if (mlist.personalize == Personalization.full and
-            mlist.reply_goes_to_list != ReplyToMunging.point_to_list and
+        if (mlist.personalize is Personalization.full and
+            mlist.reply_goes_to_list is not ReplyToMunging.point_to_list and
             not mlist.anonymous_list):
             # Watch out for existing Cc headers, merge, and remove dups.  Note
             # that RFC 2822 says only zero or one Cc header is allowed.
