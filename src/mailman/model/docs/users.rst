@@ -332,8 +332,7 @@ membership role.
     >>> len(members)
     4
     >>> def sortkey(member):
-    ...     return (member.address.email, member.mailing_list,
-    ...             int(member.role))
+    ...     return member.address.email, member.mailing_list, member.role.value
     >>> for member in sorted(members, key=sortkey):
     ...     print member.address.email, member.mailing_list.list_id, \
     ...           member.role

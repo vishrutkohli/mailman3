@@ -36,7 +36,7 @@ import hashlib
 
 from cStringIO import StringIO
 from datetime import datetime, timedelta
-from flufl.enum import Enum
+from enum import Enum
 from lazr.config import as_boolean
 from restish import http
 from restish.http import Response
@@ -79,7 +79,7 @@ class ExtendedEncoder(json.JSONEncoder):
                 seconds = obj.seconds + obj.microseconds / 1000000.0
                 return '{0}d{1}s'.format(obj.days, seconds)
             return '{0}d'.format(obj.days)
-        elif hasattr(obj, 'enum') and issubclass(obj.enum, Enum):
+        elif isinstance(obj, Enum):
             # It's up to the decoding validator to associate this name with
             # the right Enum class.
             return obj.name

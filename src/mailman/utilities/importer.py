@@ -28,6 +28,7 @@ __all__ = [
 import sys
 import datetime
 
+from mailman.interfaces.action import FilterAction
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
@@ -47,6 +48,7 @@ TYPES = dict(
     bounce_info_stale_after=seconds_to_delta,
     bounce_you_are_disabled_warnings_interval=seconds_to_delta,
     digest_volume_frequency=DigestFrequency,
+    filter_action=FilterAction,
     newsgroup_moderation=NewsgroupModeration,
     personalize=Personalization,
     reply_goes_to_list=ReplyToMunging,

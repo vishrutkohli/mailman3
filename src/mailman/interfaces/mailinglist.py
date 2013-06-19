@@ -29,7 +29,7 @@ __all__ = [
     ]
 
 
-from flufl.enum import Enum
+from enum import Enum
 from zope.interface import Interface, Attribute
 
 from mailman.interfaces.member import MemberRole

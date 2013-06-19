@@ -48,9 +48,13 @@ class enum_validator:
         self._enum_class = enum_class
 
     def __call__(self, enum_value):
-        # This will raise a ValueError if the enum value is unknown.  Let that
-        # percolate up.
-        return self._enum_class[enum_value]
+        # This will raise a KeyError if the enum value is unknown.  The
+        # Validator API requires turning this into a ValueError.
+        try:
+            return self._enum_class[enum_value]
+        except KeyError as exception:
+            # Retain the error message.
+            raise ValueError(exception.message)
 
 
 def subscriber_validator(subscriber):

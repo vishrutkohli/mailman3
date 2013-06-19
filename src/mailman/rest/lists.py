@@ -57,7 +57,7 @@ def member_matcher(request, segments):
         return None
     try:
         role = MemberRole[segments[0]]
-    except ValueError:
+    except KeyError:
         # Not a valid role.
         return None
     # No more segments.
@@ -76,7 +76,7 @@ def roster_matcher(request, segments):
         return None
     try:
         return (), dict(role=MemberRole[segments[1]]), ()
-    except ValueError:
+    except KeyError:
         # Not a valid role.
         return None
 
