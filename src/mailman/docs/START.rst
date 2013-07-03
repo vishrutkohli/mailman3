@@ -25,10 +25,15 @@ search, and retrieval of archived messages to a separate application (a simple
 implementation is provided).  The web interface (known as `Postorius`_) and
 archiver (known as `Hyperkitty`_) are in separate development.
 
-Contributions are welcome.  Please submit bug reports on the Mailman bug
-tracker at https://bugs.launchpad.net/mailman though you will currently need
-to have a login on Launchpad to do so.  You can also send email to the
-mailman-developers@python.org mailing list.
+
+Contact Us
+==========
+
+Contributions of code, problem reports, and feature requests are welcome.
+Please submit bug reports on the Mailman bug tracker at
+https://bugs.launchpad.net/mailman (you need to have a login on Launchpad to
+do so).  You can also send email to the mailman-developers@python.org mailing
+list, or ask on IRC channel #mailman on Freenode.
 
 
 Requirements
