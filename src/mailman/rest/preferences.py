@@ -84,6 +84,7 @@ class Preferences(ReadOnlyPreferences):
             return http.not_found()
         kws = dict(
             acknowledge_posts=GetterSetter(as_boolean),
+	    hide_address = GetterSetter(as_boolean),
             delivery_mode=GetterSetter(enum_validator(DeliveryMode)),
             delivery_status=GetterSetter(enum_validator(DeliveryStatus)),
             preferred_language=GetterSetter(language_validator),
