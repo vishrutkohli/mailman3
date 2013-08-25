@@ -90,7 +90,7 @@ You can also use the response set to get the date of the last response sent.
     >>> response.address
     <Address: aperson@example.com [not verified] at ...>
     >>> response.response_type
-    <EnumValue: Response.hold [int=1]>
+    <EnumValue: Response.hold [value=1]>
     >>> response.date_sent
     datetime.date(2005, 8, 1)
 

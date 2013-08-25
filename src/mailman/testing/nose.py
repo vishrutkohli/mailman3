@@ -27,15 +27,20 @@ __all__ = [
 
 import os
 import re
+import doctest
 import mailman
+import importlib
 
-from mailman.testing.layers import ConfigLayer, MockAndMonkeyLayer
+from mailman.testing.documentation import setup, teardown
+from mailman.testing.layers import ConfigLayer, MockAndMonkeyLayer, SMTPLayer
 from nose2.events import Plugin
 
-
+DOT = '.'
+FLAGS = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE | doctest.REPORT_NDIFF
 TOPDIR = os.path.dirname(mailman.__file__)
 
 
+
 class NosePlugin(Plugin):
     configSection = 'mailman'
 
@@ -59,3 +64,36 @@ class NosePlugin(Plugin):
                     break
             else:
                 event.excludedNames.append(name)
+
+    def handleFile(self, event):
+        path = event.path[len(TOPDIR)+1:]
+        if len(self.patterns) > 0:
+            for pattern in self.patterns:
+                if re.search(pattern, path):
+                    break
+            else:
+                # Skip this doctest.
+                return
+        base, ext = os.path.splitext(path)
+        if ext != '.rst':
+            return
+        # Look to see if the package defines a test layer, otherwise use the
+        # default layer.  First turn the file system path into a dotted Python
+        # module path.
+        parent = os.path.dirname(path)
+        dotted = 'mailman.' + DOT.join(parent.split(os.path.sep))
+        try:
+            module = importlib.import_module(dotted)
+        except ImportError:
+            layer = SMTPLayer
+        else:
+            layer = getattr(module, 'layer', SMTPLayer)
+        suite = doctest.DocFileSuite(
+            path, package='mailman',
+            optionflags=FLAGS,
+            setUp=setup,
+            tearDown=teardown)
+        # Flatten the suite, adding the layer flag on every TestCase.
+        for test in suite:
+            test.layer = layer
+            event.extraTests.append(test)

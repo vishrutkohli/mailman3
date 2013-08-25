@@ -52,8 +52,9 @@ script that will produce no output to force the hooks to run.
     >>> import subprocess
     >>> from mailman.testing.layers import ConfigLayer
     >>> def call():
+    ...     exe = os.path.join(os.path.dirname(sys.executable), 'mailman')
     ...     proc = subprocess.Popen(
-    ...         'bin/mailman lists --domain ignore -q'.split(),
+    ...         [exe, 'lists', '--domain', 'ignore', '-q'],
     ...         cwd=ConfigLayer.root_directory,
     ...         env=dict(MAILMAN_CONFIG_FILE=config_path,
     ...                  PYTHONPATH=config_directory),
