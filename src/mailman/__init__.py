@@ -44,7 +44,7 @@ except ImportError:
 #
 # Do *not* do this if we're building the documentation.
 if 'build_sphinx' not in sys.argv:
-    if sys.argv[0].split(os.sep)[-1] == 'test':
+    if any('nose2' in arg for arg in sys.argv):
         from mailman.testing.i18n import initialize
     else:
         from mailman.core.i18n import initialize
