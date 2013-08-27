@@ -45,6 +45,7 @@ class NosePlugin(Plugin):
     configSection = 'mailman'
 
     def __init__(self):
+        super(NosePlugin, self).__init__()
         self.patterns = []
         self.addArgument(self.patterns, 'P', 'pattern',
                          'Add a test matching pattern')
