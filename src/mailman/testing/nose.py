@@ -89,12 +89,12 @@ class NosePlugin(Plugin):
             layer = SMTPLayer
         else:
             layer = getattr(module, 'layer', SMTPLayer)
-        suite = doctest.DocFileSuite(
+        test = doctest.DocFileTest(
             path, package='mailman',
             optionflags=FLAGS,
             setUp=setup,
             tearDown=teardown)
-        # Flatten the suite, adding the layer flag on every TestCase.
-        for test in suite:
-            test.layer = layer
-            event.extraTests.append(test)
+        test.layer = layer
+        # Suppress the extra "Doctest: ..." line.
+        test.shortDescription = lambda: None
+        event.extraTests.append(test)
