@@ -39,44 +39,43 @@ Python 2.7 is required.  It can either be the default 'python' on your
 If your operating system does not include Python, see http://www.python.org
 downloading and installing it from source.  Python 3 is not yet supported.
 
-In this documentation, a bare ``python`` refers to the Python executable used
-to invoke ``bootstrap.py``.
-
-Mailman 3 is now based on the `zc.buildout`_ infrastructure, which greatly
-simplifies testing Mailman.  Buildout is not required for installation.
-
-During the beta program, you may need some additional dependencies, such as a
-C compiler and the Python development headers and libraries.  You will need an
-internet connection.
+You may need some additional dependencies, which are either available from
+your OS vendor, or can be downloaded automatically from the `Python
+Cheeseshop`_.
 
 
 Building Mailman 3
 ==================
 
-We provide several recipes for building Mailman.  All should generally work,
-but some may provide a better experience for developing Mailman versus
-deploying Mailman.
-
+To build Mailman for development purposes, you will create a virtual
+environment.  You need to have the `virtualenv`_ program installed.
 
 Building for development
 ------------------------
 
-The best way to build Mailman for development is to use the `zc.buildout`_
-tools.  This will download all Mailman dependencies from the `Python
-Cheeseshop`_.  The dependencies will get installed locally, but isolated from
-your system Python.  Here are the commands to build Mailman for development::
+First, create a virtual environment.  By default ``virtualenv`` uses the
+``python`` executable it finds first on your ``$PATH``.  Make sure this is
+Python 2.7.  The directory you install the virtualenv into is up to you, but
+for purposes of this document, we'll install it into ``/tmp/py27``::
 
-    % python bootstrap.py
-    % bin/buildout
+    % virtualenv --system-site-packages /tmp/py27
+
+Now, activate the virtual environment and set it up for development::
+
+    % source /tmp/py27/bin/activate
+    % python setup.py develop
 
 Sit back and have some Kombucha while you wait for everything to download and
 install.
 
 Now you can run the test suite via::
 
-    % bin/test -vv
+    % nose2 -v
 
-You should see no failures.
+You should see no failures.  You can also run a subset of the full test suite
+by filter tests on the module or test name using the ``-P`` option::
+
+    % nose2 -v -P user
 
 Build the online docs by running::
 
@@ -90,21 +89,6 @@ in your browser to start reading the documentation.  Or you can just read the
 doctests by looking in all the 'doc' directories under the 'mailman' package.
 Doctests are documentation first, so they should give you a pretty good idea
 how various components of Mailman 3 work.
-
-
-Building for deployment using virtualenv
-----------------------------------------
-
-`virtualenv`_ is a way to create isolated Python environments.  You can use
-virtualenv as a way to deploy Mailman without installing it into your system
-Python.  There are lots of ways to use virtualenv, but as described here, it
-will be default use any dependencies which are already installed in your
-system, downloading from the Cheeseshop only those which are missing.  Here
-are the steps to install Mailman using virtualenv::
-
-    $ virtualenv --system-site-packages /path/to/your/installation
-    $ source /path/to/your/installation/bin/activate
-    $ python setup.py install
 
 Once everything is downloaded and installed, you can initialize Mailman and
 get a display of the basic configuration settings by running::
@@ -190,7 +174,6 @@ email application that speaks LMTP or SMTP will be able to use Hyperkitty.
 A `five minute guide to Hyperkitty`_ is based on Toshio Kuratomi's README.
 
 
-.. _`zc.buildout`: http://pypi.python.org/pypi/zc.buildout
 .. _`Postorius`: https://launchpad.net/postorius
 .. _`Hyperkitty`: https://launchpad.net/hyperkitty
 .. _`Django`: http://djangoproject.org/

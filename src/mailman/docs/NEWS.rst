@@ -12,6 +12,12 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2013-XX-XX)
 
+Development
+-----------
+ * Mailman 3 no longer uses ``zc.buildout`` and tests are now run by the
+   ``nose2`` test runner.  See ``src/mailman/docs/START.rst`` for details on
+   how to build Mailman and run the test suite.
+
 REST
 ----
  * Add ``reply_to_address`` and ``first_strip_reply_to`` as writable
