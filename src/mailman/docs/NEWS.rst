@@ -17,6 +17,7 @@ Development
  * Mailman 3 no longer uses ``zc.buildout`` and tests are now run by the
    ``nose2`` test runner.  See ``src/mailman/docs/START.rst`` for details on
    how to build Mailman and run the test suite.
+ * Use the ``enum34`` package instead of ``flufl.enum``.
 
 REST
 ----

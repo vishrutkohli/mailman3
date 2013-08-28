@@ -34,7 +34,7 @@ import socket
 import logging
 
 from datetime import timedelta
-from flufl.enum import Enum
+from enum import Enum
 from flufl.lock import Lock, NotLockedError, TimeOutError
 from lazr.config import as_boolean
 

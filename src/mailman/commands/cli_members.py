@@ -130,7 +130,7 @@ class Members:
                             DeliveryMode.mime_digests,
                             DeliveryMode.summary_digests]
         elif args.digest is not None:
-            digest_types = [DeliveryMode(args.digest + '_digests')]
+            digest_types = [DeliveryMode[args.digest + '_digests']]
         else:
             # Don't filter on digest type.
             pass
@@ -140,7 +140,7 @@ class Members:
         elif args.nomail == 'byadmin':
             status_types = [DeliveryStatus.by_moderator]
         elif args.nomail.startswith('by'):
-            status_types = [DeliveryStatus('by_' + args.nomail[2:])]
+            status_types = [DeliveryStatus['by_' + args.nomail[2:]]]
         elif args.nomail == 'enabled':
             status_types = [DeliveryStatus.enabled]
         elif args.nomail == 'unknown':

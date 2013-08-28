@@ -60,7 +60,7 @@ class _ModerationBase:
         resource.update(data)
         # Check for a matching request type, and insert the type name into the
         # resource.
-        request_type = RequestType(resource.pop('_request_type'))
+        request_type = RequestType[resource.pop('_request_type')]
         if request_type not in expected_request_types:
             return None
         resource['type'] = request_type.name
@@ -205,7 +205,7 @@ class MembershipChangeRequest(resource.Resource, _ModerationBase):
             return http.not_found()
         key, data = results
         try:
-            request_type = RequestType(data['_request_type'])
+            request_type = RequestType[data['_request_type']]
         except ValueError:
             return http.bad_request()
         if request_type is RequestType.subscription:

@@ -32,7 +32,7 @@ from storm.variables import Variable
 
 
 class _EnumVariable(Variable):
-    """Storm variable for supporting flufl.enum.Enum types.
+    """Storm variable for supporting enum types.
 
     To use this, make the database column a INTEGER.
     """
@@ -46,18 +46,18 @@ class _EnumVariable(Variable):
             return None
         if not from_db:
             return value
-        return self._enum[value]
+        return self._enum(value)
 
     def parse_get(self, value, to_db):
         if value is None:
             return None
         if not to_db:
             return value
-        return int(value)
+        return value.value
 
 
 class Enum(SimpleProperty):
-    """Custom Enum type for Storm supporting flufl.enum.Enums."""
+    """Custom type for Storm supporting enums."""
 
     variable_class = _EnumVariable
 

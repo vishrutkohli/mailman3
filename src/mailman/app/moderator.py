@@ -246,7 +246,7 @@ def handle_subscription(mlist, id, action, comment=None):
                 lang=getUtility(ILanguageManager)[data['language']])
     elif action is Action.accept:
         key, data = requestdb.get_request(id)
-        delivery_mode = DeliveryMode(data['delivery_mode'])
+        delivery_mode = DeliveryMode[data['delivery_mode']]
         address = data['address']
         display_name = data['display_name']
         language = getUtility(ILanguageManager)[data['language']]
