@@ -2,32 +2,73 @@
 Hooking up your mail server
 ===========================
 
-Mailman needs to be hooked up to your mail server (a.k.a. *mail transport
-agent* or *MTA*) both to accept incoming mail and to deliver outgoing mail.
-Mailman itself never delivers messages to the end user; it lets its immediate
-upstream mail server do that.
+Mailman needs to communicate with your *MTA* (*mail transport agent*
+or *mail server*, the software which handles sending mail across the
+Internet), both to accept incoming mail and to deliver outgoing mail.
+Mailman itself never delivers messages to the end user.  It sends them
+to its immediate upstream MTA, which delivers them.  In the same way,
+Mailman never receives mail directly.  Mail from outside always comes
+via the MTA.
 
-The preferred way to allow Mailman to accept incoming messages from your mail
-server is to use the `Local Mail Transfer Protocol`_ (LMTP_) interface.  Most
-open source mail server support LMTP for local delivery, and this is much more
-efficient than spawning a process just to do the delivery.
+Mailman accepts incoming messages from the MTA using the `Local Mail
+Transfer Protocol`_ (LMTP_) interface.  Mailman can use other incoming
+transports, but LMTP is much more efficient than spawning a process
+just to do the delivery.  Most open source MTAs support LMTP for local
+delivery.  If yours doesn't, and you need to use a different
+interface, please ask on the `mailing list or on IRC`_.
 
-Your mail server should also accept `Simple Mail Transfer Protocol`_ (SMTP_)
-connections from Mailman, for all outgoing messages.
+Mailman passes all outgoing messages to the MTA using the `Simple Mail
+Transfer Protocol`_ (SMTP_).
 
-The specific instructions for hooking your mail server up to Mailman differs
-depending on which mail server you're using.  The following are instructions
-for the popular open source mail servers.
+Cooperation between Mailman and the MTA requires some configuration of
+both.  MTA configuration differs for each of the available MTAs, and
+there is a section for each one.  Instructions for Postfix are given
+below.  We would really appreciate contributions of configurations for
+Exim and Sendmail, and welcome information about other popular open
+source mail servers.
 
-Note that Mailman provides lots of configuration variables that you can use to
-tweak performance for your operating environment.  See the
+Configuring Mailman to communicate with the MTA is straightforward,
+and basically the same for all MTAs.  In your ``mailman.cfg`` file,
+add (or edit) a section like the following::
+
+    [mta]
+    incoming: mailman.mta.postfix.LMTP
+    outgoing: mailman.mta.deliver.deliver
+    lmtp_host: 127.0.0.1
+    lmtp_port: 8024
+    smtp_host: localhost
+    smtp_port: 25
+
+This configuration is for a system where Mailman and the MTA are on
+the same host.
+
+The ``incoming`` and ``outgoing`` parameters identify the Python
+objects used to communicate with the MTA.  The ``deliver`` module used
+in ``outgoing`` is pretty standard across all MTAs.  The ``postfix``
+module in ``incoming`` is specific to Postfix.  See the section for
+your MTA below for details on these parameters.
+
+``lmtp_host`` and ``lmtp_port`` are parameters which are used by
+Mailman, but also will be passed to the MTA to identify the Mailman
+host.  The "same host" case is special; some MTAs (including Postfix)
+do not recognize "localhost", and need the numerical IP address.  If
+they are on different hosts, ``lmtp_host`` should be set to the domain
+name or IP address of the Mailman host.  ``lmtp_port`` is fairly
+arbitrary (there is no standard port for LMTP).  Use any port
+convenient for your site.  "8024" is as good as any, unless another
+service is using it.
+
+``smtp_host`` and ``smtp_port`` are parameters used to identify the
+MTA to Mailman.  If the MTA and Mailman are on separate hosts,
+``smtp_host`` should be set to the domain name or IP address of the
+MTA host.  ``smtp_port`` will almost always be 25, which is the
+standard port for SMTP.  (Some special site configurations set it to a
+different port.  If you need this, you probably already know that,
+know why, and what to do, too!)
+
+Mailman also provides many other configuration variables that you can
+use to tweak performance for your operating environment.  See the
 ``src/mailman/config/schema.cfg`` file for details.
-
-
-Exim
-====
-
-Contributions are welcome!
 
 
 Postfix
@@ -131,12 +172,19 @@ the Postfix documentation at:
 .. _`mydestination`: http://www.postfix.org/postconf.5.html#mydestination
 
 
+Exim
+====
+
+Contributions are welcome!
+
+
 Sendmail
 ========
 
 Contributions are welcome!
 
 
+.. _`mailing list or on IRC`: START.html#contact-us
 .. _`Local Mail Transfer Protocol`:
    http://en.wikipedia.org/wiki/Local_Mail_Transfer_Protocol
 .. _LMTP: http://www.faqs.org/rfcs/rfc2033.html
