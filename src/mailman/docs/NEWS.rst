@@ -25,6 +25,8 @@ REST
    attributes of a mailing list's configuration.  (LP: #1157881)
  * Support pagination of some large collections (lists, users, members).
    Given by Florian Fuchs.  (LP: #1156529)
+ * Expose ``hide_address`` to the ``.../preferences`` REST API.  Contributed
+   by Sneha Priscilla.
 
 Configuration
 -------------
