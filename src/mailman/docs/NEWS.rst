@@ -28,6 +28,12 @@ REST
  * Expose ``hide_address`` to the ``.../preferences`` REST API.  Contributed
    by Sneha Priscilla.
 
+Commands
+--------
+ * `mailman conf` now has a `-t/--sort` flag which sorts the output by section
+   and then key.  Contributed by Karl-Aksel Puulmann and David Soto
+   (LP: 1162492)
+
 Configuration
 -------------
  * When creating the initial file system layout in ``var``, e.g. via

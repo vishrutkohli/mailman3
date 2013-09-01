@@ -31,6 +31,7 @@ import mock
 import tempfile
 import unittest
 
+from StringIO import StringIO
 from mailman.commands.cli_conf import Conf
 from mailman.testing.layers import ConfigLayer
 
@@ -40,6 +41,7 @@ class FakeArgs:
     section = None
     key = None
     output = None
+    sort = False
 
 
 class FakeParser:
@@ -99,3 +101,13 @@ class TestConf(unittest.TestCase):
         finally:
             os.remove(filename)
         self.assertEqual(contents, 'no\n')
+
+    def test_sort_by_section(self):
+        self.args.output = '-'
+        self.args.sort = True
+        output = StringIO()
+        with mock.patch('sys.stdout', output):
+            self.command.process(self.args)
+        last_line = ''
+        for line in output.getvalue().splitlines():
+            self.assertTrue(line > last_line)
