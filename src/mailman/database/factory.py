@@ -56,7 +56,6 @@ class DatabaseFactory:
             database.initialize()
             database.load_migrations()
             database.commit()
-            import sys; print('db -> done', os.getpid(), file=sys.stderr)
             return database
 
 
