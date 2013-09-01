@@ -54,7 +54,7 @@ def _membership_sort_key(member):
     The members are sorted first by unique list id, then by subscribed email
     address, then by role.
     """
-    return (member.list_id, member.address.email, int(member.role))
+    return (member.list_id, member.address.email, member.role.value)
 
 
 

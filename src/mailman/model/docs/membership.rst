@@ -217,7 +217,7 @@ There is also a roster containing all the subscribers of a mailing list,
 regardless of their role.
 
     >>> def sortkey(member):
-    ...     return (member.address.email, int(member.role))
+    ...     return (member.address.email, member.role.value)
     >>> for member in sorted(mlist.subscribers.members, key=sortkey):
     ...     print member.address.email, member.role
     aperson@example.com MemberRole.member

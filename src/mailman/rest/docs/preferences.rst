@@ -95,6 +95,7 @@ PUT operation.
     ...           'acknowledge_posts': True,
     ...           'delivery_mode': 'plaintext_digests',
     ...           'delivery_status': 'by_user',
+    ...           'hide_address': False,
     ...           'preferred_language': 'ja',
     ...           'receive_list_copy': True,
     ...           'receive_own_postings': False,
@@ -109,6 +110,7 @@ PUT operation.
     acknowledge_posts: True
     delivery_mode: plaintext_digests
     delivery_status: by_user
+    hide_address: False
     http_etag: "..."
     preferred_language: ja
     receive_list_copy: True
@@ -133,6 +135,7 @@ You can also update just a few of the attributes using PATCH.
     acknowledge_posts: True
     delivery_mode: plaintext_digests
     delivery_status: by_user
+    hide_address: False
     http_etag: "..."
     preferred_language: ja
     receive_list_copy: False

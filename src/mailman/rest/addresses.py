@@ -178,7 +178,7 @@ class UserAddresses(_AddressBase):
 
 def membership_key(member):
     # Sort first by mailing list, then by address, then by role.
-    return member.list_id, member.address.email, int(member.role)
+    return member.list_id, member.address.email, member.role.value
 
 
 class AddressMemberships(MemberCollection):

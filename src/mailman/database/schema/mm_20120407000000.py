@@ -67,11 +67,11 @@ def upgrade(database, store, version, module_path):
 def archive_policy(archive, archive_private):
     """Convert archive and archive_private to archive_policy."""
     if archive == 0:
-        return int(ArchivePolicy.never)
+        return ArchivePolicy.never.value
     elif archive_private == 1:
-        return int(ArchivePolicy.private)
+        return ArchivePolicy.private.value
     else:
-        return int(ArchivePolicy.public)
+        return ArchivePolicy.public.value
 
 
 

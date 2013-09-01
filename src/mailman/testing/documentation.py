@@ -25,23 +25,16 @@ from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'test_suite',
+    'setup',
+    'teardown'
     ]
 
 
-import os
-import sys
-import doctest
-import unittest
-
 from inspect import isfunction, ismethod
-
-import mailman
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
-from mailman.testing.helpers import (
-    call_api, chdir, specialized_message_from_string)
+from mailman.testing.helpers import call_api, specialized_message_from_string
 from mailman.testing.layers import SMTPLayer
 
 
@@ -181,53 +174,3 @@ def teardown(testobj):
             cleanup()
         else:
             cleanup[0](*cleanup[1:])
-
-
-
-def test_suite():
-    """Create test suites for all .rst documentation tests.
-
-    .txt files are also tested, but .rst is highly preferred.
-    """
-    suite = unittest.TestSuite()
-    topdir = os.path.dirname(mailman.__file__)
-    packages = []
-    for dirpath, dirnames, filenames in os.walk(topdir):
-        if 'docs' in dirnames:
-            docsdir = os.path.join(dirpath, 'docs')[len(topdir)+1:]
-            packages.append(docsdir)
-    # Under higher verbosity settings, report all doctest errors, not just the
-    # first one.
-    flags = (doctest.ELLIPSIS |
-             doctest.NORMALIZE_WHITESPACE |
-             doctest.REPORT_NDIFF)
-    # Add all the doctests in all subpackages.
-    doctest_files = {}
-    with chdir(topdir):
-        for docsdir in packages:
-            # Look to see if the package defines a test layer, otherwise use
-            # SMTPLayer.
-            package_path = 'mailman.' + DOT.join(docsdir.split(os.sep))
-            try:
-                __import__(package_path)
-            except ImportError:
-                layer = SMTPLayer
-            else:
-                layer = getattr(sys.modules[package_path], 'layer', SMTPLayer)
-            for filename in os.listdir(docsdir):
-                base, extension = os.path.splitext(filename)
-                if os.path.splitext(filename)[1] in ('.txt', '.rst'):
-                    module_path = package_path + '.' + base
-                    doctest_files[module_path] = (
-                        os.path.join(docsdir, filename), layer)
-    for module_path in sorted(doctest_files):
-        path, layer = doctest_files[module_path]
-        test = doctest.DocFileSuite(
-            path,
-            package='mailman',
-            optionflags=flags,
-            setUp=setup,
-            tearDown=teardown)
-        test.layer = layer
-        suite.addTest(test)
-    return suite

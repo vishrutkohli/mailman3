@@ -12,12 +12,27 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2013-XX-XX)
 
+Development
+-----------
+ * Mailman 3 no longer uses ``zc.buildout`` and tests are now run by the
+   ``nose2`` test runner.  See ``src/mailman/docs/START.rst`` for details on
+   how to build Mailman and run the test suite.
+ * Use the ``enum34`` package instead of ``flufl.enum``.
+
 REST
 ----
  * Add ``reply_to_address`` and ``first_strip_reply_to`` as writable
    attributes of a mailing list's configuration.  (LP: #1157881)
  * Support pagination of some large collections (lists, users, members).
    Given by Florian Fuchs.  (LP: #1156529)
+ * Expose ``hide_address`` to the ``.../preferences`` REST API.  Contributed
+   by Sneha Priscilla.
+
+Commands
+--------
+ * `mailman conf` now has a `-t/--sort` flag which sorts the output by section
+   and then key.  Contributed by Karl-Aksel Puulmann and David Soto
+   (LP: 1162492)
 
 Configuration
 -------------
