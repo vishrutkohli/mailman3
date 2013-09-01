@@ -42,12 +42,13 @@ from zope.component import getUtility
 from mailman.interfaces.database import IDatabaseFactory
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.archiver import ArchivePolicy
+from mailman.interfaces.bounce import BounceContext
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.model.bans import Ban
-from mailman.model.bounce import BounceContext, BounceEvent
+from mailman.model.bounce import BounceEvent
 from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
 
@@ -474,5 +475,5 @@ class TestMigration20130406MigratedData(MigrationTestBase):
         self.assertEqual(events[0].email, 'anne@example.com')
         self.assertEqual(events[0].timestamp, datetime(2013, 4, 6, 21, 12))
         self.assertEqual(events[0].message_id, '<abc@example.com>')
-        self.assertEqual(events[0].context, BounceContext[1])
+        self.assertEqual(events[0].context, BounceContext.normal)
         self.assertFalse(events[0].processed)
