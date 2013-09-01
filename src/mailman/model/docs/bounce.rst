@@ -39,8 +39,8 @@ of bouncing email addresses.  These are passed one-by-one to the registration
 interface.
 
     >>> event = processor.register(mlist, 'anne@example.com', msg)
-    >>> print event.list_name
-    test@example.com
+    >>> print event.list_id
+    test.example.com
     >>> print event.email
     anne@example.com
     >>> print event.message_id

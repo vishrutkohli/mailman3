@@ -33,6 +33,9 @@ __all__ = [
     ]
 
 
+from mailman.database.schema.helpers import make_listid, pivot
+
+
 VERSION = '20121015000000'
 
 
@@ -45,19 +48,9 @@ def upgrade(database, store, version, module_path):
 
 
 
-def _make_listid(fqdn_listname):
-    list_name, at, mail_host = fqdn_listname.partition('@')
-    if at == '':
-        # If there is no @ sign in the value, assume it already contains the
-        # list-id.
-        return fqdn_listname
-    return '{0}.{1}'.format(list_name, mail_host)
-
-
-
 def upgrade_sqlite(database, store, version, module_path):
     database.load_schema(
-        store, version, 'sqlite_{0}_01.sql'.format(version), module_path)
+        store, version, 'sqlite_{}_01.sql'.format(version), module_path)
     results = store.execute("""
         SELECT id, mailing_list
         FROM ban;
@@ -67,15 +60,12 @@ def upgrade_sqlite(database, store, version, module_path):
         if mailing_list is None:
             continue
         store.execute("""
-            UPDATE ban_backup SET list_id = '{0}'
-            WHERE id = {1};
-            """.format(_make_listid(mailing_list), id))
+            UPDATE ban_backup SET list_id = '{}'
+            WHERE id = {};
+            """.format(make_listid(mailing_list), id))
     # Pivot the bans backup table to the real thing.
-    store.execute('DROP TABLE ban;')
-    store.execute('ALTER TABLE ban_backup RENAME TO ban;')
-    # Pivot the mailinglist backup table to the real thing.
-    store.execute('DROP TABLE mailinglist;')
-    store.execute('ALTER TABLE ml_backup RENAME TO mailinglist;')
+    pivot(store, 'ban')
+    pivot(store, 'mailinglist')
 
 
 
@@ -90,7 +80,7 @@ def upgrade_postgres(database, store, version, module_path):
         store.execute("""
             UPDATE ban SET list_id = '{0}'
             WHERE id = {1};
-            """.format(_make_listid(mailing_list), id))
+            """.format(make_listid(mailing_list), id))
     store.execute('ALTER TABLE ban DROP COLUMN mailing_list;')
     store.execute('ALTER TABLE mailinglist DROP COLUMN new_member_options;')
     store.execute('ALTER TABLE mailinglist DROP COLUMN send_reminders;')

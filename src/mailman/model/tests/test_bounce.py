@@ -58,7 +58,7 @@ Message-Id: <first>
         events = list(self._processor.events)
         self.assertEqual(len(events), 1)
         event = events[0]
-        self.assertEqual(event.list_name, 'test@example.com')
+        self.assertEqual(event.list_id, 'test.example.com')
         self.assertEqual(event.email, 'anne@example.com')
         self.assertEqual(event.timestamp, datetime(2005, 8, 1, 7, 49, 23))
         self.assertEqual(event.message_id, '<first>')
@@ -68,7 +68,7 @@ Message-Id: <first>
         unprocessed = list(self._processor.unprocessed)
         self.assertEqual(len(unprocessed), 1)
         event = unprocessed[0]
-        self.assertEqual(event.list_name, 'test@example.com')
+        self.assertEqual(event.list_id, 'test.example.com')
         self.assertEqual(event.email, 'anne@example.com')
         self.assertEqual(event.timestamp, datetime(2005, 8, 1, 7, 49, 23))
         self.assertEqual(event.message_id, '<first>')

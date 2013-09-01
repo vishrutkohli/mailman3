@@ -27,8 +27,10 @@ __all__ = [
     ]
 
 
+import os
 import types
 
+from flufl.lock import Lock
 from zope.component import getAdapter
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
@@ -47,13 +49,15 @@ class DatabaseFactory:
     @staticmethod
     def create():
         """See `IDatabaseFactory`."""
-        database_class = config.database['class']
-        database = call_name(database_class)
-        verifyObject(IDatabase, database)
-        database.initialize()
-        database.load_migrations()
-        database.commit()
-        return database
+        with Lock(os.path.join(config.LOCK_DIR, 'dbcreate.lck')):
+            database_class = config.database['class']
+            database = call_name(database_class)
+            verifyObject(IDatabase, database)
+            database.initialize()
+            database.load_migrations()
+            database.commit()
+            import sys; print('db -> done', os.getpid(), file=sys.stderr)
+            return database
 
 
 

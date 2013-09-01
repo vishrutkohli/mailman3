@@ -26,11 +26,14 @@ __all__ = [
     'TestMigration20120407UnchangedData',
     'TestMigration20121015MigratedData',
     'TestMigration20121015Schema',
+    'TestMigration20130406MigratedData',
+    'TestMigration20130406Schema',
     ]
 
 
 import unittest
 
+from datetime import datetime
 from operator import attrgetter
 from pkg_resources import resource_string
 from storm.exceptions import DatabaseError
@@ -44,6 +47,7 @@ from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.model.bans import Ban
+from mailman.model.bounce import BounceContext, BounceEvent
 from mailman.testing.helpers import temporary_db
 from mailman.testing.layers import ConfigLayer
 
@@ -426,3 +430,49 @@ class TestMigration20121015MigratedData(MigrationTestBase):
         self.assertEqual(bans[0].list_id, 'test.example.com')
         self.assertEqual(bans[1].email, 'bart@example.com')
         self.assertEqual(bans[1].list_id, None)
+
+
+
+class TestMigration20130406Schema(MigrationTestBase):
+    """Test column migrations."""
+
+    def test_pre_upgrade_column_migrations(self):
+        self._missing_present('bounceevent',
+                              ['20130405999999'],
+                              ('list_id',),
+                              ('list_name',))
+
+    def test_post_upgrade_column_migrations(self):
+        self._missing_present('bounceevent',
+                              ['20130405999999',
+                               '20130406000000'],
+                              ('list_name',),
+                              ('list_id',))
+
+
+
+class TestMigration20130406MigratedData(MigrationTestBase):
+    """Test migrated data."""
+
+    def test_migration_bounceevent(self):
+        # Load all migrations to just before the one we're testing.
+        self._database.load_migrations('20130405999999')
+        # Insert a bounce event.
+        self._database.store.execute("""
+            INSERT INTO bounceevent VALUES (
+                1, 'test@example.com', 'anne@example.com',
+                '2013-04-06 21:12:00', '<abc@example.com>',
+                1, 0);
+            """)
+        # Update to the current migration we're testing
+        self._database.load_migrations('20130406000000')
+        # The bounce event should exist, but with a list-id instead of a fqdn
+        # list name.
+        events = list(self._database.store.find(BounceEvent))
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0].list_id, 'test.example.com')
+        self.assertEqual(events[0].email, 'anne@example.com')
+        self.assertEqual(events[0].timestamp, datetime(2013, 4, 6, 21, 12))
+        self.assertEqual(events[0].message_id, '<abc@example.com>')
+        self.assertEqual(events[0].context, BounceContext[1])
+        self.assertFalse(events[0].processed)

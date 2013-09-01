@@ -60,8 +60,8 @@ class UnrecognizedBounceDisposition(Enum):
 class IBounceEvent(Interface):
     """Registration record for a single bounce event."""
 
-    list_name = Attribute(
-        """The name of the mailing list that received this bounce.""")
+    list_id = Attribute(
+        """The List-ID of the mailing list that received this bounce.""")
 
     email = Attribute(
         """The email address that bounced.""")

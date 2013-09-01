@@ -30,13 +30,14 @@ already applied.
     >>> from mailman.model.version import Version
     >>> results = config.db.store.find(Version, component='schema')
     >>> results.count()
-    3
+    4
     >>> versions = sorted(result.version for result in results)
     >>> for version in versions:
     ...     print version
     00000000000000
     20120407000000
     20121015000000
+    20130406000000
 
 
 Migrations
@@ -79,7 +80,7 @@ This migration module just adds a marker to the `version` table.
 
     >>> with open(os.path.join(path, '__init__.py'), 'w') as fp:
     ...     pass
-    >>> with open(os.path.join(path, 'mm_20129999000000.py'), 'w') as fp:
+    >>> with open(os.path.join(path, 'mm_20159999000000.py'), 'w') as fp:
     ...     print >> fp, """
     ... from __future__ import unicode_literals
     ... from mailman.model.version import Version
@@ -98,14 +99,15 @@ This will load the new migration, since it hasn't been loaded before.
     00000000000000
     20120407000000
     20121015000000
-    20129999000000
+    20130406000000
+    20159999000000
     >>> test = config.db.store.find(Version, component='test').one()
     >>> print test.version
-    20129999000000
+    20159999000000
 
 Migrations will only be loaded once.
 
-    >>> with open(os.path.join(path, 'mm_20129999000001.py'), 'w') as fp:
+    >>> with open(os.path.join(path, 'mm_20159999000001.py'), 'w') as fp:
     ...     print >> fp, """
     ... from __future__ import unicode_literals
     ... from mailman.model.version import Version
@@ -129,13 +131,14 @@ The first time we load this new migration, we'll get the 801 marker.
     00000000000000
     20120407000000
     20121015000000
-    20129999000000
-    20129999000001
+    20130406000000
+    20159999000000
+    20159999000001
     >>> test = config.db.store.find(Version, component='test')
     >>> for marker in sorted(marker.version for marker in test):
     ...     print marker
     00000000000801
-    20129999000000
+    20159999000000
 
 We do not get an 802 marker because the migration has already been loaded.
 
@@ -146,13 +149,14 @@ We do not get an 802 marker because the migration has already been loaded.
     00000000000000
     20120407000000
     20121015000000
-    20129999000000
-    20129999000001
+    20130406000000
+    20159999000000
+    20159999000001
     >>> test = config.db.store.find(Version, component='test')
     >>> for marker in sorted(marker.version for marker in test):
     ...     print marker
     00000000000801
-    20129999000000
+    20159999000000
 
 
 Partial upgrades
@@ -165,13 +169,13 @@ additional migrations, intended to be applied in sequential order.
     >>> from shutil import copyfile
     >>> from mailman.testing.helpers import chdir
     >>> with chdir(path):
-    ...     copyfile('mm_20129999000000.py', 'mm_20129999000002.py')
-    ...     copyfile('mm_20129999000000.py', 'mm_20129999000003.py')
-    ...     copyfile('mm_20129999000000.py', 'mm_20129999000004.py')
+    ...     copyfile('mm_20159999000000.py', 'mm_20159999000002.py')
+    ...     copyfile('mm_20159999000000.py', 'mm_20159999000003.py')
+    ...     copyfile('mm_20159999000000.py', 'mm_20159999000004.py')
 
 Now, only migrate to the ...03 timestamp.
 
-    >>> config.db.load_migrations('20129999000003')
+    >>> config.db.load_migrations('20159999000003')
 
 You'll notice that the ...04 version is not present.
 
@@ -181,10 +185,11 @@ You'll notice that the ...04 version is not present.
     00000000000000
     20120407000000
     20121015000000
-    20129999000000
-    20129999000001
-    20129999000002
-    20129999000003
+    20130406000000
+    20159999000000
+    20159999000001
+    20159999000002
+    20159999000003
 
 
 .. cleanup:

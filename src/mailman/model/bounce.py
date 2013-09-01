@@ -43,15 +43,15 @@ class BounceEvent(Model):
     """See `IBounceEvent`."""
 
     id = Int(primary=True)
-    list_name = Unicode()
+    list_id = Unicode()
     email = Unicode()
     timestamp = DateTime()
     message_id = Unicode()
     context = Enum(BounceContext)
     processed = Bool()
 
-    def __init__(self, list_name, email, msg, context=None):
-        self.list_name = list_name
+    def __init__(self, list_id, email, msg, context=None):
+        self.list_id = list_id
         self.email = email
         self.timestamp = now()
         self.message_id = msg['message-id']
@@ -67,7 +67,7 @@ class BounceProcessor:
     @dbconnection
     def register(self, store, mlist, email, msg, where=None):
         """See `IBounceProcessor`."""
-        event = BounceEvent(mlist.fqdn_listname, email, msg, where)
+        event = BounceEvent(mlist.list_id, email, msg, where)
         store.add(event)
         return event
 
