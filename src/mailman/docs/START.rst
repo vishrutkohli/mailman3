@@ -25,58 +25,64 @@ search, and retrieval of archived messages to a separate application (a simple
 implementation is provided).  The web interface (known as `Postorius`_) and
 archiver (known as `Hyperkitty`_) are in separate development.
 
-Contributions are welcome.  Please submit bug reports on the Mailman bug
-tracker at https://bugs.launchpad.net/mailman though you will currently need
-to have a login on Launchpad to do so.  You can also send email to the
-mailman-developers@python.org mailing list.
+
+Contact Us
+==========
+
+Contributions of code, problem reports, and feature requests are welcome.
+Please submit bug reports on the Mailman bug tracker at
+https://bugs.launchpad.net/mailman (you need to have a login on Launchpad to
+do so).  You can also send email to the mailman-developers@python.org mailing
+list, or ask on IRC channel ``#mailman`` on Freenode.
 
 
 Requirements
 ============
 
 Python 2.7 is required.  It can either be the default 'python' on your
-``$PATH`` or it can be accessible via the ``python2.7`` binary.
-If your operating system does not include Python, see http://www.python.org
-downloading and installing it from source.  Python 3 is not yet supported.
+``$PATH`` or it can be accessible via the ``python2.7`` binary.  If
+your operating system does not include Python, see http://www.python.org
+for information about downloading installers (where available) and
+installing it from source (when necessary or preferred).  Python 3 is
+not yet supported.
 
-In this documentation, a bare ``python`` refers to the Python executable used
-to invoke ``bootstrap.py``.
-
-Mailman 3 is now based on the `zc.buildout`_ infrastructure, which greatly
-simplifies testing Mailman.  Buildout is not required for installation.
-
-During the beta program, you may need some additional dependencies, such as a
-C compiler and the Python development headers and libraries.  You will need an
-internet connection.
+You may need some additional dependencies, which are either available from
+your OS vendor, or can be downloaded automatically from the `Python
+Cheeseshop`_.
 
 
 Building Mailman 3
 ==================
 
-We provide several recipes for building Mailman.  All should generally work,
-but some may provide a better experience for developing Mailman versus
-deploying Mailman.
-
+To build Mailman for development purposes, you will create a virtual
+environment.  You need to have the `virtualenv`_ program installed.
 
 Building for development
 ------------------------
 
-The best way to build Mailman for development is to use the `zc.buildout`_
-tools.  This will download all Mailman dependencies from the `Python
-Cheeseshop`_.  The dependencies will get installed locally, but isolated from
-your system Python.  Here are the commands to build Mailman for development::
+First, create a virtual environment.  By default ``virtualenv`` uses the
+``python`` executable it finds first on your ``$PATH``.  Make sure this is
+Python 2.7.  The directory you install the virtualenv into is up to you, but
+for purposes of this document, we'll install it into ``/tmp/py27``::
 
-    % python bootstrap.py
-    % bin/buildout
+    % virtualenv --system-site-packages /tmp/py27
+
+Now, activate the virtual environment and set it up for development::
+
+    % source /tmp/py27/bin/activate
+    % python setup.py develop
 
 Sit back and have some Kombucha while you wait for everything to download and
 install.
 
 Now you can run the test suite via::
 
-    % bin/test -vv
+    % nose2 -v
 
-You should see no failures.
+You should see no failures.  You can also run a subset of the full test suite
+by filter tests on the module or test name using the ``-P`` option::
+
+    % nose2 -v -P user
 
 Build the online docs by running::
 
@@ -90,21 +96,6 @@ in your browser to start reading the documentation.  Or you can just read the
 doctests by looking in all the 'doc' directories under the 'mailman' package.
 Doctests are documentation first, so they should give you a pretty good idea
 how various components of Mailman 3 work.
-
-
-Building for deployment using virtualenv
-----------------------------------------
-
-`virtualenv`_ is a way to create isolated Python environments.  You can use
-virtualenv as a way to deploy Mailman without installing it into your system
-Python.  There are lots of ways to use virtualenv, but as described here, it
-will be default use any dependencies which are already installed in your
-system, downloading from the Cheeseshop only those which are missing.  Here
-are the steps to install Mailman using virtualenv::
-
-    $ virtualenv --system-site-packages /path/to/your/installation
-    $ source /path/to/your/installation/bin/activate
-    $ python setup.py install
 
 Once everything is downloaded and installed, you can initialize Mailman and
 get a display of the basic configuration settings by running::
@@ -149,8 +140,9 @@ Try ``bin/mailman --help`` for more details.  You can use the commands
 ``bin/mailman start`` to start the runner subprocess daemons, and of course
 ``bin/mailman stop`` to stop them.
 
-Postorius is being developed as a separate, Django-based project.  For now,
-all configuration happens via the command line and REST API.
+Postorius, a web UI for administration and subscriber settings, is being
+developed as a separate, Django-based project.  For now, the most flexible
+means of configuration is via the command line and REST API.
 
 
 Mailman Web UI
@@ -167,16 +159,16 @@ Postorius was prototyped at the `Pycon 2012 sprint`_, so it is "very alpha" as
 of Mailman 3 beta 1, and comes in several components.  In particular, it
 requires a `Django`_ installation, and Bazaar checkouts of the `REST client
 module`_ and `Postorius`_ itself.  Building it is fairly straightforward,
-however, given Florian Fuchs' `Five Minute Guide` from his `blog post`_ on the
+based on Florian Fuchs' `Five Minute Guide` from his `blog post`_ on the
 Mailman wiki.  (Check the `blog post`_ for the most recent version!)
 
 
 The Archiver
 ------------
 
-In Mailman 3, the archivers are decoupled from the core engine.  It is useful
-to provide a simple, standard interface for third-party archiving tools and
-services.  For this reason, Mailman 3 defines a formal interface to insert
+In Mailman 3, the archivers are decoupled from the core engine.  Instead,
+Mailman 3 provides a simple, standard interface for third-party archiving tools
+and services.  For this reason, Mailman 3 defines a formal interface to insert
 messages into any of a number of configured archivers, using whatever protocol
 is appropriate for that archiver.  Summary, search, and retrieval of archived
 posts are handled by a separate application.
@@ -190,7 +182,6 @@ email application that speaks LMTP or SMTP will be able to use Hyperkitty.
 A `five minute guide to Hyperkitty`_ is based on Toshio Kuratomi's README.
 
 
-.. _`zc.buildout`: http://pypi.python.org/pypi/zc.buildout
 .. _`Postorius`: https://launchpad.net/postorius
 .. _`Hyperkitty`: https://launchpad.net/hyperkitty
 .. _`Django`: http://djangoproject.org/

@@ -64,4 +64,4 @@ class Status:
             message = _('GNU Mailman is in an unexpected state '
                         '($hostname != $fqdn_name)')
         print(message)
-        return int(status)
+        return status.value

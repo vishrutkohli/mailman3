@@ -124,7 +124,7 @@ cperson is neither a member, nor a nonmember of the mailing list.
 ::
 
     >>> def memberkey(member):
-    ...     return member.mailing_list, member.address.email, int(member.role)
+    ...     return member.mailing_list, member.address.email, member.role.value
 
     >>> dump_list(mlist.members.members, key=memberkey)
     <Member: Anne Person <aperson@example.com>

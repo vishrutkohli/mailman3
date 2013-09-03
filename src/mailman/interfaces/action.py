@@ -24,7 +24,7 @@ __all__ = [
     ]
 
 
-from flufl.enum import Enum
+from enum import Enum
 
 
 

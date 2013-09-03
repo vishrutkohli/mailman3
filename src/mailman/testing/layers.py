@@ -154,7 +154,7 @@ class ConfigLayer(MockAndMonkeyLayer):
                 continue
             logger_name = 'mailman.' + sub_name
             log = logging.getLogger(logger_name)
-            log.propagate = True
+            #log.propagate = True
             # Reopen the file to a new path that tests can get at.  Instead of
             # using the configuration file path though, use a path that's
             # specific to the logger so that tests can find expected output
