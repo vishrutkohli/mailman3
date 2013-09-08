@@ -36,6 +36,7 @@ from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.archiver import ClobberDate
 from mailman.utilities.datetime import RFC822_DATE_FMT, now
+from mailman.model.mailinglist import ListArchiverSet
 
 
 log = logging.getLogger('mailman.error')
@@ -91,17 +92,19 @@ class ArchiveRunner(Runner):
     def _dispose(self, mlist, msg, msgdata):
         received_time = msgdata.get('received_time', now(strip_tzinfo=False))
         for archiver in config.archivers:
-            msg_copy = copy.deepcopy(msg)
-            if _should_clobber(msg, msgdata, archiver.name):
-                original_date = msg_copy['date']
-                del msg_copy['date']
-                del msg_copy['x-original-date']
-                msg_copy['Date'] = received_time.strftime(RFC822_DATE_FMT)
-                if original_date:
-                    msg_copy['X-Original-Date'] = original_date
-            # A problem in one archiver should not prevent other archivers
-            # from running.
-            try:
-                archiver.archive_message(mlist, msg_copy)
-            except Exception:
-                log.exception('Broken archiver: %s' % archiver.name)
+            archSet = ListArchiverSet(mlist)
+            if archSet.isEnabled(archiver.name):
+                msg_copy = copy.deepcopy(msg)
+                if _should_clobber(msg, msgdata, archiver.name):
+                    original_date = msg_copy['date']
+                    del msg_copy['date']
+                    del msg_copy['x-original-date']
+                    msg_copy['Date'] = received_time.strftime(RFC822_DATE_FMT)
+                    if original_date:
+                        msg_copy['X-Original-Date'] = original_date
+                # A problem in one archiver should not prevent other archivers
+                # from running.
+                try:
+                    archiver.archive_message(mlist, msg_copy)
+                except Exception:
+                    log.exception('Broken archiver: %s' % archiver.name)
