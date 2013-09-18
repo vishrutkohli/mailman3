@@ -28,12 +28,16 @@ __all__ = [
 
 import unittest
 
+from zope.component import getUtility
 from urllib2 import HTTPError
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
 from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
+from mailman.interfaces.listmanager import IListManager
+from mailman.model.mailinglist import ListArchiverSet
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 
@@ -159,3 +163,25 @@ class TestLists(unittest.TestCase):
             call_api('http://localhost:9001/3.0/lists/ant.example.com',
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
+
+    def test_prototype_in_list_archivers(self):
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/test@example.com/config')
+        self.assertEqual(response.status, 200)
+        self.assertEqual(resource['archivers']['prototype'], 0)
+
+    def test_lazy_add_archivers(self):
+        call_api('http://localhost:9001/3.0/lists', {
+                 'fqdn_listname': 'new_list@example.com',
+                 })
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/new_list@example.com/config')
+        self.assertEqual(response.status, 200)
+        self.assertEqual(resource['archivers']['prototype'], 0)
+
+    def test_set_archiver_enabled(self):
+        mlist = getUtility(IListManager).create('newest_list@example.com')
+        lset = ListArchiverSet(mlist)
+        lset.set('prototype', 1)
+        self.assertEqual(lset.isEnabled('prototype'), 1)
+
