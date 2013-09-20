@@ -31,6 +31,7 @@ import unittest
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.importer import import_config_pck
+from mailman.interfaces.archiver import ArchivePolicy
 from pkg_resources import resource_filename
 
 
@@ -68,3 +69,34 @@ class TestBasicImport(unittest.TestCase):
         self._import()
         self.assertTrue(self._mlist.allow_list_posts)
         self.assertTrue(self._mlist.include_rfc2369_headers)
+
+
+
+class TestArchiveImport(unittest.TestCase):
+    # The mlist.archive_policy gets set from the old list's archive and
+    # archive_private values
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('blank@example.com')
+        self._mlist.archive_policy = "INITIAL-TEST-VALUE"
+
+    def tearDown(self):
+        remove_list(self._mlist)
+
+    def _do_test(self, pckdict, expected):
+        import_config_pck(self._mlist, pckdict)
+        self.assertEqual(self._mlist.archive_policy, expected)
+
+    def test_public(self):
+        self._do_test({ "archive": True, "archive_private": False },
+                      ArchivePolicy.public)
+
+    def test_private(self):
+        self._do_test({ "archive": True, "archive_private": True },
+                      ArchivePolicy.private)
+
+    def test_no_archive(self):
+        self._do_test({ "archive": False, "archive_private": False },
+                      ArchivePolicy.never)

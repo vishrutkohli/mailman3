@@ -33,6 +33,7 @@ from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
 from mailman.interfaces.nntp import NewsgroupModeration
+from mailman.interfaces.archiver import ArchivePolicy
 
 
 
@@ -90,3 +91,11 @@ def import_config_pck(mlist, config_dict):
             except TypeError:
                 print('Type conversion error:', key, file=sys.stderr)
                 raise
+    # Handle the archiving policy
+    if config_dict.get("archive"):
+        if config_dict.get("archive_private"):
+            mlist.archive_policy = ArchivePolicy.private
+        else:
+            mlist.archive_policy = ArchivePolicy.public
+    else:
+        mlist.archive_policy = ArchivePolicy.never
