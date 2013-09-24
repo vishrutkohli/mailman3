@@ -22,10 +22,10 @@ Transfer Protocol`_ (SMTP_).
 
 Cooperation between Mailman and the MTA requires some configuration of
 both.  MTA configuration differs for each of the available MTAs, and
-there is a section for each one.  Instructions for Postfix are given
-below.  We would really appreciate contributions of configurations for
-Exim and Sendmail, and welcome information about other popular open
-source mail servers.
+there is a section for each one.  Instructions for Postfix and Exim (v4)
+are given below.  We would really appreciate a contribution of a
+configuration for Sendmail, and welcome information about other popular
+open source mail servers.
 
 Configuring Mailman to communicate with the MTA is straightforward,
 and basically the same for all MTAs.  In your ``mailman.cfg`` file,
@@ -38,15 +38,25 @@ add (or edit) a section like the following::
     lmtp_port: 8024
     smtp_host: localhost
     smtp_port: 25
+    configuration: mailman.config.postfix
 
 This configuration is for a system where Mailman and the MTA are on
 the same host.
 
-The ``incoming`` and ``outgoing`` parameters identify the Python
-objects used to communicate with the MTA.  The ``deliver`` module used
-in ``outgoing`` is pretty standard across all MTAs.  The ``postfix``
-module in ``incoming`` is specific to Postfix.  See the section for
-your MTA below for details on these parameters.
+Note that the modules that configure the communication protocol
+(especially ``incoming``) are full-fledged Python programs, and may use
+these configuration parameters to automatically configure the MTA to
+recognize the list addresses and other attributes of the communication
+channel.  This is why some constraints on the format of attributes arise
+(e.g., ``lmtp_host``), even though Mailman itself has no problem with
+them.
+
+The ``incoming`` and ``outgoing`` parameters identify the Python objects
+used to communicate with the MTA.  They should be dotted Python module
+specifications.  The ``deliver`` module used in ``outgoing`` should be
+satisfactory for most MTAs.  The ``postfix`` module in ``incoming`` is
+specific to the Postfix MTA.  See the section for your MTA below for details on
+these parameters.
 
 ``lmtp_host`` and ``lmtp_port`` are parameters which are used by
 Mailman, but also will be passed to the MTA to identify the Mailman
@@ -175,7 +185,118 @@ the Postfix documentation at:
 Exim
 ====
 
-Contributions are welcome!
+`Exim 4`_ is an MTA maintained by the `University of Cambridge`_ and
+distributed by most open source OS distributions.
+
+Mailman settings:
+-----------------
+
+Add or edit a stanza like this in mailman.cfg::
+
+    [mta]
+    # For all Exim4 installations
+    incoming: mailman.mta.exim4.LMTP
+    outgoing: mailman.mta.deliver.deliver
+    # Typical single host with MTA and Mailman configuration.
+    # Adjust to your system's configuration.
+    # Exim happily works with the "localhost" alias rather than IP address.
+    lmtp_host: localhost
+    smtp_host: localhost
+    # Mailman should not be run as root.
+    # Use any convenient port > 1024.  8024 is a convention, but can be
+    # changed if there is a conflict with other software using that port.
+    lmtp_port: 8024
+    # smtp_port rarely needs to be set.
+    smtp_port: 25
+    # Exim4-specific configuration parameter defaults.  Currently empty.
+    configuration: python:mailman.config.exim4
+
+For further information about these settings, see
+``mailman/config/schema.cfg``.
+
+Exim4 configuration
+-------------------
+
+The configuration presented below is mostly boilerplate that allows Exim
+to automatically discover your list addresses, and route both posts and
+administrative messages to the right Mailman services.  For this reason,
+the mailman.mta.exim4 module ends up with all methods being no-ops.
+
+This configuration is field-tested in a Debian "conf.d"-style Exim
+installation, with multiple configuration files that are assembled by a
+Debian-specific script.  If your Exim v4 installation is structured
+differently, ignore the comments indicating location in the Debian
+installation.
+::
+
+    # /etc/exim4/conf.d/main/25_mm3_macros
+    # The colon-separated list of domains served by Mailman.
+    domainlist mm_domains=list.example.net
+
+    MM3_LMTP_PORT=8024
+
+    # Assuming a typical source installation in /usr/local, with
+    # links to the Mailman bin directory and so on from MM3_HOME.
+    MM3_HOME=/usr/local/var/mailman
+    MM3_UID=list
+    MM3_GID=list
+
+    ################################################################
+    # The configuration below is boilerplate:
+    # you should not need to change it.
+
+    # The path to the list receipt (used as the required file when
+    # matching list addresses)
+    MM3_LISTCHK=MM3_HOME/lists/${local_part}@${domain}
+
+    # /etc/exim4/conf.d/main/455_mm3_router
+    mailman3_router:
+      driver = accept
+      domains = +mm_domains
+      require_files = MM3_LISTCHK
+      local_part_suffix_optional
+      local_part_suffix = -admin : \
+         -bounces   : -bounces+* : \
+         -confirm   : -confirm+* : \
+         -join      : -leave     : \
+         -owner     : -request   : \
+         -subscribe : -unsubscribe
+      transport = mailman3_transport
+
+    # /etc/exim4/conf.d/main/55_mm3_transport
+    mailman3_transport:
+      driver = smtp
+      protocol = lmtp
+      allow_localhost
+      hosts = localhost
+      port = MM3_LMTP_PORT
+
+Troubleshooting
+---------------
+
+The most likely causes of failure to deliver to Mailman are typos in the
+configuration, and errors in the ``MM3_HOME`` macro or the
+``mm_domains`` list.  Mismatches in the LMTP port could be a cause.
+Finally, Exim's router configuration is order-sensitive.  Especially if
+you are being tricky and supporting Mailman 2 and Mailman 3 at the same
+time, you could have one shadow the other.
+
+Exim 4 documentation
+--------------------
+
+There is `copious documentation for Exim`_.  The parts most relevant to
+configuring communication with Mailman 3 are the chapters on the `accept
+router`_ and the `LMTP transport`_.  Unless you are already familiar
+with Exim configuration, you probably want to start with the chapter on
+`how Exim receives and delivers mail`.
+
+.. _`Exim 4`: http://www.exim.org/
+.. _`University of Cambridge`: http://www.cam.ac.uk/
+.. _`copious documentation for Exim`: http://www.exim.org/docs.html
+.. _`accept router`: http://www.exim.org/exim-html-current/doc/html/spec_html/ch-the_accept_router.html
+.. _`LMTP transport`: http://www.exim.org/exim-html-current/doc/html/spec_html/ch-the_lmtp_transport.html
+.. _`how Exim receives and delivers mail`: http://www.exim.org/exim-html-current/doc/html/spec_html/ch-how_exim_receives_and_delivers_mail.html
+
 
 
 Sendmail
