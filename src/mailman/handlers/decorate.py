@@ -201,8 +201,8 @@ def process(mlist, msg, msgdata):
 
 
 def decorate(mlist, uri, extradict=None):
-    """Expand the decoration template."""
-    if uri is None:
+    """Expand the decoration template from its URI."""
+    if uri is None or uri == '':
         return ''
     # Get the decorator template.
     loader = getUtility(ITemplateLoader)
@@ -211,6 +211,11 @@ def decorate(mlist, uri, extradict=None):
         language=mlist.preferred_language.code,
         ))
     template = loader.get(template_uri)
+    return decorate_template(mlist, template, extradict)
+
+
+def decorate_template(mlist, template, extradict=None):
+    """Expand the decoration template."""
     # Create a dictionary which includes the default set of interpolation
     # variables allowed in headers and footers.  These will be augmented by
     # any key/value pairs in the extradict.

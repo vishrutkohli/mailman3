@@ -27,13 +27,33 @@ __all__ = [
 
 import cPickle
 import unittest
+from datetime import timedelta, datetime
 
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.importer import import_config_pck
 from mailman.interfaces.archiver import ArchivePolicy
+from mailman.interfaces.action import Action, FilterAction
+from mailman.interfaces.bounce import UnrecognizedBounceDisposition
+from mailman.interfaces.bans import IBanManager
+from mailman.interfaces.mailinglist import IAcceptableAliasSet
+from mailman.interfaces.nntp import NewsgroupModeration
+from mailman.interfaces.autorespond import ResponseAction
+from mailman.interfaces.templates import ITemplateLoader
+from mailman.interfaces.usermanager import IUserManager
+from mailman.interfaces.member import DeliveryMode, DeliveryStatus
+from mailman.interfaces.languages import ILanguageManager
+from mailman.handlers.decorate import decorate
+from mailman.utilities.string import expand
 from pkg_resources import resource_filename
+from enum import Enum
+from zope.component import getUtility
 
+
+
+class DummyEnum(Enum):
+    # For testing purposes
+    val = 42
 
 
 class TestBasicImport(unittest.TestCase):
@@ -70,6 +90,121 @@ class TestBasicImport(unittest.TestCase):
         self.assertTrue(self._mlist.allow_list_posts)
         self.assertTrue(self._mlist.include_rfc2369_headers)
 
+    def test_no_overwrite_rosters(self):
+        # The mlist.members and mlist.digest_members rosters must not be
+        # overwritten.
+        for rname in ("members", "digest_members"):
+            roster = getattr(self._mlist, rname)
+            self.assertFalse(isinstance(roster, dict))
+            self._import()
+            self.assertFalse(isinstance(roster, dict),
+                "The %s roster has been overwritten by the import" % rname)
+
+    def test_last_post_time(self):
+        # last_post_time -> last_post_at
+        self._pckdict["last_post_time"] = 1270420800.274485
+        self.assertEqual(self._mlist.last_post_at, None)
+        self._import()
+        # convert 1270420800.2744851 to datetime
+        expected = datetime(2010, 4, 4, 22, 40, 0, 274485)
+        self.assertEqual(self._mlist.last_post_at, expected)
+
+    def test_autoresponse_grace_period(self):
+        # autoresponse_graceperiod -> autoresponse_grace_period
+        # must be a timedelta, not an int
+        self._mlist.autoresponse_grace_period = timedelta(days=42)
+        self._import()
+        self.assertTrue(isinstance(
+                self._mlist.autoresponse_grace_period, timedelta))
+        self.assertEqual(self._mlist.autoresponse_grace_period,
+                         timedelta(days=90))
+
+    def test_autoresponse_admin_to_owner(self):
+        # admin -> owner
+        self._mlist.autorespond_owner = DummyEnum.val
+        self._mlist.autoresponse_owner_text = 'DUMMY'
+        self._import()
+        self.assertEqual(self._mlist.autorespond_owner, ResponseAction.none)
+        self.assertEqual(self._mlist.autoresponse_owner_text, '')
+
+    #def test_administrative(self):
+    #    # administrivia -> administrative
+    #    self._mlist.administrative = None
+    #    self._import()
+    #    self.assertTrue(self._mlist.administrative)
+
+    def test_filter_pass_renames(self):
+        # mime_types -> types
+        # filename_extensions -> extensions
+        self._mlist.filter_types = ["dummy"]
+        self._mlist.pass_types = ["dummy"]
+        self._mlist.filter_extensions = ["dummy"]
+        self._mlist.pass_extensions = ["dummy"]
+        self._import()
+        self.assertEqual(list(self._mlist.filter_types), [])
+        self.assertEqual(list(self._mlist.filter_extensions),
+                         ['exe', 'bat', 'cmd', 'com', 'pif',
+                          'scr', 'vbs', 'cpl'])
+        self.assertEqual(list(self._mlist.pass_types),
+                ['multipart/mixed', 'multipart/alternative', 'text/plain'])
+        self.assertEqual(list(self._mlist.pass_extensions), [])
+
+    def test_process_bounces(self):
+        # bounce_processing -> process_bounces
+        self._mlist.process_bounces = None
+        self._import()
+        self.assertTrue(self._mlist.process_bounces)
+
+    def test_forward_unrecognized_bounces_to(self):
+        # bounce_unrecognized_goes_to_list_owner -> forward_unrecognized_bounces_to
+        self._mlist.forward_unrecognized_bounces_to = DummyEnum.val
+        self._import()
+        self.assertEqual(self._mlist.forward_unrecognized_bounces_to,
+                         UnrecognizedBounceDisposition.administrators)
+
+    def test_moderator_password(self):
+        # mod_password -> moderator_password
+        self._mlist.moderator_password = str("TESTDATA")
+        self._import()
+        self.assertEqual(self._mlist.moderator_password, None)
+
+    def test_newsgroup_moderation(self):
+        # news_moderation -> newsgroup_moderation
+        # news_prefix_subject_too -> nntp_prefix_subject_too
+        self._mlist.newsgroup_moderation = DummyEnum.val
+        self._mlist.nntp_prefix_subject_too = None
+        self._import()
+        self.assertEqual(self._mlist.newsgroup_moderation,
+                         NewsgroupModeration.none)
+        self.assertTrue(self._mlist.nntp_prefix_subject_too)
+
+    def test_msg_to_message(self):
+        # send_welcome_msg -> send_welcome_message
+        # send_goodbye_msg -> send_goodbye_message
+        self._mlist.send_welcome_message = None
+        self._mlist.send_goodbye_message = None
+        self._import()
+        self.assertTrue(self._mlist.send_welcome_message)
+        self.assertTrue(self._mlist.send_goodbye_message)
+
+    def test_ban_list(self):
+        banned = [
+            ("anne@example.com", "anne@example.com"),
+            ("^.*@example.com", "bob@example.com")
+            ]
+        self._pckdict["ban_list"] = [ b[0] for b in banned ]
+        self._import()
+        for _pattern, addr in banned:
+            self.assertTrue(IBanManager(self._mlist).is_banned(addr))
+
+    def test_acceptable_aliases(self):
+        # it used to be a plain-text field (values are newline-separated)
+        aliases = ["alias1@example.com", "alias2@exemple.com"]
+        self._pckdict["acceptable_aliases"] = "\n".join(aliases)
+        self._import()
+        alias_set = IAcceptableAliasSet(self._mlist)
+        self.assertEqual(sorted(alias_set.aliases), aliases)
+
 
 
 class TestArchiveImport(unittest.TestCase):
@@ -80,7 +215,7 @@ class TestArchiveImport(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('blank@example.com')
-        self._mlist.archive_policy = "INITIAL-TEST-VALUE"
+        self._mlist.archive_policy = DummyEnum.val
 
     def tearDown(self):
         remove_list(self._mlist)
@@ -100,3 +235,434 @@ class TestArchiveImport(unittest.TestCase):
     def test_no_archive(self):
         self._do_test({ "archive": False, "archive_private": False },
                       ArchivePolicy.never)
+
+
+
+class TestFilterActionImport(unittest.TestCase):
+    # The mlist.filter_action enum values have changed. In Mailman 2.1 the
+    # order was 'Discard', 'Reject', 'Forward to List Owner', 'Preserve'.
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('blank@example.com')
+        self._mlist.filter_action = DummyEnum.val
+
+    def tearDown(self):
+        remove_list(self._mlist)
+
+    def _do_test(self, original, expected):
+        import_config_pck(self._mlist, { "filter_action": original })
+        self.assertEqual(self._mlist.filter_action, expected)
+
+    def test_discard(self):
+        self._do_test(0, FilterAction.discard)
+
+    def test_reject(self):
+        self._do_test(1, FilterAction.reject)
+
+    def test_forward(self):
+        self._do_test(2, FilterAction.forward)
+
+    def test_preserve(self):
+        self._do_test(3, FilterAction.preserve)
+
+
+
+class TestMemberActionImport(unittest.TestCase):
+    # The mlist.default_member_action and mlist.default_nonmember_action enum
+    # values are different in Mailman 2.1, they have been merged into a
+    # single enum in Mailman 3
+    # For default_member_action, which used to be called
+    # member_moderation_action, the values were:
+    # 0==Hold, 1=Reject, 2==Discard
+    # For default_nonmember_action, which used to be called
+    # generic_nonmember_action, the values were:
+    # 0==Accept, 1==Hold, 2==Reject, 3==Discard
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('blank@example.com')
+        self._mlist.default_member_action = DummyEnum.val
+        self._mlist.default_nonmember_action = DummyEnum.val
+        self._pckdict = {
+            "member_moderation_action": DummyEnum.val,
+            "generic_nonmember_action": DummyEnum.val,
+        }
+
+    def tearDown(self):
+        remove_list(self._mlist)
+
+    def _do_test(self, expected):
+        import_config_pck(self._mlist, self._pckdict)
+        for key, value in expected.iteritems():
+            self.assertEqual(getattr(self._mlist, key), value)
+
+    def test_member_hold(self):
+        self._pckdict["member_moderation_action"] = 0
+        self._do_test({"default_member_action": Action.hold})
+
+    def test_member_reject(self):
+        self._pckdict["member_moderation_action"] = 1
+        self._do_test({"default_member_action": Action.reject})
+
+    def test_member_discard(self):
+        self._pckdict["member_moderation_action"] = 2
+        self._do_test({"default_member_action": Action.discard})
+
+    def test_nonmember_accept(self):
+        self._pckdict["generic_nonmember_action"] = 0
+        self._do_test({"default_nonmember_action": Action.accept})
+
+    def test_nonmember_hold(self):
+        self._pckdict["generic_nonmember_action"] = 1
+        self._do_test({"default_nonmember_action": Action.hold})
+
+    def test_nonmember_reject(self):
+        self._pckdict["generic_nonmember_action"] = 2
+        self._do_test({"default_nonmember_action": Action.reject})
+
+    def test_nonmember_discard(self):
+        self._pckdict["generic_nonmember_action"] = 3
+        self._do_test({"default_nonmember_action": Action.discard})
+
+
+
+class TestConvertToURI(unittest.TestCase):
+    # The following values were plain text, and are now URIs in Mailman 3:
+    # - welcome_message_uri
+    # - goodbye_message_uri
+    # - header_uri
+    # - footer_uri
+    # - digest_header_uri
+    # - digest_footer_uri
+    #
+    # The templates contain variables that must be replaced:
+    # - %(real_name)s -> %(display_name)s
+    # - %(real_name)s@%(host_name)s -> %(fqdn_listname)s
+    # - %(web_page_url)slistinfo%(cgiext)s/%(_internal_name)s -> %(listinfo_uri)s
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('blank@example.com')
+        self._conf_mapping = {
+            "welcome_msg": "welcome_message_uri",
+            "goodbye_msg": "goodbye_message_uri",
+            "msg_header": "header_uri",
+            "msg_footer": "footer_uri",
+            "digest_header": "digest_header_uri",
+            "digest_footer": "digest_footer_uri",
+        }
+        self._pckdict = {}
+        #self._pckdict = {
+        #    "preferred_language": "XX", # templates are lang-specific
+        #}
+
+    def tearDown(self):
+        remove_list(self._mlist)
+
+    def test_text_to_uri(self):
+        for oldvar, newvar in self._conf_mapping.iteritems():
+            self._pckdict[oldvar] = "TEST VALUE"
+            import_config_pck(self._mlist, self._pckdict)
+            newattr = getattr(self._mlist, newvar)
+            text = decorate(self._mlist, newattr)
+            self.assertEqual(text, "TEST VALUE",
+                    "Old variable %s was not properly imported to %s"
+                    % (oldvar, newvar))
+
+    def test_substitutions(self):
+        test_text = ("UNIT TESTING %(real_name)s mailing list\n"
+                     "%(real_name)s@%(host_name)s\n"
+                     "%(web_page_url)slistinfo%(cgiext)s/%(_internal_name)s")
+        expected_text = ("UNIT TESTING $display_name mailing list\n"
+                         "$fqdn_listname\n"
+                         "$listinfo_uri")
+        for oldvar, newvar in self._conf_mapping.iteritems():
+            self._pckdict[oldvar] = test_text
+            import_config_pck(self._mlist, self._pckdict)
+            newattr = getattr(self._mlist, newvar)
+            template_uri = expand(newattr, dict(
+                listname=self._mlist.fqdn_listname,
+                language=self._mlist.preferred_language.code,
+                ))
+            loader = getUtility(ITemplateLoader)
+            text = loader.get(template_uri)
+            self.assertEqual(text, expected_text,
+                    "Old variables were not converted for %s" % newvar)
+
+    def test_keep_default(self):
+        # If the value was not changed from MM2.1's default, don't import it
+        default_msg_footer = (
+            "_______________________________________________\n"
+            "%(real_name)s mailing list\n"
+            "%(real_name)s@%(host_name)s\n"
+            "%(web_page_url)slistinfo%(cgiext)s/%(_internal_name)s"
+            )
+        for oldvar in ("msg_footer", "digest_footer"):
+            newvar = self._conf_mapping[oldvar]
+            self._pckdict[oldvar] = default_msg_footer
+            old_value = getattr(self._mlist, newvar)
+            import_config_pck(self._mlist, self._pckdict)
+            new_value = getattr(self._mlist, newvar)
+            self.assertEqual(old_value, new_value,
+                    "Default value was not preserved for %s" % newvar)
+
+    def test_keep_default_if_fqdn_changed(self):
+        # Use case: importing the old a@ex.com into b@ex.com
+        # We can't check if it changed from the default
+        # -> don't import, we may do more harm than good and it's easy to
+        # change if needed
+        test_value = "TEST-VALUE"
+        for oldvar, newvar in self._conf_mapping.iteritems():
+            self._mlist.mail_host = "example.com"
+            self._pckdict["mail_host"] = "test.example.com"
+            self._pckdict[oldvar] = test_value
+            old_value = getattr(self._mlist, newvar)
+            import_config_pck(self._mlist, self._pckdict)
+            new_value = getattr(self._mlist, newvar)
+            self.assertEqual(old_value, new_value,
+                    "Default value was not preserved for %s" % newvar)
+
+
+
+class TestRosterImport(unittest.TestCase):
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('blank@example.com')
+        self._pckdict = {
+            "members": {
+                "anne@example.com": 0,
+                "bob@example.com": "bob@ExampLe.Com",
+            },
+            "digest_members": {
+                "cindy@example.com": 0,
+                "dave@example.com": "dave@ExampLe.Com",
+            },
+            "passwords": {
+                "anne@example.com" : "annepass",
+                "bob@example.com"  : "bobpass",
+                "cindy@example.com": "cindypass",
+                "dave@example.com" : "davepass",
+            },
+            "language": {
+                "anne@example.com" : "fr",
+                "bob@example.com"  : "de",
+                "cindy@example.com": "es",
+                "dave@example.com" : "it",
+            },
+            "usernames": {
+                "anne@example.com" : "Anne",
+                "bob@example.com"  : "Bob",
+                "cindy@example.com": "Cindy",
+                "dave@example.com" : "Dave",
+            },
+            "owner": [
+                "anne@example.com",
+                "emily@example.com",
+            ],
+            "moderator": [
+                "bob@example.com",
+                "fred@example.com",
+            ],
+        }
+        self._usermanager = getUtility(IUserManager)
+        language_manager = getUtility(ILanguageManager)
+        for code in self._pckdict["language"].values():
+            if code not in language_manager.codes:
+                language_manager.add(code, 'utf-8', code)
+
+    def tearDown(self):
+        remove_list(self._mlist)
+
+    def test_member(self):
+        import_config_pck(self._mlist, self._pckdict)
+        for name in ("anne", "bob", "cindy", "dave"):
+            addr = "%s@example.com" % name
+            self.assertTrue(
+                    addr in [ a.email for a in self._mlist.members.addresses],
+                    "Address %s was not imported" % addr)
+        self.assertTrue("anne@example.com" in [ a.email
+                        for a in self._mlist.regular_members.addresses])
+        self.assertTrue("bob@example.com" in [ a.email
+                        for a in self._mlist.regular_members.addresses])
+        self.assertTrue("cindy@example.com" in [ a.email
+                        for a in self._mlist.digest_members.addresses])
+        self.assertTrue("dave@example.com" in [ a.email
+                        for a in self._mlist.digest_members.addresses])
+
+    def test_original_email(self):
+        import_config_pck(self._mlist, self._pckdict)
+        bob = self._usermanager.get_address("bob@example.com")
+        self.assertEqual(bob.original_email, "bob@ExampLe.Com")
+        dave = self._usermanager.get_address("dave@example.com")
+        self.assertEqual(dave.original_email, "dave@ExampLe.Com")
+
+    def test_language(self):
+        import_config_pck(self._mlist, self._pckdict)
+        for name in ("anne", "bob", "cindy", "dave"):
+            addr = "%s@example.com" % name
+            member = self._mlist.members.get_member(addr)
+            self.assertTrue(member is not None,
+                            "Address %s was not imported" % addr)
+            print(self._pckdict["language"])
+            print(member.preferred_language, member.preferred_language.code)
+            self.assertEqual(member.preferred_language.code,
+                             self._pckdict["language"][addr])
+
+    def test_username(self):
+        import_config_pck(self._mlist, self._pckdict)
+        for name in ("anne", "bob", "cindy", "dave"):
+            addr = "%s@example.com" % name
+            user = self._usermanager.get_user(addr)
+            address = self._usermanager.get_address(addr)
+            self.assertTrue(user is not None,
+                    "User %s was not imported" % addr)
+            self.assertTrue(address is not None,
+                    "Address %s was not imported" % addr)
+            display_name = self._pckdict["usernames"][addr]
+            self.assertEqual(user.display_name, display_name,
+                    "The display name was not set for User %s" % addr)
+            self.assertEqual(address.display_name, display_name,
+                    "The display name was not set for Address %s" % addr)
+
+    def test_owner(self):
+        import_config_pck(self._mlist, self._pckdict)
+        for name in ("anne", "emily"):
+            addr = "%s@example.com" % name
+            self.assertTrue(
+                    addr in [ a.email for a in self._mlist.owners.addresses ],
+                    "Address %s was not imported as owner" % addr)
+        self.assertFalse("emily@example.com" in
+                [ a.email for a in self._mlist.members.addresses ],
+                "Address emily@ was wrongly added to the members list")
+
+    def test_moderator(self):
+        import_config_pck(self._mlist, self._pckdict)
+        for name in ("bob", "fred"):
+            addr = "%s@example.com" % name
+            self.assertTrue(
+                    addr in [ a.email for a in self._mlist.moderators.addresses ],
+                    "Address %s was not imported as moderator" % addr)
+        self.assertFalse("fred@example.com" in
+                [ a.email for a in self._mlist.members.addresses ],
+                "Address fred@ was wrongly added to the members list")
+
+    def test_password(self):
+        #self.anne.password = config.password_context.encrypt('abc123')
+        import_config_pck(self._mlist, self._pckdict)
+        for name in ("anne", "bob", "cindy", "dave"):
+            addr = "%s@example.com" % name
+            user = self._usermanager.get_user(addr)
+            self.assertTrue(user is not None,
+                    "Address %s was not imported" % addr)
+            self.assertEqual(user.password, '{plaintext}%spass' % name,
+                    "Password for %s was not imported" % addr)
+
+    def test_same_user(self):
+        # Adding the address of an existing User must not create another user
+        user = self._usermanager.create_user('anne@example.com', 'Anne')
+        user.register("bob@example.com") # secondary email
+        import_config_pck(self._mlist, self._pckdict)
+        member = self._mlist.members.get_member('bob@example.com')
+        self.assertEqual(member.user, user)
+
+
+
+class TestPreferencesImport(unittest.TestCase):
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('blank@example.com')
+        self._pckdict = {
+            "members": { "anne@example.com": 0 },
+            "user_options": {},
+            "delivery_status": {},
+        }
+        self._usermanager = getUtility(IUserManager)
+
+    def tearDown(self):
+        remove_list(self._mlist)
+
+    def _do_test(self, oldvalue, expected):
+        self._pckdict["user_options"]["anne@example.com"] = oldvalue
+        import_config_pck(self._mlist, self._pckdict)
+        user = self._usermanager.get_user("anne@example.com")
+        self.assertTrue(user is not None, "User was not imported")
+        member = self._mlist.members.get_member("anne@example.com")
+        self.assertTrue(member is not None, "Address was not subscribed")
+        for exp_name, exp_val in expected.iteritems():
+            try:
+                currentval = getattr(member, exp_name)
+            except AttributeError:
+                # hide_address has no direct getter
+                currentval = getattr(member.preferences, exp_name)
+            self.assertEqual(currentval, exp_val,
+                    "Preference %s was not imported" % exp_name)
+        # XXX: should I check that other params are still equal to
+        # mailman.core.constants.system_preferences ?
+
+    def test_acknowledge_posts(self):
+        # AcknowledgePosts
+        self._do_test(4, {"acknowledge_posts": True})
+
+    def test_hide_address(self):
+        # ConcealSubscription
+        self._do_test(16, {"hide_address": True})
+
+    def test_receive_own_postings(self):
+        # DontReceiveOwnPosts
+        self._do_test(2, {"receive_own_postings": False})
+
+    def test_receive_list_copy(self):
+        # DontReceiveDuplicates
+        self._do_test(256, {"receive_list_copy": False})
+
+    def test_digest_plain(self):
+        # Digests & DisableMime
+        self._pckdict["digest_members"] = self._pckdict["members"].copy()
+        self._pckdict["members"] = {}
+        self._do_test(8, {"delivery_mode": DeliveryMode.plaintext_digests})
+
+    def test_digest_mime(self):
+        # Digests & not DisableMime
+        self._pckdict["digest_members"] = self._pckdict["members"].copy()
+        self._pckdict["members"] = {}
+        self._do_test(0, {"delivery_mode": DeliveryMode.mime_digests})
+
+    def test_delivery_status(self):
+        # look for the pckdict["delivery_status"] key which will look like
+        # (status, time) where status is among the following:
+        # ENABLED  = 0 # enabled
+        # UNKNOWN  = 1 # legacy disabled
+        # BYUSER   = 2 # disabled by user choice
+        # BYADMIN  = 3 # disabled by admin choice
+        # BYBOUNCE = 4 # disabled by bounces
+        for oldval, expected in enumerate((DeliveryStatus.enabled,
+                DeliveryStatus.unknown, DeliveryStatus.by_user,
+                DeliveryStatus.by_moderator, DeliveryStatus.by_bounces)):
+            self._pckdict["delivery_status"]["anne@example.com"] = (oldval, 0)
+            import_config_pck(self._mlist, self._pckdict)
+            member = self._mlist.members.get_member("anne@example.com")
+            self.assertTrue(member is not None, "Address was not subscribed")
+            self.assertEqual(member.delivery_status, expected)
+            member.unsubscribe()
+
+    def test_moderate(self):
+        # Option flag Moderate is translated to
+        # member.moderation_action = Action.hold
+        self._do_test(128, {"moderation_action": Action.hold})
+
+    def test_multiple_options(self):
+        # DontReceiveDuplicates & DisableMime & SuppressPasswordReminder
+        self._pckdict["digest_members"] = self._pckdict["members"].copy()
+        self._pckdict["members"] = {}
+        self._do_test(296, {
+                "receive_list_copy": False,
+                "delivery_mode": DeliveryMode.plaintext_digests,
+                })
