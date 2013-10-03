@@ -192,7 +192,7 @@ class TestBasicImport(unittest.TestCase):
             ("anne@example.com", "anne@example.com"),
             ("^.*@example.com", "bob@example.com")
             ]
-        self._pckdict["ban_list"] = [ b[0] for b in banned ]
+        self._pckdict["ban_list"] = [ str(b[0]) for b in banned ]
         self._import()
         for _pattern, addr in banned:
             self.assertTrue(IBanManager(self._mlist).is_banned(addr))
@@ -200,7 +200,7 @@ class TestBasicImport(unittest.TestCase):
     def test_acceptable_aliases(self):
         # it used to be a plain-text field (values are newline-separated)
         aliases = ["alias1@example.com", "alias2@exemple.com"]
-        self._pckdict["acceptable_aliases"] = "\n".join(aliases)
+        self._pckdict[b"acceptable_aliases"] = str("\n".join(aliases))
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
         self.assertEqual(sorted(alias_set.aliases), aliases)
@@ -287,8 +287,8 @@ class TestMemberActionImport(unittest.TestCase):
         self._mlist.default_member_action = DummyEnum.val
         self._mlist.default_nonmember_action = DummyEnum.val
         self._pckdict = {
-            "member_moderation_action": DummyEnum.val,
-            "generic_nonmember_action": DummyEnum.val,
+            b"member_moderation_action": DummyEnum.val,
+            b"generic_nonmember_action": DummyEnum.val,
         }
 
     def tearDown(self):
@@ -300,31 +300,31 @@ class TestMemberActionImport(unittest.TestCase):
             self.assertEqual(getattr(self._mlist, key), value)
 
     def test_member_hold(self):
-        self._pckdict["member_moderation_action"] = 0
+        self._pckdict[b"member_moderation_action"] = 0
         self._do_test({"default_member_action": Action.hold})
 
     def test_member_reject(self):
-        self._pckdict["member_moderation_action"] = 1
+        self._pckdict[b"member_moderation_action"] = 1
         self._do_test({"default_member_action": Action.reject})
 
     def test_member_discard(self):
-        self._pckdict["member_moderation_action"] = 2
+        self._pckdict[b"member_moderation_action"] = 2
         self._do_test({"default_member_action": Action.discard})
 
     def test_nonmember_accept(self):
-        self._pckdict["generic_nonmember_action"] = 0
+        self._pckdict[b"generic_nonmember_action"] = 0
         self._do_test({"default_nonmember_action": Action.accept})
 
     def test_nonmember_hold(self):
-        self._pckdict["generic_nonmember_action"] = 1
+        self._pckdict[b"generic_nonmember_action"] = 1
         self._do_test({"default_nonmember_action": Action.hold})
 
     def test_nonmember_reject(self):
-        self._pckdict["generic_nonmember_action"] = 2
+        self._pckdict[b"generic_nonmember_action"] = 2
         self._do_test({"default_nonmember_action": Action.reject})
 
     def test_nonmember_discard(self):
-        self._pckdict["generic_nonmember_action"] = 3
+        self._pckdict[b"generic_nonmember_action"] = 3
         self._do_test({"default_nonmember_action": Action.discard})
 
 
@@ -365,7 +365,7 @@ class TestConvertToURI(unittest.TestCase):
 
     def test_text_to_uri(self):
         for oldvar, newvar in self._conf_mapping.iteritems():
-            self._pckdict[oldvar] = "TEST VALUE"
+            self._pckdict[str(oldvar)] = b"TEST VALUE"
             import_config_pck(self._mlist, self._pckdict)
             newattr = getattr(self._mlist, newvar)
             text = decorate(self._mlist, newattr)
@@ -381,7 +381,7 @@ class TestConvertToURI(unittest.TestCase):
                          "$fqdn_listname\n"
                          "$listinfo_uri")
         for oldvar, newvar in self._conf_mapping.iteritems():
-            self._pckdict[oldvar] = test_text
+            self._pckdict[str(oldvar)] = str(test_text)
             import_config_pck(self._mlist, self._pckdict)
             newattr = getattr(self._mlist, newvar)
             template_uri = expand(newattr, dict(
@@ -403,7 +403,7 @@ class TestConvertToURI(unittest.TestCase):
             )
         for oldvar in ("msg_footer", "digest_footer"):
             newvar = self._conf_mapping[oldvar]
-            self._pckdict[oldvar] = default_msg_footer
+            self._pckdict[str(oldvar)] = str(default_msg_footer)
             old_value = getattr(self._mlist, newvar)
             import_config_pck(self._mlist, self._pckdict)
             new_value = getattr(self._mlist, newvar)
@@ -418,8 +418,8 @@ class TestConvertToURI(unittest.TestCase):
         test_value = "TEST-VALUE"
         for oldvar, newvar in self._conf_mapping.iteritems():
             self._mlist.mail_host = "example.com"
-            self._pckdict["mail_host"] = "test.example.com"
-            self._pckdict[oldvar] = test_value
+            self._pckdict[b"mail_host"] = b"test.example.com"
+            self._pckdict[str(oldvar)] = test_value
             old_value = getattr(self._mlist, newvar)
             import_config_pck(self._mlist, self._pckdict)
             new_value = getattr(self._mlist, newvar)
@@ -435,44 +435,44 @@ class TestRosterImport(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('blank@example.com')
         self._pckdict = {
-            "members": {
-                "anne@example.com": 0,
-                "bob@example.com": "bob@ExampLe.Com",
+            b"members": {
+                b"anne@example.com": 0,
+                b"bob@example.com": b"bob@ExampLe.Com",
             },
-            "digest_members": {
-                "cindy@example.com": 0,
-                "dave@example.com": "dave@ExampLe.Com",
+            b"digest_members": {
+                b"cindy@example.com": 0,
+                b"dave@example.com": b"dave@ExampLe.Com",
             },
-            "passwords": {
-                "anne@example.com" : "annepass",
-                "bob@example.com"  : "bobpass",
-                "cindy@example.com": "cindypass",
-                "dave@example.com" : "davepass",
+            b"passwords": {
+                b"anne@example.com" : b"annepass",
+                b"bob@example.com"  : b"bobpass",
+                b"cindy@example.com": b"cindypass",
+                b"dave@example.com" : b"davepass",
             },
-            "language": {
-                "anne@example.com" : "fr",
-                "bob@example.com"  : "de",
-                "cindy@example.com": "es",
-                "dave@example.com" : "it",
+            b"language": {
+                b"anne@example.com" : b"fr",
+                b"bob@example.com"  : b"de",
+                b"cindy@example.com": b"es",
+                b"dave@example.com" : b"it",
             },
-            "usernames": {
-                "anne@example.com" : "Anne",
-                "bob@example.com"  : "Bob",
-                "cindy@example.com": "Cindy",
-                "dave@example.com" : "Dave",
+            b"usernames": { # Usernames are unicode strings in the pickle
+                b"anne@example.com" : "Anne",
+                b"bob@example.com"  : "Bob",
+                b"cindy@example.com": "Cindy",
+                b"dave@example.com" : "Dave",
             },
-            "owner": [
-                "anne@example.com",
-                "emily@example.com",
+            b"owner": [
+                b"anne@example.com",
+                b"emily@example.com",
             ],
-            "moderator": [
-                "bob@example.com",
-                "fred@example.com",
+            b"moderator": [
+                b"bob@example.com",
+                b"fred@example.com",
             ],
         }
         self._usermanager = getUtility(IUserManager)
         language_manager = getUtility(ILanguageManager)
-        for code in self._pckdict["language"].values():
+        for code in self._pckdict[b"language"].values():
             if code not in language_manager.codes:
                 language_manager.add(code, 'utf-8', code)
 
@@ -580,9 +580,9 @@ class TestPreferencesImport(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('blank@example.com')
         self._pckdict = {
-            "members": { "anne@example.com": 0 },
-            "user_options": {},
-            "delivery_status": {},
+            b"members": { b"anne@example.com": 0 },
+            b"user_options": {},
+            b"delivery_status": {},
         }
         self._usermanager = getUtility(IUserManager)
 
@@ -590,7 +590,7 @@ class TestPreferencesImport(unittest.TestCase):
         remove_list(self._mlist)
 
     def _do_test(self, oldvalue, expected):
-        self._pckdict["user_options"]["anne@example.com"] = oldvalue
+        self._pckdict[b"user_options"][b"anne@example.com"] = oldvalue
         import_config_pck(self._mlist, self._pckdict)
         user = self._usermanager.get_user("anne@example.com")
         self.assertTrue(user is not None, "User was not imported")
@@ -625,14 +625,14 @@ class TestPreferencesImport(unittest.TestCase):
 
     def test_digest_plain(self):
         # Digests & DisableMime
-        self._pckdict["digest_members"] = self._pckdict["members"].copy()
-        self._pckdict["members"] = {}
+        self._pckdict[b"digest_members"] = self._pckdict[b"members"].copy()
+        self._pckdict[b"members"] = {}
         self._do_test(8, {"delivery_mode": DeliveryMode.plaintext_digests})
 
     def test_digest_mime(self):
         # Digests & not DisableMime
-        self._pckdict["digest_members"] = self._pckdict["members"].copy()
-        self._pckdict["members"] = {}
+        self._pckdict[b"digest_members"] = self._pckdict[b"members"].copy()
+        self._pckdict[b"members"] = {}
         self._do_test(0, {"delivery_mode": DeliveryMode.mime_digests})
 
     def test_delivery_status(self):
@@ -646,7 +646,7 @@ class TestPreferencesImport(unittest.TestCase):
         for oldval, expected in enumerate((DeliveryStatus.enabled,
                 DeliveryStatus.unknown, DeliveryStatus.by_user,
                 DeliveryStatus.by_moderator, DeliveryStatus.by_bounces)):
-            self._pckdict["delivery_status"]["anne@example.com"] = (oldval, 0)
+            self._pckdict[b"delivery_status"][b"anne@example.com"] = (oldval, 0)
             import_config_pck(self._mlist, self._pckdict)
             member = self._mlist.members.get_member("anne@example.com")
             self.assertTrue(member is not None, "Address was not subscribed")
@@ -660,8 +660,8 @@ class TestPreferencesImport(unittest.TestCase):
 
     def test_multiple_options(self):
         # DontReceiveDuplicates & DisableMime & SuppressPasswordReminder
-        self._pckdict["digest_members"] = self._pckdict["members"].copy()
-        self._pckdict["members"] = {}
+        self._pckdict[b"digest_members"] = self._pckdict[b"members"].copy()
+        self._pckdict[b"members"] = {}
         self._do_test(296, {
                 "receive_list_copy": False,
                 "delivery_mode": DeliveryMode.plaintext_digests,

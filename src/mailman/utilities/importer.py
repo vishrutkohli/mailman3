@@ -197,13 +197,13 @@ def import_config_pck(mlist, config_dict):
         mlist.archive_policy = ArchivePolicy.never
     # Handle ban list
     for addr in config_dict.get('ban_list', []):
-        IBanManager(mlist).ban(addr)
+        IBanManager(mlist).ban(unicode(addr))
     # Handle acceptable aliases
     for addr in config_dict.get('acceptable_aliases', '').splitlines():
         addr = addr.strip()
         if not addr:
             continue
-        IAcceptableAliasSet(mlist).add(addr)
+        IAcceptableAliasSet(mlist).add(unicode(addr))
     # Handle conversion to URIs
     convert_to_uri = {
         "welcome_msg": "welcome_message_uri",
@@ -299,7 +299,7 @@ def import_roster(mlist, config_dict, members, role):
                 original_email = merged_members[email]
             else:
                 original_email = email
-            user = usermanager.create_user(original_email)
+            user = usermanager.create_user(unicode(original_email))
         address = usermanager.get_address(email)
         address.verified_on = datetime.datetime.now()
         mlist.subscribe(address, role)
