@@ -27,6 +27,7 @@ __all__ = [
 import unittest
 
 from zope.component import getUtility
+from storm.locals import Store
 
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message
@@ -37,6 +38,7 @@ from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.usermanager import IUserManager
+from mailman.model.mime import ContentFilter
 from mailman.testing.helpers import (
     event_subscribers, specialized_message_from_string)
 from mailman.testing.layers import ConfigLayer
@@ -125,6 +127,19 @@ Message-ID: <argon>
         self.assertEqual(request, None)
         saved_message = getUtility(IMessageStore).get_message_by_id('<argon>')
         self.assertEqual(saved_message.as_string(), msg.as_string())
+
+    def test_content_filters_are_deleted_when_mailing_list_is_deleted(self):
+        # When a mailing list with content filters is deleted, the filters must
+        # be deleted fist or an IntegrityError will be raised
+        filter_names = ("filter_types", "pass_types",
+                        "filter_extensions", "pass_extensions")
+        for fname in filter_names:
+            setattr(self._ant, fname, ["test-filter-1", "test-filter-2"])
+        getUtility(IListManager).delete(self._ant)
+        store = Store.of(self._ant)
+        filters = store.find(ContentFilter,
+                             ContentFilter.mailing_list == self._ant)
+        self.assertEqual(filters.count(), 0)
 
 
 

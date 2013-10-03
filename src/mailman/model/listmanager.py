@@ -34,6 +34,7 @@ from mailman.interfaces.listmanager import (
     IListManager, ListAlreadyExistsError, ListCreatedEvent, ListCreatingEvent,
     ListDeletedEvent, ListDeletingEvent)
 from mailman.model.mailinglist import MailingList
+from mailman.model.mime import ContentFilter
 from mailman.utilities.datetime import now
 
 
@@ -79,6 +80,7 @@ class ListManager:
         """See `IListManager`."""
         fqdn_listname = mlist.fqdn_listname
         notify(ListDeletingEvent(mlist))
+        store.find(ContentFilter, ContentFilter.mailing_list == mlist).remove()
         store.remove(mlist)
         notify(ListDeletedEvent(fqdn_listname))
 
