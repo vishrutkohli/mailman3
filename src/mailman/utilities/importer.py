@@ -103,6 +103,10 @@ def nonmember_action_mapping(value):
     elif value == 3:
         return Action.discard
 
+
+def unicode_to_string(value):
+    return str(value) if value is not None else None
+
 
 # Attributes in Mailman 2 which have a different type in Mailman 3.
 TYPES = dict(
@@ -124,6 +128,7 @@ TYPES = dict(
     forward_unrecognized_bounces_to=UnrecognizedBounceDisposition,
     default_member_action=member_action_mapping,
     default_nonmember_action=nonmember_action_mapping,
+    moderator_password=unicode_to_string,
     )
 
 
@@ -177,7 +182,15 @@ def import_config_pck(mlist, config_dict):
         # strings).
         if hasattr(mlist, key):
             if isinstance(value, str):
-                value = unicode(value, 'ascii')
+                for encoding in ("ascii", "utf-8"):
+                    try:
+                        value = unicode(value, encoding)
+                    except UnicodeDecodeError, e:
+                        continue
+                    else:
+                        break
+                if isinstance(value, str): # we did our best
+                    value = unicode(value, 'ascii', 'replace')
             # Some types require conversion.
             converter = TYPES.get(key)
             if converter is not None:

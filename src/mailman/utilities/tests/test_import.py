@@ -168,6 +168,12 @@ class TestBasicImport(unittest.TestCase):
         self._import()
         self.assertEqual(self._mlist.moderator_password, None)
 
+    def test_moderator_password_str(self):
+        # moderator_password must not be unicode
+        self._pckdict[b"mod_password"] = b'TESTVALUE'
+        self._import()
+        self.assertEqual(self._mlist.moderator_password, b'TESTVALUE')
+
     def test_newsgroup_moderation(self):
         # news_moderation -> newsgroup_moderation
         # news_prefix_subject_too -> nntp_prefix_subject_too
@@ -204,6 +210,20 @@ class TestBasicImport(unittest.TestCase):
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
         self.assertEqual(sorted(alias_set.aliases), aliases)
+
+    def test_info_non_ascii(self):
+        # info can contain non-ascii chars
+        info = 'O idioma aceito \xe9 somente Portugu\xeas do Brasil'
+        self._pckdict[b"info"] = info.encode("utf-8")
+        self._import()
+        self.assertEqual(self._mlist.info, info,
+                         "Encoding to UTF-8 is not handled")
+        # test fallback to ascii with replace
+        self._pckdict[b"info"] = info.encode("iso-8859-1")
+        self._import()
+        self.assertEqual(self._mlist.info,
+                         unicode(self._pckdict[b"info"], "ascii", "replace"),
+                         "We don't fall back to replacing non-ascii chars")
 
 
 
@@ -560,7 +580,7 @@ class TestRosterImport(unittest.TestCase):
             user = self._usermanager.get_user(addr)
             self.assertTrue(user is not None,
                     "Address %s was not imported" % addr)
-            self.assertEqual(user.password, '{plaintext}%spass' % name,
+            self.assertEqual(user.password, b'{plaintext}%spass' % name,
                     "Password for %s was not imported" % addr)
 
     def test_same_user(self):
