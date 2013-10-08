@@ -31,7 +31,7 @@ from datetime import timedelta, datetime
 
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.testing.layers import ConfigLayer
-from mailman.utilities.importer import import_config_pck
+from mailman.utilities.importer import import_config_pck, Import21Error
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.action import Action, FilterAction
 from mailman.interfaces.bounce import UnrecognizedBounceDisposition
@@ -225,6 +225,32 @@ class TestBasicImport(unittest.TestCase):
         self.assertEqual(self._mlist.info,
                          unicode(self._pckdict[b"info"], "ascii", "replace"),
                          "We don't fall back to replacing non-ascii chars")
+
+    def test_preferred_language(self):
+        self._pckdict[b"preferred_language"] = b'ja'
+        english = getUtility(ILanguageManager).get('en')
+        japanese = getUtility(ILanguageManager).get('ja')
+        self.assertEqual(self._mlist.preferred_language, english)
+        self._import()
+        self.assertEqual(self._mlist.preferred_language, japanese)
+
+    def test_preferred_language_unknown_previous(self):
+        # when the previous language is unknown, it should not fail
+        self._mlist._preferred_language = 'xx' # non-existant
+        self._import()
+        english = getUtility(ILanguageManager).get('en')
+        self.assertEqual(self._mlist.preferred_language, english)
+
+    def test_new_language(self):
+        self._pckdict[b"preferred_language"] = b'xx_XX'
+        try:
+            self._import()
+        except Import21Error, e:
+            # check the message
+            self.assertTrue("xx_XX" in str(e))
+            self.assertTrue("[language.xx]" in str(e))
+        else:
+            self.fail("Import21Error was not raised")
 
 
 
@@ -548,6 +574,17 @@ class TestRosterImport(unittest.TestCase):
             print(member.preferred_language, member.preferred_language.code)
             self.assertEqual(member.preferred_language.code,
                              self._pckdict["language"][addr])
+
+    def test_new_language(self):
+        self._pckdict[b"language"][b"anne@example.com"] = b'xx_XX'
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except Import21Error, e:
+            # check the message
+            self.assertTrue("xx_XX" in str(e))
+            self.assertTrue("[language.xx]" in str(e))
+        else:
+            self.fail("Import21Error was not raised")
 
     def test_username(self):
         import_config_pck(self._mlist, self._pckdict)

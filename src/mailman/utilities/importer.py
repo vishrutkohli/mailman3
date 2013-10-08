@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'import_config_pck',
+    'ImportError',
     ]
 
 
@@ -31,6 +32,7 @@ import os
 from urllib2 import URLError
 
 from mailman.config import config
+from mailman.core.errors import MailmanError
 from mailman.interfaces.action import FilterAction, Action
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.digests import DigestFrequency
@@ -42,10 +44,15 @@ from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.usermanager import IUserManager
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus, MemberRole
+from mailman.interfaces.languages import ILanguageManager
 from mailman.handlers.decorate import decorate, decorate_template
 from mailman.utilities.i18n import search
 from zope.component import getUtility
 
+
+
+class Import21Error(MailmanError):
+    pass
 
 
 def seconds_to_delta(value):
@@ -107,6 +114,26 @@ def nonmember_action_mapping(value):
 def unicode_to_string(value):
     return str(value) if value is not None else None
 
+
+def check_language_code(code):
+    if code is None:
+        return None
+    code = unicode(code)
+    if code not in getUtility(ILanguageManager):
+        msg = """Missing language: {0}
+You must add a section describing this language in your mailman.cfg file.
+This section should look like this:
+[language.{1}]
+# The English name for the language.
+description: CHANGE ME
+# And the default character set for the language.
+charset: utf-8
+# Whether the language is enabled or not.
+enabled: yes
+""".format(code, code[:2])
+        raise Import21Error(msg)
+    return code
+
 
 # Attributes in Mailman 2 which have a different type in Mailman 3.
 TYPES = dict(
@@ -129,6 +156,7 @@ TYPES = dict(
     default_member_action=member_action_mapping,
     default_nonmember_action=nonmember_action_mapping,
     moderator_password=unicode_to_string,
+    preferred_language=check_language_code,
     )
 
 
@@ -180,7 +208,9 @@ def import_config_pck(mlist, config_dict):
         # Handle the simple case where the key is an attribute of the
         # IMailingList and the types are the same (modulo 8-bit/unicode
         # strings).
-        if hasattr(mlist, key):
+        # When attributes raise an exception, hasattr may think they don't
+        # exist (see python issue 9666). Add them here.
+        if hasattr(mlist, key) or key in ("preferred_language", ):
             if isinstance(value, str):
                 for encoding in ("ascii", "utf-8"):
                     try:
@@ -346,7 +376,7 @@ def import_roster(mlist, config_dict, members, role):
             pass
         if email in config_dict.get("language", {}):
             member.preferences.preferred_language = \
-                unicode(config_dict["language"][email])
+                check_language_code(config_dict["language"][email])
         # if the user already exists, display_name and password will be
         # overwritten
         if email in config_dict.get("usernames", {}):
