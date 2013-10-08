@@ -172,6 +172,7 @@ class TestBasicImport(unittest.TestCase):
         # moderator_password must not be unicode
         self._pckdict[b"mod_password"] = b'TESTVALUE'
         self._import()
+        self.assertFalse(isinstance(self._mlist.moderator_password, unicode))
         self.assertEqual(self._mlist.moderator_password, b'TESTVALUE')
 
     def test_newsgroup_moderation(self):
@@ -435,7 +436,7 @@ class TestConvertToURI(unittest.TestCase):
         # We can't check if it changed from the default
         # -> don't import, we may do more harm than good and it's easy to
         # change if needed
-        test_value = "TEST-VALUE"
+        test_value = b"TEST-VALUE"
         for oldvar, newvar in self._conf_mapping.iteritems():
             self._mlist.mail_host = "example.com"
             self._pckdict[b"mail_host"] = b"test.example.com"
@@ -445,6 +446,20 @@ class TestConvertToURI(unittest.TestCase):
             new_value = getattr(self._mlist, newvar)
             self.assertEqual(old_value, new_value,
                     "Default value was not preserved for %s" % newvar)
+
+    def test_unicode(self):
+        for oldvar in self._conf_mapping:
+            self._pckdict[str(oldvar)] = b"Ol\xe1!"
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except UnicodeDecodeError, e:
+            self.fail(e)
+        for oldvar, newvar in self._conf_mapping.iteritems():
+            newattr = getattr(self._mlist, newvar)
+            text = decorate(self._mlist, newattr)
+            expected = u'Ol\ufffd!'.encode("utf-8")
+            # we get bytestrings because the text is stored in a file
+            self.assertEqual(text, expected)
 
 
 

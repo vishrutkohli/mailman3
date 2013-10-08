@@ -231,28 +231,43 @@ def import_config_pck(mlist, config_dict):
         "%(real_name)s@%(host_name)s": "$fqdn_listname",
         "%(web_page_url)slistinfo%(cgiext)s/%(_internal_name)s": "$listinfo_uri",
     }
+    # Collect defaults
+    defaults = {}
     for oldvar, newvar in convert_to_uri.iteritems():
-        if oldvar not in config_dict:
-            continue
-        text = config_dict[oldvar]
-        for oldph, newph in convert_placeholders.iteritems():
-            text = text.replace(oldph, newph)
         default_value = getattr(mlist, newvar)
-        if not text and not default_value:
+        if not default_value:
             continue
         # Check if the value changed from the default
         try:
             default_text = decorate(mlist, default_value)
-            expanded_text = decorate_template(mlist, text)
         except (URLError, KeyError):
             # Use case: importing the old a@ex.com into b@ex.com
             # We can't check if it changed from the default
             # -> don't import, we may do more harm than good and it's easy to
             # change if needed
             continue
-        if not text and not default_text:
+        defaults[newvar] = (default_value, default_text)
+    for oldvar, newvar in convert_to_uri.iteritems():
+        if oldvar not in config_dict:
+            continue
+        text = config_dict[oldvar]
+        text = unicode(text, "utf-8", "replace")
+        for oldph, newph in convert_placeholders.iteritems():
+            text = text.replace(oldph, newph)
+        default_value, default_text  = defaults.get(newvar, (None, None))
+        if not text and not (default_value or default_text):
             continue # both are empty, leave it
-        if expanded_text.strip() == default_text.strip():
+        # Check if the value changed from the default
+        try:
+            expanded_text = decorate_template(mlist, text)
+        except KeyError:
+            # Use case: importing the old a@ex.com into b@ex.com
+            # We can't check if it changed from the default
+            # -> don't import, we may do more harm than good and it's easy to
+            # change if needed
+            continue
+        if expanded_text and default_text \
+                and expanded_text.strip() == default_text.strip():
             continue # keep the default
         # Write the custom value to the right file
         base_uri = "mailman:///$listname/$language/"
