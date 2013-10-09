@@ -55,6 +55,19 @@ class Import21Error(MailmanError):
     pass
 
 
+def str_to_unicode(value):
+    # Convert a string to unicode when the encoding is not declared
+    if isinstance(value, unicode):
+        return value
+    for encoding in ("ascii", "utf-8"):
+        try:
+            return unicode(value, encoding)
+        except UnicodeDecodeError, e:
+            continue
+    # we did our best, use replace
+    return unicode(value, 'ascii', 'replace')
+
+
 def seconds_to_delta(value):
     return datetime.timedelta(seconds=value)
 
@@ -212,15 +225,7 @@ def import_config_pck(mlist, config_dict):
         # exist (see python issue 9666). Add them here.
         if hasattr(mlist, key) or key in ("preferred_language", ):
             if isinstance(value, str):
-                for encoding in ("ascii", "utf-8"):
-                    try:
-                        value = unicode(value, encoding)
-                    except UnicodeDecodeError, e:
-                        continue
-                    else:
-                        break
-                if isinstance(value, str): # we did our best
-                    value = unicode(value, 'ascii', 'replace')
+                value = str_to_unicode(value)
             # Some types require conversion.
             converter = TYPES.get(key)
             if converter is not None:
@@ -240,13 +245,13 @@ def import_config_pck(mlist, config_dict):
         mlist.archive_policy = ArchivePolicy.never
     # Handle ban list
     for addr in config_dict.get('ban_list', []):
-        IBanManager(mlist).ban(unicode(addr))
+        IBanManager(mlist).ban(str_to_unicode(addr))
     # Handle acceptable aliases
     for addr in config_dict.get('acceptable_aliases', '').splitlines():
         addr = addr.strip()
         if not addr:
             continue
-        IAcceptableAliasSet(mlist).add(unicode(addr))
+        IAcceptableAliasSet(mlist).add(str_to_unicode(addr))
     # Handle conversion to URIs
     convert_to_uri = {
         "welcome_msg": "welcome_message_uri",
@@ -342,7 +347,7 @@ def import_roster(mlist, config_dict, members, role):
     """
     usermanager = getUtility(IUserManager)
     for email in members:
-        email = unicode(email)
+        email = str_to_unicode(email)
         roster = mlist.get_roster(role)
         if roster.get_member(email) is not None:
             print("%s is already imported with role %s" % (email, role),
@@ -357,7 +362,7 @@ def import_roster(mlist, config_dict, members, role):
                 original_email = merged_members[email]
             else:
                 original_email = email
-            user = usermanager.create_user(unicode(original_email))
+            user = usermanager.create_user(str_to_unicode(original_email))
         address = usermanager.get_address(email)
         address.verified_on = datetime.datetime.now()
         mlist.subscribe(address, role)
@@ -380,8 +385,10 @@ def import_roster(mlist, config_dict, members, role):
         # if the user already exists, display_name and password will be
         # overwritten
         if email in config_dict.get("usernames", {}):
-            address.display_name = unicode(config_dict["usernames"][email])
-            user.display_name    = unicode(config_dict["usernames"][email])
+            address.display_name = \
+                    str_to_unicode(config_dict["usernames"][email])
+            user.display_name    = \
+                    str_to_unicode(config_dict["usernames"][email])
         if email in config_dict.get("passwords", {}):
             user.password = config.password_context.encrypt(
                                     config_dict["passwords"][email])

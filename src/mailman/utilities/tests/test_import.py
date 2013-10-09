@@ -197,17 +197,24 @@ class TestBasicImport(unittest.TestCase):
     def test_ban_list(self):
         banned = [
             ("anne@example.com", "anne@example.com"),
-            ("^.*@example.com", "bob@example.com")
+            ("^.*@example.com", "bob@example.com"),
+            ("non-ascii-\xe8@example.com", "non-ascii-\ufffd@example.com"),
             ]
-        self._pckdict["ban_list"] = [ str(b[0]) for b in banned ]
-        self._import()
+        self._pckdict["ban_list"] = [ b[0].encode("iso-8859-1") for b in banned ]
+        try:
+            self._import()
+        except UnicodeDecodeError, e:
+            self.fail(e)
         for _pattern, addr in banned:
             self.assertTrue(IBanManager(self._mlist).is_banned(addr))
 
     def test_acceptable_aliases(self):
         # it used to be a plain-text field (values are newline-separated)
-        aliases = ["alias1@example.com", "alias2@exemple.com"]
-        self._pckdict[b"acceptable_aliases"] = str("\n".join(aliases))
+        aliases = ["alias1@example.com",
+                   "alias2@exemple.com",
+                   "non-ascii-\xe8@example.com"]
+        self._pckdict[b"acceptable_aliases"] = \
+                ("\n".join(aliases)).encode("utf-8")
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
         self.assertEqual(sorted(alias_set.aliases), aliases)
