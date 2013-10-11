@@ -136,14 +136,14 @@ def check_language_code(code):
         msg = """Missing language: {0}
 You must add a section describing this language in your mailman.cfg file.
 This section should look like this:
-[language.{1}]
+[language.{0}]
 # The English name for the language.
 description: CHANGE ME
 # And the default character set for the language.
 charset: utf-8
 # Whether the language is enabled or not.
 enabled: yes
-""".format(code, code[:2])
+""".format(code)
         raise Import21Error(msg)
     return code
 

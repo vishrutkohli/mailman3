@@ -254,8 +254,7 @@ class TestBasicImport(unittest.TestCase):
             self._import()
         except Import21Error, e:
             # check the message
-            self.assertTrue("xx_XX" in str(e))
-            self.assertTrue("[language.xx]" in str(e))
+            self.assertTrue("[language.xx_XX]" in str(e))
         else:
             self.fail("Import21Error was not raised")
 
@@ -588,8 +587,7 @@ class TestRosterImport(unittest.TestCase):
             import_config_pck(self._mlist, self._pckdict)
         except Import21Error, e:
             # check the message
-            self.assertTrue("xx_XX" in str(e))
-            self.assertTrue("[language.xx]" in str(e))
+            self.assertTrue("[language.xx_XX]" in str(e))
         else:
             self.fail("Import21Error was not raised")
 
