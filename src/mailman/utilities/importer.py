@@ -175,7 +175,6 @@ TYPES = dict(
 
 # Attribute names in Mailman 2 which are renamed in Mailman 3.
 NAME_MAPPINGS = dict(
-    host_name='mail_host',
     include_list_post_header='allow_list_posts',
     real_name='display_name',
     last_post_time='last_post_at',

@@ -77,11 +77,12 @@ class TestBasicImport(unittest.TestCase):
         self._import()
         self.assertEqual(self._mlist.display_name, 'Test')
 
-    def test_mail_host(self):
-        # The mlist.mail_host gets set.
+    def test_mail_host_invariant(self):
+        # The mlist.mail_host must not be updated when importing (it will
+        # change the list_id property, which is supposed to be read-only)
         self.assertEqual(self._mlist.mail_host, 'example.com')
         self._import()
-        self.assertEqual(self._mlist.mail_host, 'heresy.example.org')
+        self.assertEqual(self._mlist.mail_host, 'example.com')
 
     def test_rfc2369_headers(self):
         self._mlist.allow_list_posts = False
