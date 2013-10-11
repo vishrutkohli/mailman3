@@ -213,12 +213,28 @@ class TestBasicImport(unittest.TestCase):
         # it used to be a plain-text field (values are newline-separated)
         aliases = ["alias1@example.com",
                    "alias2@exemple.com",
-                   "non-ascii-\xe8@example.com"]
+                   "non-ascii-\xe8@example.com",
+                   ]
         self._pckdict[b"acceptable_aliases"] = \
                 ("\n".join(aliases)).encode("utf-8")
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
         self.assertEqual(sorted(alias_set.aliases), aliases)
+
+    def test_acceptable_aliases_invalid(self):
+        # values without an '@' sign used to be matched against the local part,
+        # now we need to add the '^' sign
+        aliases = ["invalid-value", ]
+        self._pckdict[b"acceptable_aliases"] = \
+                ("\n".join(aliases)).encode("utf-8")
+        try:
+            self._import()
+        except ValueError, e:
+            print(format_exc())
+            self.fail("Invalid value '%s' caused a crash" % e)
+        alias_set = IAcceptableAliasSet(self._mlist)
+        self.assertEqual(sorted(alias_set.aliases),
+                         [ ("^" + a) for a in aliases ])
 
     def test_info_non_ascii(self):
         # info can contain non-ascii chars

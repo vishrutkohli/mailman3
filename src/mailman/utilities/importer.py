@@ -250,7 +250,11 @@ def import_config_pck(mlist, config_dict):
         addr = addr.strip()
         if not addr:
             continue
-        IAcceptableAliasSet(mlist).add(str_to_unicode(addr))
+        addr = str_to_unicode(addr)
+        try:
+            IAcceptableAliasSet(mlist).add(addr)
+        except ValueError:
+            IAcceptableAliasSet(mlist).add("^" + addr)
     # Handle conversion to URIs
     convert_to_uri = {
         "welcome_msg": "welcome_message_uri",
