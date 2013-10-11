@@ -28,12 +28,14 @@ __all__ = [
 import cPickle
 import unittest
 from datetime import timedelta, datetime
+from traceback import format_exc
 
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.importer import import_config_pck, Import21Error
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.action import Action, FilterAction
+from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
@@ -41,13 +43,15 @@ from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.interfaces.usermanager import IUserManager
-from mailman.interfaces.member import DeliveryMode, DeliveryStatus
+from mailman.interfaces.member import DeliveryMode, DeliveryStatus, MemberRole
 from mailman.interfaces.languages import ILanguageManager
+from mailman.model.address import Address
 from mailman.handlers.decorate import decorate
 from mailman.utilities.string import expand
 from pkg_resources import resource_filename
 from enum import Enum
 from zope.component import getUtility
+from storm.locals import Store
 
 
 
@@ -205,6 +209,7 @@ class TestBasicImport(unittest.TestCase):
         try:
             self._import()
         except UnicodeDecodeError, e:
+            print(format_exc())
             self.fail(e)
         for _pattern, addr in banned:
             self.assertTrue(IBanManager(self._mlist).is_banned(addr))
@@ -502,6 +507,7 @@ class TestConvertToURI(unittest.TestCase):
         try:
             import_config_pck(self._mlist, self._pckdict)
         except UnicodeDecodeError, e:
+            print(format_exc())
             self.fail(e)
         for oldvar, newvar in self._conf_mapping.iteritems():
             newattr = getattr(self._mlist, newvar)
@@ -664,6 +670,48 @@ class TestRosterImport(unittest.TestCase):
         import_config_pck(self._mlist, self._pckdict)
         member = self._mlist.members.get_member('bob@example.com')
         self.assertEqual(member.user, user)
+
+    def test_owner_and_moderator_not_lowercase(self):
+        # In the v2.1 pickled dict, the owner and moderator lists are not
+        # necessarily lowercased already
+        self._pckdict[b"owner"] = [b"Anne@example.com"]
+        self._pckdict[b"moderator"] = [b"Anne@example.com"]
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except AssertionError:
+            print(format_exc())
+            self.fail("The address was not lowercased")
+        self.assertTrue("anne@example.com" in
+                [ a.email for a in self._mlist.owners.addresses ])
+        self.assertTrue("anne@example.com" in
+                [ a.email for a in self._mlist.moderators.addresses])
+
+    def test_address_already_exists_but_no_user(self):
+        # An address already exists, but it is not linked to a user nor
+        # subscribed
+        anne_addr = Address("anne@example.com", "Anne")
+        Store.of(self._mlist).add(anne_addr)
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except ExistingAddressError:
+            print(format_exc())
+            self.fail("existing address was not checked")
+        anne = self._usermanager.get_user("anne@example.com")
+        self.assertTrue(anne.controls("anne@example.com"))
+        self.assertTrue(anne_addr in self._mlist.regular_members.addresses)
+
+    def test_address_already_subscribed_but_no_user(self):
+        # An address is already subscribed, but it is not linked to a user
+        anne_addr = Address("anne@example.com", "Anne")
+        self._mlist.subscribe(anne_addr)
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except ExistingAddressError:
+            print(format_exc())
+            self.fail("existing address was not checked")
+        anne = self._usermanager.get_user("anne@example.com")
+        self.assertTrue(anne.controls("anne@example.com"))
+
 
 
 

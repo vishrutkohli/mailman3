@@ -350,24 +350,29 @@ def import_roster(mlist, config_dict, members, role):
     """
     usermanager = getUtility(IUserManager)
     for email in members:
-        email = str_to_unicode(email)
+        # for owners and members, the emails can have a mixed case, so
+        # lowercase them all
+        email = str_to_unicode(email).lower()
         roster = mlist.get_roster(role)
         if roster.get_member(email) is not None:
             print("%s is already imported with role %s" % (email, role),
                   file=sys.stderr)
             continue
+        address = usermanager.get_address(email)
         user = usermanager.get_user(email)
         if user is None:
-            merged_members = {}
-            merged_members.update(config_dict.get("members", {}))
-            merged_members.update(config_dict.get("digest_members", {}))
-            if merged_members.get(email, 0) != 0:
-                original_email = merged_members[email]
-            else:
-                original_email = email
-            user = usermanager.create_user(str_to_unicode(original_email))
-        address = usermanager.get_address(email)
-        address.verified_on = datetime.datetime.now()
+            user = usermanager.create_user()
+            if address is None:
+                merged_members = {}
+                merged_members.update(config_dict.get("members", {}))
+                merged_members.update(config_dict.get("digest_members", {}))
+                if merged_members.get(email, 0) != 0:
+                    original_email = str_to_unicode(merged_members[email])
+                else:
+                    original_email = email
+                address = usermanager.create_address(original_email)
+                address.verified_on = datetime.datetime.now()
+            user.link(address)
         mlist.subscribe(address, role)
         member = roster.get_member(email)
         assert member is not None
