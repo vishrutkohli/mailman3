@@ -241,6 +241,19 @@ class TestBasicImport(unittest.TestCase):
         self.assertEqual(sorted(alias_set.aliases),
                          [ ("^" + a) for a in aliases ])
 
+    def test_acceptable_aliases_as_list(self):
+        # in some versions of the pickle, it can be a list, not a string
+        # (seen in the wild)
+        aliases = [b"alias1@example.com", b"alias2@exemple.com" ]
+        self._pckdict[b"acceptable_aliases"] = aliases
+        try:
+            self._import()
+        except AttributeError:
+            print(format_exc())
+            self.fail("Import does not handle acceptable_aliases as list")
+        alias_set = IAcceptableAliasSet(self._mlist)
+        self.assertEqual(sorted(alias_set.aliases), aliases)
+
     def test_info_non_ascii(self):
         # info can contain non-ascii chars
         info = 'O idioma aceito \xe9 somente Portugu\xeas do Brasil'

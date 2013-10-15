@@ -246,7 +246,10 @@ def import_config_pck(mlist, config_dict):
     for addr in config_dict.get('ban_list', []):
         IBanManager(mlist).ban(str_to_unicode(addr))
     # Handle acceptable aliases
-    for addr in config_dict.get('acceptable_aliases', '').splitlines():
+    acceptable_aliases = config_dict.get('acceptable_aliases', '')
+    if isinstance(acceptable_aliases, basestring):
+        acceptable_aliases = acceptable_aliases.splitlines()
+    for addr in acceptable_aliases:
         addr = addr.strip()
         if not addr:
             continue
