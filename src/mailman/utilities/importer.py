@@ -29,11 +29,11 @@ import sys
 import datetime
 
 from mailman.interfaces.action import FilterAction
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
 from mailman.interfaces.nntp import NewsgroupModeration
-from mailman.interfaces.archiver import ArchivePolicy
 
 
 
