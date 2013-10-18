@@ -110,4 +110,9 @@ class TestConf(unittest.TestCase):
             self.command.process(self.args)
         last_line = ''
         for line in output.getvalue().splitlines():
-            self.assertTrue(line > last_line)
+            if not line.startswith('['):
+                # This is a continuation line.  --sort doesn't sort these.
+                continue
+            self.assertTrue(line > last_line,
+                            '{} !> {}'.format(line, last_line))
+            last_line = line

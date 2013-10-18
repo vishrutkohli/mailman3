@@ -143,7 +143,6 @@ class ConfigLayer(MockAndMonkeyLayer):
         if cls.stderr:
             test_config += dedent("""
             [logging.root]
-            propagate: yes
             level: debug
             """)
         # Enable log message propagation and reset the log paths so that the
@@ -154,7 +153,7 @@ class ConfigLayer(MockAndMonkeyLayer):
                 continue
             logger_name = 'mailman.' + sub_name
             log = logging.getLogger(logger_name)
-            #log.propagate = True
+            log.propagate = cls.stderr
             # Reopen the file to a new path that tests can get at.  Instead of
             # using the configuration file path though, use a path that's
             # specific to the logger so that tests can find expected output
@@ -170,15 +169,16 @@ class ConfigLayer(MockAndMonkeyLayer):
                 propagate: yes
                 level: debug
                 """), dict(name=sub_name, path=path))
-        # zope.testing sets up logging before we get to our own initialization
-        # function.  This messes with the root logger, so explicitly set it to
-        # go to stderr.
+        # The root logger will already have a handler, but it's not the right
+        # handler.  Remove that and set our own.
         if cls.stderr:
             console = logging.StreamHandler(sys.stderr)
             formatter = logging.Formatter(config.logging.root.format,
                                           config.logging.root.datefmt)
             console.setFormatter(formatter)
-            logging.getLogger().addHandler(console)
+            root = logging.getLogger()
+            del root.handlers[:]
+            root.addHandler(console)
         # Write the configuration file for subprocesses and set up the config
         # object to pass that properly on the -C option.
         config_file = os.path.join(cls.var_dir, 'test.cfg')
@@ -208,27 +208,6 @@ class ConfigLayer(MockAndMonkeyLayer):
 
     # Flag to indicate that loggers should propagate to the console.
     stderr = False
-
-    @classmethod
-    def enable_stderr(cls):
-        """Enable stderr logging if -e/--stderr is given.
-
-        We used to hack our way into the zc.testing framework, but that was
-        undocumented and way too fragile.  Well, this probably is too, but now
-        we just scan sys.argv for -e/--stderr and enable logging if found.
-        Then we remove the option from sys.argv.  This works because this
-        method is called before zope.testrunner sees the options.
-
-        As a bonus, we'll check an environment variable too.
-        """
-        if '-e' in sys.argv:
-            cls.stderr = True
-            sys.argv.remove('-e')
-        if '--stderr' in sys.argv:
-            cls.stderr = True
-            sys.argv.remove('--stderr')
-        if len(os.environ.get('MM_VERBOSE_TESTLOG', '').strip()) > 0:
-            cls.stderr = True
 
     # The top of our source tree, for tests that care (e.g. hooks.txt).
     root_directory = None
