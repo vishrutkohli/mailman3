@@ -103,4 +103,4 @@ class TemplateLoader:
     def get(self, uri):
         """See `ITemplateLoader`."""
         with closing(urllib2.urlopen(uri)) as fp:
-            return fp.read()
+            return unicode(fp.read(), "utf-8")

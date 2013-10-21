@@ -25,11 +25,13 @@ __all__ = [
     ]
 
 
+import os
 import cPickle
 import unittest
 from datetime import timedelta, datetime
 from traceback import format_exc
 
+from mailman.config import config
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.importer import import_config_pck, Import21Error
@@ -515,6 +517,7 @@ class TestConvertToURI(unittest.TestCase):
                     "Default value was not preserved for %s" % newvar)
 
     def test_unicode(self):
+        # non-ascii templates
         for oldvar in self._conf_mapping:
             self._pckdict[str(oldvar)] = b"Ol\xe1!"
         try:
@@ -525,10 +528,24 @@ class TestConvertToURI(unittest.TestCase):
         for oldvar, newvar in self._conf_mapping.iteritems():
             newattr = getattr(self._mlist, newvar)
             text = decorate(self._mlist, newattr)
-            expected = u'Ol\ufffd!'.encode("utf-8")
-            # we get bytestrings because the text is stored in a file
+            expected = u'Ol\ufffd!'
             self.assertEqual(text, expected)
 
+    def test_unicode_in_default(self):
+        # What if the default template is already in UTF-8? (like if you import twice)
+        footer = b'\xe4\xb8\xad $listinfo_uri'
+        footer_path = os.path.join(config.VAR_DIR, "templates", "lists",
+                                   "blank@example.com", "en", "footer-generic.txt")
+        try:
+            os.makedirs(os.path.dirname(footer_path))
+        except OSError:
+            pass
+        with open(footer_path, "w") as footer_file:
+            footer_file.write(footer)
+        self._pckdict[b"msg_footer"] = b"NEW-VALUE"
+        import_config_pck(self._mlist, self._pckdict)
+        text = decorate(self._mlist, self._mlist.footer_uri)
+        self.assertEqual(text, 'NEW-VALUE')
 
 
 class TestRosterImport(unittest.TestCase):

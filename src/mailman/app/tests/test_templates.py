@@ -126,3 +126,14 @@ class TestTemplateLoader(unittest.TestCase):
         with self.assertRaises(urllib2.URLError) as cm:
             self._loader.get('mailman:///missing@example.com/en/foo/demo.txt')
         self.assertEqual(cm.exception.reason, 'No such file')
+
+    def test_non_ascii(self):
+        # mailman://demo.txt with non-ascii content
+        test_text = b'\xe4\xb8\xad'
+        path = os.path.join(self.var_dir, 'templates', 'site', 'it')
+        os.makedirs(path)
+        with open(os.path.join(path, 'demo.txt'), 'w') as fp:
+            print(test_text, end='', file=fp)
+        content = self._loader.get('mailman:///it/demo.txt')
+        self.assertTrue(isinstance(content, unicode))
+        self.assertEqual(content, test_text.decode("utf-8"))
