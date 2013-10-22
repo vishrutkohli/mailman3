@@ -34,7 +34,6 @@ from traceback import format_exc
 
 from mailman.config import config
 from mailman.app.lifecycle import create_list, remove_list
-from mailman.interfaces.archiver import ArchivePolicy
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.importer import import_config_pck, Import21Error
 from mailman.interfaces.archiver import ArchivePolicy
@@ -47,7 +46,7 @@ from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.interfaces.usermanager import IUserManager
-from mailman.interfaces.member import DeliveryMode, DeliveryStatus, MemberRole
+from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.interfaces.languages import ILanguageManager
 from mailman.model.address import Address
 from mailman.handlers.decorate import decorate

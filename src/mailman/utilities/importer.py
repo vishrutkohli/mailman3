@@ -22,7 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'import_config_pck',
-    'ImportError',
+    'Import21Error',
     ]
 
 
@@ -62,7 +62,7 @@ def str_to_unicode(value):
     for encoding in ("ascii", "utf-8"):
         try:
             return unicode(value, encoding)
-        except UnicodeDecodeError, e:
+        except UnicodeDecodeError:
             continue
     # we did our best, use replace
     return unicode(value, 'ascii', 'replace')
