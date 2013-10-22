@@ -47,12 +47,19 @@ class NosePlugin(Plugin):
     def __init__(self):
         super(NosePlugin, self).__init__()
         self.patterns = []
+        self.stderr = False
+        def set_stderr(ignore):
+            self.stderr = True
         self.addArgument(self.patterns, 'P', 'pattern',
                          'Add a test matching pattern')
+        self.addFlag(set_stderr, 'E', 'stderr',
+                     'Enable stderr logging to sub-runners')
 
     def startTestRun(self, event):
         MockAndMonkeyLayer.testing_mode = True
-        ConfigLayer.enable_stderr()
+        if (    self.stderr or
+                len(os.environ.get('MM_VERBOSE_TESTLOG', '').strip()) > 0):
+            ConfigLayer.stderr = True
 
     def getTestCaseNames(self, event):
         if len(self.patterns) == 0:

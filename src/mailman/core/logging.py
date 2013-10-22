@@ -117,8 +117,7 @@ def initialize(propagate=None):
     # sublogs.  The root logger should log to stderr.
     logging.basicConfig(format=config.logging.root.format,
                         datefmt=config.logging.root.datefmt,
-                        level=as_log_level(config.logging.root.level),
-                        stream=sys.stderr)
+                        level=as_log_level(config.logging.root.level))
     # Create the sub-loggers.  Note that we'll redirect flufl.lock to
     # mailman.locks.
     for logger_config in config.logger_configs:

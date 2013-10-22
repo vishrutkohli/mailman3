@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestArchiveImport',
     'TestBasicImport',
     ]
 
@@ -33,6 +34,7 @@ from traceback import format_exc
 
 from mailman.config import config
 from mailman.app.lifecycle import create_list, remove_list
+from mailman.interfaces.archiver import ArchivePolicy
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.importer import import_config_pck, Import21Error
 from mailman.interfaces.archiver import ArchivePolicy
@@ -298,9 +300,11 @@ class TestBasicImport(unittest.TestCase):
 
 
 class TestArchiveImport(unittest.TestCase):
-    # The mlist.archive_policy gets set from the old list's archive and
-    # archive_private values
+    """Test conversion of the archive policies.
 
+    Mailman 2.1 had two variables `archive` and `archive_private`.  Now
+    there's just a single `archive_policy` enum.
+    """
     layer = ConfigLayer
 
     def setUp(self):
@@ -315,16 +319,39 @@ class TestArchiveImport(unittest.TestCase):
         self.assertEqual(self._mlist.archive_policy, expected)
 
     def test_public(self):
-        self._do_test({ "archive": True, "archive_private": False },
+        self._do_test(dict(archive=True, archive_private=False),
                       ArchivePolicy.public)
 
     def test_private(self):
-        self._do_test({ "archive": True, "archive_private": True },
+        self._do_test(dict(archive=True, archive_private=True),
                       ArchivePolicy.private)
 
     def test_no_archive(self):
-        self._do_test({ "archive": False, "archive_private": False },
+        self._do_test(dict(archive=False, archive_private=False),
                       ArchivePolicy.never)
+
+    def test_bad_state(self):
+        # For some reason, the old list has the invalid archiving state where
+        # `archive` is False and `archive_private` is True.  It doesn't matter
+        # because this still collapses to the same enum value.
+        self._do_test(dict(archive=False, archive_private=True),
+                      ArchivePolicy.never)
+
+    def test_missing_archive_key(self):
+        # For some reason, the old list didn't have an `archive` key.  We
+        # treat this as if no archiving is done.
+        self._do_test(dict(archive_private=False), ArchivePolicy.never)
+
+    def test_missing_archive_key_archive_public(self):
+        # For some reason, the old list didn't have an `archive` key, and it
+        # has weird value for archive_private.  We treat this as if no
+        # archiving is done.
+        self._do_test(dict(archive_private=True), ArchivePolicy.never)
+
+    def test_missing_archive_private_key(self):
+        # For some reason, the old list was missing an `archive_private` key.
+        # For maximum safety, we treat this as private archiving.
+        self._do_test(dict(archive=True), ArchivePolicy.private)
 
 
 
@@ -342,7 +369,7 @@ class TestFilterActionImport(unittest.TestCase):
         remove_list(self._mlist)
 
     def _do_test(self, original, expected):
-        import_config_pck(self._mlist, { "filter_action": original })
+        import_config_pck(self._mlist, dict(filter_action=original))
         self.assertEqual(self._mlist.filter_action, expected)
 
     def test_discard(self):
@@ -376,10 +403,10 @@ class TestMemberActionImport(unittest.TestCase):
         self._mlist = create_list('blank@example.com')
         self._mlist.default_member_action = DummyEnum.val
         self._mlist.default_nonmember_action = DummyEnum.val
-        self._pckdict = {
-            b"member_moderation_action": DummyEnum.val,
-            b"generic_nonmember_action": DummyEnum.val,
-        }
+        self._pckdict = dict(
+            member_moderation_action=DummyEnum.val,
+            generic_nonmember_action=DummyEnum.val,
+            )
 
     def tearDown(self):
         remove_list(self._mlist)
@@ -391,31 +418,31 @@ class TestMemberActionImport(unittest.TestCase):
 
     def test_member_hold(self):
         self._pckdict[b"member_moderation_action"] = 0
-        self._do_test({"default_member_action": Action.hold})
+        self._do_test(dict(default_member_action=Action.hold))
 
     def test_member_reject(self):
         self._pckdict[b"member_moderation_action"] = 1
-        self._do_test({"default_member_action": Action.reject})
+        self._do_test(dict(default_member_action=Action.reject))
 
     def test_member_discard(self):
         self._pckdict[b"member_moderation_action"] = 2
-        self._do_test({"default_member_action": Action.discard})
+        self._do_test(dict(default_member_action=Action.discard))
 
     def test_nonmember_accept(self):
         self._pckdict[b"generic_nonmember_action"] = 0
-        self._do_test({"default_nonmember_action": Action.accept})
+        self._do_test(dict(default_nonmember_action=Action.accept))
 
     def test_nonmember_hold(self):
         self._pckdict[b"generic_nonmember_action"] = 1
-        self._do_test({"default_nonmember_action": Action.hold})
+        self._do_test(dict(default_nonmember_action=Action.hold))
 
     def test_nonmember_reject(self):
         self._pckdict[b"generic_nonmember_action"] = 2
-        self._do_test({"default_nonmember_action": Action.reject})
+        self._do_test(dict(default_nonmember_action=Action.reject))
 
     def test_nonmember_discard(self):
         self._pckdict[b"generic_nonmember_action"] = 3
-        self._do_test({"default_nonmember_action": Action.discard})
+        self._do_test(dict(default_nonmember_action=Action.discard))
 
 
 
@@ -437,15 +464,15 @@ class TestConvertToURI(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('blank@example.com')
-        self._conf_mapping = {
-            "welcome_msg": "welcome_message_uri",
-            "goodbye_msg": "goodbye_message_uri",
-            "msg_header": "header_uri",
-            "msg_footer": "footer_uri",
-            "digest_header": "digest_header_uri",
-            "digest_footer": "digest_footer_uri",
-        }
-        self._pckdict = {}
+        self._conf_mapping = dict(
+            welcome_msg="welcome_message_uri",
+            goodbye_msg="goodbye_message_uri",
+            msg_header="header_uri",
+            msg_footer="footer_uri",
+            digest_header="digest_header_uri",
+            digest_footer="digest_footer_uri",
+        )
+        self._pckdict = dict()
         #self._pckdict = {
         #    "preferred_language": "XX", # templates are lang-specific
         #}
@@ -555,44 +582,44 @@ class TestRosterImport(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('blank@example.com')
         self._pckdict = {
-            b"members": {
-                b"anne@example.com": 0,
-                b"bob@example.com": b"bob@ExampLe.Com",
+            "members": {
+                "anne@example.com": 0,
+                "bob@example.com": b"bob@ExampLe.Com",
             },
-            b"digest_members": {
-                b"cindy@example.com": 0,
-                b"dave@example.com": b"dave@ExampLe.Com",
+            "digest_members": {
+                "cindy@example.com": 0,
+                "dave@example.com": b"dave@ExampLe.Com",
             },
-            b"passwords": {
-                b"anne@example.com" : b"annepass",
-                b"bob@example.com"  : b"bobpass",
-                b"cindy@example.com": b"cindypass",
-                b"dave@example.com" : b"davepass",
+            "passwords": {
+                "anne@example.com" : b"annepass",
+                "bob@example.com"  : b"bobpass",
+                "cindy@example.com": b"cindypass",
+                "dave@example.com" : b"davepass",
             },
-            b"language": {
-                b"anne@example.com" : b"fr",
-                b"bob@example.com"  : b"de",
-                b"cindy@example.com": b"es",
-                b"dave@example.com" : b"it",
+            "language": {
+                "anne@example.com" : b"fr",
+                "bob@example.com"  : b"de",
+                "cindy@example.com": b"es",
+                "dave@example.com" : b"it",
             },
-            b"usernames": { # Usernames are unicode strings in the pickle
-                b"anne@example.com" : "Anne",
-                b"bob@example.com"  : "Bob",
-                b"cindy@example.com": "Cindy",
-                b"dave@example.com" : "Dave",
+            "usernames": { # Usernames are unicode strings in the pickle
+                "anne@example.com" : "Anne",
+                "bob@example.com"  : "Bob",
+                "cindy@example.com": "Cindy",
+                "dave@example.com" : "Dave",
             },
-            b"owner": [
-                b"anne@example.com",
-                b"emily@example.com",
+            "owner": [
+                "anne@example.com",
+                "emily@example.com",
             ],
-            b"moderator": [
-                b"bob@example.com",
-                b"fred@example.com",
+            "moderator": [
+                "bob@example.com",
+                "fred@example.com",
             ],
         }
         self._usermanager = getUtility(IUserManager)
         language_manager = getUtility(ILanguageManager)
-        for code in self._pckdict[b"language"].values():
+        for code in self._pckdict["language"].values():
             if code not in language_manager.codes:
                 language_manager.add(code, 'utf-8', code)
 
@@ -635,7 +662,7 @@ class TestRosterImport(unittest.TestCase):
                              self._pckdict["language"][addr])
 
     def test_new_language(self):
-        self._pckdict[b"language"][b"anne@example.com"] = b'xx_XX'
+        self._pckdict[b"language"]["anne@example.com"] = b'xx_XX'
         try:
             import_config_pck(self._mlist, self._pckdict)
         except Import21Error, e:
@@ -704,8 +731,8 @@ class TestRosterImport(unittest.TestCase):
     def test_owner_and_moderator_not_lowercase(self):
         # In the v2.1 pickled dict, the owner and moderator lists are not
         # necessarily lowercased already
-        self._pckdict[b"owner"] = [b"Anne@example.com"]
-        self._pckdict[b"moderator"] = [b"Anne@example.com"]
+        self._pckdict["owner"] = [b"Anne@example.com"]
+        self._pckdict["moderator"] = [b"Anne@example.com"]
         try:
             import_config_pck(self._mlist, self._pckdict)
         except AssertionError:
@@ -751,18 +778,18 @@ class TestPreferencesImport(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('blank@example.com')
-        self._pckdict = {
-            b"members": { b"anne@example.com": 0 },
-            b"user_options": {},
-            b"delivery_status": {},
-        }
+        self._pckdict = dict(
+            members={ "anne@example.com": 0 },
+            user_options=dict(),
+            delivery_status=dict(),
+        )
         self._usermanager = getUtility(IUserManager)
 
     def tearDown(self):
         remove_list(self._mlist)
 
     def _do_test(self, oldvalue, expected):
-        self._pckdict[b"user_options"][b"anne@example.com"] = oldvalue
+        self._pckdict["user_options"]["anne@example.com"] = oldvalue
         import_config_pck(self._mlist, self._pckdict)
         user = self._usermanager.get_user("anne@example.com")
         self.assertTrue(user is not None, "User was not imported")
@@ -781,31 +808,31 @@ class TestPreferencesImport(unittest.TestCase):
 
     def test_acknowledge_posts(self):
         # AcknowledgePosts
-        self._do_test(4, {"acknowledge_posts": True})
+        self._do_test(4, dict(acknowledge_posts=True))
 
     def test_hide_address(self):
         # ConcealSubscription
-        self._do_test(16, {"hide_address": True})
+        self._do_test(16, dict(hide_address=True))
 
     def test_receive_own_postings(self):
         # DontReceiveOwnPosts
-        self._do_test(2, {"receive_own_postings": False})
+        self._do_test(2, dict(receive_own_postings=False))
 
     def test_receive_list_copy(self):
         # DontReceiveDuplicates
-        self._do_test(256, {"receive_list_copy": False})
+        self._do_test(256, dict(receive_list_copy=False))
 
     def test_digest_plain(self):
         # Digests & DisableMime
-        self._pckdict[b"digest_members"] = self._pckdict[b"members"].copy()
-        self._pckdict[b"members"] = {}
-        self._do_test(8, {"delivery_mode": DeliveryMode.plaintext_digests})
+        self._pckdict["digest_members"] = self._pckdict["members"].copy()
+        self._pckdict["members"] = dict()
+        self._do_test(8, dict(delivery_mode=DeliveryMode.plaintext_digests))
 
     def test_digest_mime(self):
         # Digests & not DisableMime
-        self._pckdict[b"digest_members"] = self._pckdict[b"members"].copy()
-        self._pckdict[b"members"] = {}
-        self._do_test(0, {"delivery_mode": DeliveryMode.mime_digests})
+        self._pckdict["digest_members"] = self._pckdict["members"].copy()
+        self._pckdict["members"] = dict()
+        self._do_test(0, dict(delivery_mode=DeliveryMode.mime_digests))
 
     def test_delivery_status(self):
         # look for the pckdict["delivery_status"] key which will look like
@@ -818,7 +845,7 @@ class TestPreferencesImport(unittest.TestCase):
         for oldval, expected in enumerate((DeliveryStatus.enabled,
                 DeliveryStatus.unknown, DeliveryStatus.by_user,
                 DeliveryStatus.by_moderator, DeliveryStatus.by_bounces)):
-            self._pckdict[b"delivery_status"][b"anne@example.com"] = (oldval, 0)
+            self._pckdict["delivery_status"]["anne@example.com"] = (oldval, 0)
             import_config_pck(self._mlist, self._pckdict)
             member = self._mlist.members.get_member("anne@example.com")
             self.assertTrue(member is not None, "Address was not subscribed")
@@ -828,13 +855,13 @@ class TestPreferencesImport(unittest.TestCase):
     def test_moderate(self):
         # Option flag Moderate is translated to
         # member.moderation_action = Action.hold
-        self._do_test(128, {"moderation_action": Action.hold})
+        self._do_test(128, dict(moderation_action=Action.hold))
 
     def test_multiple_options(self):
         # DontReceiveDuplicates & DisableMime & SuppressPasswordReminder
         self._pckdict[b"digest_members"] = self._pckdict[b"members"].copy()
-        self._pckdict[b"members"] = {}
-        self._do_test(296, {
-                "receive_list_copy": False,
-                "delivery_mode": DeliveryMode.plaintext_digests,
-                })
+        self._pckdict[b"members"] = dict()
+        self._do_test(296, dict(
+                receive_list_copy=False,
+                delivery_mode=DeliveryMode.plaintext_digests,
+                ))

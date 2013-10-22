@@ -234,9 +234,13 @@ def import_config_pck(mlist, config_dict):
             except TypeError:
                 print('Type conversion error:', key, file=sys.stderr)
                 raise
-    # Handle the archiving policy
-    if config_dict.get("archive"):
-        if config_dict.get("archive_private"):
+    # Handle the archiving policy.  In MM2.1 there were two boolean options
+    # but only three of the four possible states were valid.  Now there's just
+    # an enum.
+    if config_dict.get('archive'):
+        # For maximum safety, if for some strange reason there's no
+        # archive_private key, treat the list as having private archives.
+        if config_dict.get('archive_private', True):
             mlist.archive_policy = ArchivePolicy.private
         else:
             mlist.archive_policy = ArchivePolicy.public

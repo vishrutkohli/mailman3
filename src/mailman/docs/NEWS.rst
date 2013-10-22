@@ -16,7 +16,8 @@ Development
 -----------
  * Mailman 3 no longer uses ``zc.buildout`` and tests are now run by the
    ``nose2`` test runner.  See ``src/mailman/docs/START.rst`` for details on
-   how to build Mailman and run the test suite.
+   how to build Mailman and run the test suite.  Also, use ``-P`` to select a
+   test pattern and ``-E`` to enable stderr debugging in runners.
  * Use the ``enum34`` package instead of ``flufl.enum``.
 
 REST
@@ -52,6 +53,8 @@ Bugs
    signals.  (LP: #1184376)
  * Add `subject_prefix` to the `IMailingList` interface, and clarify the
    docstring for `display_name`.  (LP: #1181498)
+ * Fix importation from MM2.1 to MM3 of the archive policy.  Given by Aurélien
+   Bompard. (LP: #1227658)
 
 
 3.0 beta 3 -- "Here Again"
