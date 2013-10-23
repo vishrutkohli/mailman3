@@ -53,6 +53,8 @@ Bugs
    signals.  (LP: #1184376)
  * Add `subject_prefix` to the `IMailingList` interface, and clarify the
    docstring for `display_name`.  (LP: #1181498)
+ * Fix importation from MM2.1 to MM3 of the archive policy.  Given by Aurélien
+   Bompard. (LP: #1227658)
 
 
 3.0 beta 3 -- "Here Again"
