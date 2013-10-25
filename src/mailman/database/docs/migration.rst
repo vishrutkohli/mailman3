@@ -199,8 +199,9 @@ You'll notice that the ...04 version is not present.
     this will cause migration.rst to fail on subsequent runs.  So let's just
     clean up the database explicitly.
 
-    >>> results = config.db.store.execute("""
-    ...     DELETE FROM version WHERE version.version >= '201299990000'
-    ...                            OR version.component = 'test';
-    ...     """)
-    >>> config.db.commit()
+    >>> if config.db.TAG != 'sqlite':
+    ...     results = config.db.store.execute("""
+    ...         DELETE FROM version WHERE version.version >= '201299990000'
+    ...                                OR version.component = 'test';
+    ...         """)
+    ...     config.db.commit()

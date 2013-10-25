@@ -28,4 +28,3 @@ INSERT INTO bounceevent_backup SELECT
     FROM bounceevent;
 
 ALTER TABLE bounceevent_backup ADD COLUMN list_id TEXT;
-
