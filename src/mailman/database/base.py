@@ -27,7 +27,6 @@ import os
 import sys
 import logging
 
-from flufl.lock import Lock
 from lazr.config import as_boolean
 from pkg_resources import resource_listdir, resource_string
 from storm.cache import GenerationalCache
@@ -59,13 +58,6 @@ class StormBaseDatabase:
     def __init__(self):
         self.url = None
         self.store = None
-
-    def initialize(self, debug=None):
-        """See `IDatabase`."""
-        # Serialize this so we don't get multiple processes trying to create
-        # the database at the same time.
-        with Lock(os.path.join(config.LOCK_DIR, 'dbcreate.lck')):
-            self._create(debug)
 
     def begin(self):
         """See `IDatabase`."""
@@ -117,7 +109,8 @@ class StormBaseDatabase:
         """
         pass
 
-    def _create(self, debug):
+    def initialize(self, debug=None):
+        """See `IDatabase`."""
         # Calculate the engine url.
         url = expand(config.database.url, config.paths)
         log.debug('Database url: %s', url)

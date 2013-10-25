@@ -1,12 +1,12 @@
--- THIS FILE CONTAINS THE SQLITE3 SCHEMA MIGRATION FROM
+-- This file contains the sqlite3 schema migration from
 -- 3.0b1 TO 3.0b2
 --
--- AFTER 3.0b2 IS RELEASED YOU MAY NOT EDIT THIS FILE.
+-- 3.0b2 has been released thus you MAY NOT edit this file.
 
 -- For SQLite3 migration strategy, see
 -- http://sqlite.org/faq.html#q11
 
--- REMOVALS from the mailinglist table.
+-- REMOVALS from the mailinglist table:
 -- REM archive
 -- REM archive_private
 -- REM archive_volume_frequency
@@ -15,7 +15,7 @@
 -- REM news_prefix_subject_too
 -- REM nntp_host
 --
--- ADDS to the mailing list table.
+-- ADDS to the mailing list table:
 -- ADD allow_list_posts
 -- ADD archive_policy
 -- ADD list_id
@@ -25,16 +25,16 @@
 -- LP: #971013
 -- LP: #967238
 
--- REMOVALS from the member table.
+-- REMOVALS from the member table:
 -- REM mailing_list
 
--- ADDS to the member table.
+-- ADDS to the member table:
 -- ADD list_id
 
 -- LP: #1024509
 
 
-CREATE TABLE ml_backup (
+CREATE TABLE mailinglist_backup (
     id INTEGER NOT NULL,
     -- List identity
     list_name TEXT,
@@ -142,7 +142,7 @@ CREATE TABLE ml_backup (
     PRIMARY KEY (id)
     );
 
-INSERT INTO ml_backup SELECT
+INSERT INTO mailinglist_backup SELECT
     id,
     -- List identity
     list_name,
@@ -249,7 +249,7 @@ INSERT INTO ml_backup SELECT
     welcome_message_uri
     FROM mailinglist;
 
-CREATE TABLE mem_backup(
+CREATE TABLE member_backup(
     id INTEGER NOT NULL,
     _member_id TEXT,
     role INTEGER,
@@ -260,7 +260,7 @@ CREATE TABLE mem_backup(
     PRIMARY KEY (id)
     );
 
-INSERT INTO mem_backup SELECT
+INSERT INTO member_backup SELECT
     id,
     _member_id,
     role,
@@ -272,9 +272,9 @@ INSERT INTO mem_backup SELECT
 
 
 -- Add the new columns.  They'll get inserted at the Python layer.
-ALTER TABLE ml_backup ADD COLUMN archive_policy INTEGER;
-ALTER TABLE ml_backup ADD COLUMN list_id TEXT;
-ALTER TABLE ml_backup ADD COLUMN nntp_prefix_subject_too INTEGER;
-ALTER TABLE ml_backup ADD COLUMN newsgroup_moderation INTEGER;
+ALTER TABLE mailinglist_backup ADD COLUMN archive_policy INTEGER;
+ALTER TABLE mailinglist_backup ADD COLUMN list_id TEXT;
+ALTER TABLE mailinglist_backup ADD COLUMN nntp_prefix_subject_too INTEGER;
+ALTER TABLE mailinglist_backup ADD COLUMN newsgroup_moderation INTEGER;
 
-ALTER TABLE mem_backup ADD COLUMN list_id TEXT;
+ALTER TABLE member_backup ADD COLUMN list_id TEXT;

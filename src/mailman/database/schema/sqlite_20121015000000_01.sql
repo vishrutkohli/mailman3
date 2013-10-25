@@ -1,12 +1,12 @@
--- THIS FILE CONTAINS THE SQLITE3 SCHEMA MIGRATION FROM
+-- This file contains the sqlite3 schema migration from
 -- 3.0b2 TO 3.0b3
 --
--- AFTER 3.0b3 IS RELEASED YOU MAY NOT EDIT THIS FILE.
+-- 3.0b3 has been released thus you MAY NOT edit this file.
 
--- REMOVALS from the ban table.
+-- REMOVALS from the ban table:
 -- REM mailing_list
 
--- ADDS to the ban table.
+-- ADDS to the ban table:
 -- ADD list_id
 
 CREATE TABLE ban_backup (
@@ -30,7 +30,7 @@ ALTER TABLE ban_backup ADD COLUMN list_id TEXT;
 -- REM private_roster
 -- REM admin_member_chunksize
 
-CREATE TABLE ml_backup (
+CREATE TABLE mailinglist_backup (
     id INTEGER NOT NULL,
     list_name TEXT,
     mail_host TEXT,
@@ -130,7 +130,7 @@ CREATE TABLE ml_backup (
     PRIMARY KEY (id)
     );
 
-INSERT INTO ml_backup SELECT
+INSERT INTO mailinglist_backup SELECT
     id,
     list_name,
     mail_host,

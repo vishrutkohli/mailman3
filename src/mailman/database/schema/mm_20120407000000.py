@@ -48,11 +48,11 @@ __all__ = [
     ]
 
 
+from mailman.database.schema.helpers import pivot
 from mailman.interfaces.archiver import ArchivePolicy
 
 
 VERSION = '20120407000000'
-_helper = None
 
 
 
@@ -98,7 +98,7 @@ def upgrade_sqlite(database, store, version, module_path):
         list_id = '{0}.{1}'.format(list_name, mail_host)
         fqdn_listname = '{0}@{1}'.format(list_name, mail_host)
         store.execute("""
-            UPDATE ml_backup SET
+            UPDATE mailinglist_backup SET
                 allow_list_posts = {0},
                 newsgroup_moderation = {1},
                 nntp_prefix_subject_too = {2},
@@ -120,8 +120,7 @@ def upgrade_sqlite(database, store, version, module_path):
             WHERE mailing_list = '{1}';
             """.format(list_id, fqdn_listname))
     # Pivot the backup table to the real thing.
-    store.execute('DROP TABLE mailinglist;')
-    store.execute('ALTER TABLE ml_backup RENAME TO mailinglist;')
+    pivot(store, 'mailinglist')
     # Now add some indexes that were previously missing.
     store.execute(
         'CREATE INDEX ix_mailinglist_list_id ON mailinglist (list_id);')
@@ -137,12 +136,11 @@ def upgrade_sqlite(database, store, version, module_path):
         else:
             list_id = '{0}.{1}'.format(list_name, mail_host)
         store.execute("""
-            UPDATE mem_backup SET list_id = '{0}'
+            UPDATE member_backup SET list_id = '{0}'
             WHERE id = {1};
             """.format(list_id, id))
     # Pivot the backup table to the real thing.
-    store.execute('DROP TABLE member;')
-    store.execute('ALTER TABLE mem_backup RENAME TO member;')
+    pivot(store, 'member')
 
 
 

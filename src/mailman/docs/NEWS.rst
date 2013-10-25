@@ -43,6 +43,11 @@ Configuration
    the configuration file, just after ``./mailman.cfg`` and before
    ``~/.mailman.cfg``.  (LP: #1157861)
 
+Database
+--------
+ * The `bounceevent` table now uses list-ids to cross-reference the mailing
+   list, to match other tables.  Similarly for the `IBounceEvent` interface.
+
 Bugs
 ----
  * Non-queue runners should not create ``var/queue`` subdirectories.  Fixed by
