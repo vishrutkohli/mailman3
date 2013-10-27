@@ -28,8 +28,8 @@ __all__ = [
 import os
 
 from storm.locals import (
-    And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, Store,
-    TimeDelta, Unicode)
+    And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, ReferenceSet,
+    Store, TimeDelta, Unicode)
 from urlparse import urljoin
 from zope.component import getUtility
 from zope.event import notify
@@ -47,8 +47,8 @@ from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.mailinglist import (
-    IAcceptableAlias, IAcceptableAliasSet, IMailingList, Personalization,
-    ReplyToMunging)
+    IAcceptableAlias, IAcceptableAliasSet, IArchiverList, IListArchiverSet,
+    IMailingList, Personalization, ReplyToMunging)
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError,
     SubscriptionEvent)
@@ -67,6 +67,19 @@ from mailman.utilities.string import expand
 SPACE = ' '
 UNDERSCORE = '_'
 
+@implementer(IArchiverList)
+class ArchiverList(Model):    
+    __storm_primary__ = "mailing_list_id", "archiver_name"
+    mailing_list_id = Int()
+    archiver_name = Unicode()
+    archiver_enabled = Bool()
+
+    def __init__(self, mailing_list_id, archiver_name):
+        self.mailing_list_id = mailing_list_id
+        self.archiver_name = archiver_name
+        self.archiver_enabled = False
+
+
 
 
 @implementer(IMailingList)
@@ -78,6 +91,7 @@ class MailingList(Model):
     # XXX denotes attributes that should be part of the public interface but
     # are currently missing.
 
+    archivers = ReferenceSet(id, ArchiverList.mailing_list_id)
     # List identity
     list_name = Unicode()
     mail_host = Unicode()
@@ -538,3 +552,40 @@ class AcceptableAliasSet:
             AcceptableAlias.mailing_list == self._mailing_list)
         for alias in aliases:
             yield alias.alias
+
+@implementer(IListArchiverSet)
+class ListArchiverSet:
+    def __init__(self, mailing_list):
+        self._mailing_list = mailing_list
+        self.lazyAdd()
+
+    def getAll(self):
+        entries = Store.of(self._mailing_list).find(ArchiverList, ArchiverList.mailing_list_id == self._mailing_list.id)
+        all_in_config = {archiver.name for archiver in config.archivers}
+        ret = {}
+        for entry in entries:
+            if entry.archiver_name in all_in_config:
+                ret[entry.archiver_name] = int(entry.archiver_enabled)
+        return ret
+
+    def set(self, archiver, is_enabled):
+        bool_enabled = (int(is_enabled) != 0)
+        self.get(archiver).set(archiver_enabled=bool_enabled)
+
+    def isEnabled(self, archiverName):
+        return self.get(archiverName).one().archiver_enabled
+
+    def get(self, archiverName):
+        return Store.of(self._mailing_list).find(ArchiverList,
+            (ArchiverList.mailing_list_id == self._mailing_list.id) & (ArchiverList.archiver_name == archiverName))
+
+    def lazyAdd(self):
+        names = []
+        for archiver in config.archivers:
+            count = self.get(archiver.name).count()
+            names.append((archiver.name, count))
+            if not count:
+                entry = ArchiverList(self._mailing_list.id, archiver.name)
+                Store.of(self._mailing_list).add(entry)
+        Store.of(self._mailing_list).commit()
+

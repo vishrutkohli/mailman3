@@ -24,6 +24,7 @@ __all__ = [
     'IAcceptableAlias',
     'IAcceptableAliasSet',
     'IMailingList',
+    'IArchiverList',
     'Personalization',
     'ReplyToMunging',
     ]
@@ -54,6 +55,16 @@ class ReplyToMunging(Enum):
     # An explicit Reply-To header is added
     explicit_header = 2
 
+class IArchiverList(Interface):    
+    mailing_list_id = Attribute("""List id""")
+    archiver_name = Attribute("""Archiver name""")
+    archiver_enabled = Attribute("""If is enabled.""")
+
+class IListArchiverSet(Interface):
+    def getAll():
+        """Return dict containing all archivers and their settings."""
+    def set(archiver, is_enabled):
+        """Set archiver for this list."""
 
 
 class IMailingList(Interface):
