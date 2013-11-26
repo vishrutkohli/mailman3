@@ -246,6 +246,7 @@ First post!
         # global archivers.  No messages will get archived.
         for archiver in IListArchiverSet(self._mlist).archivers:
             archiver.is_enabled = False
+        config.db.store.commit()
         self._archiveq.enqueue(
             self._msg, {},
             listname=self._mlist.fqdn_listname)

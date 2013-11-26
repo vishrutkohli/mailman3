@@ -70,8 +70,12 @@ class TestListArchiver(unittest.TestCase):
         archiver = archiver_set.get('prototype')
         self.assertTrue(archiver.is_enabled)
         # Disable the site-wide archiver.
-        archiver.system_archiver.is_enabled = False
+        config.push('enable prototype', """\
+        [archiver.prototype]
+        enable: no
+        """)
         self.assertFalse(archiver.is_enabled)
+        config.pop('enable prototype')
 
 
 

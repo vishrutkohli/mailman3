@@ -478,6 +478,10 @@ def reset_the_world():
     with transaction():
         for message in message_store.messages:
             message_store.delete_message(message['message-id'])
+    # Delete any other residual messages.
+    for dirpath, dirnames, filenames in os.walk(config.MESSAGES_DIR):
+        for filename in filenames:
+            os.remove(os.path.join(dirpath, filename))
     # Reset the global style manager.
     getUtility(IStyleManager).populate()
     # Remove all dynamic header-match rules.
