@@ -23,8 +23,9 @@ __metaclass__ = type
 __all__ = [
     'IAcceptableAlias',
     'IAcceptableAliasSet',
+    'IListArchiver',
+    'IListArchiverSet',
     'IMailingList',
-    'IArchiverList',
     'Personalization',
     'ReplyToMunging',
     ]
@@ -55,16 +56,6 @@ class ReplyToMunging(Enum):
     # An explicit Reply-To header is added
     explicit_header = 2
 
-class IArchiverList(Interface):    
-    mailing_list_id = Attribute("""List id""")
-    archiver_name = Attribute("""Archiver name""")
-    archiver_enabled = Attribute("""If is enabled.""")
-
-class IListArchiverSet(Interface):
-    def getAll():
-        """Return dict containing all archivers and their settings."""
-    def set(archiver, is_enabled):
-        """Set archiver for this list."""
 
 
 class IMailingList(Interface):
@@ -802,3 +793,37 @@ class IAcceptableAliasSet(Interface):
 
     aliases = Attribute(
         """An iterator over all the acceptable aliases.""")
+
+
+
+class IListArchiver(Interface):
+    """An archiver for a mailing list.
+
+    The named archiver must be enabled site-wide in order for a mailing list
+    to be able to enable it.
+    """
+
+    mailing_list = Attribute('The associated mailing list.')
+
+    name = Attribute('The name of the archiver.')
+
+    is_enabled = Attribute('Is this archiver enabled for this mailing list?')
+
+    system_archiver = Attribute(
+        'The associated system-wide IArchiver instance.')
+
+
+class IListArchiverSet(Interface):
+    """The set of archivers (enabled or disabled) for a mailing list."""
+
+    archivers = Attribute(
+        """An iterator over all the archivers for this mailing list.""")
+
+    def get(archiver_name):
+        """Return the `IListArchiver` with the given name, if it exists.
+
+        :param archiver_name: The name of the archiver.
+        :type archiver_name: unicode.
+        :return: the matching `IListArchiver` or None if the named archiver
+            does not exist.
+        """

@@ -43,6 +43,7 @@ class MailArchive:
     """
 
     name = 'mail-archive'
+    is_enabled = False
 
     def __init__(self):
         # Read our specific configuration file

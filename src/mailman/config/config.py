@@ -249,12 +249,14 @@ class Configuration:
 
     @property
     def archivers(self):
-        """Iterate over all the enabled archivers."""
+        """Iterate over all the archivers."""
         for section in self._config.getByCategory('archiver', []):
-            if not as_boolean(section.enable):
+            class_path = section['class'].strip()
+            if len(class_path) == 0:
                 continue
-            class_path = section['class']
-            yield call_name(class_path)
+            archiver = call_name(class_path)
+            archiver.is_enabled = as_boolean(section.enable)
+            yield archiver
 
     @property
     def style_configs(self):

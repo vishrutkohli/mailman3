@@ -97,9 +97,9 @@ class IListManager(Interface):
     def create(fqdn_listname):
         """Create a mailing list with the given name.
 
-        :type fqdn_listname: Unicode
         :param fqdn_listname: The fully qualified name of the mailing list,
             e.g. `mylist@example.com`.
+        :type fqdn_listname: Unicode
         :return: The newly created `IMailingList`.
         :raise `ListAlreadyExistsError` if the named list already exists.
         """
@@ -107,8 +107,8 @@ class IListManager(Interface):
     def get(fqdn_listname):
         """Return the mailing list with the given name, if it exists.
 
-        :type fqdn_listname: Unicode.
         :param fqdn_listname: The fully qualified name of the mailing list.
+        :type fqdn_listname: Unicode.
         :return: the matching `IMailingList` or None if the named list does
             not exist.
         """
@@ -116,8 +116,8 @@ class IListManager(Interface):
     def get_by_list_id(list_id):
         """Return the mailing list with the given list id, if it exists.
 
-        :type fqdn_listname: Unicode.
         :param fqdn_listname: The fully qualified name of the mailing list.
+        :type fqdn_listname: Unicode.
         :return: the matching `IMailingList` or None if the named list does
             not exist.
         """
@@ -125,8 +125,8 @@ class IListManager(Interface):
     def delete(mlist):
         """Remove the mailing list from the database.
 
-        :type mlist: `IMailingList`
         :param mlist: The mailing list to delete.
+        :type mlist: `IMailingList`
         """
 
     mailing_lists = Attribute(

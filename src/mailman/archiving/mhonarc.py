@@ -46,6 +46,7 @@ class MHonArc:
     """Local MHonArc archiver."""
 
     name = 'mhonarc'
+    is_enabled = False
 
     def __init__(self):
         # Read our specific configuration file

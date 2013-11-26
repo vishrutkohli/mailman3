@@ -52,6 +52,7 @@ class Prototype:
     """
 
     name = 'prototype'
+    is_enabled = False
 
     @staticmethod
     def list_url(mlist):

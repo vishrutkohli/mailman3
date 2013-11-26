@@ -26,6 +26,7 @@ __all__ = [
 
 
 from lazr.config import as_boolean, as_timedelta
+from operator import attrgetter
 from restish import http, resource
 
 from mailman.config import config
@@ -34,10 +35,10 @@ from mailman.core.errors import (
 from mailman.interfaces.action import Action
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
-from mailman.interfaces.mailinglist import IAcceptableAliasSet, IListArchiverSet, ReplyToMunging
+from mailman.interfaces.mailinglist import (
+    IAcceptableAliasSet, IListArchiverSet, ReplyToMunging)
 from mailman.rest.helpers import GetterSetter, PATCH, etag, no_content
 from mailman.rest.validator import PatchValidator, Validator, enum_validator
-from mailman.model.mailinglist import ListArchiverSet
 
 
 
@@ -65,21 +66,24 @@ class AcceptableAliases(GetterSetter):
         for alias in value:
             alias_set.add(unicode(alias))
 
+
+
 class ListArchivers(GetterSetter):
+    """Resource for list-specific archivers."""
 
     def get(self, mlist, attribute):
         """Return the mailing list's acceptable aliases."""
         assert attribute == 'archivers', (
             'Unexpected attribute: {0}'.format(attribute))
-        archivers = ListArchiverSet(mlist)
-        return archivers.getAll()
+        archiver_set = IListArchiverSet(mlist)
+        return sorted(archiver_set.archivers, key=attrgetter('name'))
 
     def put(self, mlist, attribute, value):
         assert attribute == 'archivers', (
             'Unexpected attribute: {0}'.format(attribute))
-        archivers = ListArchiverSet(mlist)
+        archiver_set = IListArchiverSet(mlist)
         for key, value in value.iteritems():
-            archivers.set(key, value)
+            archivers_set.set(key, value)
 
 
 

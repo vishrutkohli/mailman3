@@ -28,8 +28,8 @@ __all__ = [
 import os
 
 from storm.locals import (
-    And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, ReferenceSet,
-    Store, TimeDelta, Unicode)
+    And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, Store,
+    TimeDelta, Unicode)
 from urlparse import urljoin
 from zope.component import getUtility
 from zope.event import notify
@@ -47,7 +47,7 @@ from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.mailinglist import (
-    IAcceptableAlias, IAcceptableAliasSet, IArchiverList, IListArchiverSet,
+    IAcceptableAlias, IAcceptableAliasSet, IListArchiver, IListArchiverSet,
     IMailingList, Personalization, ReplyToMunging)
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError,
@@ -67,19 +67,6 @@ from mailman.utilities.string import expand
 SPACE = ' '
 UNDERSCORE = '_'
 
-@implementer(IArchiverList)
-class ArchiverList(Model):    
-    __storm_primary__ = "mailing_list_id", "archiver_name"
-    mailing_list_id = Int()
-    archiver_name = Unicode()
-    archiver_enabled = Bool()
-
-    def __init__(self, mailing_list_id, archiver_name):
-        self.mailing_list_id = mailing_list_id
-        self.archiver_name = archiver_name
-        self.archiver_enabled = False
-
-
 
 
 @implementer(IMailingList)
@@ -91,7 +78,6 @@ class MailingList(Model):
     # XXX denotes attributes that should be part of the public interface but
     # are currently missing.
 
-    archivers = ReferenceSet(id, ArchiverList.mailing_list_id)
     # List identity
     list_name = Unicode()
     mail_host = Unicode()
@@ -553,39 +539,68 @@ class AcceptableAliasSet:
         for alias in aliases:
             yield alias.alias
 
+
+
+@implementer(IListArchiver)
+class ListArchiver(Model):
+    """See `IListArchiver`."""
+
+    id = Int(primary=True)
+
+    mailing_list_id = Int()
+    mailing_list = Reference(mailing_list_id, MailingList.id)
+    name = Unicode()
+    _is_enabled = Bool()
+
+    def __init__(self, mailing_list, archiver_name, system_archiver):
+        self.mailing_list = mailing_list
+        self.name = archiver_name
+        self._is_enabled = system_archiver.is_enabled
+
+    @property
+    def system_archiver(self):
+        for archiver in config.archivers:
+            if archiver.name == self.name:
+                return archiver
+        return None
+
+    @property
+    def is_enabled(self):
+        return self.system_archiver.is_enabled and self._is_enabled
+
+    @is_enabled.setter
+    def is_enabled(self, value):
+        self._is_enabled = value
+
+
 @implementer(IListArchiverSet)
 class ListArchiverSet:
     def __init__(self, mailing_list):
         self._mailing_list = mailing_list
-        self.lazyAdd()
-
-    def getAll(self):
-        entries = Store.of(self._mailing_list).find(ArchiverList, ArchiverList.mailing_list_id == self._mailing_list.id)
-        all_in_config = {archiver.name for archiver in config.archivers}
-        ret = {}
-        for entry in entries:
-            if entry.archiver_name in all_in_config:
-                ret[entry.archiver_name] = int(entry.archiver_enabled)
-        return ret
-
-    def set(self, archiver, is_enabled):
-        bool_enabled = (int(is_enabled) != 0)
-        self.get(archiver).set(archiver_enabled=bool_enabled)
-
-    def isEnabled(self, archiverName):
-        return self.get(archiverName).one().archiver_enabled
-
-    def get(self, archiverName):
-        return Store.of(self._mailing_list).find(ArchiverList,
-            (ArchiverList.mailing_list_id == self._mailing_list.id) & (ArchiverList.archiver_name == archiverName))
-
-    def lazyAdd(self):
-        names = []
+        system_archivers = {}
         for archiver in config.archivers:
-            count = self.get(archiver.name).count()
-            names.append((archiver.name, count))
-            if not count:
-                entry = ArchiverList(self._mailing_list.id, archiver.name)
-                Store.of(self._mailing_list).add(entry)
-        Store.of(self._mailing_list).commit()
+            system_archivers[archiver.name] = archiver
+        # Add any system enabled archivers which aren't already associated
+        # with the mailing list.
+        store = Store.of(self._mailing_list)
+        for archiver_name in system_archivers:
+            exists = store.find(
+                ListArchiver,
+                And(ListArchiver.mailing_list == mailing_list,
+                    ListArchiver.name == archiver_name)).one()
+            if exists is None:
+                store.add(ListArchiver(mailing_list, archiver_name,
+                                       system_archivers[archiver_name]))
 
+    @property
+    def archivers(self):
+        entries = Store.of(self._mailing_list).find(
+            ListArchiver, ListArchiver.mailing_list == self._mailing_list)
+        for entry in entries:
+            yield entry
+
+    def get(self, archiver_name):
+        return Store.of(self._mailing_list).find(
+            ListArchiver,
+            And(ListArchiver.mailing_list == self._mailing_list,
+                ListArchiver.name == archiver_name)).one()

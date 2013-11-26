@@ -50,6 +50,8 @@ class IArchiver(Interface):
     """An interface to the archiver."""
 
     name = Attribute('The name of this archiver')
+    is_enabled = Attribute(
+        'A flag indicating whether this archiver is enabled site-wide.')
 
     def list_url(mlist):
         """Return the url to the top of the list's archive.
