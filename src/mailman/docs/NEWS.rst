@@ -49,6 +49,7 @@ Database
 --------
  * The `bounceevent` table now uses list-ids to cross-reference the mailing
    list, to match other tables.  Similarly for the `IBounceEvent` interface.
+ * Added a `listarchiver` table to support list-specific archivers.
 
 Bugs
 ----
