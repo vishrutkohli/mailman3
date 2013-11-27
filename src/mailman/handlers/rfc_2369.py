@@ -28,10 +28,10 @@ __all__ = [
 from email.utils import formataddr
 from zope.interface import implementer
 
-from mailman.config import config
 from mailman.core.i18n import _
 from mailman.handlers.cook_headers import uheader
 from mailman.interfaces.archiver import ArchivePolicy
+from mailman.interfaces.mailinglist import IListArchiverSet
 from mailman.interfaces.handler import IHandler
 
 
@@ -84,10 +84,13 @@ def process(mlist, msg, msgdata):
         headers['List-Post'] = list_post
         # Add RFC 2369 and 5064 archiving headers, if archiving is enabled.
         if mlist.archive_policy is not ArchivePolicy.never:
-            for archiver in config.archivers:
+            archiver_set = IListArchiverSet(mlist)
+            for archiver in archiver_set.archivers:
+                if not archiver.is_enabled:
+                    continue
                 headers['List-Archive'] = '<{0}>'.format(
-                    archiver.list_url(mlist))
-                permalink = archiver.permalink(mlist, msg)
+                    archiver.system_archiver.list_url(mlist))
+                permalink = archiver.system_archiver.permalink(mlist, msg)
                 if permalink is not None:
                     headers['Archived-At'] = permalink
     # XXX RFC 2369 also defines a List-Owner header which we are not currently

@@ -30,6 +30,12 @@
 
   <adapter
     for="mailman.interfaces.mailinglist.IMailingList"
+    provides="mailman.interfaces.mailinglist.IListArchiverSet"
+    factory="mailman.model.mailinglist.ListArchiverSet"
+    />
+
+  <adapter
+    for="mailman.interfaces.mailinglist.IMailingList"
     provides="mailman.interfaces.requests.IListRequests"
     factory="mailman.model.requests.ListRequests"
     />

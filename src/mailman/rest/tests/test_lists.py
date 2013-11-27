@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestListArchivers',
     'TestLists',
     'TestListsMissing',
     ]
@@ -159,3 +160,71 @@ class TestLists(unittest.TestCase):
             call_api('http://localhost:9001/3.0/lists/ant.example.com',
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
+
+
+
+class TestListArchivers(unittest.TestCase):
+    """Test corner cases for list archivers."""
+
+    layer = RESTLayer
+
+    def setUp(self):
+        with transaction():
+            self._mlist = create_list('ant@example.com')
+
+    def test_archiver_statuses(self):
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/ant.example.com/archivers')
+        self.assertEqual(response.status, 200)
+        # Remove the variable data.
+        resource.pop('http_etag')
+        self.assertEqual(resource, {
+            'mail-archive': True,
+            'mhonarc': True,
+            'prototype': True,
+            })
+
+    def test_archiver_statuses_on_missing_lists(self):
+        # You cannot get the archiver statuses on a list that doesn't exist.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/bee.example.com/archivers')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_patch_status_on_bogus_archiver(self):
+        # You cannot set the status on an archiver the list doesn't know about.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/ant.example.com/archivers', {
+                    'bogus-archiver': True,
+                    },
+                method='PATCH')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Unexpected parameters: bogus-archiver')
+
+    def test_put_incomplete_statuses(self):
+        # PUT requires the full resource representation.  This one forgets to
+        # specify the prototype and mhonarc archiver.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/ant.example.com/archivers', {
+                    'mail-archive': True,
+                    },
+                method='PUT')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Missing parameters: mhonarc, prototype')
+
+    def test_patch_bogus_status(self):
+        # Archiver statuses must be interpretable as booleans.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/ant.example.com/archivers', {
+                    'mail-archive': 'sure',
+                    'mhonarc': False,
+                    'prototype': 'no'
+                    },
+                method='PATCH')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Invalid boolean value: sure')

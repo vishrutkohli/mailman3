@@ -52,6 +52,7 @@ class Prototype:
     """
 
     name = 'prototype'
+    is_enabled = False
 
     @staticmethod
     def list_url(mlist):
@@ -77,7 +78,7 @@ class Prototype:
         """
         archive_dir = os.path.join(config.ARCHIVE_DIR, 'prototype')
         try:
-            os.makedirs(archive_dir, 0775)
+            os.makedirs(archive_dir, 0o775)
         except OSError as error:
             # If this already exists, then we're fine
             if error.errno != errno.EEXIST:

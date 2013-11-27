@@ -6,11 +6,16 @@
 -- For SQLite3 migration strategy, see
 -- http://sqlite.org/faq.html#q11
 
--- REMOVALS from the bounceevent table:
+-- ADD listarchiver table.
+
+-- REMOVALs from the bounceevent table:
 -- REM list_name
 
--- ADDS to the ban bounceevent table:
+-- ADDs to the bounceevent table:
 -- ADD list_id
+
+-- ADDs to the mailinglist table:
+-- ADD archiver_id
 
 CREATE TABLE bounceevent_backup (
     id INTEGER NOT NULL,
@@ -28,3 +33,14 @@ INSERT INTO bounceevent_backup SELECT
     FROM bounceevent;
 
 ALTER TABLE bounceevent_backup ADD COLUMN list_id TEXT;
+
+CREATE TABLE listarchiver (
+    id INTEGER NOT NULL,
+    mailing_list_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    _is_enabled BOOLEAN,
+    PRIMARY KEY (id)
+    );
+
+CREATE INDEX ix_listarchiver_mailing_list_id
+    ON listarchiver(mailing_list_id);

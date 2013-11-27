@@ -28,6 +28,8 @@ REST
    Given by Florian Fuchs.  (LP: #1156529)
  * Expose ``hide_address`` to the ``.../preferences`` REST API.  Contributed
    by Sneha Priscilla.
+ * Mailing lists can now individually enable or disable any archiver available
+   site-wide.  Contributed by Joanna Skrzeszewska.  (LP: #1158040)
 
 Commands
 --------

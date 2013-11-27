@@ -23,11 +23,13 @@ __metaclass__ = type
 __all__ = [
     'AList',
     'AllLists',
+    'ListArchivers',
     'ListConfiguration',
     'ListsForDomain',
     ]
 
 
+from lazr.config import as_boolean
 from operator import attrgetter
 from restish import http, resource
 from zope.component import getUtility
@@ -36,11 +38,13 @@ from mailman.app.lifecycle import create_list, remove_list
 from mailman.interfaces.domain import BadDomainSpecificationError
 from mailman.interfaces.listmanager import (
     IListManager, ListAlreadyExistsError)
+from mailman.interfaces.mailinglist import IListArchiverSet
 from mailman.interfaces.member import MemberRole
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.rest.configuration import ListConfiguration
 from mailman.rest.helpers import (
-    CollectionMixin, etag, no_content, paginate, path_to, restish_matcher)
+    CollectionMixin, GetterSetter, PATCH, etag, no_content, paginate, path_to,
+    restish_matcher)
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator
@@ -189,6 +193,13 @@ class AList(_ListBase):
             return http.not_found()
         return SubscriptionRequests(self._mlist)
 
+    @resource.child()
+    def archivers(self, request, segments):
+        """Return a representation of mailing list archivers."""
+        if self._mlist is None:
+            return http.not_found()
+        return ListArchivers(self._mlist)
+
 
 
 class AllLists(_ListBase):
@@ -256,3 +267,59 @@ class ListsForDomain(_ListBase):
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(self._domain.mailing_lists)
+
+
+
+class ArchiverGetterSetter(GetterSetter):
+    """Resource for updating archiver statuses."""
+
+    def __init__(self, mlist):
+        super(ArchiverGetterSetter, self).__init__()
+        self._archiver_set = IListArchiverSet(mlist)
+
+    def put(self, mlist, attribute, value):
+        # attribute will contain the (bytes) name of the archiver that is
+        # getting a new status.  value will be the representation of the new
+        # boolean status.
+        archiver = self._archiver_set.get(attribute.decode('utf-8'))
+        if archiver is None:
+            raise ValueError('No such archiver: {}'.format(attribute))
+        archiver.is_enabled = as_boolean(value)
+
+
+class ListArchivers(resource.Resource):
+    """The archivers for a list, with their enabled flags."""
+
+    def __init__(self, mlist):
+        self._mlist = mlist
+
+    @resource.GET()
+    def statuses(self, request):
+        """Get all the archiver statuses."""
+        archiver_set = IListArchiverSet(self._mlist)
+        resource = {archiver.name: archiver.is_enabled
+                    for archiver in archiver_set.archivers}
+        return http.ok([], etag(resource))
+
+    def patch_put(self, request, is_optional):
+        archiver_set = IListArchiverSet(self._mlist)
+        kws = {archiver.name: ArchiverGetterSetter(self._mlist)
+               for archiver in archiver_set.archivers}
+        if is_optional:
+            # For a PUT, all attributes are optional.
+            kws['_optional'] = kws.keys()
+        try:
+            Validator(**kws).update(self._mlist, request)
+        except ValueError as error:
+            return http.bad_request([], str(error))
+        return no_content()
+
+    @resource.PUT()
+    def put_statuses(self, request):
+        """Update all the archiver statuses."""
+        return self.patch_put(request, is_optional=False)
+
+    @PATCH()
+    def patch_statuses(self, request):
+        """Patch some archiver statueses."""
+        return self.patch_put(request, is_optional=True)
