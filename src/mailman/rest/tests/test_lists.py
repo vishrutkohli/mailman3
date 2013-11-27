@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestListArchivers',
     'TestLists',
     'TestListsMissing',
     ]
@@ -28,16 +29,12 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
 from urllib2 import HTTPError
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
-from mailman.config import config
 from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
-from mailman.interfaces.listmanager import IListManager
-from mailman.model.mailinglist import ListArchiverSet
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 
@@ -164,24 +161,70 @@ class TestLists(unittest.TestCase):
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
 
-    def test_prototype_in_list_archivers(self):
+
+
+class TestListArchivers(unittest.TestCase):
+    """Test corner cases for list archivers."""
+
+    layer = RESTLayer
+
+    def setUp(self):
+        with transaction():
+            self._mlist = create_list('ant@example.com')
+
+    def test_archiver_statuses(self):
         resource, response = call_api(
-            'http://localhost:9001/3.0/lists/test@example.com/config')
+            'http://localhost:9001/3.0/lists/ant.example.com/archivers')
         self.assertEqual(response.status, 200)
-        self.assertEqual(resource['archivers']['prototype'], 0)
+        # Remove the variable data.
+        resource.pop('http_etag')
+        self.assertEqual(resource, {
+            'mail-archive': True,
+            'mhonarc': True,
+            'prototype': True,
+            })
 
-    def test_lazy_add_archivers(self):
-        call_api('http://localhost:9001/3.0/lists', {
-                 'fqdn_listname': 'new_list@example.com',
-                 })
-        resource, response = call_api(
-            'http://localhost:9001/3.0/lists/new_list@example.com/config')
-        self.assertEqual(response.status, 200)
-        self.assertEqual(resource['archivers']['prototype'], 0)
+    def test_archiver_statuses_on_missing_lists(self):
+        # You cannot get the archiver statuses on a list that doesn't exist.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/bee.example.com/archivers')
+        self.assertEqual(cm.exception.code, 404)
 
-    def test_set_archiver_enabled(self):
-        mlist = getUtility(IListManager).create('newest_list@example.com')
-        lset = ListArchiverSet(mlist)
-        lset.set('prototype', 1)
-        self.assertEqual(lset.isEnabled('prototype'), 1)
+    def test_patch_status_on_bogus_archiver(self):
+        # You cannot set the status on an archiver the list doesn't know about.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/ant.example.com/archivers', {
+                    'bogus-archiver': True,
+                    },
+                method='PATCH')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Unexpected parameters: bogus-archiver')
 
+    def test_put_incomplete_statuses(self):
+        # PUT requires the full resource representation.  This one forgets to
+        # specify the prototype and mhonarc archiver.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/ant.example.com/archivers', {
+                    'mail-archive': True,
+                    },
+                method='PUT')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         'Missing parameters: mhonarc, prototype')
+
+    def test_patch_bogus_status(self):
+        # Archiver statuses must be interpretable as booleans.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/lists/ant.example.com/archivers', {
+                    'mail-archive': 'sure',
+                    'mhonarc': False,
+                    'prototype': 'no'
+                    },
+                method='PATCH')
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Invalid boolean value: sure')

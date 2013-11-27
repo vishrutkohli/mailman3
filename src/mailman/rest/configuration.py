@@ -26,7 +26,6 @@ __all__ = [
 
 
 from lazr.config import as_boolean, as_timedelta
-from operator import attrgetter
 from restish import http, resource
 
 from mailman.config import config
@@ -35,8 +34,7 @@ from mailman.core.errors import (
 from mailman.interfaces.action import Action
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
-from mailman.interfaces.mailinglist import (
-    IAcceptableAliasSet, IListArchiverSet, ReplyToMunging)
+from mailman.interfaces.mailinglist import IAcceptableAliasSet, ReplyToMunging
 from mailman.rest.helpers import GetterSetter, PATCH, etag, no_content
 from mailman.rest.validator import PatchValidator, Validator, enum_validator
 
@@ -68,25 +66,6 @@ class AcceptableAliases(GetterSetter):
 
 
 
-class ListArchivers(GetterSetter):
-    """Resource for list-specific archivers."""
-
-    def get(self, mlist, attribute):
-        """Return the mailing list's acceptable aliases."""
-        assert attribute == 'archivers', (
-            'Unexpected attribute: {0}'.format(attribute))
-        archiver_set = IListArchiverSet(mlist)
-        return sorted(archiver_set.archivers, key=attrgetter('name'))
-
-    def put(self, mlist, attribute, value):
-        assert attribute == 'archivers', (
-            'Unexpected attribute: {0}'.format(attribute))
-        archiver_set = IListArchiverSet(mlist)
-        for key, value in value.iteritems():
-            archivers_set.set(key, value)
-
-
-
 # Additional validators for converting from web request strings to internal
 # data types.  See below for details.
 
@@ -101,15 +80,6 @@ def list_of_unicode(values):
     """Turn a list of things into a list of unicodes."""
     return [unicode(value) for value in values]
 
-def list_of_pairs_to_dict(pairs):
-    dict = {}
-    # If pairs has only one element then it is not a list but a string.
-    if not isinstance(pairs, list):
-        pairs = [pairs]
-    for key_value in pairs:
-        parts = key_value.split('|')
-        dict[parts[0]] = parts[1]
-    return dict
 
 
 # This is the list of IMailingList attributes that are exposed through the
@@ -128,7 +98,6 @@ def list_of_pairs_to_dict(pairs):
 
 ATTRIBUTES = dict(
     acceptable_aliases=AcceptableAliases(list_of_unicode),
-    archivers=ListArchivers(list_of_pairs_to_dict),
     admin_immed_notify=GetterSetter(as_boolean),
     admin_notify_mchanges=GetterSetter(as_boolean),
     administrivia=GetterSetter(as_boolean),

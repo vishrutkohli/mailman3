@@ -230,3 +230,61 @@ The mailing list does not exist.
 
     >>> print list_manager.get('ant@example.com')
     None
+
+
+Managing mailing list archivers
+===============================
+
+The Mailman system has some site-wide enabled archivers, and each mailing list
+can enable or disable these archivers individually.  This gives list owners
+control over where traffic to their list is archived.  You can see which
+archivers are available, and whether they are enabled for this mailing list.
+::
+
+    >>> mlist = create_list('dog@example.com')
+    >>> transaction.commit()
+
+    >>> dump_json('http://localhost:9001/3.0/lists/dog@example.com/archivers')
+    http_etag: "..."
+    mail-archive: True
+    mhonarc: True
+    prototype: True
+
+You can set all the archiver states by putting new state flags on the
+resource.
+::
+
+    >>> dump_json(
+    ...     'http://localhost:9001/3.0/lists/dog@example.com/archivers', {
+    ...         'mail-archive': False,
+    ...         'mhonarc': True,
+    ...         'prototype': False,
+    ...         }, method='PUT')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/lists/dog@example.com/archivers')
+    http_etag: "..."
+    mail-archive: False
+    mhonarc: True
+    prototype: False
+
+You can change the state of a subset of the list archivers.
+::
+
+    >>> dump_json(
+    ...     'http://localhost:9001/3.0/lists/dog@example.com/archivers', {
+    ...         'mhonarc': False,
+    ...         }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/lists/dog@example.com/archivers')
+    http_etag: "..."
+    mail-archive: False
+    mhonarc: False
+    prototype: False
