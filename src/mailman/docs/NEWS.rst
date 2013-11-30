@@ -39,6 +39,7 @@ Commands
 
 Configuration
 -------------
+ * Add support for the Exim 4 MTA.  Contributed by Stephen Turnbull.
  * When creating the initial file system layout in ``var``, e.g. via
    ``bin/mailman info``, add an ``var/etc/mailman.cfg`` file if one does not
    already exist.  Also, when initializing the system, look for that file as
