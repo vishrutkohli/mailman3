@@ -46,6 +46,7 @@ import mock
 import time
 import uuid
 import errno
+import shutil
 import signal
 import socket
 import logging
@@ -482,6 +483,7 @@ def reset_the_world():
     for dirpath, dirnames, filenames in os.walk(config.MESSAGES_DIR):
         for filename in filenames:
             os.remove(os.path.join(dirpath, filename))
+        shutil.rmtree(dirpath)
     # Reset the global style manager.
     getUtility(IStyleManager).populate()
     # Remove all dynamic header-match rules.
