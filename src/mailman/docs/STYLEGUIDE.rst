@@ -2,7 +2,7 @@
 GNU Mailman Coding Style Guide
 ==============================
 
-Copyright (C) 2002-2013 Barry A. Warsaw
+Copyright (C) 2002-2014 Barry A. Warsaw
 
 
 Python coding style guide for GNU Mailman
