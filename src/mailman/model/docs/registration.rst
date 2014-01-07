@@ -104,7 +104,7 @@ But this address is waiting for confirmation.
     delivery_mode: regular
     display_name : Anne Person
     email        : aperson@example.com
-    list_name    : alpha@example.com
+    list_id      : alpha.example.com
     type         : registration
 
 

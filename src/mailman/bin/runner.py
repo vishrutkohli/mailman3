@@ -156,7 +156,7 @@ def main():
         cannot be run once."""))
     parser.add_argument(
         '-l', '--list',
-        default=False, action='store_true',
+        default=None, action='store_true',
         help=_('List the available runner names and exit.'))
     parser.add_argument(
         '-v', '--verbose',

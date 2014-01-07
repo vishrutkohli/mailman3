@@ -327,6 +327,8 @@ def call_api(url, data=None, method=None, username=None, password=None):
         else:
             method = 'POST'
     method = method.upper()
+    if method in ('POST', 'PUT', 'PATCH') and data is None:
+        data = urlencode({}, doseq=True)
     basic_auth = '{0}:{1}'.format(
         (config.webservice.admin_user if username is None else username),
         (config.webservice.admin_pass if password is None else password))

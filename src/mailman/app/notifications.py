@@ -65,44 +65,36 @@ def _get_message(uri_template, mlist, language):
 
 
 
-def send_welcome_message(mlist, address, language, delivery_mode, text=''):
+def send_welcome_message(mlist, member, language, text=''):
     """Send a welcome message to a subscriber.
 
     Prepending to the standard welcome message template is the mailing list's
     welcome message, if there is one.
 
-    :param mlist: the mailing list
+    :param mlist: The mailing list.
     :type mlist: IMailingList
-    :param address: The address to respond to
-    :type address: string
-    :param language: the language of the response
+    :param member: The member to send the welcome message to.
+    :param address: IMember
+    :param language: The language of the response.
     :type language: ILanguage
-    :param delivery_mode: the type of delivery the subscriber is getting
-    :type delivery_mode: DeliveryMode
     """
-    welcome_message = _get_message(mlist.welcome_message_uri,
-                                   mlist, language)
-    # Find the IMember object which is subscribed to the mailing list, because
-    # from there, we can get the member's options url.
-    member = mlist.members.get_member(address)
-    user_name = member.user.display_name
+    welcome_message = _get_message(mlist.welcome_message_uri, mlist, language)
     options_url = member.options_url
     # Get the text from the template.
+    display_name = ('' if member.user is None else member.user.display_name)
     text = expand(welcome_message, dict(
         fqdn_listname=mlist.fqdn_listname,
         list_name=mlist.display_name,
         listinfo_uri=mlist.script_url('listinfo'),
         list_requests=mlist.request_address,
-        user_name=user_name,
-        user_address=address,
+        user_name=display_name,
+        user_address=member.address.email,
         user_options_uri=options_url,
         ))
-    if delivery_mode is not DeliveryMode.regular:
-        digmode = _(' (Digest mode)')
-    else:
-        digmode = ''
+    digmode = ('' if member.delivery_mode is DeliveryMode.regular
+               else _(' (Digest mode)'))
     msg = UserNotification(
-        formataddr((user_name, address)),
+        formataddr((display_name, member.address.email)),
         mlist.request_address,
         _('Welcome to the "$mlist.display_name" mailing list${digmode}'),
         text, language)

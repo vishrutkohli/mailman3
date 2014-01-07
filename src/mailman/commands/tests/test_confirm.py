@@ -55,11 +55,10 @@ class TestConfirm(unittest.TestCase):
 
     def tearDown(self):
         reset_the_world()
-        
+
     def test_welcome_message(self):
         # A confirmation causes a welcome message to be sent to the member, if
         # enabled by the mailing list.
-        #
         status = self._command.process(
             self._mlist, Message(), {}, (self._token,), Results())
         self.assertEqual(status, ContinueProcessing.yes)
@@ -68,7 +67,7 @@ class TestConfirm(unittest.TestCase):
         self.assertEqual(len(messages), 1)
         # Grab the welcome message.
         welcome = messages[0].msg
-        self.assertEqual(welcome['subject'], 
+        self.assertEqual(welcome['subject'],
                          'Welcome to the "Test" mailing list')
         self.assertEqual(welcome['to'], 'Anne Person <anne@example.com>')
 

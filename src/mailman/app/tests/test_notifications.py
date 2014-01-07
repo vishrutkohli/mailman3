@@ -33,10 +33,9 @@ from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.membership import add_member
-from mailman.app.notifications import send_welcome_message
 from mailman.config import config
 from mailman.interfaces.languages import ILanguageManager
-from mailman.interfaces.member import DeliveryMode
+from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.testing.helpers import get_queue_messages
 from mailman.testing.layers import ConfigLayer
 
@@ -82,11 +81,8 @@ Welcome to the $list_name mailing list.
         shutil.rmtree(self.var_dir)
 
     def test_welcome_message(self):
-        en = getUtility(ILanguageManager).get('en')
         add_member(self._mlist, 'anne@example.com', 'Anne Person',
                    'password', DeliveryMode.regular, 'en')
-        send_welcome_message(self._mlist, 'anne@example.com', en,
-                             DeliveryMode.regular)
         # Now there's one message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 1)
@@ -110,16 +106,42 @@ Welcome to the Test List mailing list.
             'mailman:///$listname/$language/welcome.txt')
         # Add the xx language and subscribe Anne using it.
         manager = getUtility(ILanguageManager)
-        xx = manager.add('xx', 'us-ascii', 'Xlandia')
+        manager.add('xx', 'us-ascii', 'Xlandia')
         add_member(self._mlist, 'anne@example.com', 'Anne Person',
                    'password', DeliveryMode.regular, 'xx')
-        send_welcome_message(self._mlist, 'anne@example.com', xx,
-                             DeliveryMode.regular)
         # Now there's one message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 1)
         message = messages[0].msg
         self.assertEqual(str(message['subject']),
                          'Welcome to the "Test List" mailing list')
-        self.assertEqual(message.get_payload(),
-                         'You just joined the Test List mailing list!')
+        self.assertMultiLineEqual(
+            message.get_payload(),
+            'You just joined the Test List mailing list!')
+
+    def test_no_welcome_message_to_owners(self):
+        # Welcome messages go only to mailing list members, not to owners.
+        add_member(self._mlist, 'anne@example.com', 'Anne Person',
+                   'password', DeliveryMode.regular, 'xx',
+                   MemberRole.owner)
+        # There is no welcome message in the virgin queue.
+        messages = get_queue_messages('virgin')
+        self.assertEqual(len(messages), 0)
+
+    def test_no_welcome_message_to_nonmembers(self):
+        # Welcome messages go only to mailing list members, not to nonmembers.
+        add_member(self._mlist, 'anne@example.com', 'Anne Person',
+                   'password', DeliveryMode.regular, 'xx',
+                   MemberRole.nonmember)
+        # There is no welcome message in the virgin queue.
+        messages = get_queue_messages('virgin')
+        self.assertEqual(len(messages), 0)
+
+    def test_no_welcome_message_to_moderators(self):
+        # Welcome messages go only to mailing list members, not to moderators.
+        add_member(self._mlist, 'anne@example.com', 'Anne Person',
+                   'password', DeliveryMode.regular, 'xx',
+                   MemberRole.moderator)
+        # There is no welcome message in the virgin queue.
+        messages = get_queue_messages('virgin')
+        self.assertEqual(len(messages), 0)

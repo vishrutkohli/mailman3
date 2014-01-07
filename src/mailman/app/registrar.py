@@ -22,22 +22,23 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Registrar',
+    'handle_ConfirmationNeededEvent',
     ]
 
 
 import logging
 
 from zope.component import getUtility
+from zope.event import notify
 from zope.interface import implementer
 
-from mailman.app.notifications import send_welcome_message
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
 from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.pending import IPendable, IPendings
-from mailman.interfaces.registrar import IRegistrar
+from mailman.interfaces.registrar import ConfirmationNeededEvent, IRegistrar
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import now
@@ -69,29 +70,13 @@ class Registrar:
             type=PendableRegistration.PEND_KEY,
             email=email,
             display_name=display_name,
-            delivery_mode=delivery_mode.name)
-        pendable['list_name'] = mlist.fqdn_listname
+            delivery_mode=delivery_mode.name,
+            list_id=mlist.list_id)
         token = getUtility(IPendings).add(pendable)
-        # There are three ways for a user to confirm their subscription.  They
-        # can reply to the original message and let the VERP'd return address
-        # encode the token, they can reply to the robot and keep the token in
-        # the Subject header, or they can click on the URL in the body of the
-        # message and confirm through the web.
-        subject = 'confirm ' + token
-        confirm_address = mlist.confirm_address(token)
-        # For i18n interpolation.
-        confirm_url = mlist.domain.confirm_url(token)
-        email_address = email
-        domain_name = mlist.domain.mail_host
-        contact_address = mlist.domain.contact_address
-        # Send a verification email to the address.
-        template = getUtility(ITemplateLoader).get(
-            'mailman:///{0}/{1}/confirm.txt'.format(
-                mlist.fqdn_listname,
-                mlist.preferred_language.code))
-        text = _(template)
-        msg = UserNotification(email, confirm_address, subject, text)
-        msg.send(mlist)
+        # We now have everything we need to begin the confirmation dance.
+        # Trigger the event to start the ball rolling, and return the
+        # generated token.
+        notify(ConfirmationNeededEvent(mlist, pendable, token))
         return token
 
     def confirm(self, token):
@@ -103,7 +88,6 @@ class Registrar:
         missing = object()
         email = pendable.get('email', missing)
         display_name = pendable.get('display_name', missing)
-        list_name = pendable.get('list_name', missing)
         pended_delivery_mode = pendable.get('delivery_mode', 'regular')
         try:
             delivery_mode = DeliveryMode[pended_delivery_mode]
@@ -151,20 +135,43 @@ class Registrar:
             pass
         address.verified_on = now()
         # If this registration is tied to a mailing list, subscribe the person
-        # to the list right now, and possibly send a welcome message.
-        list_name = pendable.get('list_name')
-        if list_name is not None:
-            mlist = getUtility(IListManager).get(list_name)
-            if mlist:
+        # to the list right now.  That will generate a SubscriptionEvent,
+        # which can be used to send a welcome message.
+        list_id = pendable.get('list_id')
+        if list_id is not None:
+            mlist = getUtility(IListManager).get_by_list_id(list_id)
+            if mlist is not None:
                 member = mlist.subscribe(address, MemberRole.member)
                 member.preferences.delivery_mode = delivery_mode
-                if mlist.send_welcome_message:
-                    send_welcome_message(mlist,
-                                         address.email,
-                                         mlist.preferred_language,
-                                         delivery_mode)
         return True
 
     def discard(self, token):
         # Throw the record away.
         getUtility(IPendings).confirm(token)
+
+
+
+def handle_ConfirmationNeededEvent(event):
+    if not isinstance(event, ConfirmationNeededEvent):
+        return
+    # There are three ways for a user to confirm their subscription.  They
+    # can reply to the original message and let the VERP'd return address
+    # encode the token, they can reply to the robot and keep the token in
+    # the Subject header, or they can click on the URL in the body of the
+    # message and confirm through the web.
+    subject = 'confirm ' + event.token
+    mlist = getUtility(IListManager).get_by_list_id(event.pendable['list_id'])
+    confirm_address = mlist.confirm_address(event.token)
+    # For i18n interpolation.
+    confirm_url = mlist.domain.confirm_url(event.token)
+    email_address = event.pendable['email']
+    domain_name = mlist.domain.mail_host
+    contact_address = mlist.domain.contact_address
+    # Send a verification email to the address.
+    template = getUtility(ITemplateLoader).get(
+        'mailman:///{0}/{1}/confirm.txt'.format(
+            mlist.fqdn_listname,
+            mlist.preferred_language.code))
+    text = _(template)
+    msg = UserNotification(email_address, confirm_address, subject, text)
+    msg.send(mlist)

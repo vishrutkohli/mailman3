@@ -115,7 +115,7 @@ def initialize_1(config_path=None):
     # write our files.  Specifically we must have g+rw and we probably want
     # o-rwx although I think in most cases it doesn't hurt if other can read
     # or write the files.
-    os.umask(007)
+    os.umask(0o007)
     # Initialize configuration event subscribers.  This must be done before
     # setting up the configuration system.
     from mailman.app.events import initialize as initialize_events

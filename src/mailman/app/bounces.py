@@ -196,7 +196,7 @@ def send_probe(member, msg):
         member.mailing_list.list_id)
     text = make('probe.txt', mlist, member.preferred_language.code,
                 listname=mlist.fqdn_listname,
-                address= member.address.email,
+                address=member.address.email,
                 optionsurl=member.options_url,
                 owneraddr=mlist.owner_address,
                 )

@@ -52,6 +52,7 @@ class TestJoin(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._commandq = config.switchboards['command']
         self._runner = make_testable_runner(CommandRunner, 'command')
 

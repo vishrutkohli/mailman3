@@ -57,6 +57,7 @@ class TestBounceRunner(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._bounceq = config.switchboards['bounces']
         self._runner = make_testable_runner(BounceRunner, 'bounces')
         self._anne = getUtility(IUserManager).create_address(
