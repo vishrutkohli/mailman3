@@ -91,7 +91,6 @@ class Prototype:
         mailbox = Maildir(list_dir, create=True, factory=None)
         lock_file = os.path.join(
             config.LOCK_DIR, '{0}-maildir.lock'.format(mlist.fqdn_listname))
-
         # Lock the maildir as Maildir.add() is not threadsafe.  Don't use the
         # context manager because it's not an error if we can't acquire the
         # archiver lock.  We'll just log the problem and continue.
