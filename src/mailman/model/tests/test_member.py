@@ -17,19 +17,21 @@
 
 """Test members."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestMember',
     ]
 
 
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.interfaces.member import MembershipError
+from mailman.interfaces.member import MemberRole, MembershipError
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
+from mailman.model.member import Member
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.datetime import now
 
@@ -94,3 +96,9 @@ class TestMember(unittest.TestCase):
         # The new address is not verified.
         self.assertRaises(MembershipError,
                           setattr, member, 'address', bart_address)
+
+    def test_member_ctor_value_error(self):
+        # ValueError when passing in anything but a user or address.
+        self.assertRaises(ValueError, Member, MemberRole.member,
+                          self._mlist.list_id,
+                          'aperson@example.com')

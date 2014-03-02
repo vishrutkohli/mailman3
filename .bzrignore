@@ -20,3 +20,4 @@ diff.txt
 distribute-*.egg
 distribute-*.tar.gz
 .coverage
+htmlcov

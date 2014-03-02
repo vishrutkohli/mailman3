@@ -17,7 +17,7 @@
 
 """Application support for membership management."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -173,8 +173,4 @@ def handle_SubscriptionEvent(event):
     mlist = member.mailing_list
     if not mlist.send_welcome_message:
         return
-    # What language should the welcome message be sent in?
-    language = member.preferred_language
-    if language is None:
-        language = mlist.preferred_language
-    send_welcome_message(mlist, member, language)
+    send_welcome_message(mlist, member, member.preferred_language)

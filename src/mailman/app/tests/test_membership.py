@@ -17,10 +17,13 @@
 
 """Tests of application level membership functions."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestAddMember',
+    'TestAddMemberPassword',
+    'TestDeleteMember',
     ]
 
 
@@ -29,17 +32,18 @@ import unittest
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
-from mailman.app.membership import add_member
+from mailman.app.membership import add_member, delete_member
 from mailman.core.constants import system_preferences
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
-    AlreadySubscribedError, DeliveryMode, MemberRole, MembershipIsBannedError)
+    AlreadySubscribedError, DeliveryMode, MemberRole, MembershipIsBannedError,
+    NotAMemberError)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.layers import ConfigLayer
 
 
 
-class AddMemberTest(unittest.TestCase):
+class TestAddMember(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
@@ -70,10 +74,13 @@ class AddMemberTest(unittest.TestCase):
         # Test that members who are banned by specific address cannot
         # subscribe to the mailing list.
         IBanManager(self._mlist).ban('anne@example.com')
-        self.assertRaises(
-            MembershipIsBannedError,
-            add_member, self._mlist, 'anne@example.com', 'Anne Person',
-            '123', DeliveryMode.regular, system_preferences.preferred_language)
+        with self.assertRaises(MembershipIsBannedError) as cm:
+            add_member(self._mlist, 'anne@example.com', 'Anne Person',
+                       '123', DeliveryMode.regular,
+                       system_preferences.preferred_language)
+        self.assertEqual(
+            str(cm.exception),
+            'anne@example.com is not allowed to subscribe to test@example.com')
 
     def test_add_member_globally_banned(self):
         # Test that members who are banned by specific address cannot
@@ -165,7 +172,7 @@ class AddMemberTest(unittest.TestCase):
 
 
 
-class AddMemberPasswordTest(unittest.TestCase):
+class TestAddMemberPassword(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
@@ -177,3 +184,19 @@ class AddMemberPasswordTest(unittest.TestCase):
                             'Anne Person', 'abc', DeliveryMode.regular,
                             system_preferences.preferred_language)
         self.assertEqual(member.user.password, '{plaintext}abc')
+
+
+
+class TestDeleteMember(unittest.TestCase):
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('test@example.com')
+
+    def test_delete_member_not_a_member(self):
+        # Try to delete an address which is not a member of the mailing list.
+        with self.assertRaises(NotAMemberError) as cm:
+            delete_member(self._mlist, 'noperson@example.com')
+        self.assertEqual(
+            str(cm.exception),
+            'noperson@example.com is not a member of test@example.com')
