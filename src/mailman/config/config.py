@@ -259,12 +259,6 @@ class Configuration:
             yield archiver
 
     @property
-    def style_configs(self):
-        """Iterate over all the style configuration sections."""
-        for section in self._config.getByCategory('style', []):
-            yield section
-
-    @property
     def language_configs(self):
         """Iterate over all the language configuration sections."""
         for section in self._config.getByCategory('language', []):
