@@ -67,6 +67,8 @@ Bugs
  * Fix non-member moderation rule to prefer a member sender if both members
    and non-members are in the message's sender list.  Given by Aurélien
    Bompard.  (LP: #1291452)
+ * Fix IntegrityError (against PostgreSQL) when deleting a list with content
+   filters.  Given by Aurélien Bompard.  (LP: #1117174)
 
 
 3.0 beta 3 -- "Here Again"
