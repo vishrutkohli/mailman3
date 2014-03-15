@@ -64,6 +64,9 @@ Bugs
    docstring for `display_name`.  (LP: #1181498)
  * Fix importation from MM2.1 to MM3 of the archive policy.  Given by Aurélien
    Bompard. (LP: #1227658)
+ * Fix non-member moderation rule to prefer a member sender if both members
+   and non-members are in the message's sender list.  Given by Aurélien
+   Bompard.  (LP: #1291452)
 
 
 3.0 beta 3 -- "Here Again"
