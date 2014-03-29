@@ -301,7 +301,51 @@ with Exim configuration, you probably want to start with the chapter on
 Sendmail
 ========
 
-Contributions are welcome!
+The Mailman developers have no experience with Sendmail.  Any and all
+contributions are welcome!  The follow information from a post by Gary
+Algier <gaa@ulticom.com> may be useful as a starting point, although it
+describes Mailman 2:
+
+    I have it working fine.  I recently replaced a very old implementation 
+    of sendmail and Mailman 2 on Solaris with a new one on CentOS 6.  When I 
+    did so, I used the POSTFIX_ALIAS_CMD mechanism to automatically process 
+    the aliases.  See::
+
+        https://mail.python.org/pipermail/mailman-users/2004-June/037518.html 
+ 
+    In mm_cfg.py::
+
+         MTA='Postfix' 
+         POSTFIX_ALIAS_CMD = '/usr/bin/sudo /etc/mail/import-mailman-aliases' 
+
+    /etc/mail/import-mailman-aliases contains::
+
+         #! /bin/sh 
+         /bin/cp /etc/mailman/aliases /etc/mail/mailman.aliases 
+         /usr/bin/newaliases 
+
+    In /etc/sudoers.d/mailman::
+
+         Cmnd_Alias IMPORT_MAILMAN_ALIASES = /etc/mail/import-mailman-aliases 
+         apache ALL= NOPASSWD: IMPORT_MAILMAN_ALIASES 
+         mailman ALL= NOPASSWD: IMPORT_MAILMAN_ALIASES 
+         Defaults!IMPORT_MAILMAN_ALIASES !requiretty 
+
+    In the sendmail.mc file I changed::
+
+         define(`ALIAS_FILE', `/etc/aliases')dnl
+
+    to::
+
+         define(`ALIAS_FILE', `/etc/aliases,/etc/mail/mailman.aliases')dnl
+
+    so that the Mailman aliases would be in a separate file. 
+
+The main issue here is that Mailman 2 expects to receive messages from
+the MTA via pipes, whereas Mailman 3 uses LMTP exclusively.  Recent
+Sendmail does support LMTP, so it's a matter of configuring a stock
+Sendmail.  But rather than using aliases, it needs to be configured to
+relay to the LMTP port of Mailman.
 
 
 .. _`mailing list or on IRC`: START.html#contact-us
