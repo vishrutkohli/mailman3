@@ -34,6 +34,7 @@ from zope.component import getUtility
 from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
 from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
+from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import now
 
@@ -173,6 +174,23 @@ class UserAddresses(_AddressBase):
         """/addresses"""
         resource = self._make_collection(request)
         return http.ok([], etag(resource))
+
+    @resource.POST()
+    def create(self, request):
+        """Add a new address to the user record."""
+        email = request.POST.get('email')
+        if not email:
+            return http.bad_request([], b'No email address provided.')
+        # Create a new address and connect it to the current user 
+        try:
+            address = getUtility(IUserManager).create_address(email)
+            address.user = self._user
+            location = path_to('addresses/{0}'.format(address.email))
+            return http.created(location, [], None)
+        # ... except the address already exists.
+        except ExistingAddressError:
+            return http.bad_request(
+                [], b'Address already exists: {0}'.format(email))
 
 
 

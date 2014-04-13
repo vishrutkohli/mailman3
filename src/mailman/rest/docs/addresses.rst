@@ -174,6 +174,40 @@ addresses live in the /addresses namespace.
     self_link: http://localhost:9001/3.0/addresses/dave@example.com
 
 
+A user record can have multiple email addresses associated with it. 
+Adding a new address can be done by posting to the /addresses namespace.
+
+    >>> dump_json('http://localhost:9001/3.0/users/dave@example.com/'
+    ...           'addresses', {
+    ...           'email': 'dave.person@example.org'
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/addresses/dave.person@example.org
+    server: ...
+    status: 201
+
+The new address now shows up in the result of the user's /addresses endpoint.
+
+    >>> dump_json('http://localhost:9001/3.0/users/dave@example.com/addresses')
+    entry 0:
+        email: dave.person@example.org
+        http_etag: "..."
+        original_email: dave.person@example.org
+        registered_on: 2005-08-01T07:49:23
+        self_link: http://localhost:9001/3.0/addresses/dave.person@example.org
+    entry 1:
+        display_name: Dave Person
+        email: dave@example.com
+        http_etag: "..."
+        original_email: dave@example.com
+        registered_on: 2005-08-01T07:49:23
+        self_link: http://localhost:9001/3.0/addresses/dave@example.com
+    http_etag: "..."
+    start: 0
+    total_size: 2
+
+
 Memberships
 ===========
 

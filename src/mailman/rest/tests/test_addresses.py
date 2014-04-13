@@ -109,3 +109,38 @@ class TestAddresses(unittest.TestCase):
             call_api('http://localhost:9001/3.0/addresses/'
                      'anne@example.com/unverify/foo', {})
         self.assertEqual(cm.exception.code, 400)
+
+    def test_address_added_to_user(self):
+        # Address is added to a user record.
+        with transaction():
+            anne = getUtility(IUserManager).create_user('anne@example.com')
+        response, content = call_api('http://localhost:9001/3.0/users/'
+                                     'anne@example.com/addresses', {
+                                     'email': 'anne.person@example.org'
+                                     })
+        self.assertTrue('anne.person@example.org' in [a.email for a in
+                                                      anne.addresses])
+        self.assertEqual(content['status'], '201')
+
+    def test_existing_address_bad_request(self):
+        # Posting an existing address returns 400.
+        with transaction():
+            anne = getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/'
+                     'anne@example.com/addresses', {
+                     'email': 'anne@example.com'
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Address already exists: '
+                         'anne@example.com')
+
+    def test_empty_address_bad_request(self):
+        # Posting no address returns 400.
+        with transaction():
+            anne = getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/'
+                     'anne@example.com/addresses', {})
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'No email address provided.')
