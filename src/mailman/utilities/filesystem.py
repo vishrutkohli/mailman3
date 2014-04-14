@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Module stuff."""
+"""Filesystem utilities."""
 
 from __future__ import absolute_import, unicode_literals
 
@@ -50,7 +50,7 @@ class umask:
 
 
 
-def makedirs(path, mode=02775):
+def makedirs(path, mode=0o2775):
     """Create a directory hierarchy, ensuring permissions.
 
     Other than just calling os.makedirs(), this ensures that the umask is

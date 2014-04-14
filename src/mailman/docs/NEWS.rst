@@ -25,21 +25,22 @@ REST
  * Add ``reply_to_address`` and ``first_strip_reply_to`` as writable
    attributes of a mailing list's configuration.  (LP: #1157881)
  * Support pagination of some large collections (lists, users, members).
-   Given by Florian Fuchs.  (LP: #1156529)
- * Expose ``hide_address`` to the ``.../preferences`` REST API.  Contributed
-   by Sneha Priscilla.
+   [Florian Fuchs]  (LP: #1156529)
+ * Expose ``hide_address`` to the ``.../preferences`` REST API.
+   [Sneha Priscilla.]
  * Mailing lists can now individually enable or disable any archiver available
-   site-wide.  Contributed by Joanna Skrzeszewska.  (LP: #1158040)
+   site-wide.  [Joanna Skrzeszewska]  (LP: #1158040)
 
 Commands
 --------
  * `mailman conf` now has a `-t/--sort` flag which sorts the output by section
-   and then key.  Contributed by Karl-Aksel Puulmann and David Soto
-   (LP: 1162492)
+   and then key.  [Karl-Aksel Puulmann and David Soto] (LP: 1162492)
+ * Greatly improve the fidelity of the Mailman 2.1 list importer functionality
+   (i.e. ``mailman import21``).  [Aurélien Bompard].
 
 Configuration
 -------------
- * Add support for the Exim 4 MTA.  Contributed by Stephen Turnbull.
+ * Add support for the Exim 4 MTA.  [Stephen Turnbull]
  * When creating the initial file system layout in ``var``, e.g. via
    ``bin/mailman info``, add an ``var/etc/mailman.cfg`` file if one does not
    already exist.  Also, when initializing the system, look for that file as
@@ -54,21 +55,21 @@ Database
 
 Bugs
 ----
- * Non-queue runners should not create ``var/queue`` subdirectories.  Fixed by
-   Sandesh Kumar Agrawal. (LP: #1095422)
+ * Non-queue runners should not create ``var/queue`` subdirectories.
+   [Sandesh Kumar Agrawal] (LP: #1095422)
  * Creation of lists with upper case names should be coerced to lower case.
    (LP: #1117176)
  * Fix REST server crash on `mailman reopen` due to no interception of
    signals.  (LP: #1184376)
  * Add `subject_prefix` to the `IMailingList` interface, and clarify the
    docstring for `display_name`.  (LP: #1181498)
- * Fix importation from MM2.1 to MM3 of the archive policy.  Given by Aurélien
-   Bompard. (LP: #1227658)
+ * Fix importation from MM2.1 to MM3 of the archive policy.
+   [Aurélien Bompard] (LP: #1227658)
  * Fix non-member moderation rule to prefer a member sender if both members
-   and non-members are in the message's sender list.  Given by Aurélien
-   Bompard.  (LP: #1291452)
+   and non-members are in the message's sender list.  [Aurélien Bompard]
+   (LP: #1291452)
  * Fix IntegrityError (against PostgreSQL) when deleting a list with content
-   filters.  Given by Aurélien Bompard.  (LP: #1117174)
+   filters.  [Aurélien Bompard]  (LP: #1117174)
 
 
 3.0 beta 3 -- "Here Again"
@@ -169,7 +170,7 @@ Commands
 Other
 -----
  * Added support for Postfix `relay_domains` setting for better virtual domain
-   support.  Contributed by Jimmy Bergman.
+   support.  [Jimmy Bergman].
  * Two new events are triggered on membership changes: `SubscriptionEvent`
    when a new member joins a mailing list, and an `UnsubscriptionEvent` when a
    member leaves a mailing list.  (LP: #1047286)

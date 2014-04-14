@@ -35,7 +35,7 @@ from mailman.core.i18n import _
 from mailman.database.transaction import transactional
 from mailman.interfaces.command import ICLISubCommand
 from mailman.interfaces.listmanager import IListManager
-from mailman.utilities.importer import import_config_pck
+from mailman.utilities.importer import import_config_pck, Import21Error
 
 
 
@@ -93,4 +93,8 @@ class Import21:
                         print(_('Ignoring non-dictionary: {0!r}').format(
                             config_dict), file=sys.stderr)
                         continue
-                    import_config_pck(mlist, config_dict)
+                    try:
+                        import_config_pck(mlist, config_dict)
+                    except Import21Error as error:
+                        print(error, file=sys.stderr)
+                        sys.exit(1)

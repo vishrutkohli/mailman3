@@ -42,5 +42,6 @@ class ITemplateLoader(Interface):
         :param uri: The URI of the resource.  These may be any URI supported
             by `urllib2` and also `mailman:` URIs for internal resources.
         :type uri: string
-        :return: An open file object as defined by urllib2.
+        :return: The template string as a unicode.
+        :rtype: str
         """
