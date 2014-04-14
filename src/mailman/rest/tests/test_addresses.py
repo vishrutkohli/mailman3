@@ -135,6 +135,18 @@ class TestAddresses(unittest.TestCase):
         self.assertEqual(cm.exception.reason, 'Address already exists: '
                          'anne@example.com')
 
+    def test_invalid_address_bad_request(self):
+        # Posting an invalid address string returns 400.
+        with transaction():
+            anne = getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/'
+                     'anne@example.com/addresses', {
+                     'email': 'invalid_address_string'
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Invalid email address')
+
     def test_empty_address_bad_request(self):
         # Posting no address returns 400.
         with transaction():
