@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2012-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -34,6 +34,7 @@ from zope.interface import implementer
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.archiver import IArchiver
+from mailman.interfaces.mailinglist import IListArchiverSet
 from mailman.runners.archive import ArchiveRunner
 from mailman.testing.helpers import (
     configuration,
@@ -99,6 +100,7 @@ X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
 First post!
 """)
         self._runner = make_testable_runner(ArchiveRunner)
+        IListArchiverSet(self._mlist).get('dummy').is_enabled = True
 
     def tearDown(self):
         config.pop('dummy')
@@ -237,3 +239,16 @@ First post!
         self.assertEqual(archived['message-id'], '<first>')
         self.assertEqual(archived['date'], 'Mon, 01 Aug 2005 07:49:23 +0000')
         self.assertEqual(archived['x-original-date'], None)
+
+    @configuration('archiver.dummy', enable='yes')
+    def test_disable_all_list_archivers(self):
+        # Let's disable all the archivers for the mailing list, but not the
+        # global archivers.  No messages will get archived.
+        for archiver in IListArchiverSet(self._mlist).archivers:
+            archiver.is_enabled = False
+        config.db.store.commit()
+        self._archiveq.enqueue(
+            self._msg, {},
+            listname=self._mlist.fqdn_listname)
+        self._runner.run()
+        self.assertEqual(os.listdir(config.MESSAGES_DIR), [])

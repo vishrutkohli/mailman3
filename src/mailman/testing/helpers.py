@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2008-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -46,6 +46,7 @@ import mock
 import time
 import uuid
 import errno
+import shutil
 import signal
 import socket
 import logging
@@ -326,6 +327,8 @@ def call_api(url, data=None, method=None, username=None, password=None):
         else:
             method = 'POST'
     method = method.upper()
+    if method in ('POST', 'PUT', 'PATCH') and data is None:
+        data = urlencode({}, doseq=True)
     basic_auth = '{0}:{1}'.format(
         (config.webservice.admin_user if username is None else username),
         (config.webservice.admin_pass if password is None else password))
@@ -478,6 +481,11 @@ def reset_the_world():
     with transaction():
         for message in message_store.messages:
             message_store.delete_message(message['message-id'])
+    # Delete any other residual messages.
+    for dirpath, dirnames, filenames in os.walk(config.MESSAGES_DIR):
+        for filename in filenames:
+            os.remove(os.path.join(dirpath, filename))
+        shutil.rmtree(dirpath)
     # Reset the global style manager.
     getUtility(IStyleManager).populate()
     # Remove all dynamic header-match rules.

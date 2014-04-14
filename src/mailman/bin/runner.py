@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2001-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -160,7 +160,7 @@ def main():
         help=_('List the available runner names and exit.'))
     parser.add_argument(
         '-v', '--verbose',
-        default=False, action='store_true', help=_("""\
+        default=None, action='store_true', help=_("""\
         Display more debugging information to the log file."""))
 
     args = parser.parse_args()

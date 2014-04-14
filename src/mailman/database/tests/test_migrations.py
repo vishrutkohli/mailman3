@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2012-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -36,6 +36,7 @@ import unittest
 from datetime import datetime
 from operator import attrgetter
 from pkg_resources import resource_string
+from sqlite3 import OperationalError
 from storm.exceptions import DatabaseError
 from zope.component import getUtility
 
@@ -64,6 +65,23 @@ class MigrationTestBase(unittest.TestCase):
 
     def tearDown(self):
         self._database._cleanup()
+
+    def _table_missing_present(self, migrations, missing, present):
+        """The appropriate migrations leave some tables missing and present.
+
+        :param migrations: Sequence of migrations to load.
+        :param missing: Tables which should be missing.
+        :param present: Tables which should be present.
+        """
+        for migration in migrations:
+            self._database.load_migrations(migration)
+            self._database.store.commit()
+        for table in missing:
+            self.assertRaises(OperationalError,
+                              self._database.store.execute,
+                              'select * from {};'.format(table))
+        for table in present:
+            self._database.store.execute('select * from {};'.format(table))
 
     def _missing_present(self, table, migrations, missing, present):
         """The appropriate migrations leave columns missing and present.
@@ -449,6 +467,15 @@ class TestMigration20130406Schema(MigrationTestBase):
                                '20130406000000'],
                               ('list_name',),
                               ('list_id',))
+
+    def test_pre_listarchiver_table(self):
+        self._table_missing_present(['20130405999999'], ('listarchiver',), ())
+
+    def test_post_listarchiver_table(self):
+        self._table_missing_present(['20130405999999',
+                                     '20130406000000'],
+                                     (),
+                                     ('listarchiver',))
 
 
 

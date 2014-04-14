@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2008-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -52,6 +52,7 @@ class Prototype:
     """
 
     name = 'prototype'
+    is_enabled = False
 
     @staticmethod
     def list_url(mlist):
@@ -77,7 +78,7 @@ class Prototype:
         """
         archive_dir = os.path.join(config.ARCHIVE_DIR, 'prototype')
         try:
-            os.makedirs(archive_dir, 0775)
+            os.makedirs(archive_dir, 0o775)
         except OSError as error:
             # If this already exists, then we're fine
             if error.errno != errno.EEXIST:
@@ -90,7 +91,6 @@ class Prototype:
         mailbox = Maildir(list_dir, create=True, factory=None)
         lock_file = os.path.join(
             config.LOCK_DIR, '{0}-maildir.lock'.format(mlist.fqdn_listname))
-
         # Lock the maildir as Maildir.add() is not threadsafe.  Don't use the
         # context manager because it's not an error if we can't acquire the
         # archiver lock.  We'll just log the problem and continue.

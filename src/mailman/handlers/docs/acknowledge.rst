@@ -10,6 +10,7 @@ acknowledgment.
     >>> mlist = create_list('test@example.com')
     >>> mlist.display_name = 'Test'
     >>> mlist.preferred_language = 'en'
+    >>> mlist.send_welcome_message = False
     >>> # XXX This will almost certainly change once we've worked out the web
     >>> # space layout for mailing lists now.
 

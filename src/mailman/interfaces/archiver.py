@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2008-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -50,6 +50,8 @@ class IArchiver(Interface):
     """An interface to the archiver."""
 
     name = Attribute('The name of this archiver')
+    is_enabled = Attribute(
+        'A flag indicating whether this archiver is enabled site-wide.')
 
     def list_url(mlist):
         """Return the url to the top of the list's archive.

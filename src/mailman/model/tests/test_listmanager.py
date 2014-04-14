@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2011-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -17,10 +17,13 @@
 
 """Test the ListManager."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestListCreation',
+    'TestListLifecycleEvents',
+    'TestListManager',
     ]
 
 
@@ -133,8 +136,8 @@ Message-ID: <argon>
         # must be deleted first or an IntegrityError will be raised.
         filter_names = ('filter_types', 'pass_types',
                         'filter_extensions', 'pass_extensions')
-        for fname in filter_names:
-            setattr(self._ant, fname, ['test-filter-1', 'test-filter-2'])
+        for name in filter_names:
+            setattr(self._ant, name, ['test-filter-1', 'test-filter-2'])
         getUtility(IListManager).delete(self._ant)
         store = Store.of(self._ant)
         filters = store.find(ContentFilter,

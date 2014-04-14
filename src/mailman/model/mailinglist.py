@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2006-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -47,8 +47,8 @@ from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.mailinglist import (
-    IAcceptableAlias, IAcceptableAliasSet, IMailingList, Personalization,
-    ReplyToMunging)
+    IAcceptableAlias, IAcceptableAliasSet, IListArchiver, IListArchiverSet,
+    IMailingList, Personalization, ReplyToMunging)
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError,
     SubscriptionEvent)
@@ -539,3 +539,69 @@ class AcceptableAliasSet:
             AcceptableAlias.mailing_list == self._mailing_list)
         for alias in aliases:
             yield alias.alias
+
+
+
+@implementer(IListArchiver)
+class ListArchiver(Model):
+    """See `IListArchiver`."""
+
+    id = Int(primary=True)
+
+    mailing_list_id = Int()
+    mailing_list = Reference(mailing_list_id, MailingList.id)
+    name = Unicode()
+    _is_enabled = Bool()
+
+    def __init__(self, mailing_list, archiver_name, system_archiver):
+        self.mailing_list = mailing_list
+        self.name = archiver_name
+        self._is_enabled = system_archiver.is_enabled
+
+    @property
+    def system_archiver(self):
+        for archiver in config.archivers:
+            if archiver.name == self.name:
+                return archiver
+        return None
+
+    @property
+    def is_enabled(self):
+        return self.system_archiver.is_enabled and self._is_enabled
+
+    @is_enabled.setter
+    def is_enabled(self, value):
+        self._is_enabled = value
+
+
+@implementer(IListArchiverSet)
+class ListArchiverSet:
+    def __init__(self, mailing_list):
+        self._mailing_list = mailing_list
+        system_archivers = {}
+        for archiver in config.archivers:
+            system_archivers[archiver.name] = archiver
+        # Add any system enabled archivers which aren't already associated
+        # with the mailing list.
+        store = Store.of(self._mailing_list)
+        for archiver_name in system_archivers:
+            exists = store.find(
+                ListArchiver,
+                And(ListArchiver.mailing_list == mailing_list,
+                    ListArchiver.name == archiver_name)).one()
+            if exists is None:
+                store.add(ListArchiver(mailing_list, archiver_name,
+                                       system_archivers[archiver_name]))
+
+    @property
+    def archivers(self):
+        entries = Store.of(self._mailing_list).find(
+            ListArchiver, ListArchiver.mailing_list == self._mailing_list)
+        for entry in entries:
+            yield entry
+
+    def get(self, archiver_name):
+        return Store.of(self._mailing_list).find(
+            ListArchiver,
+            And(ListArchiver.mailing_list == self._mailing_list,
+                ListArchiver.name == archiver_name)).one()

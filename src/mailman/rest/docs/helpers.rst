@@ -27,6 +27,7 @@ be set in the configuration file.
     ... use_https: yes
     ... api_version: 4.2
     ... """)
+    >>> cleanups.append((config.pop, 'helpers'))
 
     >>> print path_to('system')
     https://geddy:2112/4.2/system

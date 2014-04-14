@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2010-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -17,7 +17,7 @@
 
 """Basic WSGI Application object for REST server."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [

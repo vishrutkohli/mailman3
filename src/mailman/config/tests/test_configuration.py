@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2012-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -22,19 +22,22 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'TestConfiguration',
+    'TestConfigurationErrors',
     'TestExternal',
     ]
 
 
+import os
+import tempfile
 import unittest
 
-from pkg_resources import resource_filename
-
-from mailman.config.config import external_configuration, load_external
+from mailman.config.config import (
+    Configuration, external_configuration, load_external)
 from mailman.interfaces.configuration import (
     ConfigurationUpdatedEvent, MissingConfigurationFileError)
 from mailman.testing.helpers import configuration, event_subscribers
 from mailman.testing.layers import ConfigLayer
+from pkg_resources import resource_filename
 
 
 
@@ -99,3 +102,41 @@ class TestExternal(unittest.TestCase):
         with self.assertRaises(MissingConfigurationFileError) as cm:
             external_configuration('path:mailman.config.missing')
         self.assertEqual(cm.exception.path, 'path:mailman.config.missing')
+
+
+
+class TestConfigurationErrors(unittest.TestCase):
+    layer = ConfigLayer
+
+    def test_bad_path_layout_specifier(self):
+        # Using a [mailman]layout name that doesn't exist is a fatal error.
+        fd, filename = tempfile.mkstemp()
+        self.addCleanup(os.remove, filename)
+        os.close(fd)
+        with open(filename, 'w') as fp:
+            print("""\
+[mailman]
+layout: nonesuch
+""", file=fp)
+        # Use a fake sys.exit() function that records that it was called, and
+        # that prevents further processing.
+        config = Configuration()
+        with self.assertRaises(SystemExit) as cm:
+            config.load(filename)
+        self.assertEqual(cm.exception.args, (1,))
+
+    def test_path_expansion_infloop(self):
+        # A path expansion never completes because it references a
+        # non-existent substitution variable.
+        fd, filename = tempfile.mkstemp()
+        self.addCleanup(os.remove, filename)
+        os.close(fd)
+        with open(filename, 'w') as fp:
+            print("""\
+[paths.dev]
+log_dir: $nopath/log_dir
+""", file=fp)
+        config = Configuration()
+        with self.assertRaises(SystemExit) as cm:
+            config.load(filename)
+        self.assertEqual(cm.exception.args, (1,))

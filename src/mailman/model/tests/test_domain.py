@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2011-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -21,6 +21,8 @@ from __future__ import absolute_import, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestDomainLifecycleEvents',
+    'TestDomainManager',
     ]
 
 

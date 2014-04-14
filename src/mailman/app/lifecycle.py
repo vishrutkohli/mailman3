@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2007-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -27,6 +27,7 @@ __all__ = [
 
 
 import os
+import errno
 import shutil
 import logging
 
@@ -98,27 +99,13 @@ def create_list(fqdn_listname, owners=None, style_name=None):
 def remove_list(mlist):
     """Remove the list and all associated artifacts and subscriptions."""
     fqdn_listname = mlist.fqdn_listname
-    removeables = []
     # Delete the mailing list from the database.
     getUtility(IListManager).delete(mlist)
     # Do the MTA-specific list deletion tasks
     call_name(config.mta.incoming).delete(mlist)
-    # Remove the list directory.
-    removeables.append(os.path.join(config.LIST_DATA_DIR, fqdn_listname))
-    # Remove any stale locks associated with the list.
-    for filename in os.listdir(config.LOCK_DIR):
-        fn_listname, dot, rest = filename.partition('.')
-        if fn_listname == fqdn_listname:
-            removeables.append(os.path.join(config.LOCK_DIR, filename))
-    # Now that we know what files and directories to delete, delete them.
-    for target in removeables:
-        if not os.path.exists(target):
-            pass
-        elif os.path.islink(target):
-            os.unlink(target)
-        elif os.path.isdir(target):
-            shutil.rmtree(target)
-        elif os.path.isfile(target):
-            os.unlink(target)
-        else:
-            log.error('Could not delete list artifact: %s', target)
+    # Remove the list directory, if it exists.
+    try:
+        shutil.rmtree(os.path.join(config.LIST_DATA_DIR, fqdn_listname))
+    except OSError as error:
+        if error.errno != errno.ENOENT:
+            raise

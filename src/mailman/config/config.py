@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2006-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -249,18 +249,14 @@ class Configuration:
 
     @property
     def archivers(self):
-        """Iterate over all the enabled archivers."""
+        """Iterate over all the archivers."""
         for section in self._config.getByCategory('archiver', []):
-            if not as_boolean(section.enable):
+            class_path = section['class'].strip()
+            if len(class_path) == 0:
                 continue
-            class_path = section['class']
-            yield call_name(class_path)
-
-    @property
-    def style_configs(self):
-        """Iterate over all the style configuration sections."""
-        for section in self._config.getByCategory('style', []):
-            yield section
+            archiver = call_name(class_path)
+            archiver.is_enabled = as_boolean(section.enable)
+            yield archiver
 
     @property
     def language_configs(self):

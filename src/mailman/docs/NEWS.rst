@@ -2,7 +2,7 @@
 Mailman - The GNU Mailing List Management System
 ================================================
 
-Copyright (C) 1998-2013 by the Free Software Foundation, Inc.
+Copyright (C) 1998-2014 by the Free Software Foundation, Inc.
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 
 Here is a history of user visible changes to Mailman.
@@ -10,7 +10,7 @@ Here is a history of user visible changes to Mailman.
 
 3.0 beta 4 -- "Time and Motion"
 ===============================
-(2013-XX-XX)
+(2014-XX-XX)
 
 Development
 -----------
@@ -28,6 +28,8 @@ REST
    Given by Florian Fuchs.  (LP: #1156529)
  * Expose ``hide_address`` to the ``.../preferences`` REST API.  Contributed
    by Sneha Priscilla.
+ * Mailing lists can now individually enable or disable any archiver available
+   site-wide.  Contributed by Joanna Skrzeszewska.  (LP: #1158040)
 
 Commands
 --------
@@ -37,6 +39,7 @@ Commands
 
 Configuration
 -------------
+ * Add support for the Exim 4 MTA.  Contributed by Stephen Turnbull.
  * When creating the initial file system layout in ``var``, e.g. via
    ``bin/mailman info``, add an ``var/etc/mailman.cfg`` file if one does not
    already exist.  Also, when initializing the system, look for that file as
@@ -47,6 +50,7 @@ Database
 --------
  * The `bounceevent` table now uses list-ids to cross-reference the mailing
    list, to match other tables.  Similarly for the `IBounceEvent` interface.
+ * Added a `listarchiver` table to support list-specific archivers.
 
 Bugs
 ----
@@ -60,6 +64,11 @@ Bugs
    docstring for `display_name`.  (LP: #1181498)
  * Fix importation from MM2.1 to MM3 of the archive policy.  Given by Aurélien
    Bompard. (LP: #1227658)
+ * Fix non-member moderation rule to prefer a member sender if both members
+   and non-members are in the message's sender list.  Given by Aurélien
+   Bompard.  (LP: #1291452)
+ * Fix IntegrityError (against PostgreSQL) when deleting a list with content
+   filters.  Given by Aurélien Bompard.  (LP: #1117174)
 
 
 3.0 beta 3 -- "Here Again"

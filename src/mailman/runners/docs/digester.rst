@@ -10,6 +10,7 @@ starts by a number of messages being posted to the mailing list.
     >>> mlist.digest_size_threshold = 0.6
     >>> mlist.volume = 1
     >>> mlist.next_digest_number = 1
+    >>> mlist.send_welcome_message = False
 
     >>> from string import Template
     >>> process = config.handlers['to-digest'].process

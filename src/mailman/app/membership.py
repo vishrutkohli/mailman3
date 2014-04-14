@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2007-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -17,26 +17,28 @@
 
 """Application support for membership management."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
     'add_member',
     'delete_member',
+    'handle_SubscriptionEvent',
     ]
 
 
 from email.utils import formataddr
 from zope.component import getUtility
 
-from mailman.app.notifications import send_goodbye_message
+from mailman.app.notifications import (
+    send_goodbye_message, send_welcome_message)
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification
 from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
-    MemberRole, MembershipIsBannedError, NotAMemberError)
+    MemberRole, MembershipIsBannedError, NotAMemberError, SubscriptionEvent)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.i18n import make
 
@@ -156,3 +158,19 @@ def delete_member(mlist, email, admin_notif=None, userack=None):
         msg = OwnerNotification(mlist, subject, text,
                                 roster=mlist.administrators)
         msg.send(mlist)
+
+
+
+def handle_SubscriptionEvent(event):
+    if not isinstance(event, SubscriptionEvent):
+        return
+    # Only send a notification message if the mailing list is configured to do
+    # so, and the member being added is a list member (as opposed to a
+    # moderator, non-member, or owner).
+    member = event.member
+    if member.role is not MemberRole.member:
+        return
+    mlist = member.mailing_list
+    if not mlist.send_welcome_message:
+        return
+    send_welcome_message(mlist, member, member.preferred_language)

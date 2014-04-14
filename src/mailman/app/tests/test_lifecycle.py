@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2012-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -25,11 +25,14 @@ __all__ = [
     ]
 
 
+import os
+import shutil
 import unittest
 
+from mailman.config import config
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.domain import BadDomainSpecificationError
-from mailman.app.lifecycle import create_list
+from mailman.app.lifecycle import create_list, remove_list
 from mailman.testing.layers import ConfigLayer
 
 
@@ -48,3 +51,12 @@ class TestLifecycle(unittest.TestCase):
         # Creating a list with an unregistered domain raises an exception.
         self.assertRaises(BadDomainSpecificationError,
                      create_list, 'test@nodomain.example.org')
+
+    def test_remove_list_error(self):
+        # An error occurs while deleting the list's data directory.
+        mlist = create_list('test@example.com')
+        data_dir = os.path.join(config.LIST_DATA_DIR, mlist.fqdn_listname)
+        os.chmod(data_dir, 0)
+        self.addCleanup(shutil.rmtree, data_dir)
+        self.assertRaises(OSError, remove_list, mlist)
+        os.chmod(data_dir, 0o777)

@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2007-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -136,7 +136,7 @@ class Member(Model):
                 if self._address is None
                 else getUtility(IUserManager).get_user(self._address.email))
 
-    def _lookup(self, preference):
+    def _lookup(self, preference, default=None):
         pref = getattr(self.preferences, preference)
         if pref is not None:
             return pref
@@ -147,7 +147,9 @@ class Member(Model):
             pref = getattr(self.address.user.preferences, preference)
             if pref is not None:
                 return pref
-        return getattr(system_preferences, preference)
+        if default is None:
+            return getattr(system_preferences, preference)
+        return default
 
     @property
     def acknowledge_posts(self):
@@ -157,7 +159,13 @@ class Member(Model):
     @property
     def preferred_language(self):
         """See `IMember`."""
-        return self._lookup('preferred_language')
+        missing = object()
+        language = self._lookup('preferred_language', missing)
+        if language is missing:
+            language = ((self.mailing_list and
+                         self.mailing_list.preferred_language) or
+                        system_preferences.preferred_language)
+        return language
 
     @property
     def receive_list_copy(self):

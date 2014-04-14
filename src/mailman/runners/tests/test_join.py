@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2012-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -52,6 +52,7 @@ class TestJoin(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._commandq = config.switchboards['command']
         self._runner = make_testable_runner(CommandRunner, 'command')
 

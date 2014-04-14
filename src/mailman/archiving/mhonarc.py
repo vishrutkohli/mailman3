@@ -1,4 +1,4 @@
-# Copyright (C) 2008-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2008-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -46,6 +46,7 @@ class MHonArc:
     """Local MHonArc archiver."""
 
     name = 'mhonarc'
+    is_enabled = False
 
     def __init__(self):
         # Read our specific configuration file

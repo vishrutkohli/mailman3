@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2011-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -198,6 +198,7 @@ class TestSendProbe(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._member = add_member(self._mlist, 'anne@example.com',
                                   'Anne Person', 'xxx',
                                   DeliveryMode.regular, 'en')
@@ -355,6 +356,7 @@ class TestProbe(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._member = add_member(self._mlist, 'anne@example.com',
                                   'Anne Person', 'xxx',
                                   DeliveryMode.regular, 'en')
@@ -395,6 +397,7 @@ class TestMaybeForward(unittest.TestCase):
         site_owner: postmaster@example.com
         """)
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._msg = mfs("""\
 From: bouncer@example.com
 To: test-bounces@example.com

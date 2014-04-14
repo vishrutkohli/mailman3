@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2011-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -57,6 +57,7 @@ class TestBounceRunner(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.send_welcome_message = False
         self._bounceq = config.switchboards['bounces']
         self._runner = make_testable_runner(BounceRunner, 'bounces')
         self._anne = getUtility(IUserManager).create_address(

@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2007-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -38,8 +38,7 @@ from email.utils import formataddr, formatdate, getaddresses, make_msgid
 from zope.component import getUtility
 
 from mailman.app.membership import add_member, delete_member
-from mailman.app.notifications import (
-    send_admin_subscription_notice, send_welcome_message)
+from mailman.app.notifications import send_admin_subscription_notice
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
@@ -259,8 +258,6 @@ def handle_subscription(mlist, id, action, comment=None):
             # request was made and accepted.
             pass
         else:
-            if mlist.send_welcome_message:
-                send_welcome_message(mlist, address, language, delivery_mode)
             if mlist.admin_notify_mchanges:
                 send_admin_subscription_notice(
                     mlist, address, display_name, language)

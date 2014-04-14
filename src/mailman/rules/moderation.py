@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2013 by the Free Software Foundation, Inc.
+# Copyright (C) 2007-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -87,6 +87,10 @@ class NonmemberModeration:
                 assert address is not None, (
                     'Posting address is not registered: {0}'.format(sender))
                 mlist.subscribe(address, MemberRole.nonmember)
+        ## # If a member is found, the member-moderation rule takes precedence.
+        for sender in msg.senders:
+            if mlist.members.get_member(sender) is not None:
+                return False
         # Do nonmember moderation check.
         for sender in msg.senders:
             nonmember = mlist.nonmembers.get_member(sender)
