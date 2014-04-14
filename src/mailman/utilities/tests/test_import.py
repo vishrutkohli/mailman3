@@ -33,15 +33,12 @@ import unittest
 from datetime import timedelta, datetime
 from enum import Enum
 from pkg_resources import resource_filename
-from storm.locals import Store
-from traceback import format_exc
 from zope.component import getUtility
 
-from mailman.app.lifecycle import create_list, remove_list
+from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.handlers.decorate import decorate
 from mailman.interfaces.action import Action, FilterAction
-from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.bans import IBanManager
@@ -52,7 +49,6 @@ from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.interfaces.usermanager import IUserManager
-from mailman.model.address import Address
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.importer import import_config_pck, Import21Error
@@ -81,9 +77,6 @@ class TestBasicImport(unittest.TestCase):
         pickle_file = resource_filename('mailman.testing', 'config.pck')
         with open(pickle_file) as fp:
             self._pckdict = cPickle.load(fp)
-
-    def tearDown(self):
-        remove_list(self._mlist)
 
     def _import(self):
         import_config_pck(self._mlist, self._pckdict)
@@ -307,9 +300,6 @@ class TestArchiveImport(unittest.TestCase):
         self._mlist = create_list('blank@example.com')
         self._mlist.archive_policy = DummyEnum.val
 
-    ## def tearDown(self):
-    ##     remove_list(self._mlist)
-
     def _do_test(self, pckdict, expected):
         import_config_pck(self._mlist, pckdict)
         self.assertEqual(self._mlist.archive_policy, expected)
@@ -361,9 +351,6 @@ class TestFilterActionImport(unittest.TestCase):
         self._mlist = create_list('blank@example.com')
         self._mlist.filter_action = DummyEnum.val
 
-    ## def tearDown(self):
-    ##     remove_list(self._mlist)
-
     def _do_test(self, original, expected):
         import_config_pck(self._mlist, dict(filter_action=original))
         self.assertEqual(self._mlist.filter_action, expected)
@@ -405,9 +392,6 @@ class TestMemberActionImport(unittest.TestCase):
             member_moderation_action=DummyEnum.val,
             generic_nonmember_action=DummyEnum.val,
             )
-
-    ## def tearDown(self):
-    ##     remove_list(self._mlist)
 
     def _do_test(self, expected):
         import_config_pck(self._mlist, self._pckdict)
@@ -472,9 +456,6 @@ class TestConvertToURI(unittest.TestCase):
             digest_footer='digest_footer_uri',
             )
         self._pckdict = dict()
-
-    ## def tearDown(self):
-    ##     remove_list(self._mlist)
 
     def test_text_to_uri(self):
         for oldvar, newvar in self._conf_mapping.items():
@@ -614,9 +595,6 @@ class TestRosterImport(unittest.TestCase):
             if code not in language_manager.codes:
                 language_manager.add(code, 'utf-8', code)
 
-    ## def tearDown(self):
-    ##     remove_list(self._mlist)
-
     def test_member(self):
         import_config_pck(self._mlist, self._pckdict)
         for name in ('anne', 'bob', 'cindy', 'dave'):
@@ -728,8 +706,8 @@ class TestRosterImport(unittest.TestCase):
     def test_address_already_exists_but_no_user(self):
         # An address already exists, but it is not linked to a user nor
         # subscribed.
-        anne_addr = Address('anne@example.com', 'Anne')
-        Store.of(self._mlist).add(anne_addr)
+        anne_addr = self._usermanager.create_address(
+            'anne@example.com', 'Anne')
         import_config_pck(self._mlist, self._pckdict)
         anne = self._usermanager.get_user('anne@example.com')
         self.assertTrue(anne.controls('anne@example.com'))
@@ -737,7 +715,8 @@ class TestRosterImport(unittest.TestCase):
 
     def test_address_already_subscribed_but_no_user(self):
         # An address is already subscribed, but it is not linked to a user.
-        anne_addr = Address('anne@example.com', 'Anne')
+        anne_addr = self._usermanager.create_address(
+            'anne@example.com', 'Anne')
         self._mlist.subscribe(anne_addr)
         import_config_pck(self._mlist, self._pckdict)
         anne = self._usermanager.get_user('anne@example.com')
@@ -759,9 +738,6 @@ class TestPreferencesImport(unittest.TestCase):
             delivery_status=dict(),
             )
         self._usermanager = getUtility(IUserManager)
-
-    ## def tearDown(self):
-    ##     remove_list(self._mlist)
 
     def _do_test(self, oldvalue, expected):
         self._pckdict['user_options']['anne@example.com'] = oldvalue
