@@ -180,7 +180,8 @@ class TestMembership(unittest.TestCase):
     def test_patch_nonexistent_member(self):
         # /members/<missing> PATCH returns 404
         with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/members/801', method='PATCH')
+            call_api('http://localhost:9001/3.0/members/801',
+                     {}, method='PATCH')
         self.assertEqual(cm.exception.code, 404)
 
     def test_patch_member_bogus_attribute(self):

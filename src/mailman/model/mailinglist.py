@@ -160,6 +160,7 @@ class MailingList(Model):
     max_num_recipients = Int()
     member_moderation_notice = Unicode()
     mime_is_default_digest = Bool()
+    # FIXME: There should be no moderator_password
     moderator_password = RawStr()
     newsgroup_moderation = Enum(NewsgroupModeration)
     nntp_prefix_subject_too = Bool()

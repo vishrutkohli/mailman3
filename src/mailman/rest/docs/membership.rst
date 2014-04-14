@@ -704,7 +704,7 @@ This can be done by PATCH'ing his member with the `delivery_mode` parameter.
 If a PATCH request changes no attributes, nothing happens.
 ::
 
-    >>> dump_json('http://localhost:9001/3.0/members/10', method='PATCH')
+    >>> dump_json('http://localhost:9001/3.0/members/10', {}, method='PATCH')
     content-length: 0
     date: ...
     server: ...

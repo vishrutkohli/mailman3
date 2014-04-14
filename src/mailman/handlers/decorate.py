@@ -22,6 +22,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Decorate',
+    'decorate',
+    'decorate_template',
     ]
 
 
@@ -105,9 +107,9 @@ def process(mlist, msg, msgdata):
         delsp = msg.get_param('delsp')
         # Save 'Content-Transfer-Encoding' header in case decoration fails.
         cte = msg.get('content-transfer-encoding')
-        # header/footer is now in unicode (2.2)
+        # header/footer is now in unicode.
         try:
-            oldpayload = unicode(msg.get_payload(decode=True), mcset)
+            oldpayload = msg.get_payload(decode=True).decode(mcset)
             del msg['content-transfer-encoding']
             frontsep = endsep = ''
             if header and not header.endswith('\n'):
@@ -201,7 +203,7 @@ def process(mlist, msg, msgdata):
 
 
 def decorate(mlist, uri, extradict=None):
-    """Expand the decoration template."""
+    """Expand the decoration template from its URI."""
     if uri is None:
         return ''
     # Get the decorator template.
@@ -211,6 +213,12 @@ def decorate(mlist, uri, extradict=None):
         language=mlist.preferred_language.code,
         ))
     template = loader.get(template_uri)
+    return decorate_template(mlist, template, extradict)
+
+
+
+def decorate_template(mlist, template, extradict=None):
+    """Expand the decoration template."""
     # Create a dictionary which includes the default set of interpolation
     # variables allowed in headers and footers.  These will be augmented by
     # any key/value pairs in the extradict.

@@ -450,7 +450,7 @@ class IMailingList(Interface):
         that gets created to accumlate messages for the digest.
         """)
 
-    administrative = Attribute(
+    administrivia = Attribute(
         """Flag controlling `administrivia` checks.
 
         Administrivia tests check whether postings to the mailing list are
