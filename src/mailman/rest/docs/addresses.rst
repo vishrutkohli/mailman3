@@ -173,6 +173,59 @@ addresses live in the /addresses namespace.
     registered_on: 2005-08-01T07:49:23
     self_link: http://localhost:9001/3.0/addresses/dave@example.com
 
+A user can be associated with multiple email addresses.  You can add new
+addresses to an existing user.
+
+    >>> dump_json(
+    ...     'http://localhost:9001/3.0/users/dave@example.com/addresses', {
+    ...           'email': 'dave.person@example.org'
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/addresses/dave.person@example.org
+    server: ...
+    status: 201
+
+When you add the new address, you can give it an optional display name.
+
+    >>> dump_json(
+    ...     'http://localhost:9001/3.0/users/dave@example.com/addresses', {
+    ...           'email': 'dp@example.org',
+    ...           'display_name': 'Davie P',
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/addresses/dp@example.org
+    server: ...
+    status: 201
+
+The user controls these new addresses.
+
+    >>> dump_json('http://localhost:9001/3.0/users/dave@example.com/addresses')
+    entry 0:
+        email: dave.person@example.org
+        http_etag: "..."
+        original_email: dave.person@example.org
+        registered_on: 2005-08-01T07:49:23
+        self_link: http://localhost:9001/3.0/addresses/dave.person@example.org
+    entry 1:
+        display_name: Dave Person
+        email: dave@example.com
+        http_etag: "..."
+        original_email: dave@example.com
+        registered_on: 2005-08-01T07:49:23
+        self_link: http://localhost:9001/3.0/addresses/dave@example.com
+    entry 2:
+        display_name: Davie P
+        email: dp@example.org
+        http_etag: "..."
+        original_email: dp@example.org
+        registered_on: 2005-08-01T07:49:23
+        self_link: http://localhost:9001/3.0/addresses/dp@example.org
+    http_etag: "..."
+    start: 0
+    total_size: 3
+
 
 Memberships
 ===========
