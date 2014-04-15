@@ -109,3 +109,86 @@ class TestAddresses(unittest.TestCase):
             call_api('http://localhost:9001/3.0/addresses/'
                      'anne@example.com/unverify/foo', {})
         self.assertEqual(cm.exception.code, 400)
+
+    def test_address_added_to_user(self):
+        # Address is added to a user record.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com')
+        response, content = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com/addresses', {
+                'email': 'anne.person@example.org',
+                })
+        self.assertIn('anne.person@example.org',
+                      [addr.email for addr in anne.addresses])
+        self.assertEqual(content['status'], '201')
+        self.assertEqual(
+            content['location'],
+            'http://localhost:9001/3.0/addresses/anne.person@example.org')
+        # The address has no display name.
+        anne_person = user_manager.get_address('anne.person@example.org')
+        self.assertEqual(anne_person.display_name, '')
+
+    def test_address_and_display_name_added_to_user(self):
+        # Address with a display name is added to the user record.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com')
+        response, content = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com/addresses', {
+                'email': 'anne.person@example.org',
+                'display_name': 'Ann E Person',
+                })
+        self.assertIn('anne.person@example.org',
+                      [addr.email for addr in anne.addresses])
+        self.assertEqual(content['status'], '201')
+        self.assertEqual(
+            content['location'],
+            'http://localhost:9001/3.0/addresses/anne.person@example.org')
+        # The address has no display name.
+        anne_person = user_manager.get_address('anne.person@example.org')
+        self.assertEqual(anne_person.display_name, 'Ann E Person')
+
+    def test_existing_address_bad_request(self):
+        # Trying to add an existing address returns 400.
+        with transaction():
+            getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/addresses', {
+                     'email': 'anne@example.com',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Address already exists')
+
+    def test_invalid_address_bad_request(self):
+        # Trying to add an invalid address string returns 400.
+        with transaction():
+            getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/addresses', {
+                     'email': 'invalid_address_string'
+                     })
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Invalid email address')
+
+    def test_empty_address_bad_request(self):
+        # The address is required.
+        with transaction():
+            getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/addresses',
+                {})
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason, 'Missing parameters: email')
+
+    def test_add_address_to_missing_user(self):
+        # The user that the address is being added to must exist.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/addresses', {
+                    'email': 'anne.person@example.org',
+                    })
+        self.assertEqual(cm.exception.code, 404)

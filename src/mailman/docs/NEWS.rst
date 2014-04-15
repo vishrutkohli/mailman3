@@ -30,6 +30,8 @@ REST
    [Sneha Priscilla.]
  * Mailing lists can now individually enable or disable any archiver available
    site-wide.  [Joanna Skrzeszewska]  (LP: #1158040)
+ * Addresses can be added to existing users, including display names, via the
+   REST API.  [Florian Fuchs]
 
 Commands
 --------

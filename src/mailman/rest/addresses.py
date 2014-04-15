@@ -31,10 +31,13 @@ from operator import attrgetter
 from restish import http, resource
 from zope.component import getUtility
 
+from mailman.interfaces.address import (
+    ExistingAddressError, InvalidEmailAddressError)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
 from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
-from mailman.interfaces.usermanager import IUserManager
+from mailman.rest.validator import Validator
 from mailman.utilities.datetime import now
 
 
@@ -173,6 +176,32 @@ class UserAddresses(_AddressBase):
         """/addresses"""
         resource = self._make_collection(request)
         return http.ok([], etag(resource))
+
+    @resource.POST()
+    def create(self, request):
+        """POST to /addresses
+
+        Add a new address to the user record.
+        """
+        if self._user is None:
+            return http.not_found()
+        user_manager = getUtility(IUserManager)
+        validator = Validator(email=unicode,
+                              display_name=unicode,
+                              _optional=('display_name',))
+        try:
+            address = user_manager.create_address(**validator(request))
+        except ValueError as error:
+            return http.bad_request([], str(error))
+        except InvalidEmailAddressError:
+            return http.bad_request([], b'Invalid email address')
+        except ExistingAddressError:
+            return http.bad_request([], b'Address already exists')
+        else:
+            # Link the address to the current user and return it.
+            address.user = self._user
+            location = path_to('addresses/{0}'.format(address.email))
+            return http.created(location, [], None)
 
 
 

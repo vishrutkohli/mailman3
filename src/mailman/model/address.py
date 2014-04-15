@@ -27,11 +27,13 @@ __all__ = [
 
 from email.utils import formataddr
 from storm.locals import DateTime, Int, Reference, Unicode
+from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
 
 from mailman.database.model import Model
-from mailman.interfaces.address import AddressVerificationEvent, IAddress
+from mailman.interfaces.address import (
+    AddressVerificationEvent, IAddress, IEmailValidator)
 from mailman.utilities.datetime import now
 
 
@@ -54,6 +56,7 @@ class Address(Model):
 
     def __init__(self, email, display_name):
         super(Address, self).__init__()
+        getUtility(IEmailValidator).validate(email)
         lower_case = email.lower()
         self.email = lower_case
         self.display_name = display_name
