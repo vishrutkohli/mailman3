@@ -37,7 +37,6 @@ from mailman.app.membership import add_member, delete_member
 from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection
-from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.listmanager import (
     IListManager, ListDeletingEvent, NoSuchListError)
 from mailman.interfaces.member import DeliveryMode, MemberRole
@@ -152,10 +151,6 @@ class SubscriptionService:
             raise NoSuchListError(list_id)
         # Is the subscriber an email address or user id?
         if isinstance(subscriber, basestring):
-            # It's an email address, so we'll want a real name.  Make sure
-            # it's a valid email address, and let InvalidEmailAddressError
-            # propagate up.
-            getUtility(IEmailValidator).validate(subscriber)
             if display_name is None:
                 display_name, at, domain = subscriber.partition('@')
             # Because we want to keep the REST API simple, there is no

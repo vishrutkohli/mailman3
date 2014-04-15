@@ -35,7 +35,6 @@ from mailman.app.notifications import (
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification
-from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
     MemberRole, MembershipIsBannedError, NotAMemberError, SubscriptionEvent)
@@ -72,8 +71,6 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
     :raises InvalidEmailAddressError: if the email address is not valid.
     :raises MembershipIsBannedError: if the membership is not allowed.
     """
-    # Let's be extra cautious.
-    getUtility(IEmailValidator).validate(email)
     # Check to see if the email address is banned.
     if IBanManager(mlist).is_banned(email):
         raise MembershipIsBannedError(mlist, email)
