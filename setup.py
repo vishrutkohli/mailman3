@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-from distribute_setup import use_setuptools
-use_setuptools()
+# Do *not* import unicode_literals.  This breaks setuptools.
+from __future__ import absolute_import, print_function
 
 import re
 import sys
@@ -25,7 +25,7 @@ from setuptools import setup, find_packages
 from string import Template
 
 if sys.hexversion < 0x20700f0:
-    print 'Mailman requires at least Python 2.7'
+    print('Mailman requires at least Python 2.7')
     sys.exit(1)
 
 
@@ -37,7 +37,7 @@ with open('src/mailman/version.py') as fp:
             __version__ = mo.group('version')
             break
     else:
-        print 'No version number found'
+        print('No version number found')
         sys.exit(1)
 
 

@@ -19,6 +19,7 @@ Development
    how to build Mailman and run the test suite.  Also, use ``-P`` to select a
    test pattern and ``-E`` to enable stderr debugging in runners.
  * Use the ``enum34`` package instead of ``flufl.enum``.
+ * Use ``setuptools`` instead of ``distribute``, since the latter is defunct.
 
 REST
 ----
