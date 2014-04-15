@@ -33,6 +33,12 @@ REST
    site-wide.  [Joanna Skrzeszewska]  (LP: #1158040)
  * Addresses can be added to existing users, including display names, via the
    REST API.  [Florian Fuchs]
+ * Fixed a crash in the REST server when searching for nonmembers via
+   ``/find`` which we've never seen before, because those members only have an
+   address record, not a user record.  This requires a small change in the API
+   where the JSON response's ``address`` key now contains the URL to the
+   address resource, the new ``email`` key contains the email address as a
+   string, and the ``user`` key is optional.
 
 Commands
 --------

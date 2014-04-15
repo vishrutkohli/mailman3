@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'TestMembership',
+    'TestNonmembership',
     ]
 
 
@@ -34,8 +35,11 @@ from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
-from mailman.testing.helpers import call_api
-from mailman.testing.layers import RESTLayer
+from mailman.testing.helpers import (
+    TestableMaster, call_api, get_lmtp_client, make_testable_runner,
+    wait_for_webservice)
+from mailman.runners.incoming import IncomingRunner
+from mailman.testing.layers import ConfigLayer, RESTLayer
 from mailman.utilities.datetime import now
 
 
@@ -144,7 +148,10 @@ class TestMembership(unittest.TestCase):
                          'http://localhost:9001/3.0/members/1')
         self.assertEqual(entry_0['role'], 'member')
         self.assertEqual(entry_0['user'], 'http://localhost:9001/3.0/users/1')
-        self.assertEqual(entry_0['address'], 'anne@example.com')
+        self.assertEqual(entry_0['email'], 'anne@example.com')
+        self.assertEqual(
+            entry_0['address'],
+            'http://localhost:9001/3.0/addresses/anne@example.com')
         self.assertEqual(entry_0['list_id'], 'test.example.com')
 
     def test_member_changes_preferred_address(self):
@@ -158,7 +165,10 @@ class TestMembership(unittest.TestCase):
         content, response = call_api('http://localhost:9001/3.0/members')
         self.assertEqual(int(content['total_size']), 1)
         entry_0 = content['entries'][0]
-        self.assertEqual(entry_0['address'], 'anne@example.com')
+        self.assertEqual(entry_0['email'], 'anne@example.com')
+        self.assertEqual(
+            entry_0['address'],
+            'http://localhost:9001/3.0/addresses/anne@example.com')
         # Anne registers a new address and makes it her preferred address.
         # There are no changes to her membership.
         with transaction():
@@ -169,7 +179,10 @@ class TestMembership(unittest.TestCase):
         content, response = call_api('http://localhost:9001/3.0/members')
         self.assertEqual(int(content['total_size']), 1)
         entry_0 = content['entries'][0]
-        self.assertEqual(entry_0['address'], 'aperson@example.com')
+        self.assertEqual(entry_0['email'], 'aperson@example.com')
+        self.assertEqual(
+            entry_0['address'],
+            'http://localhost:9001/3.0/addresses/aperson@example.com')
 
     def test_get_nonexistent_member(self):
         # /members/<bogus> returns 404
@@ -202,3 +215,109 @@ class TestMembership(unittest.TestCase):
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/1/all')
         self.assertEqual(cm.exception.code, 404)
+
+
+
+class CustomLayer(ConfigLayer):
+    """Custom layer which starts both the REST and LMTP servers."""
+
+    server = None
+    client = None
+
+    @classmethod
+    def _wait_for_both(cls):
+        cls.client = get_lmtp_client(quiet=True)
+        wait_for_webservice()
+
+    @classmethod
+    def setUp(cls):
+        assert cls.server is None, 'Layer already set up'
+        cls.server = TestableMaster(cls._wait_for_both)
+        cls.server.start('lmtp', 'rest')
+
+    @classmethod
+    def tearDown(cls):
+        assert cls.server is not None, 'Layer is not set up'
+        cls.server.stop()
+        cls.server = None
+
+
+class TestNonmembership(unittest.TestCase):
+    layer = CustomLayer
+
+    def setUp(self):
+        with transaction():
+            self._mlist = create_list('test@example.com')
+        self._usermanager = getUtility(IUserManager)
+
+    def _go(self, message):
+        lmtp = get_lmtp_client(quiet=True)
+        lmtp.lhlo('remote.example.org')
+        lmtp.sendmail('nonmember@example.com', ['test@example.com'], message)
+        lmtp.close()
+        # The message will now be sitting in the `in` queue.  Run the incoming
+        # runner once to process it, which should result in the nonmember
+        # showing up.
+        inq = make_testable_runner(IncomingRunner, 'in')
+        inq.run()
+
+    def test_nonmember_findable_after_posting(self):
+        # A nonmember we have never seen before posts a message to the mailing
+        # list.  They are findable through the /members/find API using a role
+        # of nonmember.
+        self._go("""\
+From: nonmember@example.com
+To: test@example.com
+Subject: Nonmember post
+Message-ID: <alpha>
+
+Some text.
+""")
+        # Now use the REST API to try to find the nonmember.
+        response, content = call_api(
+            'http://localhost:9001/3.0/members/find', {
+                #'list_id': 'test.example.com',
+                'role': 'nonmember',
+                })
+        self.assertEqual(response['total_size'], 1)
+        nonmember = response['entries'][0]
+        self.assertEqual(nonmember['role'], 'nonmember')
+        self.assertEqual(nonmember['email'], 'nonmember@example.com')
+        self.assertEqual(
+            nonmember['address'],
+            'http://localhost:9001/3.0/addresses/nonmember@example.com')
+        # There is no user key in the JSON data because there is no user
+        # record associated with the address record.
+        self.assertNotIn('user', nonmember)
+
+    def test_linked_nonmember_findable_after_posting(self):
+        # Like above, a nonmember posts a message to the mailing list.  In
+        # this case though, the nonmember already has a user record.  They are
+        # findable through the /members/find API using a role of nonmember.
+        with transaction():
+            self._usermanager.create_user('nonmember@example.com')
+        self._go("""\
+From: nonmember@example.com
+To: test@example.com
+Subject: Nonmember post
+Message-ID: <alpha>
+
+Some text.
+""")
+        # Now use the REST API to try to find the nonmember.
+        response, content = call_api(
+            'http://localhost:9001/3.0/members/find', {
+                #'list_id': 'test.example.com',
+                'role': 'nonmember',
+                })
+        self.assertEqual(response['total_size'], 1)
+        nonmember = response['entries'][0]
+        self.assertEqual(nonmember['role'], 'nonmember')
+        self.assertEqual(nonmember['email'], 'nonmember@example.com')
+        self.assertEqual(
+            nonmember['address'],
+            'http://localhost:9001/3.0/addresses/nonmember@example.com')
+        # There is a user key in the JSON data because the address had
+        # previously been linked to a user record.
+        self.assertEqual(nonmember['user'],
+                         'http://localhost:9001/3.0/users/1')

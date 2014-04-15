@@ -41,8 +41,9 @@ the REST interface.
     >>> subscribe(bee, 'Bart')
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
-        address: bperson@example.com
+        address: http://localhost:9001/3.0/addresses/bperson@example.com
         delivery_mode: regular
+        email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -55,8 +56,9 @@ the REST interface.
 Bart's specific membership can be accessed directly:
 
     >>> dump_json('http://localhost:9001/3.0/members/1')
-    address: bperson@example.com
+    address: http://localhost:9001/3.0/addresses/bperson@example.com
     delivery_mode: regular
+    email: bperson@example.com
     http_etag: ...
     list_id: bee.example.com
     role: member
@@ -69,16 +71,18 @@ the REST interface.
     >>> subscribe(bee, 'Cris')
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
-        address: bperson@example.com
+        address: http://localhost:9001/3.0/addresses/bperson@example.com
         delivery_mode: regular
+        email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
     entry 1:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -96,24 +100,27 @@ subscribes, she is returned first.
 
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
     entry 1:
-        address: bperson@example.com
+        address: http://localhost:9001/3.0/addresses/bperson@example.com
         delivery_mode: regular
+        email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
     entry 2:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -135,40 +142,45 @@ User ids are different than member ids.
 
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
     entry 1:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
     entry 2:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
     entry 3:
-        address: bperson@example.com
+        address: http://localhost:9001/3.0/addresses/bperson@example.com
         delivery_mode: regular
+        email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
     entry 4:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -183,16 +195,18 @@ We can also get just the members of a single mailing list.
     >>> dump_json(
     ...     'http://localhost:9001/3.0/lists/ant@example.com/roster/member')
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
     entry 1:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
@@ -215,8 +229,9 @@ page.
     ...     'http://localhost:9001/3.0/lists/ant@example.com/roster/member'
     ...     '?count=1&page=1')
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
@@ -231,8 +246,9 @@ This works with members of a single list as well as with all members.
     >>> dump_json(
     ...     'http://localhost:9001/3.0/members?count=1&page=1')
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
@@ -275,56 +291,63 @@ mailing list.
 
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
-        address: dperson@example.com
+        address: http://localhost:9001/3.0/addresses/dperson@example.com
         delivery_mode: regular
+        email: dperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: moderator
         self_link: http://localhost:9001/3.0/members/6
         user: http://localhost:9001/3.0/users/4
     entry 1:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
     entry 2:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
     entry 3:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: owner
         self_link: http://localhost:9001/3.0/members/7
         user: http://localhost:9001/3.0/users/2
     entry 4:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
     entry 5:
-        address: bperson@example.com
+        address: http://localhost:9001/3.0/addresses/bperson@example.com
         delivery_mode: regular
+        email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
     entry 6:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -339,8 +362,9 @@ We can access all the owners of a list.
     >>> dump_json(
     ...     'http://localhost:9001/3.0/lists/bee@example.com/roster/owner')
     entry 0:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: owner
@@ -358,8 +382,9 @@ A specific member can always be referenced by their role and address.
 
     >>> dump_json('http://localhost:9001/3.0/lists/'
     ...           'bee@example.com/owner/cperson@example.com')
-    address: cperson@example.com
+    address: http://localhost:9001/3.0/addresses/cperson@example.com
     delivery_mode: regular
+    email: cperson@example.com
     http_etag: ...
     list_id: bee.example.com
     role: owner
@@ -373,16 +398,18 @@ example, we can search for all the memberships of a particular address.
     ...           'subscriber': 'aperson@example.com',
     ...           })
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
     entry 1:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -398,32 +425,36 @@ Or, we can find all the memberships for a particular mailing list.
     ...           'list_id': 'bee.example.com',
     ...           })
     entry 0:
-        address: aperson@example.com
+        address: http://localhost:9001/3.0/addresses/aperson@example.com
         delivery_mode: regular
+        email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
     entry 1:
-        address: bperson@example.com
+        address: http://localhost:9001/3.0/addresses/bperson@example.com
         delivery_mode: regular
+        email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
     entry 2:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
     entry 3:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: owner
@@ -441,16 +472,18 @@ list.
     ...           'list_id': 'bee.example.com',
     ...           })
     entry 0:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
     entry 1:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: owner
@@ -467,16 +500,18 @@ Or, we can find all the memberships for an address with a specific role.
     ...           'role': 'member',
     ...           })
     entry 0:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
     entry 1:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -494,8 +529,9 @@ Finally, we can search for a specific member given all three criteria.
     ...           'role': 'member',
     ...           })
     entry 0:
-        address: cperson@example.com
+        address: http://localhost:9001/3.0/addresses/cperson@example.com
         delivery_mode: regular
+        email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
         role: member
@@ -542,8 +578,9 @@ Elly is now a known user, and a member of the mailing list.
     entry 0:
     ...
     entry 3:
-        address: eperson@example.com
+        address: http://localhost:9001/3.0/addresses/eperson@example.com
         delivery_mode: regular
+        email: eperson@example.com
         http_etag: ...
         list_id: ant.example.com
         role: member
@@ -583,8 +620,9 @@ list with her preferred address.
     entry 0:
     ...
     entry 4:
-        address: gwen@example.com
+        address: http://localhost:9001/3.0/addresses/gwen@example.com
         delivery_mode: regular
+        email: gwen@example.com
         http_etag: "..."
         list_id: ant.example.com
         role: member
@@ -606,8 +644,9 @@ the new address.
     entry 0:
     ...
     entry 4:
-        address: gwen.person@example.com
+        address: http://localhost:9001/3.0/addresses/gwen.person@example.com
         delivery_mode: regular
+        email: gwen.person@example.com
         http_etag: "..."
         list_id: ant.example.com
         role: member
@@ -671,8 +710,9 @@ Fred is getting MIME deliveries.
     DeliveryMode.mime_digests
 
     >>> dump_json('http://localhost:9001/3.0/members/10')
-    address: fperson@example.com
+    address: http://localhost:9001/3.0/addresses/fperson@example.com
     delivery_mode: mime_digests
+    email: fperson@example.com
     http_etag: "..."
     list_id: ant.example.com
     role: member
@@ -693,8 +733,9 @@ This can be done by PATCH'ing his member with the `delivery_mode` parameter.
     status: 204
 
     >>> dump_json('http://localhost:9001/3.0/members/10')
-    address: fperson@example.com
+    address: http://localhost:9001/3.0/addresses/fperson@example.com
     delivery_mode: regular
+    email: fperson@example.com
     http_etag: "..."
     list_id: ant.example.com
     role: member
@@ -711,8 +752,9 @@ If a PATCH request changes no attributes, nothing happens.
     status: 204
 
     >>> dump_json('http://localhost:9001/3.0/members/10')
-    address: fperson@example.com
+    address: http://localhost:9001/3.0/addresses/fperson@example.com
     delivery_mode: regular
+    email: fperson@example.com
     http_etag: "..."
     list_id: ant.example.com
     role: member
@@ -753,8 +795,9 @@ addresses.
     entry 0:
     ...
     entry 5:
-        address: herb@example.com
+        address: http://localhost:9001/3.0/addresses/herb@example.com
         delivery_mode: regular
+        email: herb@example.com
         http_etag: "..."
         list_id: ant.example.com
         role: member
@@ -762,8 +805,9 @@ addresses.
         user: http://localhost:9001/3.0/users/8
     ...
     entry 10:
-        address: herb@example.com
+        address: http://localhost:9001/3.0/addresses/herb@example.com
         delivery_mode: regular
+        email: herb@example.com
         http_etag: "..."
         list_id: bee.example.com
         role: member
@@ -818,16 +862,18 @@ his membership ids have not changed.
     >>> dump_json('http://localhost:9001/3.0/addresses/'
     ...           'hperson@example.com/memberships')
     entry 0:
-        address: hperson@example.com
+        address: http://localhost:9001/3.0/addresses/hperson@example.com
         delivery_mode: regular
+        email: hperson@example.com
         http_etag: "..."
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/11
         user: http://localhost:9001/3.0/users/8
     entry 1:
-        address: hperson@example.com
+        address: http://localhost:9001/3.0/addresses/hperson@example.com
         delivery_mode: regular
+        email: hperson@example.com
         http_etag: "..."
         list_id: bee.example.com
         role: member

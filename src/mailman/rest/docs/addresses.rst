@@ -261,16 +261,18 @@ Elle can get her memberships for each of her email addresses.
     >>> dump_json('http://localhost:9001/3.0/addresses/'
     ...           'elle@example.com/memberships')
     entry 0:
-        address: elle@example.com
+        address: http://localhost:9001/3.0/addresses/elle@example.com
         delivery_mode: regular
+        email: elle@example.com
         http_etag: "..."
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/2
     entry 1:
-        address: elle@example.com
+        address: http://localhost:9001/3.0/addresses/elle@example.com
         delivery_mode: regular
+        email: elle@example.com
         http_etag: "..."
         list_id: bee.example.com
         role: member
@@ -298,16 +300,18 @@ does not show up in the list of memberships for his other address.
     >>> dump_json('http://localhost:9001/3.0/addresses/'
     ...           'elle@example.com/memberships')
     entry 0:
-        address: elle@example.com
+        address: http://localhost:9001/3.0/addresses/elle@example.com
         delivery_mode: regular
+        email: elle@example.com
         http_etag: "..."
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/2
     entry 1:
-        address: elle@example.com
+        address: http://localhost:9001/3.0/addresses/elle@example.com
         delivery_mode: regular
+        email: elle@example.com
         http_etag: "..."
         list_id: bee.example.com
         role: member
@@ -320,8 +324,9 @@ does not show up in the list of memberships for his other address.
     >>> dump_json('http://localhost:9001/3.0/addresses/'
     ...           'eperson@example.com/memberships')
     entry 0:
-        address: eperson@example.com
+        address: http://localhost:9001/3.0/addresses/eperson@example.com
         delivery_mode: regular
+        email: eperson@example.com
         http_etag: "..."
         list_id: bee.example.com
         role: member

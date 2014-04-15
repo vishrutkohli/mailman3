@@ -56,18 +56,25 @@ class _MemberBase(resource.Resource, CollectionMixin):
     def _resource_as_dict(self, member):
         """See `CollectionMixin`."""
         enum, dot, role = str(member.role).partition('.')
-        # Both the user_id and the member_id are UUIDs.  We need to use the
-        # integer equivalent in the URL.
-        user_id = member.user.user_id.int
-        member_id = member.member_id.int
-        return dict(
+        # The member will always have a member id and an address id.  It will
+        # only have a user id if the address is linked to a user.
+        # E.g. nonmembers we've only seen via postings to lists they are not
+        # subscribed to will not have a user id.   The user_id and the
+        # member_id are UUIDs.  We need to use the integer equivalent in the
+        # URL.
+        response = dict(
             list_id=member.list_id,
-            address=member.address.email,
+            email=member.address.email,
             role=role,
-            user=path_to('users/{0}'.format(user_id)),
-            self_link=path_to('members/{0}'.format(member_id)),
+            address=path_to('addresses/{}'.format(member.address.email)),
+            self_link=path_to('members/{}'.format(member.member_id.int)),
             delivery_mode=member.delivery_mode,
             )
+        # Add the user link if there is one.
+        user = member.user
+        if user is not None:
+            response['user'] = path_to('users/{}'.format(user.user_id.int))
+        return response
 
     @paginate
     def _get_collection(self, request):

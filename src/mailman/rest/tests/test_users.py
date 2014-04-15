@@ -229,7 +229,10 @@ class TestLP1074374(unittest.TestCase):
         content, response = call_api('http://localhost:9001/3.0/members')
         self.assertEqual(content['total_size'], 1)
         member = content['entries'][0]
-        self.assertEqual(member['address'], 'anne@example.com')
+        self.assertEqual(
+            member['address'],
+            'http://localhost:9001/3.0/addresses/anne@example.com')
+        self.assertEqual(member['email'], 'anne@example.com')
         self.assertEqual(member['delivery_mode'], 'regular')
         self.assertEqual(member['list_id'], 'test.example.com')
         self.assertEqual(member['role'], 'member')
