@@ -27,7 +27,7 @@ REST
  * Support pagination of some large collections (lists, users, members).
    [Florian Fuchs]  (LP: #1156529)
  * Expose ``hide_address`` to the ``.../preferences`` REST API.
-   [Sneha Priscilla.]
+   [Sneha Priscilla.]  (LP: #1203519)
  * Mailing lists can now individually enable or disable any archiver available
    site-wide.  [Joanna Skrzeszewska]  (LP: #1158040)
  * Addresses can be added to existing users, including display names, via the
