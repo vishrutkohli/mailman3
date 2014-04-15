@@ -2,6 +2,13 @@
 Set up the archive ui in five minutes
 =====================================
 
+.. note::
+   This document is way out of date.  If you have access to the Web,
+   the most recent explanation of setting up a full Mailman 3 system,
+   including Postorius and HyperKitty, is the `Development Setup Guide`_ at
+   `FedoraHosted`_.  If you must work offline, this document may be of some
+   use, but be careful.
+
 The `hyperkitty`_ application aims at providing an interface to visualize and
 explore Mailman archives.
 
@@ -68,7 +75,9 @@ omit the preceding steps.  Continue with these steps.
 
 - Install the hyperkitty sources::
 
-    % git clone http://ambre.pingoured.fr/cgit/hyperkitty.git/
+    % git clone https://github.com/hyperkitty/kittystore.git
+    % git clone https://github.com/hyperkitty/hyperkitty.git
+    % git clone https://github.com/hyperkitty/hyperkitty_standalone.git
 
 
 Running hyperkitty
@@ -87,7 +96,9 @@ Running hyperkitty
     % python manage.py runserver
 
 
-.. _`hyperkitty`: https://launchpad.net/hyperkitty
+.. _`Development Setup Guide`: https://fedorahosted.org/hyperkitty/wiki/DevelopmentSetupGuide
+.. _`FedoraHosted`: https://fedorahosted.org/
+.. _`hyperkitty`: https://fedorahosted.org/hyperkitty/
 .. _`Django`: http://djangoproject.org/
 .. _`notmuch mail indexer`: http://notmuchmail.org
 .. _`bunch`: http://pypi.python.org/pypi/bunch

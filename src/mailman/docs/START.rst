@@ -23,7 +23,7 @@ the core, Mailman 3 exposes a REST administrative interface to the web,
 communicates with archivers via decoupled interfaces, and leaves summary,
 search, and retrieval of archived messages to a separate application (a simple
 implementation is provided).  The web interface (known as `Postorius`_) and
-archiver (known as `Hyperkitty`_) are in separate development.
+archiver (known as `Hyperkitty`_) are developed separately.
 
 
 Contact Us
@@ -51,6 +51,20 @@ your OS vendor, or can be downloaded automatically from the `Python
 Cheeseshop`_.
 
 
+Documentation
+=============
+
+The documentation for Mailman 3 is distributed throughout the sources.
+The core documentation (such as this file, ``START.rst``) is found in
+the ``src/mailman/docs`` directory, but much of the documentation is
+in module-specific places.  A prebuilt HTML version of `Mailman 3
+documentation`_ is available at pythonhosted.org, as is `Postorius
+documentation`_.  `HyperKitty documentation`_ is available at ReadTheDocs.
+
+The `Development Setup Guide`_ is a recent step-by-step explanation of
+how to set up a complete Mailman 3 system including the Mailman 3 core
+and basic client API, Postorius, and HyperKitty.
+
 Building Mailman 3
 ==================
 
@@ -62,10 +76,19 @@ Building for development
 
 First, create a virtual environment.  By default ``virtualenv`` uses the
 ``python`` executable it finds first on your ``$PATH``.  Make sure this is
-Python 2.7.  The directory you install the virtualenv into is up to you, but
-for purposes of this document, we'll install it into ``/tmp/py27``::
+Python 2.7 (just start the interactive interpreter and check the version in
+the startup banner).  The directory you install the virtualenv into is up to
+you, but for purposes of this document, we'll install it into ``/tmp/py27``::
 
     % virtualenv --system-site-packages /tmp/py27
+
+If your default Python is not version 2.7, use the ``--python`` option to
+specify the Python executable.  You can use the command name if this version
+is on your ``PATH``::
+
+    % virtualenv --system-site-packages --python=python2.7 /tmp/py27
+
+or you may specify the full path to any Python 2.7 executable.
 
 Now, activate the virtual environment and set it up for development::
 
@@ -73,7 +96,28 @@ Now, activate the virtual environment and set it up for development::
     % python setup.py develop
 
 Sit back and have some Kombucha while you wait for everything to download and
-install.
+install.  If you have older versions of some of the packages, the installation
+may be interrupted with an error such as::
+
+    error: Installed distribution zope.interface 3.8.0 conflicts with requirement zope.interface>=4.1.0
+
+(It appears that this is a defect specific to the ``zope.interface``
+package; it's expected that it should upgrade in this situation.
+However, we cannot rule out similar problems with other packages.)
+
+This issue can be addressed in two ways.  If you are worried about backward
+compatibility with the installed version of the package for some reason, you
+can restart the process by creating a virtualenv without the
+``--system-site-packages`` option.  This may require installation of duplicates
+of many packages, as only the standard library and packages freshly installed
+in the virtualenv will be available to Python.
+
+The alternative is to keep the virtualenv installed with
+``--system-site-packages``, explicitly upgrade the package, and then
+restart the installation::
+
+    % pip install --upgrade zope.interface
+    % python setup.py develop
 
 Now you can run the test suite via::
 
@@ -87,6 +131,14 @@ by filter tests on the module or test name using the ``-P`` option::
 Build the online docs by running::
 
     % python setup.py build_sphinx
+
+If ``setup.py`` fails to recognize the ``build_sphinx`` command, then
+just install Sphinx in your virtualenv::
+
+    % pip install sphinx
+
+This will automatically add the ``build_sphinx`` command to
+``setup.py``, so just re-run the command.
 
 Then visit::
 
@@ -193,3 +245,7 @@ A `five minute guide to Hyperkitty`_ is based on Toshio Kuratomi's README.
 .. _`Pycon 2012 sprint`: https://us.pycon.org/2012/community/sprints/projects/
 .. _`Python Cheeseshop`: http://pypi.python.org/pypi
 .. _`virtualenv`: http://www.virtualenv.org/en/latest/
+.. _`Mailman 3 documentation`: http://www.pythonhosted.org/mailman/
+.. _`Postorius documentation`: http://www.pythonhosted.org/postorius/
+.. _`HyperKitty documentation`: https://hyperkitty.readthedocs.org/en/latest/development.html
+.. _`Development Setup Guide`: https://fedorahosted.org/hyperkitty/wiki/DevelopmentSetupGuide
