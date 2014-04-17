@@ -79,6 +79,8 @@ Bugs
    (LP: #1291452)
  * Fix IntegrityError (against PostgreSQL) when deleting a list with content
    filters.  [Aurélien Bompard]  (LP: #1117174)
+ * Fix test isolation bug in ``languages.rst``.
+   [Piotr Kasprzyk] (LP: #1308769)
 
 
 3.0 beta 3 -- "Here Again"

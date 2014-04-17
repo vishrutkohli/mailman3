@@ -15,6 +15,10 @@ running Mailman instance.
     >>> verifyObject(ILanguageManager, mgr)
     True
 
+    # Make a copy of the language manager's dictionary, so we can restore it
+    # after the test.  Currently the test layer doesn't manage this.
+    >>> saved = mgr._languages.copy()
+
     # The language manager component comes pre-populated; clear it out.
     >>> mgr.clear()
 
@@ -24,7 +28,7 @@ A language manager keeps track of the languages it knows about.
     []
     >>> list(mgr.languages)
     []
-    
+
 
 Adding languages
 ================
@@ -102,10 +106,6 @@ The language manager can forget about all the language codes it knows about.
 
     >>> 'en' in mgr
     True
-
-    # Make a copy of the language manager's dictionary, so we can restore it
-    # after the test.  Currently the test layer doesn't manage this.
-    >>> saved = mgr._languages.copy()
 
     >>> mgr.clear()
     >>> 'en' in mgr
