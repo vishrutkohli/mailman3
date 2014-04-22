@@ -10,7 +10,7 @@ Here is a history of user visible changes to Mailman.
 
 3.0 beta 4 -- "Time and Motion"
 ===============================
-(2014-XX-XX)
+(2014-04-22)
 
 Development
 -----------
