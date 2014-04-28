@@ -45,7 +45,7 @@ The module short-circuits if there are no recipients.
     >>> handler.process(mlist, msg, msgdata)
     >>> msgdata
     {}
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Subject: A message of great import
     <BLANKLINE>
@@ -72,7 +72,7 @@ or ``Resent-CC``), then they will get a list copy.
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
     [u'aperson@example.com', u'bperson@example.com']
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     <BLANKLINE>
     Something of great import.
@@ -90,7 +90,7 @@ If they're mentioned on the ``CC`` line, they won't get a list copy.
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
     [u'bperson@example.com']
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     CC: aperson@example.com
     <BLANKLINE>
@@ -110,7 +110,7 @@ to ``True`` (the default), then they still get a list copy.
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
     [u'aperson@example.com', u'bperson@example.com']
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     CC: bperson@example.com
     <BLANKLINE>
@@ -129,7 +129,7 @@ Other headers checked for recipients include the ``To``...
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
     [u'bperson@example.com']
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     To: aperson@example.com
     <BLANKLINE>
@@ -148,7 +148,7 @@ Other headers checked for recipients include the ``To``...
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
     [u'bperson@example.com']
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     Resent-To: aperson@example.com
     <BLANKLINE>
@@ -167,7 +167,7 @@ Other headers checked for recipients include the ``To``...
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
     [u'bperson@example.com']
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     Resent-Cc: aperson@example.com
     <BLANKLINE>

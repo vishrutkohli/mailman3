@@ -30,7 +30,7 @@ must be removed from any posted message.  ::
 
     >>> handler = config.handlers['cleanse']
     >>> handler.process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Subject: A message of great import
     <BLANKLINE>
@@ -56,7 +56,7 @@ though (Some Microsoft product perhaps?).
     ... How are you doing?
     ... """)
     >>> handler.process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: bperson@example.com
     Reply-To: bperson@example.org
     Sender: asystem@example.net
@@ -91,7 +91,7 @@ Hotmail apparently sets ``X-Originating-Email``.
     ... How are you doing?
     ... """)
     >>> handler.process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     Subject: a message to you
     From: A Test Mailing List <_xtest@example.com>
     Reply-To: _xtest@example.com

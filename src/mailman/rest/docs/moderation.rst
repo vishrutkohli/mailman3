@@ -158,7 +158,7 @@ moderation.
     >>> transaction.commit()
 
     >>> results = call_http(url(request_id))
-    >>> print results['message_id']
+    >>> print(results['message_id'])
     <bravo>
 
     >>> dump_json(url(request_id), {
@@ -173,7 +173,7 @@ moderation.
     >>> messages = get_queue_messages('pipeline')
     >>> len(messages)
     1
-    >>> print messages[0].msg['message-id']
+    >>> print(messages[0].msg['message-id'])
     <bravo>
 
 Messages can be rejected via the REST API too.  These bounce the message back
@@ -186,7 +186,7 @@ to the original author.
     >>> transaction.commit()
 
     >>> results = call_http(url(request_id))
-    >>> print results['message_id']
+    >>> print(results['message_id'])
     <charlie>
 
     >>> dump_json(url(request_id), {
@@ -201,7 +201,7 @@ to the original author.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg['subject']
+    >>> print(messages[0].msg['subject'])
     Request to mailing list "Ant" rejected
 
 
@@ -358,7 +358,7 @@ Bart's unsubscription request is discarded.
 Bart is still a member of the mailing list.
 
     >>> transaction.abort()
-    >>> print ant.members.get_member('bart@example.com')
+    >>> print(ant.members.get_member('bart@example.com'))
     <Member: Bart Person <bart@example.com> on ant@example.com
              as MemberRole.member>
     >>> transaction.abort()

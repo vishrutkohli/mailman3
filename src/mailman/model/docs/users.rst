@@ -45,14 +45,14 @@ When the user's password is changed, an event is triggered.
     >>> from mailman.testing.helpers import event_subscribers
     >>> with event_subscribers(save_event):
     ...     user_1.password = b'changed again'
-    >>> print saved_event
+    >>> print(saved_event)
     <PasswordChangeEvent Zoe X. Person>
 
 The event holds a reference to the `IUser` that changed their password.
 
-    >>> print saved_event.user.display_name
+    >>> print(saved_event.user.display_name)
     Zoe X. Person
-    >>> print saved_event.user.password
+    >>> print(saved_event.user.password)
     changed again
 
 
@@ -63,7 +63,7 @@ Although rarely visible to users, every user has a unique ID in Mailman, which
 never changes.  This ID is generated randomly at the time the user is created,
 and is represented by a UUID.
 
-    >>> print user_1.user_id
+    >>> print(user_1.user_id)
     00000000-0000-0000-0000-000000000001
 
 The user id cannot change.
@@ -76,7 +76,7 @@ The user id cannot change.
 User records also have a date on which they where created.
 
     # The test suite uses a predictable timestamp.
-    >>> print user_1.created_on
+    >>> print(user_1.created_on)
     2005-08-01 07:49:23
 
 
@@ -138,7 +138,7 @@ that address.
     True
     >>> user_manager.get_user('zperson@example.org') is user_1
     True
-    >>> print user_manager.get_user('bperson@example.com')
+    >>> print(user_manager.get_user('bperson@example.com'))
     None
 
 Addresses can also be unlinked from a user.
@@ -146,7 +146,7 @@ Addresses can also be unlinked from a user.
     >>> user_1.unlink(address_1)
     >>> user_1.controls('zperson@example.net')
     False
-    >>> print user_manager.get_user('aperson@example.net')
+    >>> print(user_manager.get_user('aperson@example.net'))
     None
 
 But don't try to unlink the address from a user it's not linked to.
@@ -173,14 +173,14 @@ change.
 By default, a user has no preferred address.
 
     >>> user_2 = user_manager.create_user()
-    >>> print user_2.preferred_address
+    >>> print(user_2.preferred_address)
     None
 
 Even when a user registers an address, this address will not be set as the
 preferred address.
 
     >>> anne = user_2.register('anne@example.com', 'Anne Person')
-    >>> print user_2.preferred_address
+    >>> print(user_2.preferred_address)
     None
 
 The preferred address must be explicitly registered, however only verified
@@ -233,7 +233,7 @@ A user can disavow their preferred address.
     >>> user_2.preferred_address
     <Address: aperson@example.com [verified] at ...>
     >>> del user_2.preferred_address
-    >>> print user_2.preferred_address
+    >>> print(user_2.preferred_address)
     None
 
 The preferred address always shows up in the set of addresses controlled by
@@ -241,7 +241,7 @@ this user.
 
     >>> from operator import attrgetter
     >>> for address in sorted(user_2.addresses, key=attrgetter('email')):
-    ...     print address.email
+    ...     print(address.email)
     anne@example.com
     aperson@example.com
 
@@ -252,11 +252,11 @@ Users and preferences
 This is a helper function for the following section.
 
     >>> def show_prefs(prefs):
-    ...     print 'acknowledge_posts    :', prefs.acknowledge_posts
-    ...     print 'preferred_language   :', prefs.preferred_language
-    ...     print 'receive_list_copy    :', prefs.receive_list_copy
-    ...     print 'receive_own_postings :', prefs.receive_own_postings
-    ...     print 'delivery_mode        :', prefs.delivery_mode
+    ...     print('acknowledge_posts    :', prefs.acknowledge_posts)
+    ...     print('preferred_language   :', prefs.preferred_language)
+    ...     print('receive_list_copy    :', prefs.receive_list_copy)
+    ...     print('receive_own_postings :', prefs.receive_own_postings)
+    ...     print('delivery_mode        :', prefs.delivery_mode)
 
 Users have preferences, but these preferences have no default settings.
 
@@ -334,8 +334,8 @@ membership role.
     >>> def sortkey(member):
     ...     return member.address.email, member.mailing_list, member.role.value
     >>> for member in sorted(members, key=sortkey):
-    ...     print member.address.email, member.mailing_list.list_id, \
-    ...           member.role
+    ...     print(member.address.email, member.mailing_list.list_id,
+    ...           member.role)
     zperson@example.com xtest_1.example.com MemberRole.member
     zperson@example.net xtest_3.example.com MemberRole.moderator
     zperson@example.org xtest_2.example.com MemberRole.member

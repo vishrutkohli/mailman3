@@ -44,7 +44,7 @@ Attempting delivery first must authorize with the mail server.
     >>> bulk.deliver(mlist, msg, dict(recipients=['bperson@example.com']))
     {}
 
-    >>> print smtpd.get_authentication_credentials()
+    >>> print(smtpd.get_authentication_credentials())
     PLAIN AHRlc3R1c2VyAHRlc3RwYXNz
     >>> config.pop('auth')
 

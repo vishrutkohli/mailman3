@@ -28,7 +28,7 @@ are defined.
 
     >>> from mailman.handlers.tagger import process
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     Subject: foobar
     Keywords: barbaz
     <BLANKLINE>
@@ -48,7 +48,7 @@ and the message metadata gets a key with a list of matching topic names.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     Subject: foobar
     Keywords: barbaz
     X-Topics: bar fight
@@ -76,7 +76,7 @@ lines are scanned.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Subject: nothing
     Keywords: at all
@@ -103,7 +103,7 @@ found.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Subject: nothing
     Keywords: at all
@@ -130,7 +130,7 @@ header.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Subject: nothing
     Keywords: at all
@@ -158,7 +158,7 @@ When set to a negative number, all body lines will be scanned.
     >>> process(mlist, msg, msgdata)
     >>> # Rather than print out 100 X-Ignore: headers, let's just prove that
     >>> # the X-Topics: header exists, meaning that the tagger did its job.
-    >>> print msg['x-topics']
+    >>> print(msg['x-topics'])
     bar fight
     >>> msgdata['topichits']
     [u'bar fight']
@@ -187,7 +187,7 @@ text payload.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     Subject: Was
     Keywords: Raw
     Content-Type: multipart/alternative; boundary="BOUNDARY"
@@ -232,7 +232,7 @@ But the tagger will not descend into non-text parts.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg['x-topics']
+    >>> print(msg['x-topics'])
     None
     >>> msgdata
     {}

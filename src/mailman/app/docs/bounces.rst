@@ -34,7 +34,7 @@ to the original message author.
     >>> items = get_queue_messages('virgin')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     Subject: Something important
     From: text-owner@example.com
     To: aperson@example.com
@@ -72,7 +72,7 @@ passed in as an instance of a ``RejectMessage`` exception.
     >>> items = get_queue_messages('virgin')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     Subject: Something important
     From: text-owner@example.com
     To: aperson@example.com

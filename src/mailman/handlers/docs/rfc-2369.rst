@@ -21,11 +21,11 @@ headers generally start with the `List-` prefix.
     ...         only.add('archived-at')
     ...     else:
     ...         only = set(header.lower() for header in only)
-    ...     print '---start---'
+    ...     print('---start---')
     ...     for header in sorted(only):
     ...         for value in sorted(msg.get_all(header, ())):
-    ...             print '%s: %s' % (header, value)
-    ...     print '---end---'
+    ...             print('%s: %s' % (header, value))
+    ...     print('---end---')
 
 The `rfc-2369` handler adds the `List-` headers.  `List-Id` is always added.
 

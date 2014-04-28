@@ -25,13 +25,13 @@ listname, and an `RFC 2369`_ list id.  This latter will not change even if the
 mailing list moves to a different host, so it is what uniquely distinguishes
 the mailing list to the system.
 
-    >>> print mlist.list_name
+    >>> print(mlist.list_name)
     test
-    >>> print mlist.mail_host
+    >>> print(mlist.mail_host)
     example.com
-    >>> print mlist.fqdn_listname
+    >>> print(mlist.fqdn_listname)
     test@example.com
-    >>> print mlist.list_id
+    >>> print(mlist.list_id)
     test.example.com
 
 If you try to create a mailing list with the same name as an existing list,
@@ -63,7 +63,7 @@ Use the list manager to delete a mailing list.
 After deleting the list, you can create it again.
 
     >>> mlist = list_manager.create('test@example.com')
-    >>> print mlist.fqdn_listname
+    >>> print(mlist.fqdn_listname)
     test@example.com
 
 
@@ -85,14 +85,14 @@ You can also get a mailing list by it's list id.
 
 If you try to get a list that doesn't existing yet, you get ``None``.
 
-    >>> print list_manager.get('test_2@example.com')
+    >>> print(list_manager.get('test_2@example.com'))
     None
-    >>> print list_manager.get_by_list_id('test_2.example.com')
+    >>> print(list_manager.get_by_list_id('test_2.example.com'))
     None
 
 You also get ``None`` if the list name is invalid.
 
-    >>> print list_manager.get('foo')
+    >>> print(list_manager.get('foo'))
     None
 
 
@@ -108,26 +108,26 @@ address components.
     >>> mlist_4 = list_manager.create('test_4@example.com')
 
     >>> for name in sorted(list_manager.names):
-    ...     print name
+    ...     print(name)
     test@example.com
     test_3@example.com
     test_4@example.com
 
     >>> for list_id in sorted(list_manager.list_ids):
-    ...     print list_id
+    ...     print(list_id)
     test.example.com
     test_3.example.com
     test_4.example.com
 
     >>> for fqdn_listname in sorted(m.fqdn_listname
     ...                             for m in list_manager.mailing_lists):
-    ...     print fqdn_listname
+    ...     print(fqdn_listname)
     test@example.com
     test_3@example.com
     test_4@example.com
 
     >>> for list_name, mail_host in sorted(list_manager.name_components):
-    ...     print list_name, '@', mail_host
+    ...     print(list_name, '@', mail_host)
     test   @ example.com
     test_3 @ example.com
     test_4 @ example.com

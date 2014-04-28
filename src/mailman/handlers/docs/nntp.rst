@@ -55,7 +55,7 @@ messages are gated to.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: An important message
     <BLANKLINE>
     Something of great import.

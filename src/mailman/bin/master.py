@@ -17,7 +17,7 @@
 
 """Master subprocess watcher."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -518,7 +518,7 @@ def main():
     lock = acquire_lock(options.options.force)
     try:
         with open(config.PID_FILE, 'w') as fp:
-            print >> fp, os.getpid()
+            print(os.getpid(), file=fp)
         loop = Loop(lock, options.options.restartable, options.options.config)
         loop.install_signal_handlers()
         try:

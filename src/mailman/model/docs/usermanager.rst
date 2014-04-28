@@ -26,14 +26,14 @@ have a password.
 
     >>> dump_list(address.email for address in user.addresses)
     *Empty*
-    >>> print user.display_name
+    >>> print(user.display_name)
     <BLANKLINE>
-    >>> print user.password
+    >>> print(user.password)
     None
 
 The user has preferences, but none of them will be specified.
 
-    >>> print user.preferences
+    >>> print(user.preferences)
     <Preferences ...>
 
 A user can be assigned a real name.
@@ -125,10 +125,10 @@ that the ``.get_user()`` method takes a string email address, not an
 If the address is not in the user database or does not have a user associated
 with it, you will get ``None`` back.
 
-    >>> print user_manager.get_user('zperson@example.com')
+    >>> print(user_manager.get_user('zperson@example.com'))
     None
     >>> user_4.unlink(address)
-    >>> print user_manager.get_user(address.email)
+    >>> print(user_manager.get_user(address.email))
     None
 
 Users can also be found by their unique user id.
@@ -144,7 +144,7 @@ Users can also be found by their unique user id.
 If a non-existent user id is given, None is returned.
 
     >>> from uuid import UUID
-    >>> print user_manager.get_user_by_id(UUID(int=801))
+    >>> print(user_manager.get_user_by_id(UUID(int=801)))
     None
 
 
@@ -173,8 +173,8 @@ There are now four members in the system.  Sort them by address then role.
     ...     return (member.address.email, member.role.name)
     >>> members = sorted(user_manager.members, key=sort_key)
     >>> for member in members:
-    ...     print member.mailing_list.list_id, member.address.email, \
-    ...           member.role
+    ...     print(member.mailing_list.list_id, member.address.email,
+    ...           member.role)
     test.example.com bperson@example.com MemberRole.member
     test.example.com bperson@example.com MemberRole.owner
     test.example.com eperson@example.com MemberRole.member

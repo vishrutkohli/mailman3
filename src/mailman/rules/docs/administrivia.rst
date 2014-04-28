@@ -10,7 +10,7 @@ the ``-request`` robot address.
     >>> mlist = create_list('_xtest@example.com')
     >>> mlist.administrivia = True
     >>> rule = config.rules['administrivia']
-    >>> print rule.name
+    >>> print(rule.name)
     administrivia
 
 For example, if the ``Subject:`` header contains the word ``unsubscribe``, the

@@ -50,7 +50,7 @@ original message, the list's posting address simply gets inserted.
     >>> process(mlist, msg, {})
     >>> len(msg.get_all('reply-to'))
     1
-    >>> print msg['reply-to']
+    >>> print(msg['reply-to'])
     _xtest@example.com
 
 It's also possible to strip any existing ``Reply-To`` header first, before
@@ -65,7 +65,7 @@ adding the list's posting address.
     >>> process(mlist, msg, {})
     >>> len(msg.get_all('reply-to'))
     1
-    >>> print msg['reply-to']
+    >>> print(msg['reply-to'])
     _xtest@example.com
 
 If you don't first strip the header, then the list's posting address will just
@@ -80,7 +80,7 @@ get appended to whatever the original version was.
     >>> process(mlist, msg, {})
     >>> len(msg.get_all('reply-to'))
     1
-    >>> print msg['reply-to']
+    >>> print(msg['reply-to'])
     bperson@example.com, _xtest@example.com
 
 
@@ -98,7 +98,7 @@ The list can also be configured to have an explicit ``Reply-To`` header.
     >>> process(mlist, msg, {})
     >>> len(msg.get_all('reply-to'))
     1
-    >>> print msg['reply-to']
+    >>> print(msg['reply-to'])
     my-list@example.com
 
 And as before, it's possible to either strip any existing ``Reply-To``
@@ -113,7 +113,7 @@ header...
     >>> process(mlist, msg, {})
     >>> len(msg.get_all('reply-to'))
     1
-    >>> print msg['reply-to']
+    >>> print(msg['reply-to'])
     my-list@example.com
 
 ...or not.
@@ -127,5 +127,5 @@ header...
     >>> process(mlist, msg, {})
     >>> len(msg.get_all('reply-to'))
     1
-    >>> print msg['reply-to']
+    >>> print(msg['reply-to'])
     my-list@example.com, bperson@example.com

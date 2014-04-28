@@ -14,7 +14,7 @@ Hooks name an importable callable so it must be accessible on ``sys.path``.
 
     >>> hook_path = os.path.join(config_directory, 'hooks.py')
     >>> with open(hook_path, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... counter = 1
     ... def pre_hook():
     ...     global counter
@@ -25,7 +25,7 @@ Hooks name an importable callable so it must be accessible on ``sys.path``.
     ...     global counter
     ...     print 'post-hook:', counter
     ...     counter += 1
-    ... """
+    ... """, file=fp)
     >>> fp.close()
 
 
@@ -36,13 +36,13 @@ We can set the pre-hook in the configuration file.
 
     >>> config_path = os.path.join(config_directory, 'hooks.cfg')
     >>> with open(config_path, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... [meta]
     ... extends: test.cfg
     ...
     ... [mailman]
     ... pre_hook: hooks.pre_hook
-    ... """
+    ... """, file=fp)
 
 The hooks are run in the second and third steps of initialization.  However,
 we can't run those initialization steps in process, so call a command line
@@ -61,7 +61,7 @@ script that will produce no output to force the hooks to run.
     ...         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ...     stdout, stderr = proc.communicate()
     ...     assert proc.returncode == 0, stderr
-    ...     print stdout
+    ...     print(stdout)
 
     >>> call()
     pre-hook: 1
@@ -77,13 +77,13 @@ We can set the post-hook in the configuration file.
 ::
 
     >>> with open(config_path, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... [meta]
     ... extends: test.cfg
     ...
     ... [mailman]
     ... post_hook: hooks.post_hook
-    ... """
+    ... """, file=fp)
 
     >>> call()
     post-hook: 1
@@ -99,14 +99,14 @@ We can set the pre- and post-hooks in the configuration file.
 ::
 
     >>> with open(config_path, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... [meta]
     ... extends: test.cfg
     ...
     ... [mailman]
     ... pre_hook: hooks.pre_hook
     ... post_hook: hooks.post_hook
-    ... """
+    ... """, file=fp)
 
     >>> call()
     pre-hook: 1

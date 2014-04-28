@@ -210,7 +210,7 @@ Existing mailing lists can be deleted through the API, by doing an HTTP
 
 The mailing list does not exist.
 
-    >>> print list_manager.get('bee@example.com')
+    >>> print(list_manager.get('bee@example.com'))
     None
 
 .. Abort the Storm transaction.
@@ -228,7 +228,7 @@ address as well.
 
 The mailing list does not exist.
 
-    >>> print list_manager.get('ant@example.com')
+    >>> print(list_manager.get('ant@example.com'))
     None
 
 

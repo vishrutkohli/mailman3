@@ -17,7 +17,7 @@ names to rule objects.
     >>> from mailman.interfaces.rules import IRule
     >>> for rule_name in sorted(config.rules):
     ...     rule = config.rules[rule_name]
-    ...     print rule_name, verifyObject(IRule, rule)
+    ...     print(rule_name, verifyObject(IRule, rule))
     administrivia True
     any True
     approved True
@@ -58,7 +58,7 @@ For example, the ``emergency`` rule just checks to see if the emergency flag
 is set on the mailing list, and the message has not been pre-approved by the
 list administrator.
 
-    >>> print rule.name
+    >>> print(rule.name)
     emergency
     >>> mlist.emergency = False
     >>> rule.check(mlist, msg, {})

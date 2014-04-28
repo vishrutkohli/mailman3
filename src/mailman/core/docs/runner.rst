@@ -58,7 +58,7 @@ on instance variables.
     >>> filebase = switchboard.enqueue(msg, listname=mlist.fqdn_listname,
     ...                                foo='yes', bar='no')
     >>> runner.run()
-    >>> print runner.msg.as_string()
+    >>> print(runner.msg.as_string())
     From: aperson@example.com
     To: test@example.com
     <BLANKLINE>

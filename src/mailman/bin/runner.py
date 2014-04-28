@@ -17,7 +17,7 @@
 
 """The runner process."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -82,7 +82,8 @@ def make_runner(name, slice, range, once=False):
         if os.environ.get('MAILMAN_UNDER_MASTER_CONTROL') is not None:
             # Exit with SIGTERM exit code so the master watcher won't try to
             # restart us.
-            print >> sys.stderr, _('Cannot import runner module: $class_path')
+            print(_('Cannot import runner module: $class_path'),
+                  file=sys.stderr)
             traceback.print_exc()
             sys.exit(signal.SIGTERM)
         else:
@@ -190,7 +191,7 @@ def main():
         for shortname in sorted(descriptions):
             classname = descriptions[shortname]
             name = (' ' * (longest - len(shortname))) + shortname
-            print _('$name runs $classname')
+            print(_('$name runs $classname'))
         sys.exit(0)
 
     runner = make_runner(*args.runner, once=args.once)

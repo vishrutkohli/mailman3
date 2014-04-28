@@ -706,7 +706,7 @@ Fred is getting MIME deliveries.
     >>> memberships[0]
     <Member: Fred Person <fperson@example.com>
              on ant@example.com as MemberRole.member>
-    >>> print memberships[0].delivery_mode
+    >>> print(memberships[0].delivery_mode)
     DeliveryMode.mime_digests
 
     >>> dump_json('http://localhost:9001/3.0/members/10')
@@ -825,7 +825,7 @@ Herb must iterate through his memberships explicitly.
     ...                              'herb@example.com/memberships')
     >>> memberships = [entry['self_link'] for entry in content['entries']]
     >>> for url in sorted(memberships):
-    ...     print url
+    ...     print(url)
     http://localhost:9001/3.0/members/11
     http://localhost:9001/3.0/members/12
 

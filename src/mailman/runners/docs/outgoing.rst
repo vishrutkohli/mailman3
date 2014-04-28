@@ -74,7 +74,7 @@ Every recipient got the same copy of the message.
     >>> len(messages)
     1
 
-    >>> print messages[0].as_string()
+    >>> print(messages[0].as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: My first post
@@ -119,7 +119,7 @@ recipients.
     >>> from operator import itemgetter
     >>> def show_headers(messages):
     ...     for message in sorted(messages, key=itemgetter('x-rcptto')):
-    ...         print message['X-RcptTo'], message['X-MailFrom']
+    ...         print(message['X-RcptTo'], message['X-MailFrom'])
 
     >>> show_headers(messages)
     aperson@example.com   test-bounces@example.com

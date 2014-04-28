@@ -16,16 +16,16 @@ The mail command ``join`` subscribes an email address to the mailing list.
     >>> from mailman.commands.eml_membership import Join
     >>> from mailman.utilities.string import wrap
     >>> join = Join()
-    >>> print join.name
+    >>> print(join.name)
     join
-    >>> print wrap(join.description)
+    >>> print(wrap(join.description))
     You will be asked to confirm your subscription request and you may be
     issued a provisional password.
     <BLANKLINE>
     By using the 'digest' option, you can specify whether you want digest
     delivery or not.  If not specified, the mailing list's default
     delivery mode will be used.
-    >>> print join.argument_description
+    >>> print(join.argument_description)
     [digest=<no|mime|plain>]
 
 
@@ -43,9 +43,9 @@ If that's missing though, then an error is returned.
     >>> results = Results()
 
     >>> from mailman.email.message import Message
-    >>> print join.process(mlist, Message(), {}, (), results)
+    >>> print(join.process(mlist, Message(), {}, (), results))
     ContinueProcessing.no
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     join: No valid address found to subscribe
@@ -55,12 +55,12 @@ The ``subscribe`` command is an alias.
 
     >>> from mailman.commands.eml_membership import Subscribe
     >>> subscribe = Subscribe()
-    >>> print subscribe.name
+    >>> print(subscribe.name)
     subscribe
     >>> results = Results()
-    >>> print subscribe.process(mlist, Message(), {}, (), results)
+    >>> print(subscribe.process(mlist, Message(), {}, (), results))
     ContinueProcessing.no
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     subscribe: No valid address found to subscribe
@@ -77,9 +77,9 @@ When the message has a From field, that address will be subscribed.
     ...
     ... """)
     >>> results = Results()
-    >>> print join.process(mlist, msg, {}, (), results)
+    >>> print(join.process(mlist, msg, {}, (), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmation email sent to Anne Person <anne@example.com>
@@ -91,7 +91,7 @@ first.
     >>> from mailman.interfaces.usermanager import IUserManager
     >>> from zope.component import getUtility
     >>> user_manager = getUtility(IUserManager)
-    >>> print user_manager.get_user('anne@example.com')
+    >>> print(user_manager.get_user('anne@example.com'))
     None
 
 Mailman has sent her the confirmation message.
@@ -100,7 +100,7 @@ Mailman has sent her the confirmation message.
     >>> items = get_queue_messages('virgin')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: confirm ...
@@ -148,16 +148,16 @@ list.
     ... """.format(token=token))
 
     >>> results = Results()
-    >>> print confirm.process(mlist, msg, {}, (token,), results)
+    >>> print(confirm.process(mlist, msg, {}, (token,), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmed
     <BLANKLINE>
 
     >>> user = user_manager.get_user('anne@example.com')
-    >>> print user.display_name
+    >>> print(user.display_name)
     Anne Person
     >>> list(user.addresses)
     [<Address: Anne Person <anne@example.com> [verified] at ...>]
@@ -177,17 +177,17 @@ Joining a second list
     ... From: Anne Person <anne@example.com>
     ...
     ... """)
-    >>> print join.process(mlist_2, msg, {}, (), Results())
+    >>> print(join.process(mlist_2, msg, {}, (), Results()))
     ContinueProcessing.yes
 
 Anne of course, is still registered.
 
-    >>> print user_manager.get_user('anne@example.com')
+    >>> print(user_manager.get_user('anne@example.com'))
     <User "Anne Person" (...) at ...>
 
 But she is not a member of the mailing list.
 
-    >>> print mlist_2.members.get_member('anne@example.com')
+    >>> print(mlist_2.members.get_member('anne@example.com'))
     None
 
 One Anne confirms this subscription, she becomes a member of the mailing
@@ -206,15 +206,15 @@ list.
     ... """.format(token=token))
 
     >>> results = Results()
-    >>> print confirm.process(mlist_2, msg, {}, (token,), results)
+    >>> print(confirm.process(mlist_2, msg, {}, (token,), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmed
     <BLANKLINE>
 
-    >>> print mlist_2.members.get_member('anne@example.com')
+    >>> print(mlist_2.members.get_member('anne@example.com'))
     <Member: Anne Person <anne@example.com>
              on baker@example.com as MemberRole.member>
 
@@ -227,9 +227,9 @@ list.  ``unsubscribe`` is an alias for ``leave``.
 
     >>> from mailman.commands.eml_membership import Leave
     >>> leave = Leave()
-    >>> print leave.name
+    >>> print(leave.name)
     leave
-    >>> print leave.description
+    >>> print(leave.description)
     Leave this mailing list.
     <BLANKLINE>
     You may be asked to confirm your request.
@@ -239,9 +239,9 @@ to leave it.  She sends a message to the ``-leave`` address for the list and
 is sent a confirmation message for her request.
 
     >>> results = Results()
-    >>> print leave.process(mlist_2, msg, {}, (), results)
+    >>> print(leave.process(mlist_2, msg, {}, (), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Anne Person <anne@example.com> left baker@example.com
@@ -249,7 +249,7 @@ is sent a confirmation message for her request.
 
 Anne is no longer a member of the mailing list.
 
-    >>> print mlist_2.members.get_member('anne@example.com')
+    >>> print(mlist_2.members.get_member('anne@example.com'))
     None
 
 Anne does not need to leave a mailing list with the same email address she's
@@ -261,7 +261,7 @@ will do.
     >>> address = anne.register('anne.person@example.org')
 
     >>> results = Results()
-    >>> print mlist.members.get_member('anne@example.com')
+    >>> print(mlist.members.get_member('anne@example.com'))
     <Member: Anne Person <anne@example.com>
              on alpha@example.com as MemberRole.member>
 
@@ -275,16 +275,16 @@ Since Anne's alternative address has not yet been verified, it can't be used
 to unsubscribe Anne from the alpha mailing list.
 ::
 
-    >>> print leave.process(mlist, msg, {}, (), results)
+    >>> print(leave.process(mlist, msg, {}, (), results))
     ContinueProcessing.no
 
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Invalid or unverified email address: anne.person@example.org
     <BLANKLINE>
 
-    >>> print mlist.members.get_member('anne@example.com')
+    >>> print(mlist.members.get_member('anne@example.com'))
     <Member: Anne Person <anne@example.com>
              on alpha@example.com as MemberRole.member>
 
@@ -296,16 +296,16 @@ unsubscribe her from the list.
     >>> address.verified_on = now()
 
     >>> results = Results()
-    >>> print leave.process(mlist, msg, {}, (), results)
+    >>> print(leave.process(mlist, msg, {}, (), results))
     ContinueProcessing.yes
 
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Anne Person <anne.person@example.org> left alpha@example.com
     <BLANKLINE>
 
-    >>> print mlist.members.get_member('anne@example.com')
+    >>> print(mlist.members.get_member('anne@example.com'))
     None
 
 
@@ -320,7 +320,7 @@ Bart wants to join the alpha list, so he sends his subscription request.
     ...
     ... """)
 
-    >>> print join.process(mlist, msg, {}, (), Results())
+    >>> print(join.process(mlist, msg, {}, (), Results()))
     ContinueProcessing.yes
 
 There are two messages in the virgin queue, one of which is the confirmation
@@ -335,7 +335,7 @@ message.
 
 Bart is still not a user.
 
-    >>> print user_manager.get_user('bart@example.com')
+    >>> print(user_manager.get_user('bart@example.com'))
     None
 
 Bart replies to the original message, specifically keeping the Subject header
@@ -351,10 +351,10 @@ a user of the system.
     ... """.format(token=token))
 
     >>> results = Results()
-    >>> print confirm.process(mlist, msg, {}, (token,), results)
+    >>> print(confirm.process(mlist, msg, {}, (token,), results))
     ContinueProcessing.yes
 
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmed
@@ -362,11 +362,11 @@ a user of the system.
 
 Now Bart is a user...
 
-    >>> print user_manager.get_user('bart@example.com')
+    >>> print(user_manager.get_user('bart@example.com'))
     <User "Bart Person" (...) at ...>
 
 ...and a member of the mailing list.
 
-    >>> print mlist.members.get_member('bart@example.com')
+    >>> print(mlist.members.get_member('bart@example.com'))
     <Member: Bart Person <bart@example.com>
              on alpha@example.com as MemberRole.member>

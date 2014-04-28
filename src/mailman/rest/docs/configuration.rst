@@ -177,7 +177,7 @@ Using ``PATCH``, you can change just one attribute.
 
 These values are changed permanently.
 
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     My List
 
 
@@ -224,7 +224,7 @@ Aliases are returned as a list on the ``aliases`` key.
     ...     'http://localhost:9001/3.0/lists/'
     ...     'ant@example.com/config/acceptable_aliases')
     >>> for alias in response['acceptable_aliases']:
-    ...     print alias
+    ...     print(alias)
     bar@example.net
     foo@example.com
 
@@ -233,6 +233,6 @@ The mailing list has its aliases set.
     >>> from mailman.interfaces.mailinglist import IAcceptableAliasSet
     >>> aliases = IAcceptableAliasSet(mlist)
     >>> for alias in sorted(aliases.aliases):
-    ...     print alias
+    ...     print(alias)
     bar@example.net
     foo@example.com

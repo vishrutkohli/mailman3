@@ -8,11 +8,11 @@ sending the word `help` to a mailing list's -request address.
     >>> mlist = create_list('test@example.com')
     >>> from mailman.commands.eml_help import Help
     >>> help = Help()
-    >>> print help.name
+    >>> print(help.name)
     help
-    >>> print help.description
+    >>> print(help.description)
     Get help about available email commands.
-    >>> print help.argument_description
+    >>> print(help.argument_description)
     [command]
 
 With no arguments, `help` provides a list of the available commands and a
@@ -23,9 +23,9 @@ short description of each of them.
     >>> results = Results()
 
     >>> from mailman.email.message import Message
-    >>> print help.process(mlist, Message(), {}, (), results)
+    >>> print(help.process(mlist, Message(), {}, (), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     confirm     - Confirm a subscription request.
@@ -42,9 +42,9 @@ short description of each of them.
 With an argument, you can get more detailed help about a specific command.
 
     >>> results = Results()
-    >>> print help.process(mlist, Message(), {}, ('help',), results)
+    >>> print(help.process(mlist, Message(), {}, ('help',), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     help [command]
@@ -54,9 +54,9 @@ With an argument, you can get more detailed help about a specific command.
 Some commands have even more detailed help.
 
     >>> results = Results()
-    >>> print help.process(mlist, Message(), {}, ('join',), results)
+    >>> print(help.process(mlist, Message(), {}, ('join',), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     join [digest=<no|mime|plain>]

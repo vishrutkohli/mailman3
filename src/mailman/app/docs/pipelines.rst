@@ -9,7 +9,7 @@ handlers, each of which is applied in turn.  Unlike rules and chains, there is
 no way to stop a pipeline from processing the message once it's started.
 
     >>> mlist = create_list('test@example.com')
-    >>> print mlist.posting_pipeline
+    >>> print(mlist.posting_pipeline)
     default-posting-pipeline
     >>> from mailman.core.pipelines import process
 
@@ -34,7 +34,7 @@ Messages hit the pipeline after they've been accepted for posting.
 The message has been modified with additional headers, footer decorations,
 etc.
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Message-ID: <first>
@@ -73,7 +73,7 @@ processing queues.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Message-ID: <first>
@@ -110,7 +110,7 @@ delivered to end recipients.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Message-ID: <first>
@@ -141,7 +141,7 @@ There's now one message in the digest mailbox, getting ready to be sent.
     >>> sum(1 for mboxmsg in digest)
     1
 
-    >>> print list(digest)[0].as_string()
+    >>> print(list(digest)[0].as_string())
     From: aperson@example.com
     To: test@example.com
     Message-ID: <first>

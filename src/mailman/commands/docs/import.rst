@@ -15,7 +15,7 @@ that into an existing mailing list in Mailman 3.0.
 
     >>> class FakeParser:
     ...     def error(self, message):
-    ...         print message
+    ...         print(message)
     >>> command.parser = FakeParser()
 
 You must specify the mailing list you are importing into, and it must exist.
@@ -48,9 +48,9 @@ import, the mailing list's 'real name' has changed.
     >>> FakeArgs.pickle_file = [
     ...     resource_filename('mailman.testing', 'config.pck')]
 
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     Import
 
     >>> command.process(FakeArgs)
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     Test

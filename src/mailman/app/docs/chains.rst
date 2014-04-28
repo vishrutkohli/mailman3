@@ -17,9 +17,9 @@ The `discard` chain simply throws the message away.
 ::
 
     >>> chain = config.chains['discard']
-    >>> print chain.name
+    >>> print(chain.name)
     discard
-    >>> print chain.description
+    >>> print(chain.description)
     Discard a message and stop processing.
 
     >>> mlist = create_list('test@example.com')
@@ -33,8 +33,8 @@ The `discard` chain simply throws the message away.
     ... """)
 
     >>> def print_msgid(event):
-    ...     print '{0}: {1}'.format(
-    ...         event.chain.name.upper(), event.msg.get('message-id', 'n/a'))
+    ...     print('{0}: {1}'.format(
+    ...         event.chain.name.upper(), event.msg.get('message-id', 'n/a')))
 
     >>> from mailman.core.chains import process
     >>> from mailman.testing.helpers import event_subscribers
@@ -52,9 +52,9 @@ this action.
 ::
 
     >>> chain = config.chains['reject']
-    >>> print chain.name
+    >>> print(chain.name)
     reject
-    >>> print chain.description
+    >>> print(chain.description)
     Reject/bounce a message and stop processing.
 
     >>> with event_subscribers(print_msgid):
@@ -67,7 +67,7 @@ The bounce message is now sitting in the `virgin` queue.
     >>> qfiles = get_queue_messages('virgin')
     >>> len(qfiles)
     1
-    >>> print qfiles[0].msg.as_string()
+    >>> print(qfiles[0].msg.as_string())
     Subject: My first post
     From: test-owner@example.com
     To: aperson@example.com
@@ -95,9 +95,9 @@ and depending on the list's settings, sends a notification to both the
 original sender and the list moderators.  ::
 
     >>> chain = config.chains['hold']
-    >>> print chain.name
+    >>> print(chain.name)
     hold
-    >>> print chain.description
+    >>> print(chain.description)
     Hold a message and stop processing.
 
     >>> with event_subscribers(print_msgid):
@@ -120,7 +120,7 @@ is addressed to the original sender.
 
 This one is addressed to the list moderators.
 
-    >>> print messages[0].as_string()
+    >>> print(messages[0].as_string())
     Subject: test@example.com post from aperson@example.com requires approval
     From: test-owner@example.com
     To: test-owner@example.com
@@ -173,7 +173,7 @@ This one is addressed to the list moderators.
 
 This message is addressed to the sender of the message.
 
-    >>> print messages[1].as_string()
+    >>> print(messages[1].as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="us-ascii"
     Content-Transfer-Encoding: 7bit
@@ -235,7 +235,7 @@ The message itself is held in the message store.
     >>> msg = getUtility(IMessageStore).get_message_by_id(
     ...     rdata['_mod_message_id'])
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: My first post
@@ -254,9 +254,9 @@ processed and sent on to the list membership.
 ::
 
     >>> chain = config.chains['accept']
-    >>> print chain.name
+    >>> print(chain.name)
     accept
-    >>> print chain.description
+    >>> print(chain.description)
     Accept a message.
 
     >>> with event_subscribers(print_msgid):
@@ -266,7 +266,7 @@ processed and sent on to the list membership.
     >>> qfiles = get_queue_messages('pipeline')
     >>> len(qfiles)
     1
-    >>> print qfiles[0].msg.as_string()
+    >>> print(qfiles[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: My first post
@@ -290,9 +290,9 @@ other input chain is defined for a mailing list.  It runs through the default
 rules.
 
     >>> chain = config.chains['default-posting-chain']
-    >>> print chain.name
+    >>> print(chain.name)
     default-posting-chain
-    >>> print chain.description
+    >>> print(chain.description)
     The built-in moderation chain.
 
 Once the sender is a member of the mailing list, the previously created
@@ -310,7 +310,7 @@ This message will end up in the `pipeline` queue.
     >>> qfiles = get_queue_messages('pipeline')
     >>> len(qfiles)
     1
-    >>> print qfiles[0].msg.as_string()
+    >>> print(qfiles[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: My first post

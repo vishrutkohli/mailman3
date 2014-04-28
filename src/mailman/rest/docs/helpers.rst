@@ -13,7 +13,7 @@ They only need to know where they are relative to the root URI, and this
 function can return them the full path to the resource.
 
     >>> from mailman.rest.helpers import path_to
-    >>> print path_to('system')
+    >>> print(path_to('system'))
     http://localhost:9001/3.0/system
 
 Parameters like the ``scheme``, ``host``, ``port``, and API version number can
@@ -29,7 +29,7 @@ be set in the configuration file.
     ... """)
     >>> cleanups.append((config.pop, 'helpers'))
 
-    >>> print path_to('system')
+    >>> print(path_to('system'))
     https://geddy:2112/4.2/system
 
 
@@ -44,7 +44,7 @@ gets modified to contain the etag under the ``http_etag`` key.
     >>> from mailman.rest.helpers import etag
     >>> resource = dict(geddy='bass', alex='guitar', neil='drums')
     >>> json_data = etag(resource)
-    >>> print resource['http_etag']
+    >>> print(resource['http_etag'])
     "43942176d8d5bb4414ccf35e2720ccd5251e66da"
 
 For convenience, the etag function also returns the JSON representation of the
@@ -79,7 +79,7 @@ their values.
 On valid input, the validator can be used as a ``**keyword`` argument.
 
     >>> def print_request(one, two, three):
-    ...     print repr(one), repr(two), repr(three)
+    ...     print(repr(one), repr(two), repr(three))
     >>> print_request(**validator(FakeRequest))
     1 u'two' True
 
@@ -126,7 +126,7 @@ However, if optional keys are missing, it's okay.
     >>> FakeRequest.POST = dict(one='1', two='two', three='yes',
     ...                         four='4', five='5')
     >>> def print_request(one, two, three, four=None, five=None):
-    ...     print repr(one), repr(two), repr(three), repr(four), repr(five)
+    ...     print(repr(one), repr(two), repr(three), repr(four), repr(five))
     >>> print_request(**validator(FakeRequest))
     1 u'two' True 4 5
 
@@ -183,9 +183,9 @@ And a validator to pull it all together.
     >>> validator = Validator(one=must_be_scalar, many=must_be_list)
     >>> FakeRequest.POST = form_data
     >>> values = validator(FakeRequest)
-    >>> print values['one']
+    >>> print(values['one'])
     1
-    >>> print values['many']
+    >>> print(values['many'])
     [3, 4, 5]
 
 The list values are guaranteed to be in the same order they show up in the
@@ -197,7 +197,7 @@ form data.
     >>> form_data.add('many', '4')
     >>> FakeRequest.POST = form_data
     >>> values = validator(FakeRequest)
-    >>> print values['one']
+    >>> print(values['one'])
     1
-    >>> print values['many']
+    >>> print(values['many'])
     [3, 5, 4]

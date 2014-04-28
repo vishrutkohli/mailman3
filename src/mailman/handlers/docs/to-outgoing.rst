@@ -29,7 +29,7 @@ additional key set: the mailing list name.
     >>> messages = get_queue_messages('out')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: Here is a message
     <BLANKLINE>
     Something of great import.

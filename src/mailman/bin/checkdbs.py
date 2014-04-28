@@ -51,7 +51,7 @@ Check for pending admin requests and mail the list owners if necessary."""))
     opts, args = parser.parse_args()
     if args:
         parser.print_help()
-        print >> sys.stderr, _('Unexpected arguments')
+        print(_('Unexpected arguments'), file=sys.stderr)
         sys.exit(1)
     return opts, args, parser
 

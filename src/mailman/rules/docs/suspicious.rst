@@ -8,7 +8,7 @@ confusing to users, and the list attribute that controls this is misnamed.
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['suspicious-header']
-    >>> print rule.name
+    >>> print(rule.name)
     suspicious-header
 
 Set the so-called suspicious header configuration variable.

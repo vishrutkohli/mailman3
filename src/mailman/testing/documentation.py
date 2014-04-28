@@ -21,7 +21,7 @@ Note that doctest extraction does not currently work for zip file
 distributions.  doctest discovery currently requires file system traversal.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -54,7 +54,7 @@ def stop():
 def dump_msgdata(msgdata, *additional_skips):
     """Dump in a more readable way a message metadata dictionary."""
     if len(msgdata) == 0:
-        print '*Empty*'
+        print('*Empty*')
         return
     skips = set(additional_skips)
     # Some stuff we always want to skip, because their values will always be
@@ -64,7 +64,7 @@ def dump_msgdata(msgdata, *additional_skips):
     for key in sorted(msgdata):
         if key in skips:
             continue
-        print '{0:{2}}: {1}'.format(key, msgdata[key], longest)
+        print('{0:{2}}: {1}'.format(key, msgdata[key], longest))
 
 
 def dump_list(list_of_things, key=str):
@@ -72,11 +72,11 @@ def dump_list(list_of_things, key=str):
     # List of things may be a generator.
     list_of_things = list(list_of_things)
     if len(list_of_things) == 0:
-        print '*Empty*'
+        print('*Empty*')
     if key is not None:
         list_of_things = sorted(list_of_things, key=key)
     for item in list_of_things:
-        print item
+        print(item)
 
 
 def call_http(url, data=None, method=None, username=None, password=None):
@@ -102,7 +102,7 @@ def call_http(url, data=None, method=None, username=None, password=None):
     content, response = call_api(url, data, method, username, password)
     if content is None:
         for header in sorted(response):
-            print '{0}: {1}'.format(header, response[header])
+            print('{0}: {1}'.format(header, response[header]))
         return None
     return content
 
@@ -131,15 +131,15 @@ def dump_json(url, data=None, method=None, username=None, password=None):
         if key == 'entries':
             for i, entry in enumerate(value):
                 # entry is a dictionary.
-                print 'entry %d:' % i
+                print('entry %d:' % i)
                 for entry_key in sorted(entry):
-                    print '    {0}: {1}'.format(entry_key, entry[entry_key])
+                    print('    {0}: {1}'.format(entry_key, entry[entry_key]))
         elif isinstance(value, list):
             printable_value = COMMASPACE.join(
                 "'{0}'".format(s) for s in sorted(value))
-            print '{0}: [{1}]'.format(key, printable_value)
+            print('{0}: [{1}]'.format(key, printable_value))
         else:
-            print '{0}: {1}'.format(key, value)
+            print('{0}: {1}'.format(key, value))
 
 
 
@@ -148,6 +148,7 @@ def setup(testobj):
     # Make sure future statements in our doctests are the same as everywhere
     # else.
     testobj.globs['absolute_import'] = absolute_import
+    testobj.globs['print_function'] = print_function
     testobj.globs['unicode_literals'] = unicode_literals
     # In general, I don't like adding convenience functions, since I think
     # doctests should do the imports themselves.  It makes for better

@@ -39,7 +39,7 @@ the database that matches the token.  If the token isn't in the database, None
 is returned.
 
     >>> pendable = pendingdb.confirm(bytes('missing'))
-    >>> print pendable
+    >>> print(pendable)
     None
     >>> pendable = pendingdb.confirm(token)
     >>> dump_msgdata(pendable)
@@ -51,7 +51,7 @@ is returned.
 
 After confirmation, the token is no longer in the database.
 
-    >>> print pendingdb.confirm(token)
+    >>> print(pendingdb.confirm(token))
     None
 
 There are a few other things you can do with the pending database.  When you
@@ -70,7 +70,7 @@ expunge it.
     >>> pendable = pendingdb.confirm(token_1, expunge=True)
     >>> dump_msgdata(pendable)
     type: one
-    >>> print pendingdb.confirm(token_1)
+    >>> print(pendingdb.confirm(token_1))
     None
 
 An event can be given a lifetime when it is pended, otherwise it just uses a
@@ -84,7 +84,7 @@ default lifetime.
 Every once in a while the pending database is cleared of old records.
 
     >>> pendingdb.evict()
-    >>> print pendingdb.confirm(token_4)
+    >>> print(pendingdb.confirm(token_4))
     None
     >>> pendable = pendingdb.confirm(token_2)
     >>> dump_msgdata(pendable)

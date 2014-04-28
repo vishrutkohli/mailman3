@@ -7,7 +7,7 @@ explicit recipients addressed by the message.
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['max-recipients']
-    >>> print rule.name
+    >>> print(rule.name)
     max-recipients
 
 In this case, we'll create a message with five recipients.  These include all

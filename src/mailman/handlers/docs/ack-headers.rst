@@ -23,7 +23,7 @@ added.
 
     >>> from mailman.handlers.cook_headers import process
     >>> process(mlist, msg, dict(noack=True))
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     X-Ack: no
     ...
@@ -37,7 +37,7 @@ Any existing ``X-Ack`` header in the original message is removed.
     ... A message of great import.
     ... """)
     >>> process(mlist, msg, dict(noack=True))
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     X-Ack: no
     ...

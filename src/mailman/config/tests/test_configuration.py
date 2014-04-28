@@ -28,6 +28,7 @@ __all__ = [
 
 
 import os
+import mock
 import tempfile
 import unittest
 
@@ -121,7 +122,8 @@ layout: nonesuch
         # Use a fake sys.exit() function that records that it was called, and
         # that prevents further processing.
         config = Configuration()
-        with self.assertRaises(SystemExit) as cm:
+        # Suppress warning messages in the test output.
+        with self.assertRaises(SystemExit) as cm, mock.patch('sys.stderr'):
             config.load(filename)
         self.assertEqual(cm.exception.args, (1,))
 
@@ -137,6 +139,7 @@ layout: nonesuch
 log_dir: $nopath/log_dir
 """, file=fp)
         config = Configuration()
-        with self.assertRaises(SystemExit) as cm:
+        # Suppress warning messages in the test output.
+        with self.assertRaises(SystemExit) as cm, mock.patch('sys.stderr'):
             config.load(filename)
         self.assertEqual(cm.exception.args, (1,))

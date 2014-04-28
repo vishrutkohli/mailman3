@@ -50,8 +50,8 @@ By default, the ``To:`` header is not personalized.
 
     >>> from operator import itemgetter
     >>> for message in sorted(messages, key=itemgetter('x-rcptto')):
-    ...     print message.as_string()
-    ...     print '----------'
+    ...     print(message.as_string())
+    ...     print('----------')
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -102,8 +102,8 @@ with the recipient's address and name.
     3
 
     >>> for message in sorted(messages, key=itemgetter('to')):
-    ...     print message.as_string()
-    ...     print '----------'
+    ...     print(message.as_string())
+    ...     print('----------')
     From: aperson@example.org
     To: aperson@example.com
     Subject: test one
@@ -155,8 +155,8 @@ associated real name, then this name also shows up in the ``To:`` header.
 
     >>> from operator import itemgetter
     >>> for message in sorted(messages, key=itemgetter('x-rcptto')):
-    ...     print message.as_string()
-    ...     print '----------'
+    ...     print(message.as_string())
+    ...     print('----------')
     From: aperson@example.org
     To: aperson@example.com
     Subject: test one

@@ -71,7 +71,7 @@ queue.
     >>> messages = get_queue_messages('in')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     From: anne.person@example.com
     To: mylist@example.com
     Subject: An interesting message
@@ -134,7 +134,7 @@ command queue for processing.
     >>> messages = get_queue_messages('command')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     From: anne.person@example.com
     To: mylist-request@example.com
     Subject: Help

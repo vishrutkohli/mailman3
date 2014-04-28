@@ -28,7 +28,7 @@ will place the sender in the message metadata for safe keeping.
 
     >>> from mailman.handlers.cook_headers import process
     >>> process(mlist, msg, msgdata)
-    >>> print msgdata['original_sender']
+    >>> print(msgdata['original_sender'])
     aperson@example.com
 
 But if there was no original sender, then the empty string will be saved.
@@ -40,7 +40,7 @@ But if there was no original sender, then the empty string will be saved.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msgdata['original_sender']
+    >>> print(msgdata['original_sender'])
     <BLANKLINE>
 
 
@@ -68,7 +68,7 @@ Mailman will also insert an ``X-Mailman-Version`` header...
     ... A message of great import.
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg['x-mailman-version']
+    >>> print(msg['x-mailman-version'])
     3000
 
 
@@ -85,7 +85,7 @@ message.
     ... A message of great import.
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg['precedence']
+    >>> print(msg['precedence'])
     list
 
 But Mailman will only add that header if the original message doesn't already
@@ -98,7 +98,7 @@ have one of them.
     ... A message of great import.
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg['precedence']
+    >>> print(msg['precedence'])
     junk
 
 
@@ -120,7 +120,7 @@ the recipient headers so that users will be able to reply back to the list.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     X-Mailman-Version: ...
     Precedence: list

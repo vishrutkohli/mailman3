@@ -27,9 +27,9 @@ interoperate.
     >>> archivers = {}
     >>> from operator import attrgetter
     >>> for archiver in sorted(config.archivers, key=attrgetter('name')):
-    ...     print archiver.name
-    ...     print '   ', archiver.list_url(mlist)
-    ...     print '   ', archiver.permalink(mlist, msg)
+    ...     print(archiver.name)
+    ...     print('   ', archiver.list_url(mlist))
+    ...     print('   ', archiver.permalink(mlist, msg))
     ...     archivers[archiver.name] = archiver
     mail-archive
         http://go.mail-archive.dev/test%40example.com
@@ -63,9 +63,9 @@ for free.  Mailman comes with a plugin for this archiver; by enabling it
 messages to public lists will get sent there automatically.
 
     >>> archiver = archivers['mail-archive']
-    >>> print archiver.list_url(mlist)
+    >>> print(archiver.list_url(mlist))
     http://go.mail-archive.dev/test%40example.com
-    >>> print archiver.permalink(mlist, msg)
+    >>> print(archiver.permalink(mlist, msg))
     http://go.mail-archive.dev/RSZCG7IGPHFIRW3EMTVMMDNJMNCVCOLE
 
 To archive the message, the archiver actually mails the message to a special
@@ -86,7 +86,7 @@ address at The Mail Archive.  The message gets no header or footer decoration.
     >>> len(messages)
     1
 
-    >>> print messages[0].as_string()
+    >>> print(messages[0].as_string())
     From: aperson@example.org
     To: test@example.com
     Subject: An archived message
@@ -104,9 +104,9 @@ However, if the mailing list is not public, the message will never be archived
 at this service.
 
     >>> mlist.archive_policy = ArchivePolicy.private
-    >>> print archiver.list_url(mlist)
+    >>> print(archiver.list_url(mlist))
     None
-    >>> print archiver.permalink(mlist, msg)
+    >>> print(archiver.permalink(mlist, msg))
     None
     >>> archiver.archive_message(mlist, msg)
     >>> list(smtpd.messages)
@@ -121,21 +121,21 @@ Additionally, this archiver can handle malformed ``Message-IDs``.
     >>> del msg['x-message-id-hash']
     >>> msg['Message-ID'] = '12345>'
     >>> add_message_hash(msg)
-    >>> print archiver.permalink(mlist, msg)
+    >>> print(archiver.permalink(mlist, msg))
     http://go.mail-archive.dev/YJIGBYRWZFG5LZEBQ7NR25B5HBR2BVD6
 
     >>> del msg['message-id']
     >>> del msg['x-message-id-hash']
     >>> msg['Message-ID'] = '<12345'
     >>> add_message_hash(msg)
-    >>> print archiver.permalink(mlist, msg)
+    >>> print(archiver.permalink(mlist, msg))
     http://go.mail-archive.dev/XUFFJNJ2P2WC4NDPQRZFDJMV24POP64B
 
     >>> del msg['message-id']
     >>> del msg['x-message-id-hash']
     >>> msg['Message-ID'] = '12345'
     >>> add_message_hash(msg)
-    >>> print archiver.permalink(mlist, msg)
+    >>> print(archiver.permalink(mlist, msg))
     http://go.mail-archive.dev/RSZCG7IGPHFIRW3EMTVMMDNJMNCVCOLE
 
     >>> del msg['message-id']
@@ -143,7 +143,7 @@ Additionally, this archiver can handle malformed ``Message-IDs``.
     >>> add_message_hash(msg)
     >>> msg['Message-ID'] = '    12345    '
     >>> add_message_hash(msg)
-    >>> print archiver.permalink(mlist, msg)
+    >>> print(archiver.permalink(mlist, msg))
     http://go.mail-archive.dev/RSZCG7IGPHFIRW3EMTVMMDNJMNCVCOLE
 
 
@@ -153,7 +153,7 @@ MHonArc
 A MHonArc_ archiver is also available.
 
     >>> archiver = archivers['mhonarc']
-    >>> print archiver.name
+    >>> print(archiver.name)
     mhonarc
 
 Messages sent to a local MHonArc instance are added to its archive via a
@@ -162,7 +162,7 @@ subprocess call.
     >>> from mailman.testing.helpers import LogFileMark
     >>> mark = LogFileMark('mailman.archiver')
     >>> archiver.archive_message(mlist, msg)
-    >>> print 'LOG:', mark.readline()
+    >>> print('LOG:', mark.readline())
     LOG: ... /usr/bin/mhonarc
          -add
          -dbfile .../test@example.com.mbox/mhonarc.db

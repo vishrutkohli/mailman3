@@ -10,17 +10,17 @@ i.e. the email address you would send a message to in order to post a message
 to the mailing list.  The list id is defined in `RFC 2369`_.
 
     >>> mlist = create_list('aardvark@example.com')
-    >>> print mlist.list_id
+    >>> print(mlist.list_id)
     aardvark.example.com
-    >>> print mlist.fqdn_listname
+    >>> print(mlist.fqdn_listname)
     aardvark@example.com
 
 The mailing list also has convenient attributes for accessing the list's short
 name (i.e. local part) and host name.
 
-    >>> print mlist.list_name
+    >>> print(mlist.list_name)
     aardvark
-    >>> print mlist.mail_host
+    >>> print(mlist.mail_host)
     example.com
 
 
@@ -51,7 +51,7 @@ receive a copy of any message sent to the mailing list.
 Both addresses appear on the roster of members.
 
     >>> for member in mlist.members.members:
-    ...     print member
+    ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
 
@@ -73,12 +73,12 @@ an owner and a moderator.
 ::
 
     >>> for member in mlist.owners.members:
-    ...     print member
+    ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.owner>
     <Member: cperson@example.com on aardvark@example.com as MemberRole.owner>
 
     >>> for member in mlist.moderators.members:
-    ...     print member
+    ...     print(member)
     <Member: cperson@example.com on aardvark@example.com
              as MemberRole.moderator>
 
@@ -88,19 +88,19 @@ All rosters can also be accessed indirectly.
 
     >>> roster = mlist.get_roster(MemberRole.member)
     >>> for member in roster.members:
-    ...     print member
+    ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
 
     >>> roster = mlist.get_roster(MemberRole.owner)
     >>> for member in roster.members:
-    ...     print member
+    ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.owner>
     <Member: cperson@example.com on aardvark@example.com as MemberRole.owner>
 
     >>> roster = mlist.get_roster(MemberRole.moderator)
     >>> for member in roster.members:
-    ...     print member
+    ...     print(member)
     <Member: cperson@example.com on aardvark@example.com
              as MemberRole.moderator>
 
@@ -123,7 +123,7 @@ just by changing their preferred address.
     <Member: Dave Person <dperson@example.com> on aardvark@example.com
              as MemberRole.member>
     >>> for member in mlist.members.members:
-    ...     print member
+    ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: Dave Person <dperson@example.com> on aardvark@example.com
@@ -134,7 +134,7 @@ just by changing their preferred address.
     >>> user.preferred_address = new_address
 
     >>> for member in mlist.members.members:
-    ...     print member
+    ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: dave.person@example.com on aardvark@example.com

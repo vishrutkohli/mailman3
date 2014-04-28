@@ -45,7 +45,7 @@ The message gets copied to the NNTP queue for preparation and posting.
 
 The message was successfully posted the NNTP server.
 
-    >>> print nntpd.get_message().as_string()
+    >>> print(nntpd.get_message().as_string())
     From: aperson@example.com
     To: test@example.com
     Newsgroups: comp.lang.python

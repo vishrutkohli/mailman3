@@ -19,7 +19,7 @@ line.
 
     >>> class FakeParser:
     ...     def error(self, message):
-    ...         print message
+    ...         print(message)
     >>> command.parser = FakeParser()
 
 It's easy to find out which queues are available.
@@ -48,14 +48,14 @@ Usually, the text of the message to inject is in a file.
     >>> import os, tempfile
     >>> fd, filename = tempfile.mkstemp()
     >>> with os.fdopen(fd, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... From: aperson@example.com
     ... To: test@example.com
     ... Subject: testing
     ... Message-ID: <aardvark>
     ...
     ... This is a test message.
-    ... """
+    ... """, file=fp)
 
 However, the mailing list name is always required.
 
@@ -81,7 +81,7 @@ By default, the incoming queue is used.
     >>> items = get_queue_messages('in')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: testing
@@ -109,7 +109,7 @@ But a different queue can be specified on the command line.
     >>> items = get_queue_messages('virgin')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: testing
@@ -154,7 +154,7 @@ The message text can also be provided on standard input.
     >>> items = get_queue_messages('in')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     From: bperson@example.com
     To: test@example.com
     Subject: another test

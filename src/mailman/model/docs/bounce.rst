@@ -39,16 +39,16 @@ of bouncing email addresses.  These are passed one-by-one to the registration
 interface.
 
     >>> event = processor.register(mlist, 'anne@example.com', msg)
-    >>> print event.list_id
+    >>> print(event.list_id)
     test.example.com
-    >>> print event.email
+    >>> print(event.email)
     anne@example.com
-    >>> print event.message_id
+    >>> print(event.message_id)
     <first>
 
 Bounce events have a timestamp.
 
-    >>> print event.timestamp
+    >>> print(event.timestamp)
     2005-08-01 07:49:23
 
 Bounce events have a flag indicating whether they've been processed or not.
@@ -68,9 +68,9 @@ When a bounce is registered, you can indicate the bounce context.
 If no context is given, then a default one is used.
 
     >>> event = processor.register(mlist, 'bart@example.com', msg)
-    >>> print event.message_id
+    >>> print(event.message_id)
     <second>
-    >>> print event.context
+    >>> print(event.context)
     BounceContext.normal
 
 A probe bounce carries more weight than just a normal bounce.
@@ -78,7 +78,7 @@ A probe bounce carries more weight than just a normal bounce.
     >>> from mailman.interfaces.bounce import BounceContext
     >>> event = processor.register(
     ...     mlist, 'bart@example.com', msg, BounceContext.probe)
-    >>> print event.message_id
+    >>> print(event.message_id)
     <second>
-    >>> print event.context
+    >>> print(event.context)
     BounceContext.probe

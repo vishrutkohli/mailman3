@@ -12,7 +12,7 @@ posted to the mailing list.  This chain is processed with the message
 eventually ending up in one of the four disposition states described above.
 
     >>> mlist = create_list('test@example.com')
-    >>> print mlist.posting_chain
+    >>> print(mlist.posting_chain)
     default-posting-chain
 
 
@@ -43,11 +43,11 @@ While configurable, the *sender addresses* by default are those named in the
     >>> from zope.component import getUtility
     >>> from mailman.interfaces.usermanager import IUserManager
     >>> user_manager = getUtility(IUserManager)
-    >>> print user_manager.get_address('xperson@example.com')
+    >>> print(user_manager.get_address('xperson@example.com'))
     None
-    >>> print user_manager.get_address('yperson@example.com')
+    >>> print(user_manager.get_address('yperson@example.com'))
     None
-    >>> print user_manager.get_address('zperson@example.com')
+    >>> print(user_manager.get_address('zperson@example.com'))
     None
 
 Inject the message into the incoming queue, similar to the way the upstream
@@ -69,10 +69,10 @@ not linked to a user and are unverified.
     >>> for localpart in ('xperson', 'yperson', 'zperson'):
     ...     email = '{0}@example.com'.format(localpart)
     ...     address = user_manager.get_address(email)
-    ...     print '{0}; verified? {1}; user? {2}'.format(
-    ...         address.email,
-    ...         ('No' if address.verified_on is None else 'Yes'),
-    ...         user_manager.get_user(email))
+    ...     print('{0}; verified? {1}; user? {2}'.format(
+    ...           address.email,
+    ...           ('No' if address.verified_on is None else 'Yes'),
+    ...           user_manager.get_user(email)))
     xperson@example.com; verified? No; user? None
     yperson@example.com; verified? No; user? None
     zperson@example.com; verified? No; user? None
@@ -116,7 +116,7 @@ Now the message is in the pipeline queue.
     >>> messages = get_queue_messages('pipeline')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: My first post
@@ -146,11 +146,11 @@ pipeline queue.
     >>> from mailman.interfaces.chain import ChainEvent
     >>> def on_chain(event):
     ...     if isinstance(event, ChainEvent):
-    ...         print event
-    ...         print event.chain
-    ...         print 'From: {0}\nTo: {1}\nMessage-ID: {2}'.format(
+    ...         print(event)
+    ...         print(event.chain)
+    ...         print('From: {0}\nTo: {1}\nMessage-ID: {2}'.format(
     ...             event.msg['from'], event.msg['to'],
-    ...             event.msg['message-id'])
+    ...             event.msg['message-id']))
 
     >>> mlist.emergency = True
 
@@ -234,7 +234,7 @@ to the original sender.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: My first post
     From: test-owner@example.com
     To: aperson@example.com

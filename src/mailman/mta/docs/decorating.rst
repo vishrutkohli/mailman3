@@ -35,17 +35,17 @@ We start by writing the site-global header and footer template.
 
     >>> myheader_path = os.path.join(site_dir, 'myheader.txt')
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... Delivery address: $user_address
     ... Subscribed address: $user_delivered_to
-    ... """
+    ... """, file=fp)
     >>> myfooter_path = os.path.join(site_dir, 'myfooter.txt')
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... User name: $user_name
     ... Language: $user_language
     ... Options: $user_optionsurl
-    ... """
+    ... """, file=fp)
 
 Then create a mailing list which will use this header and footer.  Because
 these are site-global templates, we can use a shorted URL.
@@ -108,8 +108,8 @@ The decorations happen when the message is delivered.
 
     >>> from operator import itemgetter
     >>> for message in sorted(messages, key=itemgetter('x-rcptto')):
-    ...     print message.as_string()
-    ...     print '----------'
+    ...     print(message.as_string())
+    ...     print('----------')
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -181,8 +181,8 @@ into the message metadata.
     3
 
     >>> for message in sorted(messages, key=itemgetter('x-rcptto')):
-    ...     print message.as_string()
-    ...     print '----------'
+    ...     print(message.as_string())
+    ...     print('----------')
     From: aperson@example.org
     To: test@example.com
     Subject: test one

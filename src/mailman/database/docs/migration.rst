@@ -33,7 +33,7 @@ already applied.
     4
     >>> versions = sorted(result.version for result in results)
     >>> for version in versions:
-    ...     print version
+    ...     print(version)
     00000000000000
     20120407000000
     20121015000000
@@ -81,34 +81,34 @@ This migration module just adds a marker to the `version` table.
     >>> with open(os.path.join(path, '__init__.py'), 'w') as fp:
     ...     pass
     >>> with open(os.path.join(path, 'mm_20159999000000.py'), 'w') as fp:
-    ...     print >> fp, """
+    ...     print("""
     ... from __future__ import unicode_literals
     ... from mailman.model.version import Version
     ... def upgrade(database, store, version, module_path):
     ...     v = Version(component='test', version=version)
     ...     store.add(v)
     ...     database.load_schema(store, version, None, module_path)
-    ... """
+    ... """, file=fp)
 
 This will load the new migration, since it hasn't been loaded before.
 
     >>> config.db.load_migrations()
     >>> results = config.db.store.find(Version, component='schema')
     >>> for result in sorted(result.version for result in results):
-    ...     print result
+    ...     print(result)
     00000000000000
     20120407000000
     20121015000000
     20130406000000
     20159999000000
     >>> test = config.db.store.find(Version, component='test').one()
-    >>> print test.version
+    >>> print(test.version)
     20159999000000
 
 Migrations will only be loaded once.
 
     >>> with open(os.path.join(path, 'mm_20159999000001.py'), 'w') as fp:
-    ...     print >> fp, """
+    ...     print("""
     ... from __future__ import unicode_literals
     ... from mailman.model.version import Version
     ... _marker = 801
@@ -120,14 +120,14 @@ Migrations will only be loaded once.
     ...     v = Version(component='test', version=marker)
     ...     store.add(v)
     ...     database.load_schema(store, version, None, module_path)
-    ... """
+    ... """, file=fp)
 
 The first time we load this new migration, we'll get the 801 marker.
 
     >>> config.db.load_migrations()
     >>> results = config.db.store.find(Version, component='schema')
     >>> for result in sorted(result.version for result in results):
-    ...     print result
+    ...     print(result)
     00000000000000
     20120407000000
     20121015000000
@@ -136,7 +136,7 @@ The first time we load this new migration, we'll get the 801 marker.
     20159999000001
     >>> test = config.db.store.find(Version, component='test')
     >>> for marker in sorted(marker.version for marker in test):
-    ...     print marker
+    ...     print(marker)
     00000000000801
     20159999000000
 
@@ -145,7 +145,7 @@ We do not get an 802 marker because the migration has already been loaded.
     >>> config.db.load_migrations()
     >>> results = config.db.store.find(Version, component='schema')
     >>> for result in sorted(result.version for result in results):
-    ...     print result
+    ...     print(result)
     00000000000000
     20120407000000
     20121015000000
@@ -154,7 +154,7 @@ We do not get an 802 marker because the migration has already been loaded.
     20159999000001
     >>> test = config.db.store.find(Version, component='test')
     >>> for marker in sorted(marker.version for marker in test):
-    ...     print marker
+    ...     print(marker)
     00000000000801
     20159999000000
 
@@ -181,7 +181,7 @@ You'll notice that the ...04 version is not present.
 
     >>> results = config.db.store.find(Version, component='schema')
     >>> for result in sorted(result.version for result in results):
-    ...     print result
+    ...     print(result)
     00000000000000
     20120407000000
     20121015000000

@@ -84,13 +84,13 @@ The most trivial is to simply defer a decision for now.
 This leaves the message in the requests database.
 
     >>> key, data = requests.get_request(1)
-    >>> print key
+    >>> print(key)
     <aardvark>
 
 The moderator can also discard the message.
 
     >>> handle_message(mlist, 1, Action.discard)
-    >>> print requests.get_request(1)
+    >>> print(requests.get_request(1))
     None
 
 The message can be rejected, which bounces the message back to the original
@@ -100,7 +100,7 @@ sender.
 
 The message is no longer available in the requests database.
 
-    >>> print requests.get_request(2)
+    >>> print(requests.get_request(2))
     None
 
 And there is one message in the *virgin* queue - the rejection notice.
@@ -109,7 +109,7 @@ And there is one message in the *virgin* queue - the rejection notice.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: Request to mailing list "A Test List" rejected
@@ -135,7 +135,7 @@ And there is one message in the *virgin* queue - the rejection notice.
 The bounce gets sent to the original sender.
 
     >>> for recipient in sorted(messages[0].msgdata['recipients']):
-    ...     print recipient
+    ...     print(recipient)
     bart@example.org
 
 Or the message can be approved.
@@ -158,7 +158,7 @@ however the message metadata indicates that the message has been approved.
     >>> messages = get_queue_messages('pipeline')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     From: cris@example.org
     To: ant@example.com
     Subject: Something important
@@ -195,7 +195,7 @@ a copy to be preserve, which skips deleting the message from the storage.
     >>> from mailman.interfaces.messages import IMessageStore
     >>> from zope.component import getUtility
     >>> message_store = getUtility(IMessageStore)
-    >>> print message_store.get_message_by_id('<dolphin>')['message-id']
+    >>> print(message_store.get_message_by_id('<dolphin>')['message-id'])
     <dolphin>
 
 Orthogonal to preservation, the message can also be forwarded to another
@@ -221,14 +221,14 @@ The forwarded message is in the virgin queue, destined for the moderator.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: Forward of moderated message
     From: ant-bounces@example.com
     To: zack@example.com
     ...
 
     >>> for recipient in sorted(messages[0].msgdata['recipients']):
-    ...     print recipient
+    ...     print(recipient)
     zack@example.com
 
 
@@ -264,7 +264,7 @@ simply defer a decision for now.
 The held subscription can also be discarded.
 
     >>> handle_subscription(mlist, 2, Action.discard)
-    >>> print requests.get_request(2)
+    >>> print(requests.get_request(2))
     None
 
 Gwen tries to subscribe to the mailing list, but...
@@ -283,7 +283,7 @@ Gwen tries to subscribe to the mailing list, but...
 
 ...and she receives a rejection notice.
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: Request to mailing list "A Test List" rejected
@@ -315,7 +315,7 @@ The moderators accept the subscription request.
 
 And now Herb is a member of the mailing list.
 
-    >>> print mlist.members.get_member('herb@example.org').address
+    >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
 
@@ -335,14 +335,14 @@ As with subscription requests, the unsubscription request can be deferred.
 
     >>> from mailman.app.moderator import handle_unsubscription
     >>> handle_unsubscription(mlist, 2, Action.defer)
-    >>> print mlist.members.get_member('herb@example.org').address
+    >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
 The held unsubscription can also be discarded, and the member will remain
 subscribed.
 
     >>> handle_unsubscription(mlist, 2, Action.discard)
-    >>> print mlist.members.get_member('herb@example.org').address
+    >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
 The request can be rejected, in which case a message is sent to the member,
@@ -351,7 +351,7 @@ and the person remains a member of the mailing list.
     >>> hold_unsubscription(mlist, 'herb@example.org')
     2
     >>> handle_unsubscription(mlist, 2, Action.reject, 'No can do')
-    >>> print mlist.members.get_member('herb@example.org').address
+    >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
 Herb gets a rejection notice.
@@ -361,7 +361,7 @@ Herb gets a rejection notice.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: Request to mailing list "A Test List" rejected
@@ -385,7 +385,7 @@ the mailing list.
     2
     >>> mlist.send_goodbye_message = False
     >>> handle_unsubscription(mlist, 2, Action.accept)
-    >>> print mlist.members.get_member('herb@example.org')
+    >>> print(mlist.members.get_member('herb@example.org'))
     None
 
 
@@ -412,7 +412,7 @@ There's now a message in the virgin queue, destined for the list owner.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: New subscription request to A Test List from iris@example.org
@@ -434,7 +434,7 @@ Jeff is a member of the mailing list, and chooses to unsubscribe.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: New unsubscription request from A Test List by jeff@example.org
@@ -461,7 +461,7 @@ receive a membership change notice.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: A Test List subscription notification
@@ -480,7 +480,7 @@ get a notification.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: A Test List unsubscription notification
@@ -505,7 +505,7 @@ can get a welcome message.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: Welcome to the "A Test List" mailing list
@@ -529,7 +529,7 @@ goodbye message.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: You have been unsubscribed from the A Test List mailing list

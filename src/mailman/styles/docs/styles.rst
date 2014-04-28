@@ -20,7 +20,7 @@ To start with, there are a few legacy styles.
     >>> from mailman.interfaces.styles import IStyleManager
     >>> manager = getUtility(IStyleManager)
     >>> for style in manager.styles:
-    ...     print style.name
+    ...     print(style.name)
     legacy-announce
     legacy-default
 
@@ -29,13 +29,13 @@ style is applied.
 
     >>> from mailman.interfaces.listmanager import IListManager
     >>> mlist = getUtility(IListManager).create('ant@example.com')
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     None
 
 The legacy default style sets the list's display name.
 
     >>> manager.get('legacy-default').apply(mlist)
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     Ant
 
 
@@ -60,7 +60,7 @@ You can register a new style with the style manager.
 All registered styles are returned in alphabetical order by style name.
 
     >>> for style in manager.styles:
-    ...     print style.name
+    ...     print(style.name)
     a-test-style
     legacy-announce
     legacy-default
@@ -68,7 +68,7 @@ All registered styles are returned in alphabetical order by style name.
 You can also ask the style manager for the style, by name.
 
     >>> test_style = manager.get('a-test-style')
-    >>> print test_style.name
+    >>> print(test_style.name)
     a-test-style
 
 
@@ -79,13 +79,13 @@ You can unregister a style, making it unavailable in the future.
 
     >>> manager.unregister(test_style)
     >>> for style in manager.styles:
-    ...     print style.name
+    ...     print(style.name)
     legacy-announce
     legacy-default
 
 Asking for a missing style returns None.
 
-    >>> print manager.get('a-test-style')
+    >>> print(manager.get('a-test-style'))
     None
 
 
@@ -106,7 +106,7 @@ Now, when we use the high level API, we can ask for the style to be applied.
 
 The style has been applied.
 
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     TEST STYLE LIST
 
 If no style name is provided when creating the list, the system default style
@@ -127,5 +127,5 @@ other style is explicitly given.
     >>> with configuration('styles', default=another_style.name):
     ...     manager.register(another_style)
     ...     mlist = create_list('cat@example.com')
-    >>> print mlist.display_name
+    >>> print(mlist.display_name)
     ANOTHER STYLE LIST

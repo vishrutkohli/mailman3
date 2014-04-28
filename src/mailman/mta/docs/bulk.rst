@@ -95,7 +95,7 @@ a few things.  For example, the first two chunks will be composed of ``.net``
     3
 
     >>> for address in sorted(chunks[0].union(chunks[1])):
-    ...     print address
+    ...     print(address)
     bart@example.org
     cate@example.net
     elle@example.org
@@ -113,7 +113,7 @@ We also know that the next two chunks will contain ``.com`` (5) addresses.
     1
 
     >>> for address in sorted(chunks[2].union(chunks[3])):
-    ...     print address
+    ...     print(address)
     anne@example.com
     dave@example.com
     gwen@example.com
@@ -125,7 +125,7 @@ The next chunk will contain the ``.us`` (2) and ``.ca`` (1) domains.
     >>> len(chunks[4])
     3
     >>> for address in sorted(chunks[4]):
-    ...     print address
+    ...     print(address)
     herb@example.us
     liam@example.ca
     mary@example.us
@@ -136,7 +136,7 @@ The final chunk will contain the outliers, ``.xx`` (1) and ``.zz`` (2).
     >>> len(chunks[5])
     2
     >>> for address in sorted(chunks[5]):
-    ...     print address
+    ...     print(address)
     paco@example.xx
     quaq@example.zz
 
@@ -182,7 +182,7 @@ message sent, with all the recipients packed into the envelope recipients
     >>> messages = list(smtpd.messages)
     >>> len(messages)
     1
-    >>> print messages[0].as_string()
+    >>> print(messages[0].as_string())
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -212,7 +212,7 @@ each with 20 addresses in the ``RCPT TO``.
     5
     >>> for message in messages:
     ...     x_rcptto = message['x-rcptto']
-    ...     print 'Number of recipients:', len(x_rcptto.split(','))
+    ...     print('Number of recipients:', len(x_rcptto.split(',')))
     Number of recipients: 20
     Number of recipients: 20
     Number of recipients: 20
@@ -238,7 +238,7 @@ message metadata...
     {}
 
     >>> message = list(smtpd.messages)[0]
-    >>> print message.as_string()
+    >>> print(message.as_string())
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -257,7 +257,7 @@ message metadata...
     {}
 
     >>> message = list(smtpd.messages)[0]
-    >>> print message.as_string()
+    >>> print(message.as_string())
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -281,7 +281,7 @@ message.
     {}
 
     >>> message = list(smtpd.messages)[0]
-    >>> print message.as_string()
+    >>> print(message.as_string())
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -332,7 +332,7 @@ recipients.
 
     >>> failures = bulk.deliver(mlist, msg, msgdata)
     >>> for address in sorted(failures):
-    ...     print address, failures[address][0], failures[address][1]
+    ...     print(address, failures[address][0], failures[address][1])
     aperson@example.org 500 Error: SMTPRecipientsRefused
     bperson@example.org 500 Error: SMTPRecipientsRefused
     cperson@example.org 500 Error: SMTPRecipientsRefused
@@ -350,7 +350,7 @@ Or there could be some other problem causing an SMTP response failure.
 
     >>> failures = bulk.deliver(mlist, msg, msgdata)
     >>> for address in sorted(failures):
-    ...     print address, failures[address][0], failures[address][1]
+    ...     print(address, failures[address][0], failures[address][1])
     aperson@example.org 450 Error: SMTPResponseException
     bperson@example.org 450 Error: SMTPResponseException
     cperson@example.org 450 Error: SMTPResponseException
@@ -361,7 +361,7 @@ Or there could be some other problem causing an SMTP response failure.
 
     >>> failures = bulk.deliver(mlist, msg, msgdata)
     >>> for address in sorted(failures):
-    ...     print address, failures[address][0], failures[address][1]
+    ...     print(address, failures[address][0], failures[address][1])
     aperson@example.org 500 Error: SMTPResponseException
     bperson@example.org 500 Error: SMTPResponseException
     cperson@example.org 500 Error: SMTPResponseException

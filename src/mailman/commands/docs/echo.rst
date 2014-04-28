@@ -6,11 +6,11 @@ The mail command 'echo' simply replies with the original command and arguments
 to the sender.
 
     >>> command = config.commands['echo']
-    >>> print command.name
+    >>> print(command.name)
     echo
-    >>> print command.argument_description
+    >>> print(command.argument_description)
     [args]
-    >>> print command.description
+    >>> print(command.description)
     Echo back your arguments.
 
 The original message is ignored, but the results receive the echoed command.
@@ -22,9 +22,9 @@ The original message is ignored, but the results receive the echoed command.
     >>> results = Results()
 
     >>> from mailman.email.message import Message
-    >>> print command.process(mlist, Message(), {}, ('foo', 'bar'), results)
+    >>> print(command.process(mlist, Message(), {}, ('foo', 'bar'), results))
     ContinueProcessing.yes
-    >>> print unicode(results)
+    >>> print(unicode(results))
     The results of your email command are provided below.
     <BLANKLINE>
     echo foo bar

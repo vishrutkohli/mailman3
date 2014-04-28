@@ -16,10 +16,10 @@ Domains are how Mailman interacts with email host names and web host names.
     >>> from operator import attrgetter
     >>> def show_domains():
     ...     if len(manager) == 0:
-    ...         print 'no domains'
+    ...         print('no domains')
     ...         return
     ...     for domain in sorted(manager, key=attrgetter('mail_host')):
-    ...         print domain
+    ...         print(domain)
 
     >>> show_domains()
     no domains
@@ -77,9 +77,9 @@ Domains can list all associated mailing lists with the mailing_lists property.
     >>> def show_lists(domain):
     ...     mlists = list(domain.mailing_lists)
     ...     for mlist in mlists:
-    ...         print mlist
+    ...         print(mlist)
     ...     if len(mlists) == 0:
-    ...         print 'no lists'
+    ...         print('no lists')
 
     >>> net_domain = manager['example.net']
     >>> com_domain = manager['example.com']
@@ -99,16 +99,16 @@ In the global domain manager, domains are indexed by their email host name.
 ::
 
     >>> for domain in sorted(manager, key=attrgetter('mail_host')):
-    ...     print domain.mail_host
+    ...     print(domain.mail_host)
     example.com
     example.net
 
-    >>> print manager['example.net']
+    >>> print(manager['example.net'])
     <Domain example.net, The example domain,
             base_url: http://lists.example.net,
             contact_address: postmaster@example.com>
 
-    >>> print manager['doesnotexist.com']
+    >>> print(manager['doesnotexist.com'])
     Traceback (most recent call last):
     ...
     KeyError: u'doesnotexist.com'
@@ -117,15 +117,15 @@ As with a dictionary, you can also get the domain.  If the domain does not
 exist, ``None`` or a default is returned.
 ::
 
-    >>> print manager.get('example.net')
+    >>> print(manager.get('example.net'))
     <Domain example.net, The example domain,
             base_url: http://lists.example.net,
             contact_address: postmaster@example.com>
 
-    >>> print manager.get('doesnotexist.com')
+    >>> print(manager.get('doesnotexist.com'))
     None
 
-    >>> print manager.get('doesnotexist.com', 'blahdeblah')
+    >>> print(manager.get('doesnotexist.com', 'blahdeblah'))
     blahdeblah
 
 Non-existent domains cannot be removed.
@@ -143,5 +143,5 @@ Confirmation tokens can be added to the domain's url to generate the URL to a
 page users can use to confirm their subscriptions.
 
     >>> domain = manager['example.net']
-    >>> print domain.confirm_url('abc')
+    >>> print(domain.confirm_url('abc'))
     http://lists.example.net/confirm/abc

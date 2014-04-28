@@ -21,7 +21,7 @@ Use these functions to create unique ids rather than inlining calls to hashlib
 and whatnot.  These are better instrumented for testing purposes.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [

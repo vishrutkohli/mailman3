@@ -45,7 +45,7 @@ queue.
     >>> items = get_queue_messages('in')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: A broken message
@@ -121,7 +121,7 @@ The message is automatically re-queued to the bounces queue.
     >>> len(items)
     1
 
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     From: aperson@example.com
     To: test@example.com
     Subject: A broken message

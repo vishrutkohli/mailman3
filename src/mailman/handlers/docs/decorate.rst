@@ -24,13 +24,13 @@ decorations are added for digest messages.
 
     >>> from mailman.handlers.decorate import process
     >>> process(mlist, msg, dict(isdigest=True))
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     <BLANKLINE>
     Here is a message.
 
     >>> process(mlist, msg, dict(nodecorate=True))
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     <BLANKLINE>
     Here is a message.
@@ -56,10 +56,10 @@ footer for all mailing lists in our site.
 
     >>> myheader_path = os.path.join(site_dir, 'myheader.txt')
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, 'header'
+    ...     print('header', file=fp)
     >>> myfooter_path = os.path.join(site_dir, 'myfooter.txt')
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, 'footer'
+    ...     print('footer', file=fp)
 
 Setting these attributes on the mailing list causes it to use these
 templates.  Since these are site-global templates, we can use a shorter path.
@@ -74,7 +74,7 @@ Mailman to simply prepend the header and append the footer verbatim.
 
     >>> mlist.preferred_language = 'en'
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     ...
     <BLANKLINE>
@@ -89,14 +89,14 @@ short descriptive name for the mailing list).
 ::
 
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, '$display_name header'
+    ...     print('$display_name header', file=fp)
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, '$display_name footer'
+    ...     print('$display_name footer', file=fp)
 
     >>> msg = message_from_string(msg_text)
     >>> mlist.display_name = 'XTest'
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     ...
     XTest header
@@ -108,13 +108,13 @@ will remain in the header or footer unchanged.
 ::
 
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, '$dummy header'
+    ...     print('$dummy header', file=fp)
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, '$dummy footer'
+    ...     print('$dummy footer', file=fp)
 
     >>> msg = message_from_string(msg_text)
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     ...
     $dummy header
@@ -137,9 +137,9 @@ message payload.
 ::
 
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, 'header'
+    ...     print('header', file=fp)
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, 'footer'
+    ...     print('footer', file=fp)
 
     >>> mlist.preferred_language = 'en'
     >>> msg = message_from_string("""\
@@ -153,10 +153,10 @@ message payload.
     >>> # Don't use 'print' here as above because it won't be obvious from the
     >>> # output that the soft-line break space at the end of the 'Here is a
     >>> # message' line will be retained in the output.
-    >>> print msg['content-type']
+    >>> print(msg['content-type'])
     text/plain; format="flowed"; delsp="no"; charset="us-ascii"
     >>> for line in msg.get_payload().splitlines():
-    ...     print '>{0}<'.format(line)
+    ...     print('>{0}<'.format(line))
     >header<
     >Here is a message <
     >with soft line breaks.<
@@ -176,22 +176,22 @@ convert the text to utf-8 and base-64 encode the message payload.
     >>> mlist.preferred_language = 'ja'
 
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, '$description header'
+    ...     print('$description header', file=fp)
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, '$description footer'
+    ...     print('$description footer', file=fp)
     >>> mlist.description = '\u65e5\u672c\u8a9e'
 
     >>> from email.message import Message
     >>> msg = Message()
     >>> msg.set_payload('Fran\xe7aise', 'iso-8859-1')
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="iso-8859-1"
     Content-Transfer-Encoding: quoted-printable
     <BLANKLINE>
     Fran=E7aise
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="utf-8"
     Content-Transfer-Encoding: base64
@@ -205,9 +205,9 @@ attachments.
 
     >>> mlist.preferred_language = 'en'
     >>> with open(myheader_path, 'w') as fp:
-    ...     print >> fp, 'header'
+    ...     print('header', file=fp)
     >>> with open(myfooter_path, 'w') as fp:
-    ...     print >> fp, 'footer'
+    ...     print('footer', file=fp)
 
     >>> msg = message_from_string("""\
     ... From: aperson@example.org
@@ -219,7 +219,7 @@ attachments.
 
     >>> process(mlist, msg, {})
     >>> msg.set_boundary('BOUNDARY')
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     Content-Type: multipart/mixed; boundary="BOUNDARY"
     <BLANKLINE>
@@ -272,7 +272,7 @@ as if they were simply concatenated.
     >>> msg = MIMEMultipart('mixed', boundary='BOUNDARY',
     ...                     _subparts=(part_1, part_2))
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     Content-Type: multipart/mixed; boundary="BOUNDARY"
     MIME-Version: 1.0
     <BLANKLINE>
@@ -317,7 +317,7 @@ so that the header and footer can be added as attachments.
     ... """)
     >>> process(mlist, msg, {})
     >>> msg.set_boundary('BOUNDARY')
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     ...
     --BOUNDARY

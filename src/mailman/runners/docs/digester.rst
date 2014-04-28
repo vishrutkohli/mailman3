@@ -48,7 +48,7 @@ messages to put in the digest.
 
 The marker message is empty.
 
-    >>> print entry.msg.as_string()
+    >>> print(entry.msg.as_string())
 
 But the message metadata has a reference to the digest file.
 ::
@@ -97,7 +97,7 @@ The MIME digest is a multipart, and the RFC 1153 digest is the other one.
 
 The MIME digest has lots of good stuff, all contained in the multipart.
 
-    >>> print mime.msg.as_string()
+    >>> print(mime.msg.as_string())
     Content-Type: multipart/mixed; boundary="===============...=="
     MIME-Version: 1.0
     From: test-request@example.com
@@ -199,7 +199,7 @@ The MIME digest has lots of good stuff, all contained in the multipart.
 
 The RFC 1153 contains the digest in a single plain text message.
 
-    >>> print rfc1153.msg.as_string()
+    >>> print(rfc1153.msg.as_string())
     From: test-request@example.com
     Subject: Test Digest, Vol 1, Issue 1
     To: test@example.com
@@ -342,7 +342,7 @@ One of which is the MIME digest and the other of which is the RFC 1153 digest.
 
 You can see that the digests contain a mix of French and Japanese.
 
-    >>> print mime.msg.as_string()
+    >>> print(mime.msg.as_string())
     Content-Type: multipart/mixed; boundary="===============...=="
     MIME-Version: 1.0
     From: test-request@example.com
@@ -411,7 +411,7 @@ You can see that the digests contain a mix of French and Japanese.
 The RFC 1153 digest will be encoded in UTF-8 since it contains a mixture of
 French and Japanese characters.
 
-    >>> print rfc1153.msg.as_string()
+    >>> print(rfc1153.msg.as_string())
     From: test-request@example.com
     Subject: Groupe Test, Vol 1, Parution 2
     To: test@example.com

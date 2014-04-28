@@ -84,8 +84,8 @@ VERPing is only actually done if the metadata requests it.
 
     >>> from operator import itemgetter
     >>> for message in sorted(messages, key=itemgetter('x-rcptto')):
-    ...     print message.as_string()
-    ...     print '----------'
+    ...     print(message.as_string())
+    ...     print('----------')
     From: aperson@example.org
     To: test@example.com
     Subject: test one
@@ -119,7 +119,7 @@ VERPing is only actually done if the metadata requests it.
 
 The deliverer made a copy of the original message, so it wasn't changed.
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.org
     To: test@example.com
     Subject: test one

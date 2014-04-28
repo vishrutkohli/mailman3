@@ -57,7 +57,7 @@ an appropriate HTTP 401 Unauthorized error.
 
     >>> from httplib2 import Http
     >>> response, content = Http().request(url, 'GET', None, headers)
-    >>> print content
+    >>> print(content)
     401 Unauthorized
     <BLANKLINE>
     User is not authorized for the REST API
@@ -69,7 +69,7 @@ But with the right headers, the request succeeds.
     ...                                   config.webservice.admin_pass))
     >>> headers['Authorization'] = 'Basic ' + auth
     >>> response, content = Http().request(url, 'GET', None, headers)
-    >>> print response.status
+    >>> print(response.status)
     200
 
 

@@ -15,7 +15,7 @@ implements the ``ISystem`` interface.
 
 The Mailman version is also available via the ``system`` object.
 
-    >>> print system.mailman_version
+    >>> print(system.mailman_version)
     GNU Mailman ...
 
 The Python version running underneath is also available via the ``system``

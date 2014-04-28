@@ -27,7 +27,7 @@ Because ``withlist`` is so complex, you need to request detailed help.
 
     >>> class FakeParser:
     ...     def error(self, message):
-    ...         print message
+    ...         print(message)
     >>> command.parser = FakeParser()
 
     >>> args = FakeArgs()
@@ -50,13 +50,13 @@ single argument, the mailing list.
     >>> sys.path.insert(0, config.VAR_DIR)
 
     >>> with open(os.path.join(config.VAR_DIR, 'showme.py'), 'w') as fp:
-    ...     print >> fp, """\
+    ...     print("""\
     ... def showme(mailing_list):
     ...     print "The list's name is", mailing_list.fqdn_listname
     ...
     ... def displayname(mailing_list):
     ...     print "The list's display name is", mailing_list.display_name
-    ... """
+    ... """, file=fp)
 
 If the name of the function is the same as the module, then you only need to
 name the function once.

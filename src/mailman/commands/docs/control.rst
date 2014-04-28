@@ -70,7 +70,7 @@ stops all the child processes too.
     ...         except OSError as error:
     ...             if error.errno == errno.ESRCH:
     ...                 # The process has exited.
-    ...                 print 'Master process went bye bye'
+    ...                 print('Master process went bye bye')
     ...                 return
     ...             else:
     ...                 raise

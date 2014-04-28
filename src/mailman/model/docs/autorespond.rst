@@ -112,5 +112,5 @@ If there's been no response sent to a particular address, None is returned.
     ...     'bperson@example.com')
     >>> response_set.todays_count(address, Response.command)
     0
-    >>> print response_set.last_response(address, Response.command)
+    >>> print(response_set.last_response(address, Response.command))
     None

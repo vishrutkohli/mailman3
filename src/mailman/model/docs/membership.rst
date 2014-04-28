@@ -43,7 +43,7 @@ in the user database yet.
     >>> from zope.component import getUtility
     >>> user_manager = getUtility(IUserManager)
     >>> user_1 = user_manager.create_user('aperson@example.com', 'Anne Person')
-    >>> print user_1
+    >>> print(user_1)
     <User "Anne Person" (...) at ...>
 
 We can add Anne as an owner of the mailing list, by creating a member role for
@@ -70,7 +70,7 @@ her a moderator.  Nor does it make her a member of the list.
 Bart becomes a moderator of the list.
 
     >>> user_2 = user_manager.create_user('bperson@example.com', 'Bart Person')
-    >>> print user_2
+    >>> print(user_2)
     <User "Bart Person" (...) at ...>
     >>> address_2 = list(user_2.addresses)[0]
     >>> mlist.subscribe(address_2, MemberRole.moderator)
@@ -200,13 +200,13 @@ text email address by using the ``IRoster.get_member()`` method.
 However, if the address is not subscribed with the appropriate role, then None
 is returned.
 
-    >>> print mlist.administrators.get_member('zperson@example.com')
+    >>> print(mlist.administrators.get_member('zperson@example.com'))
     None
-    >>> print mlist.moderators.get_member('aperson@example.com')
+    >>> print(mlist.moderators.get_member('aperson@example.com'))
     None
-    >>> print mlist.members.get_member('zperson@example.com')
+    >>> print(mlist.members.get_member('zperson@example.com'))
     None
-    >>> print mlist.nonmembers.get_member('aperson@example.com')
+    >>> print(mlist.nonmembers.get_member('aperson@example.com'))
     None
 
 
@@ -219,7 +219,7 @@ regardless of their role.
     >>> def sortkey(member):
     ...     return (member.address.email, member.role.value)
     >>> for member in sorted(mlist.subscribers.members, key=sortkey):
-    ...     print member.address.email, member.role
+    ...     print(member.address.email, member.role)
     aperson@example.com MemberRole.member
     aperson@example.com MemberRole.owner
     bperson@example.com MemberRole.member
@@ -249,7 +249,7 @@ automatically accepted for posting to the mailing list.
 
     >>> for member in sorted(mlist.administrators.members,
     ...                      key=attrgetter('address.email')):
-    ...     print member.address.email, member.role, member.moderation_action
+    ...     print(member.address.email, member.role, member.moderation_action)
     aperson@example.com MemberRole.owner     Action.accept
     bperson@example.com MemberRole.moderator Action.accept
 
@@ -258,7 +258,7 @@ should go through the normal moderation checks.
 
     >>> for member in sorted(mlist.members.members,
     ...                      key=attrgetter('address.email')):
-    ...     print member.address.email, member.role, member.moderation_action
+    ...     print(member.address.email, member.role, member.moderation_action)
     aperson@example.com MemberRole.member Action.defer
     bperson@example.com MemberRole.member Action.defer
     cperson@example.com MemberRole.member Action.defer
@@ -266,7 +266,7 @@ should go through the normal moderation checks.
 Postings by nonmembers are held for moderator approval by default.
 
     >>> for member in mlist.nonmembers.members:
-    ...     print member.address.email, member.role, member.moderation_action
+    ...     print(member.address.email, member.role, member.moderation_action)
     fperson@example.com MemberRole.nonmember Action.hold
 
 
@@ -283,7 +283,7 @@ though that the address their changing to must be verified.
     >>> gwen_address = list(gwen.addresses)[0]
     >>> gwen_member = bee.subscribe(gwen_address)
     >>> for m in bee.members.members:
-    ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
+    ...     print(m.member_id.int, m.mailing_list.list_id, m.address.email)
     7 bee.example.com gwen@example.com
 
 Gwen gets a email address.
@@ -301,7 +301,7 @@ address, but the address is not yet verified.
 Her membership has not changed.
 
     >>> for m in bee.members.members:
-    ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
+    ...     print(m.member_id.int, m.mailing_list.list_id, m.address.email)
     7 bee.example.com gwen@example.com
 
 Gwen verifies her email address, and updates her membership.
@@ -313,7 +313,7 @@ Gwen verifies her email address, and updates her membership.
 Now her membership reflects the new address.
 
     >>> for m in bee.members.members:
-    ...     print m.member_id.int, m.mailing_list.list_id, m.address.email
+    ...     print(m.member_id.int, m.mailing_list.list_id, m.address.email)
     7 bee.example.com gperson@example.com
 
 
@@ -325,7 +325,7 @@ An event is triggered when a new member is subscribed to a mailing list.
 
     >>> from mailman.testing.helpers import event_subscribers
     >>> def handle_event(event):
-    ...     print event
+    ...     print(event)
 
     >>> cat = create_list('cat@example.com')
     >>> herb = user_manager.create_address('herb@example.com')

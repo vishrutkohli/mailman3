@@ -34,20 +34,20 @@ through the chain with no matches.
     >>> def hits_and_misses(msgdata):
     ...     hits = msgdata.get('rule_hits', [])
     ...     if len(hits) == 0:
-    ...         print 'No rules hit'
+    ...         print('No rules hit')
     ...     else:
-    ...         print 'Rule hits:'
+    ...         print('Rule hits:')
     ...         for rule_name in hits:
     ...             rule = config.rules[rule_name]
-    ...             print '    {0}: {1}'.format(rule.header, rule.pattern)
+    ...             print('    {0}: {1}'.format(rule.header, rule.pattern))
     ...     misses = msgdata.get('rule_misses', [])
     ...     if len(misses) == 0:
-    ...         print 'No rules missed'
+    ...         print('No rules missed')
     ...     else:
-    ...         print 'Rule misses:'
+    ...         print('Rule misses:')
     ...         for rule_name in misses:
     ...             rule = config.rules[rule_name]
-    ...             print '    {0}: {1}'.format(rule.header, rule.pattern)
+    ...             print('    {0}: {1}'.format(rule.header, rule.pattern))
 
 By looking at the message metadata after chain processing, we can see that
 none of the rules matched.
@@ -78,8 +78,8 @@ matches, it gets held for moderator approval.
     >>> from mailman.testing.helpers import event_subscribers
     >>> def handler(event):
     ...     if isinstance(event, ChainEvent):
-    ...         print event.__class__.__name__, \
-    ...             event.chain.name, event.msg['message-id']
+    ...         print(event.__class__.__name__,
+    ...               event.chain.name, event.msg['message-id'])
 
     >>> del msg['x-spam-score']
     >>> msg['X-Spam-Score'] = '*****'

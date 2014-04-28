@@ -44,13 +44,13 @@ used by the language.  The language object is returned.
 
 And you can get information for all known languages.
 
-    >>> print mgr['en'].description
+    >>> print(mgr['en'].description)
     English
-    >>> print mgr['en'].charset
+    >>> print(mgr['en'].charset)
     us-ascii
-    >>> print mgr['it'].description
+    >>> print(mgr['it'].description)
     Italian
-    >>> print mgr['it'].charset
+    >>> print(mgr['it'].charset)
     iso-8859-1
 
 
@@ -70,7 +70,7 @@ You can iterate over all the known languages.
     >>> languages = sorted((language for language in mgr.languages),
     ...                    key=attrgetter('code'))
     >>> for language in languages:
-    ...     print language.code, language.charset, language.description
+    ...     print(language.code, language.charset, language.description)
     en us-ascii English
     it iso-8859-1 Italian
     pl iso-8859-2 Polish
@@ -84,17 +84,17 @@ You can ask whether a particular language code is known.
 
 You can get a particular language by its code.
 
-    >>> print mgr['it'].description
+    >>> print(mgr['it'].description)
     Italian
-    >>> print mgr['xx'].code
+    >>> print(mgr['xx'].code)
     Traceback (most recent call last):
     ...
     KeyError: u'xx'
-    >>> print mgr.get('it').description
+    >>> print(mgr.get('it').description)
     Italian
-    >>> print mgr.get('xx')
+    >>> print(mgr.get('xx'))
     None
-    >>> print mgr.get('xx', 'missing')
+    >>> print(mgr.get('xx', 'missing'))
     missing
 
 

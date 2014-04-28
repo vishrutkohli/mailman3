@@ -38,7 +38,7 @@ set to moderate new member postings.
     ...                     DeliveryMode.regular, 'en')
     >>> member
     <Member: Anne <anne@example.com> on test@example.com as MemberRole.member>
-    >>> print member.moderation_action
+    >>> print(member.moderation_action)
     Action.defer
 
 In order to find out whether the message is held or accepted, we can subscribe
@@ -48,15 +48,15 @@ to Zope events that are triggered on each case.
     >>> from mailman.interfaces.chain import ChainEvent
     >>> def on_chain(event):
     ...     if isinstance(event, ChainEvent):
-    ...         print event
-    ...         print event.chain
-    ...         print 'Subject:', event.msg['subject']
-    ...         print 'Hits:'
+    ...         print(event)
+    ...         print(event.chain)
+    ...         print('Subject:', event.msg['subject'])
+    ...         print('Hits:')
     ...         for hit in event.msgdata.get('rule_hits', []):
-    ...             print '   ', hit
-    ...         print 'Misses:'
+    ...             print('   ', hit)
+    ...         print('Misses:')
     ...         for miss in event.msgdata.get('rule_misses', []):
-    ...             print '   ', miss
+    ...             print('   ', miss)
 
 Anne's post to the mailing list runs through the incoming runner's default
 built-in chain.  No rules hit and so the message is accepted.
@@ -218,5 +218,5 @@ moderator approval.
     >>> nonmember = mlist.nonmembers.get_member('bart@example.com')
     >>> nonmember
     <Member: bart@example.com on test@example.com as MemberRole.nonmember>
-    >>> print nonmember.moderation_action
+    >>> print(nonmember.moderation_action)
     Action.hold

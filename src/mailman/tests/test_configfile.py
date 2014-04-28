@@ -17,7 +17,7 @@
 
 """Test configuration file searching."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -121,7 +121,7 @@ class TestConfigFileSearch(TestConfigFileBase):
         with fakedirs(fake_testdir):
             # Write a mostly empty configuration file.
             with open(os.path.join(fake_testdir, 'mailman.cfg'), 'w') as fp:
-                print >> fp, '# Fake mailman.cfg file'
+                print('# Fake mailman.cfg file', file=fp)
             with chdir(fake_testdir):
                 # Sometimes symlinks bite us (eg. OS X /var -> /private/var).
                 found = os.path.realpath(search_for_configuration_file())
@@ -167,7 +167,7 @@ class TestConfigFileSearchWithChroot(TestConfigFileBase):
         with fakedirs(fake_testdir):
             # Write a mostly empty configuration file.
             with open(os.path.join(fake_testdir, 'mailman.cfg'), 'w') as fp:
-                print >> fp, '# Fake mailman.cfg file'
+                print('# Fake mailman.cfg file', file=fp)
             with hackenv('MAILMAN_CONFIG_FILE', config_file):
                 self.assertEqual(search_for_configuration_file(), config_file)
 
@@ -179,7 +179,7 @@ class TestConfigFileSearchWithChroot(TestConfigFileBase):
         with fakedirs(fake_testdir):
             # Write a mostly empty configuration file.
             with open(os.path.join(fake_testdir, '.mailman.cfg'), 'w') as fp:
-                print >> fp, '# Fake mailman.cfg file'
+                print('# Fake mailman.cfg file', file=fp)
             with hackenv('HOME', '/home/neil'):
                 self.assertEqual(search_for_configuration_file(), config_file)
 
@@ -191,7 +191,7 @@ class TestConfigFileSearchWithChroot(TestConfigFileBase):
         with fakedirs(fake_testdir):
             # Write a mostly empty configuration file.
             with open(os.path.join(fake_testdir, 'mailman.cfg'), 'w') as fp:
-                print >> fp, '# Fake mailman.cfg file'
+                print('# Fake mailman.cfg file', file=fp)
             self.assertEqual(search_for_configuration_file(), config_file)
 
     def test_sibling_directory(self):
@@ -206,6 +206,6 @@ class TestConfigFileSearchWithChroot(TestConfigFileBase):
                 os.mkdir(os.path.dirname(config_file))
                 # Write a mostly empty configuration file.
                 with open(config_file, 'w') as fp:
-                    print >> fp, '# Fake mailman.cfg file'
-                self.assertEqual(search_for_configuration_file(), 
+                    print('# Fake mailman.cfg file', file=fp)
+                self.assertEqual(search_for_configuration_file(),
                                  fake_config_file)

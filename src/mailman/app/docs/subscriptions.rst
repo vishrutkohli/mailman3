@@ -18,7 +18,7 @@ membership role.  At first, there are no memberships.
     >>> sum(1 for member in service)
     0
     >>> from uuid import UUID
-    >>> print service.get_member(UUID(int=801))
+    >>> print(service.get_member(UUID(int=801)))
     None
 
 
@@ -60,7 +60,7 @@ And all the subscribed members can now be displayed.
               as MemberRole.member>]
     >>> sum(1 for member in service)
     3
-    >>> print service.get_member(UUID(int=3))
+    >>> print(service.get_member(UUID(int=3)))
     <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>
 
 New members can also be added by providing an existing user id instead of an

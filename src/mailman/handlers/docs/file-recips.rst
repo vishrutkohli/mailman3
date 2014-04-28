@@ -25,7 +25,7 @@ returns.
 
     >>> handler = config.handlers['file-recipients']
     >>> handler.process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     <BLANKLINE>
     A message.
@@ -63,12 +63,12 @@ addresses are returned as the set of recipients.
 
     >>> fp = open(file_path, 'w')
     >>> try:
-    ...     print >> fp, 'bperson@example.com'
-    ...     print >> fp, 'cperson@example.com'
-    ...     print >> fp, 'dperson@example.com'
-    ...     print >> fp, 'eperson@example.com'
-    ...     print >> fp, 'fperson@example.com'
-    ...     print >> fp, 'gperson@example.com'
+    ...     print('bperson@example.com', file=fp)
+    ...     print('cperson@example.com', file=fp)
+    ...     print('dperson@example.com', file=fp)
+    ...     print('eperson@example.com', file=fp)
+    ...     print('fperson@example.com', file=fp)
+    ...     print('gperson@example.com', file=fp)
     ... finally:
     ...     fp.close()
 

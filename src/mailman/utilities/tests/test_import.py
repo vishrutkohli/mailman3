@@ -26,8 +26,9 @@ __all__ = [
     ]
 
 
-import cPickle
 import os
+import mock
+import cPickle
 import unittest
 
 from datetime import timedelta, datetime
@@ -107,7 +108,9 @@ class TestBasicImport(unittest.TestCase):
         for rname in ('members', 'digest_members'):
             roster = getattr(self._mlist, rname)
             self.assertFalse(isinstance(roster, dict))
-            self._import()
+            # Suppress warning messages in test output.
+            with mock.patch('sys.stderr'):
+                self._import()
             self.assertFalse(
                 isinstance(roster, dict),
                 'The %s roster has been overwritten by the import' % rname)
@@ -256,7 +259,9 @@ class TestBasicImport(unittest.TestCase):
                          'Encoding to UTF-8 is not handled')
         # Test fallback to ascii with replace.
         self._pckdict[b'info'] = info.encode('iso-8859-1')
-        self._import()
+        # Suppress warning messages in test output.
+        with mock.patch('sys.stderr'):
+            self._import()
         self.assertEqual(self._mlist.info,
                          unicode(self._pckdict[b'info'], 'ascii', 'replace'),
                          "We don't fall back to replacing non-ascii chars")
@@ -394,7 +399,9 @@ class TestMemberActionImport(unittest.TestCase):
             )
 
     def _do_test(self, expected):
-        import_config_pck(self._mlist, self._pckdict)
+        # Suppress warning messages in the test output.
+        with mock.patch('sys.stderr'):
+            import_config_pck(self._mlist, self._pckdict)
         for key, value in expected.iteritems():
             self.assertEqual(getattr(self._mlist, key), value)
 
@@ -514,7 +521,9 @@ class TestConvertToURI(unittest.TestCase):
             self._pckdict[b'mail_host'] = b'test.example.com'
             self._pckdict[str(oldvar)] = test_value
             old_value = getattr(self._mlist, newvar)
-            import_config_pck(self._mlist, self._pckdict)
+            # Suppress warning messages in the test output.
+            with mock.patch('sys.stderr'):
+                import_config_pck(self._mlist, self._pckdict)
             new_value = getattr(self._mlist, newvar)
             self.assertEqual(old_value, new_value,
                 'Default value was not preserved for %s' % newvar)
@@ -718,7 +727,9 @@ class TestRosterImport(unittest.TestCase):
         anne_addr = self._usermanager.create_address(
             'anne@example.com', 'Anne')
         self._mlist.subscribe(anne_addr)
-        import_config_pck(self._mlist, self._pckdict)
+        # Suppress warning messages in test output.
+        with mock.patch('sys.stderr'):
+            import_config_pck(self._mlist, self._pckdict)
         anne = self._usermanager.get_user('anne@example.com')
         self.assertTrue(anne.controls('anne@example.com'))
 

@@ -17,7 +17,7 @@ Create a switchboard by giving its queue name and directory.
     >>> queue_directory = os.path.join(config.QUEUE_DIR, 'test')
     >>> from mailman.core.switchboard import Switchboard
     >>> switchboard = Switchboard('test', queue_directory)
-    >>> print switchboard.name
+    >>> print(switchboard.name)
     test
     >>> switchboard.queue_directory == queue_directory
     True
@@ -32,9 +32,9 @@ Here's a helper function for ensuring things work correctly.
     ...         root, ext = os.path.splitext(qfile)
     ...         files[ext] = files.get(ext, 0) + 1
     ...     if len(files) == 0:
-    ...         print 'empty'
+    ...         print('empty')
     ...     for ext in sorted(files):
-    ...         print '{0}: {1}'.format(ext, files[ext])
+    ...         print('{0}: {1}'.format(ext, files[ext]))
 
 
 Enqueing and dequeing
@@ -50,7 +50,7 @@ dictionary.
 To read the contents of a queue file, dequeue it.
 
     >>> msg, msgdata = switchboard.dequeue(filebase)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     To: _xtest@example.com
     <BLANKLINE>

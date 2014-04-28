@@ -7,7 +7,7 @@ not explicitly mentioned in the set of message recipients.
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['implicit-dest']
-    >>> print rule.name
+    >>> print(rule.name)
     implicit-dest
 
 In order to check for implicit destinations, we need to adapt the mailing list

@@ -90,17 +90,17 @@ of the request data we want.  This returns a 2-tuple of the key and data we
 originally held.
 
     >>> key, data = requests.get_request(2)
-    >>> print key
+    >>> print(key)
     hold_2
 
 There was no additional data associated with request 2.
 
-    >>> print data
+    >>> print(data)
     None
 
 If we ask for a request that is not in the database, we get None back.
 
-    >>> print requests.get_request(801)
+    >>> print(requests.get_request(801))
     None
 
 
@@ -118,7 +118,7 @@ The data is returned when the request is retrieved.  The dictionary will have
 an additional key which holds the name of the request type.
 
     >>> key, data = requests.get_request(5)
-    >>> print key
+    >>> print(key)
     hold_5
     >>> dump_msgdata(data)
     _request_type: held_message
@@ -136,10 +136,10 @@ over by type.
     3
     >>> for request in requests.of_type(RequestType.held_message):
     ...     key, data = requests.get_request(request.id)
-    ...     print request.id, request.request_type, key
+    ...     print(request.id, request.request_type, key)
     ...     if data is not None:
     ...         for key in sorted(data):
-    ...             print '    {0}: {1}'.format(key, data[key])
+    ...             print('    {0}: {1}'.format(key, data[key]))
     1 RequestType.held_message hold_1
     4 RequestType.held_message hold_4
     5 RequestType.held_message hold_5
@@ -162,7 +162,7 @@ database.
 
 Request 2 is no longer in the database.
 
-    >>> print requests.get_request(2)
+    >>> print(requests.get_request(2))
     None
 
     >>> for request in requests.held_requests:

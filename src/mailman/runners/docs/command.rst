@@ -41,7 +41,7 @@ And now the response is in the ``virgin`` queue.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: The results of your email commands
     From: test-bounces@example.com
     To: aperson@example.com
@@ -91,7 +91,7 @@ message is plain text.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: The results of your email commands
     From: test-bounces@example.com
     To: bperson@example.com
@@ -144,7 +144,7 @@ address, and the other is the results of his email command.
     >>> registrar = getUtility(IRegistrar)
     >>> for item in messages:
     ...     subject = item.msg['subject']
-    ...     print 'Subject:', subject
+    ...     print('Subject:', subject)
     ...     if 'confirm' in str(subject):
     ...         token = str(subject).split()[1].strip()
     ...         status = registrar.confirm(token)
@@ -171,7 +171,7 @@ Similarly, to leave a mailing list, the user need only email the ``-leave`` or
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: The results of your email commands
     From: test-bounces@example.com
     To: dperson@example.com
@@ -206,7 +206,7 @@ The ``-confirm`` address is also available as an implicit command.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: The results of your email commands
     From: test-bounces@example.com
     To: dperson@example.com
@@ -250,7 +250,7 @@ looked at by the command queue.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: The results of your email commands
     ...
     <BLANKLINE>
@@ -282,7 +282,7 @@ The ``stop`` command is an alias for ``end``.
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     Subject: The results of your email commands
     ...
     <BLANKLINE>

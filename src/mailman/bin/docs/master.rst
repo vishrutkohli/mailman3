@@ -44,7 +44,7 @@ None of the children are running now.
     >>> for pid in master.runner_pids:
     ...     try:
     ...         os.kill(pid, 0)
-    ...         print 'Process did not exit:', pid
+    ...         print('Process did not exit:', pid)
     ...     except OSError as error:
     ...         if error.errno == errno.ESRCH:
     ...             # The child process exited.

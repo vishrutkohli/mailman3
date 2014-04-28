@@ -53,7 +53,7 @@ short-circuits.
     >>> mlist.filter_content = False
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Type: image/jpeg
     MIME-Version: 1.0
@@ -68,7 +68,7 @@ crafted internally by Mailman.
     >>> mlist.filter_content = True
     >>> msgdata = {'isdigest': True}
     >>> process(mlist, msg, msgdata)
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Type: image/jpeg
     MIME-Version: 1.0
@@ -105,7 +105,7 @@ just that subpart will be stripped.
     ... """)
 
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Type: multipart/mixed; boundary=BOUNDARY
     MIME-Version: 1.0
@@ -162,7 +162,7 @@ removing the inner ``multipart/alternative`` so that the outer
     ... --BOUNDARY--
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Type: multipart/mixed; boundary=BOUNDARY
     MIME-Version: 1.0
@@ -199,7 +199,7 @@ promoted to being the outer part.
     ... """)
 
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Type: text/plain
     X-Content-Filtered-By: Mailman/MimeDel ...
@@ -239,11 +239,11 @@ name of the file containing the message payload to filter.
     >>> script_path = os.path.join(config.DATA_DIR, 'filter.py')
     >>> fp = open(script_path, 'w')
     >>> try:
-    ...     print >> fp, """\
+    ...     print("""\
     ... import sys
     ... print 'Converted text/html to text/plain'
     ... print 'Filename:', sys.argv[1]
-    ... """
+    ... """, file=fp)
     ... finally:
     ...     fp.close()
     >>> config.HTML_TO_PLAIN_TEXT_COMMAND = '%s %s %%(filename)s' % (
@@ -257,7 +257,7 @@ name of the file containing the message payload to filter.
     ... <body></body></html>
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     MIME-Version: 1.0
     Content-Type: text/plain
@@ -316,7 +316,7 @@ so the entire inner ``multipart/mixed`` is discarded.
     ... --AAA--
     ... """)
     >>> process(mlist, msg, {})
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Type: multipart/mixed; boundary=AAA
     X-Content-Filtered-By: Mailman/MimeDel ...

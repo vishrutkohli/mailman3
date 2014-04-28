@@ -19,7 +19,7 @@ You cannot create a mailing list in an unknown domain.
 
     >>> class FakeParser:
     ...     def error(self, message):
-    ...         print message
+    ...         print(message)
     >>> command.parser = FakeParser()
 
     >>> FakeArgs.listname = ['test@example.xx']
@@ -134,7 +134,7 @@ The language must be known to Mailman.
     Created mailing list: test3@example.com
 
     >>> mlist = list_manager.get('test3@example.com')
-    >>> print mlist.preferred_language
+    >>> print(mlist.preferred_language)
     <Language [fr] French>
     >>> FakeArgs.language = None
 
@@ -158,7 +158,7 @@ The notification message is in the virgin queue.
     1
 
     >>> for message in messages:
-    ...     print message.msg.as_string()
+    ...     print(message.msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: Your new mailing list: test6@example.com

@@ -22,7 +22,7 @@ Here is a helper function to check the token strings.
     ...     assert isinstance(token, basestring), 'Not a string'
     ...     assert len(token) == 40, 'Unexpected length: %d' % len(token)
     ...     assert token.isalnum(), 'Not alphanumeric'
-    ...     print 'ok'
+    ...     print('ok')
 
 Here is a helper function to extract tokens from confirmation messages.
 
@@ -90,9 +90,9 @@ There should be no records in the user manager for this address yet.
     >>> from mailman.interfaces.usermanager import IUserManager
     >>> from zope.component import getUtility
     >>> user_manager = getUtility(IUserManager)
-    >>> print user_manager.get_user('aperson@example.com')
+    >>> print(user_manager.get_user('aperson@example.com'))
     None
-    >>> print user_manager.get_address('aperson@example.com')
+    >>> print(user_manager.get_address('aperson@example.com'))
     None
 
 But this address is waiting for confirmation.
@@ -118,7 +118,7 @@ message is sent to the user in order to verify the registered address.
     >>> items = get_queue_messages('virgin')
     >>> len(items)
     1
-    >>> print items[0].msg.as_string()
+    >>> print(items[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: confirm ...
@@ -224,7 +224,7 @@ confirmation step is completed.
     <Address: cperson@example.com [not verified] at ...>
     >>> token = registrar.register(
     ...     mlist, 'cperson@example.com', 'Claire Person')
-    >>> print user_manager.get_user('cperson@example.com')
+    >>> print(user_manager.get_user('cperson@example.com'))
     None
     >>> items = get_queue_messages('virgin')
     >>> len(items)
@@ -256,11 +256,11 @@ mind about registering.  When discarded, no `IAddress` or `IUser` is created.
     >>> check_token(token)
     ok
     >>> registrar.discard(token)
-    >>> print pendingdb.confirm(token)
+    >>> print(pendingdb.confirm(token))
     None
-    >>> print user_manager.get_address('eperson@example.com')
+    >>> print(user_manager.get_address('eperson@example.com'))
     None
-    >>> print user_manager.get_user('eperson@example.com')
+    >>> print(user_manager.get_user('eperson@example.com'))
     None
 
     # Clear the virgin queue of all the preceding confirmation messages.
@@ -331,7 +331,7 @@ However, the pending event matched with that token will still be removed.
     >>> token = pendingdb.add(pendable)
     >>> registrar.confirm(token)
     False
-    >>> print pendingdb.confirm(token)
+    >>> print(pendingdb.confirm(token))
     None
 
 
@@ -346,13 +346,13 @@ list.
 
 Before confirmation, Fred is not a member of the mailing list.
 
-    >>> print mlist.members.get_member('fred.person@example.com')
+    >>> print(mlist.members.get_member('fred.person@example.com'))
     None
 
 But after confirmation, he is.
 
     >>> registrar.confirm(token)
     True
-    >>> print mlist.members.get_member('fred.person@example.com')
+    >>> print(mlist.members.get_member('fred.person@example.com'))
     <Member: Fred Person <fred.person@example.com>
              on alpha@example.com as MemberRole.member>

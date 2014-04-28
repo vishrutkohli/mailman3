@@ -7,7 +7,7 @@ is the empty string when stripped.
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['no-subject']
-    >>> print rule.name
+    >>> print(rule.name)
     no-subject
 
 A message with a non-empty subject does not match the rule.

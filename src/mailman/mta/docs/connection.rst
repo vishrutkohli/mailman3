@@ -69,7 +69,7 @@ will authenticate with the mail server after each new connection.
     ...
     ... """)
     {}
-    >>> print smtpd.get_authentication_credentials()
+    >>> print(smtpd.get_authentication_credentials())
     PLAIN AHRlc3R1c2VyAHRlc3RwYXNz
 
     >>> reset()
@@ -243,7 +243,7 @@ about accidental deliveries to unintended recipients.
     >>> messages = list(smtpd.messages)
     >>> len(messages)
     1
-    >>> print messages[0].as_string()
+    >>> print(messages[0].as_string())
     From: anne@example.com
     To: bart@example.com
     Subject: aardvarks

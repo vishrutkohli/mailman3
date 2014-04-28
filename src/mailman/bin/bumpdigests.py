@@ -51,7 +51,7 @@ def main():
 
     listnames = set(args or config.list_manager.names)
     if not listnames:
-        print _('Nothing to do.')
+        print(_('Nothing to do.'))
         sys.exit(0)
 
     for listname in listnames:
@@ -60,7 +60,7 @@ def main():
             mlist = MailList.MailList(listname)
         except errors.MMListError:
             parser.print_help()
-            print >> sys.stderr, _('No such list: $listname')
+            print(_('No such list: $listname'), file=sys.stderr)
             sys.exit(1)
         try:
             mlist.bump_digest_volume()

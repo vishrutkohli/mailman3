@@ -32,7 +32,7 @@ The message will end up in the `virgin` queue.
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="us-ascii"
     Content-Transfer-Encoding: 7bit
@@ -59,7 +59,7 @@ Again, the message will end up in the `virgin` queue but with the original
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg['precedence']
+    >>> print(messages[0].msg['precedence'])
     list
 
 Sometimes we want to send the message without a `Precedence:` header such as
@@ -74,7 +74,7 @@ Again, the message will end up in the `virgin` queue but without the
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg['precedence']
+    >>> print(messages[0].msg['precedence'])
     None
 
 However, if the message already has a `Precedence:` header, setting the
@@ -85,5 +85,5 @@ However, if the message already has a `Precedence:` header, setting the
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
-    >>> print messages[0].msg['precedence']
+    >>> print(messages[0].msg['precedence'])
     junk

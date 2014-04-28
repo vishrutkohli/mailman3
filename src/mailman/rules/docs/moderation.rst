@@ -17,7 +17,7 @@ Member moderation
 =================
 
     >>> member_rule = config.rules['member-moderation']
-    >>> print member_rule.name
+    >>> print(member_rule.name)
     member-moderation
 
 Anne, a mailing list member, sends a message to the mailing list.  Her
@@ -27,7 +27,7 @@ postings are not moderated.
     >>> from mailman.testing.helpers import subscribe
     >>> subscribe(mlist, 'Anne')
     >>> member = mlist.members.get_member('aperson@example.com')
-    >>> print member.moderation_action
+    >>> print(member.moderation_action)
     Action.defer
 
 Because Anne is not moderated, the member moderation rule does not match.
@@ -62,7 +62,7 @@ Nonmembers are handled in a similar way, although by default, nonmember
 postings are held for moderator approval.
 
     >>> nonmember_rule = config.rules['nonmember-moderation']
-    >>> print nonmember_rule.name
+    >>> print(nonmember_rule.name)
     nonmember-moderation
 
 Bart, who is not a member of the mailing list, sends a message to the list.
@@ -70,7 +70,7 @@ Bart, who is not a member of the mailing list, sends a message to the list.
     >>> from mailman.interfaces.member import MemberRole
     >>> subscribe(mlist, 'Bart', MemberRole.nonmember)
     >>> nonmember = mlist.nonmembers.get_member('bperson@example.com')
-    >>> print nonmember.moderation_action
+    >>> print(nonmember.moderation_action)
     Action.hold
 
 When Bart is registered as a nonmember of the list, his moderation action is

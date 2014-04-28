@@ -17,10 +17,11 @@
 
 """Test some additional corner cases for starting/stopping."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'TestStart',
     'find_master',
     'make_config',
     ]
@@ -54,7 +55,7 @@ def make_config():
     shutil.copyfile(config.filename, config_file)
     with open(config_file, 'a') as fp:
         for runner_config in config.runner_configs:
-            print >> fp, '[{0}]\nstart:no\n'.format(runner_config.name)
+            print('[{0}]\nstart:no\n'.format(runner_config.name), file=fp)
     return config_file
 
 

@@ -100,7 +100,7 @@ The digest has been moved to a unique file.
     >>> from mailman.testing.helpers import get_queue_messages
     >>> item = get_queue_messages('digest')[0]
     >>> for msg in Mailbox(item.msgdata['digest_path']):
-    ...     print msg['subject']
+    ...     print(msg['subject'])
     Test message 2
     Test message 3
     Test message 4

@@ -7,7 +7,7 @@ RFC 2369 ``List-Post:`` header with the value of the list's posting address.
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['loop']
-    >>> print rule.name
+    >>> print(rule.name)
     loop
 
 The header could be missing, in which case the rule does not match.

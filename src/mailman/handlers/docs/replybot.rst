@@ -55,7 +55,7 @@ response.
     reduced_list_headers: True
     version             : 3
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="us-ascii"
     Content-Transfer-Encoding: 7bit
@@ -147,7 +147,7 @@ Unless the ``X-Ack:`` header has a value of ``yes``, in which case, the
     reduced_list_headers: True
     version             : 3
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="us-ascii"
     Content-Transfer-Encoding: 7bit
@@ -186,7 +186,7 @@ will get auto-responses: those sent to the ``-request`` address...
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="us-ascii"
     Content-Transfer-Encoding: 7bit
@@ -219,7 +219,7 @@ will get auto-responses: those sent to the ``-request`` address...
     >>> len(messages)
     1
 
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     Content-Type: text/plain; charset="us-ascii"
     Content-Transfer-Encoding: 7bit
@@ -258,14 +258,14 @@ measured in days.
 This is the first response to bperson, so it gets sent.
 
     >>> handler.process(mlist, msg, dict(to_owner=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     1
 
 But with a grace period greater than zero, no subsequent response will be sent
 right now.
 
     >>> handler.process(mlist, msg, dict(to_owner=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     0
 
 Fast forward 9 days and you still don't get a response.
@@ -275,14 +275,14 @@ Fast forward 9 days and you still don't get a response.
     >>> factory.fast_forward(days=9)
 
     >>> handler.process(mlist, msg, dict(to_owner=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     0
 
 But tomorrow, the sender will get a new auto-response.
 
     >>> factory.fast_forward()
     >>> handler.process(mlist, msg, dict(to_owner=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     1
 
 Of course, everything works the same way for messages to the request
@@ -297,21 +297,21 @@ address, even if the sender is the same person...
     ... """)
 
     >>> handler.process(mlist, msg, dict(to_request=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     1
 
     >>> handler.process(mlist, msg, dict(to_request=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     0
 
     >>> factory.fast_forward(days=9)
     >>> handler.process(mlist, msg, dict(to_request=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     0
 
     >>> factory.fast_forward()
     >>> handler.process(mlist, msg, dict(to_request=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     1
 
 ...and for messages to the posting address.
@@ -325,19 +325,19 @@ address, even if the sender is the same person...
     ... """)
 
     >>> handler.process(mlist, msg, dict(to_list=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     1
 
     >>> handler.process(mlist, msg, dict(to_list=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     0
 
     >>> factory.fast_forward(days=9)
     >>> handler.process(mlist, msg, dict(to_list=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     0
 
     >>> factory.fast_forward()
     >>> handler.process(mlist, msg, dict(to_list=True))
-    >>> print len(get_queue_messages('virgin'))
+    >>> len(get_queue_messages('virgin'))
     1

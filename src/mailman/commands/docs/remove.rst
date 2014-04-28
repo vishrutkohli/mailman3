@@ -25,7 +25,7 @@ A system administrator can remove mailing lists by the command line.
     >>> command.process(args)
     Removed list: test@example.com
 
-    >>> print list_manager.get('test@example.com')
+    >>> print(list_manager.get('test@example.com'))
     None
 
 You can also remove lists quietly.
@@ -37,5 +37,5 @@ You can also remove lists quietly.
     >>> args.quiet = True
     >>> command.process(args)
 
-    >>> print list_manager.get('test@example.com')
+    >>> print(list_manager.get('test@example.com'))
     None

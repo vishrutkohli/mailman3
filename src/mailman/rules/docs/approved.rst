@@ -27,7 +27,7 @@ The ``approved`` rule determines whether the message contains the proper
 approval or not.
 
     >>> rule = config.rules['approved']
-    >>> print rule.name
+    >>> print(rule.name)
     approved
 
 
@@ -102,7 +102,7 @@ the ``Approved`` header (LP: #973790) when it matches.
     >>> msg['Approved'] = 'super secret'
     >>> rule.check(mlist, msg, {})
     True
-    >>> print msg['approved']
+    >>> print(msg['approved'])
     None
 
 It also removes the header when it doesn't match.  If the rule didn't do this,
@@ -111,7 +111,7 @@ then the mailing list could be probed for its moderator password.
     >>> msg['Approved'] = 'not the password'
     >>> rule.check(mlist, msg, {})
     False
-    >>> print msg['approved']
+    >>> print(msg['approved'])
     None
 
 
@@ -135,7 +135,7 @@ payload of the message.  If this pseudo-header looks like a matching
 
 The pseudo-header is always removed from the body of plain text messages.
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Transfer-Encoding: 7bit
     MIME-Version: 1.0
@@ -157,7 +157,7 @@ the pseudo-header line is still removed.
     >>> rule.check(mlist, msg, {})
     False
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     Content-Transfer-Encoding: 7bit
     MIME-Version: 1.0
@@ -197,7 +197,7 @@ be used with MIME documents.
 
 Like before, the pseudo-header is removed, but only from the text parts.
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     MIME-Version: 1.0
     Content-Type: multipart/mixed; boundary="AAA"
@@ -242,7 +242,7 @@ If the correct password is in the non-``text/plain`` part, it is ignored.
 
 Pseudo-header is still stripped, but only from the ``text/plain`` part.
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     MIME-Version: 1.0
     Content-Type: multipart/mixed; boundary="AAA"
@@ -297,7 +297,7 @@ anything that looks like an ``Approved:`` header.
 
 And the header-like text in the ``text/html`` part was stripped.
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     MIME-Version: 1.0
     Content-Type: multipart/mixed; boundary="AAA"
@@ -354,7 +354,7 @@ given).
     >>> rule.check(mlist, msg, {})
     False
 
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     From: aperson@example.com
     MIME-Version: 1.0
     Content-Type: multipart/mixed; boundary="AAA"

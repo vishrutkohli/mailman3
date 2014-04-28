@@ -29,7 +29,7 @@ Creating an unlinked email address is straightforward.
 
 However, such addresses have no real name.
 
-    >>> print address_1.display_name
+    >>> print(address_1.display_name)
     <BLANKLINE>
 
 You can also create an email address object with a real name.
@@ -46,9 +46,9 @@ You can also create an email address object with a real name.
 The ``str()`` of the address is the RFC 2822 preferred originator format,
 while the ``repr()`` carries more information.
 
-    >>> print str(address_2)
+    >>> print(str(address_2))
     Ben Person <bperson@example.com>
-    >>> print repr(address_2)
+    >>> print(repr(address_2))
     <Address: Ben Person <bperson@example.com> [not verified] at 0x...>
 
 You can assign real names to existing addresses.
@@ -61,9 +61,9 @@ You can assign real names to existing addresses.
 These addresses are not linked to users, and can be seen by searching the user
 manager for an associated user.
 
-    >>> print user_manager.get_user('aperson@example.com')
+    >>> print(user_manager.get_user('aperson@example.com'))
     None
-    >>> print user_manager.get_user('bperson@example.com')
+    >>> print(user_manager.get_user('bperson@example.com'))
     None
 
 You can create email addresses that are linked to users by using a different
@@ -84,9 +84,9 @@ interface.
 
 And now you can find the associated user.
 
-    >>> print user_manager.get_user('aperson@example.com')
+    >>> print(user_manager.get_user('aperson@example.com'))
     None
-    >>> print user_manager.get_user('bperson@example.com')
+    >>> print(user_manager.get_user('bperson@example.com'))
     None
     >>> user_manager.get_user('cperson@example.com')
     <User "Claire Person" (...) at ...>
@@ -131,9 +131,9 @@ but the latter must be set explicitly.
 
     >>> address_4 = user_manager.create_address(
     ...     'dperson@example.com', 'Dan Person')
-    >>> print address_4.registered_on
+    >>> print(address_4.registered_on)
     2005-08-01 07:49:23
-    >>> print address_4.verified_on
+    >>> print(address_4.verified_on)
     None
 
 The verification date records when the user has completed a mail-back
@@ -141,7 +141,7 @@ verification procedure.  It takes a datetime object.
 
     >>> from mailman.utilities.datetime import now
     >>> address_4.verified_on = now()
-    >>> print address_4.verified_on
+    >>> print(address_4.verified_on)
     2005-08-01 07:49:23
 
 The address shows the verified status in its representation.
@@ -160,7 +160,7 @@ An event is triggered when the address gets verified.
     >>> from mailman.testing.helpers import event_subscribers
     >>> with event_subscribers(save_event):
     ...     address_5.verified_on = now()
-    >>> print saved_event
+    >>> print(saved_event)
     <AddressVerificationEvent eperson@example.com 2005-08-01 07:49:23>
 
 An event is also triggered when the address is unverified.  In this case,
@@ -169,9 +169,9 @@ address is being unverified.
 
     >>> with event_subscribers(save_event):
     ...     address_5.verified_on = None
-    >>> print saved_event
+    >>> print(saved_event)
     <AddressVerificationEvent eperson@example.com unverified>
-    >>> print saved_event.address.verified_on
+    >>> print(saved_event.address.verified_on)
     None
 
 
@@ -190,18 +190,18 @@ The str() of such an address prints the RFC 2822 preferred originator format
 with the original case-preserved address.  The repr() contains all the gory
 details.
 
-    >>> print str(address_6)
+    >>> print(str(address_6))
     Frank Person <FPERSON@example.com>
-    >>> print repr(address_6)
+    >>> print(repr(address_6))
     <Address: Frank Person <FPERSON@example.com> [not verified]
               key: fperson@example.com at 0x...>
 
 Both the case-insensitive version of the address and the original
 case-preserved version are available on attributes of the `IAddress` object.
 
-    >>> print address_6.email
+    >>> print(address_6.email)
     fperson@example.com
-    >>> print address_6.original_email
+    >>> print(address_6.original_email)
     FPERSON@example.com
 
 Because addresses are case-insensitive for all other purposes, you cannot
@@ -223,7 +223,7 @@ create an address that differs only in case.
 You can get the address using either the lower cased version or case-preserved
 version.  In fact, searching for an address is case insensitive.
 
-    >>> print user_manager.get_address('fperson@example.com').email
+    >>> print(user_manager.get_address('fperson@example.com').email)
     fperson@example.com
-    >>> print user_manager.get_address('FPERSON@example.com').email
+    >>> print(user_manager.get_address('FPERSON@example.com').email)
     fperson@example.com

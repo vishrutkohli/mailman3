@@ -100,7 +100,7 @@ But if the value is ``yes``, then the message will be archived.
     >>> filebase = switchboard.files[0]
     >>> qmsg, qdata = switchboard.dequeue(filebase)
     >>> switchboard.finish(filebase)
-    >>> print qmsg.as_string()
+    >>> print(qmsg.as_string())
     Subject: A sample message
     X-Archive: Yes
     <BLANKLINE>
@@ -124,7 +124,7 @@ message will get archived.
     >>> filebase = switchboard.files[0]
     >>> qmsg, qdata = switchboard.dequeue(filebase)
     >>> switchboard.finish(filebase)
-    >>> print qmsg.as_string()
+    >>> print(qmsg.as_string())
     Subject: A sample message
     <BLANKLINE>
     A message of great import.

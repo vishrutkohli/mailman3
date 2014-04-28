@@ -70,7 +70,7 @@ You can also output this list to a file.
     >>> os.close(fd)
     >>> command.process(args)
     >>> with open(args.output_filename) as fp:
-    ...     print fp.read()
+    ...     print(fp.read())
     Anne Person <anne@aaaxample.com>
     Anne Person <anne@example.com>
     Bart Person <bart@example.com>
@@ -213,7 +213,7 @@ need a file containing email addresses and full names that can be parsed by
     ...                     'Bart Person <bperson@example.com>',
     ...                     'cperson@example.com (Cate Person)',
     ...                     ):
-    ...         print >> fp, address
+    ...         print(address, file=fp)
 
     >>> args.input_filename = path
     >>> args.listname = [mlist2.fqdn_listname]
@@ -236,7 +236,7 @@ taken from standard input.
     ...                 'Elly Person <eperson@example.com>',
     ...                 'fperson@example.com (Fred Person)',
     ...                 ):
-    ...         print >> fp, address
+    ...         print(address, file=fp)
     >>> fp.seek(0)
     >>> import sys
     >>> sys.stdin = fp
@@ -263,7 +263,7 @@ Blank lines and lines that begin with '#' are ignored.
     ...                     '',
     ...                     'iperson@example.com',
     ...                     ):
-    ...         print >> fp, address
+    ...         print(address, file=fp)
 
     >>> args.input_filename = path
     >>> command.process(args)
@@ -286,7 +286,7 @@ printed.
     ...                     'aperson@example.com',
     ...                     'jperson@example.com',
     ...                     ):
-    ...         print >> fp, address
+    ...         print(address, file=fp)
 
     >>> command.process(args)
     Already subscribed (skipping): gperson@example.com

@@ -17,7 +17,7 @@
 
 """Digest runner."""
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
@@ -95,7 +95,7 @@ class Digester:
                         mlist.fqdn_listname, mlist.digest_header_uri))
                 self._header = ''
         self._toc = StringIO()
-        print >> self._toc, _("Today's Topics:\n")
+        print(_("Today's Topics:\n"), file=self._toc)
 
     def add_to_toc(self, msg, count):
         """Add a message to the table of contents."""
@@ -127,10 +127,10 @@ class Digester:
         first = True
         for line in lines:
             if first:
-                print >> self._toc, ' ', line
+                print(' ', line, file=self._toc)
                 first = False
             else:
-                print >> self._toc, '     ', line.lstrip()
+                print('     ', line.lstrip(), file=self._toc)
 
     def add_message(self, msg, count):
         """Add the message to the digest."""
@@ -225,12 +225,12 @@ class RFC1153Digester(Digester):
         self._separator70 = '-' * 70
         self._separator30 = '-' * 30
         self._text = StringIO()
-        print >> self._text, self._masthead
-        print >> self._text
+        print(self._masthead, file=self._text)
+        print(file=self._text)
         # Add the optional digest header.
         if mlist.digest_header_uri is not None:
-            print >> self._text, self._header
-            print >> self._text
+            print(self._header, file=self._text)
+            print(file=self._text)
         # Calculate the set of headers we're to keep in the RFC1153 digest.
         self._keepers = set(config.digests.plain_digest_keep_headers.split())
 
@@ -239,24 +239,24 @@ class RFC1153Digester(Digester):
 
     def add_toc(self, count):
         """Add the table of contents."""
-        print >> self._text, self._toc.getvalue()
-        print >> self._text
-        print >> self._text, self._separator70
-        print >> self._text
+        print(self._toc.getvalue(), file=self._text)
+        print(file=self._text)
+        print(self._separator70, file=self._text)
+        print(file=self._text)
 
     def add_message(self, msg, count):
         """Add the message to the digest."""
         if count > 1:
-            print >> self._text, self._separator30
-            print >> self._text
+            print(self._separator30, file=self._text)
+            print(file=self._text)
         # Each message section contains a few headers.
         for header in config.digests.plain_digest_keep_headers.split():
             if header in msg:
                 value = oneline(msg[header], in_unicode=True)
                 value = wrap('{0}: {1}'.format(header, value))
                 value = '\n\t'.join(value.split('\n'))
-                print >> self._text, value
-        print >> self._text
+                print(value, file=self._text)
+        print(file=self._text)
         # Add the payload.  If the decoded payload is empty, this may be a
         # multipart message.  In that case, just stringify it.
         payload = msg.get_payload(decode=True)
@@ -267,9 +267,9 @@ class RFC1153Digester(Digester):
         except (LookupError, TypeError):
             # Unknown or empty charset.
             payload = unicode(payload, 'us-ascii', 'replace')
-        print >> self._text, payload
+        print(payload, file=self._text)
         if not payload.endswith('\n'):
-            print >> self._text
+            print(file=self._text)
 
     def finish(self):
         """Finish up the digest, producing the email-ready copy."""
@@ -286,18 +286,18 @@ class RFC1153Digester(Digester):
             # MAS: There is no real place for the digest_footer in an RFC 1153
             # compliant digest, so add it as an additional message with
             # Subject: Digest Footer
-            print >> self._text, self._separator30
-            print >> self._text
-            print >> self._text, 'Subject: ' + _('Digest Footer')
-            print >> self._text
-            print >> self._text, footer_text
-            print >> self._text
-            print >> self._text, self._separator30
-            print >> self._text
+            print(self._separator30, file=self._text)
+            print(file=self._text)
+            print('Subject: ' + _('Digest Footer'), file=self._text)
+            print(file=self._text)
+            print(footer_text, file=self._text)
+            print(file=self._text)
+            print(self._separator30, file=self._text)
+            print(file=self._text)
         # Add the sign-off.
         sign_off = _('End of ') + self._digest_id
-        print >> self._text, sign_off
-        print >> self._text, '*' * len(sign_off)
+        print(sign_off, file=self._text)
+        print('*' * len(sign_off), file=self._text)
         # If the digest message can't be encoded by the list character set,
         # fall back to utf-8.
         text = self._text.getvalue()
@@ -325,7 +325,7 @@ class DigestRunner(Runner):
             rfc1153_digest = RFC1153Digester(mlist, volume, digest_number)
             # Cruise through all the messages in the mailbox, first building
             # the table of contents and accumulating Subject: headers and
-            # authors.  The question really is whether it's better from a
+            # authors.  The question really is whether it's better from a1
             # performance and memory footprint to go through the mailbox once
             # and cache the messages in a list, or to cruise through the
             # mailbox twice.  We'll do the latter, but it's a complete guess.

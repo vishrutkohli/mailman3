@@ -52,7 +52,7 @@ However, all addresses are linked to users.
     >>> user_manager = getUtility(IUserManager)
     >>> for address in owners:
     ...     user = user_manager.get_user(address)
-    ...     print int(user.user_id.int), list(user.addresses)[0]
+    ...     print(int(user.user_id.int), list(user.addresses)[0])
     1 aperson@example.com
     2 bperson@example.com
     3 cperson@example.com
@@ -64,7 +64,7 @@ the system, they won't be created again.
     >>> bee = create_list('bee@example.com', owners)
     >>> from operator import attrgetter
     >>> for user in sorted(bee.owners.users, key=attrgetter('user_id')):
-    ...     print int(user.user_id.int), list(user.addresses)[0]
+    ...     print(int(user.user_id.int), list(user.addresses)[0])
     1 aperson@example.com
     2 bperson@example.com
     3 cperson@example.com
@@ -82,7 +82,7 @@ artifacts.
     >>> remove_list(bee)
 
     >>> from mailman.interfaces.listmanager import IListManager
-    >>> print getUtility(IListManager).get('bee@example.com')
+    >>> print(getUtility(IListManager).get('bee@example.com'))
     None
 
 We should now be able to completely recreate the mailing list.

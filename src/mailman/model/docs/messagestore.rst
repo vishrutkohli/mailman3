@@ -30,7 +30,7 @@ However, if the message has a ``Message-ID`` header, it can be stored.
     >>> msg['Message-ID'] = '<87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>'
     >>> message_store.add(msg)
     'AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35'
-    >>> print msg.as_string()
+    >>> print(msg.as_string())
     Subject: An important message
     Message-ID: <87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>
     X-Message-ID-Hash: AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35
@@ -46,15 +46,15 @@ There are several ways to find a message given either the ``Message-ID`` or
 ``X-Message-ID-Hash`` headers.  In either case, if no matching message is
 found, ``None`` is returned.
 
-    >>> print message_store.get_message_by_id('nothing')
+    >>> print(message_store.get_message_by_id('nothing'))
     None
-    >>> print message_store.get_message_by_hash('nothing')
+    >>> print(message_store.get_message_by_hash('nothing'))
     None
 
 Given an existing ``Message-ID``, the message can be found.
 
     >>> message = message_store.get_message_by_id(msg['message-id'])
-    >>> print message.as_string()
+    >>> print(message.as_string())
     Subject: An important message
     Message-ID: <87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>
     X-Message-ID-Hash: AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35
@@ -65,7 +65,7 @@ Given an existing ``Message-ID``, the message can be found.
 Similarly, we can find messages by the ``X-Message-ID-Hash``:
 
     >>> message = message_store.get_message_by_hash(msg['x-message-id-hash'])
-    >>> print message.as_string()
+    >>> print(message.as_string())
     Subject: An important message
     Message-ID: <87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>
     X-Message-ID-Hash: AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35
@@ -83,7 +83,7 @@ contains.
     >>> messages = list(message_store.messages)
     >>> len(messages)
     1
-    >>> print messages[0].as_string()
+    >>> print(messages[0].as_string())
     Subject: An important message
     Message-ID: <87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>
     X-Message-ID-Hash: AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35
@@ -110,7 +110,7 @@ But if you delete an existing message, it really gets deleted.
     >>> message_store.delete_message(message_id)
     >>> list(message_store.messages)
     []
-    >>> print message_store.get_message_by_id(message_id)
+    >>> print(message_store.get_message_by_id(message_id))
     None
-    >>> print message_store.get_message_by_hash(message['x-message-id-hash'])
+    >>> print(message_store.get_message_by_hash(message['x-message-id-hash']))
     None

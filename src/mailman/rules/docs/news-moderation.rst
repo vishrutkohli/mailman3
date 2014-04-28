@@ -11,7 +11,7 @@ directly to the mailing list.
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['news-moderation']
-    >>> print rule.name
+    >>> print(rule.name)
     news-moderation
 
 Set the list configuration variable to enable newsgroup moderation.

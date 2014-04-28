@@ -118,7 +118,7 @@ The receipt will include the original message's subject in the response body,
     recipients          : set([u'aperson@example.com'])
     reduced_list_headers: True
     ...
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     ...
     MIME-Version: 1.0
     ...
@@ -155,7 +155,7 @@ If there is no subject, then the receipt will use a generic message.
     recipients          : set([u'aperson@example.com'])
     reduced_list_headers: True
     ...
-    >>> print messages[0].msg.as_string()
+    >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
     Subject: Test post acknowledgment

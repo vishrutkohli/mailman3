@@ -9,7 +9,7 @@ bytes).
 
     >>> mlist = create_list('_xtest@example.com')
     >>> rule = config.rules['max-size']
-    >>> print rule.name
+    >>> print(rule.name)
     max-size
 
 For example, setting the maximum message size to 1 means that any message
