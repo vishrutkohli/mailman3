@@ -26,6 +26,8 @@ __all__ = [
     ]
 
 
+import falcon
+
 from lazr.config import as_boolean
 from restish import http, resource
 
@@ -48,15 +50,14 @@ PREFERENCES = (
 
 
 
-class ReadOnlyPreferences(resource.Resource):
+class ReadOnlyPreferences:
     """.../<object>/preferences"""
 
     def __init__(self, parent, base_url):
         self._parent = parent
         self._base_url = base_url
 
-    @resource.GET()
-    def preferences(self, segments):
+    def on_get(self, request, response):
         resource = dict()
         for attr in PREFERENCES:
             # Handle this one specially.
@@ -72,7 +73,8 @@ class ReadOnlyPreferences(resource.Resource):
         # Add the self link.
         resource['self_link'] = path_to(
             '{0}/preferences'.format(self._base_url))
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
 
 
