@@ -28,6 +28,8 @@ __all__ = [
     ]
 
 
+import falcon
+
 from uuid import UUID
 from operator import attrgetter
 from restish import http, resource
@@ -94,11 +96,11 @@ class MemberCollection(_MemberBase):
         """See `CollectionMixin`."""
         raise NotImplementedError
 
-    @resource.GET()
-    def container(self, request):
+    def on_get(self, request, response):
         """roster/[members|owners|moderators]"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
 
 

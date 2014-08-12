@@ -94,7 +94,7 @@ class Validator:
         try:
             items = request.PATCH.items()
         except AttributeError:
-            items = request.POST.items()
+            items = request.params.items()
         for key, new_value in items:
             old_value = form_data.get(key, missing)
             if old_value is missing:

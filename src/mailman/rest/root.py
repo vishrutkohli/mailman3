@@ -38,29 +38,12 @@ from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.styles import IStyleManager
 from mailman.rest.addresses import AllAddresses, AnAddress
 from mailman.rest.domains import ADomain, AllDomains
-from mailman.rest.helpers import etag, path_to
+from mailman.rest.helpers import BadRequest, NotFound, child, etag, path_to
 from mailman.rest.lists import AList, AllLists
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
 from mailman.rest.templates import TemplateFinder
 from mailman.rest.users import AUser, AllUsers
-
-
-def child(matcher=None):
-    def decorator(func):
-        if matcher is None:
-            func.__matcher__ = func.__name__
-        else:
-            func.__matcher__ = matcher
-        return func
-    return decorator
-
-
-class BadRequest:
-    def on_get(self, request, response):
-        raise falcon.HTTPError(falcon.HTTP_400, None)
-
-STOP = []
 
 
 
@@ -117,13 +100,13 @@ class TopLevel:
     def system(self, request, segments):
         """/<api>/system"""
         if len(segments) == 0:
-            return System(), STOP
+            return System()
         elif len(segments) > 1:
-            return BadRequest(), STOP
+            return BadRequest(), []
         elif segments[0] == 'preferences':
-            return ReadOnlyPreferences(system_preferences, 'system'), STOP
+            return ReadOnlyPreferences(system_preferences, 'system'), []
         else:
-            return BadRequest(), STOP
+            return NotFound(), []
 
     @child()
     def addresses(self, request, segments):

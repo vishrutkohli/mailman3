@@ -27,6 +27,8 @@ __all__ = [
     ]
 
 
+import falcon
+
 from operator import attrgetter
 from restish import http, resource
 from zope.component import getUtility
@@ -34,7 +36,9 @@ from zope.component import getUtility
 from mailman.interfaces.address import (
     ExistingAddressError, InvalidEmailAddressError)
 from mailman.interfaces.usermanager import IUserManager
-from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
+from mailman.rest.helpers import (
+    BadRequest, CollectionMixin, NotFound, child, etag, path_not_found,
+    path_to)
 from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import Validator
@@ -42,7 +46,7 @@ from mailman.utilities.datetime import now
 
 
 
-class _AddressBase(resource.Resource, CollectionMixin):
+class _AddressBase(CollectionMixin):
     """Shared base class for address representations."""
 
     def _resource_as_dict(self, address):
@@ -72,11 +76,11 @@ class _AddressBase(resource.Resource, CollectionMixin):
 class AllAddresses(_AddressBase):
     """The addresses."""
 
-    @resource.GET()
-    def collection(self, request):
+    def on_get(self, request, response):
         """/addresses"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
 
 
@@ -88,14 +92,13 @@ class _VerifyResource(resource.Resource):
         self._action = action
         assert action in ('verify', 'unverify')
 
-    @resource.POST()
-    def verify(self, request):
+    def on_post(self, request, response):
         # We don't care about the POST data, just do the action.
         if self._action == 'verify' and self._address.verified_on is None:
             self._address.verified_on = now()
         elif self._action == 'unverify':
             self._address.verified_on = None
-        return no_content()
+        response.status = falcon.HTTP_204
 
 
 class AnAddress(_AddressBase):
@@ -109,20 +112,21 @@ class AnAddress(_AddressBase):
         """
         self._address = getUtility(IUserManager).get_address(email)
 
-    @resource.GET()
-    def address(self, request):
+    def on_get(self, request, response):
         """Return a single address."""
         if self._address is None:
-            return http.not_found()
-        return http.ok([], self._resource_as_json(self._address))
+            path_not_found(request, response)
+        else:
+            response.status = falcon.HTTP_200
+            response.body = self._resource_as_json(self._address)
 
-    @resource.child()
+    @child()
     def memberships(self, request, segments):
         """/addresses/<email>/memberships"""
         if len(segments) != 0:
-            return http.bad_request()
+            return BadRequest(), []
         if self._address is None:
-            return http.not_found()
+            return NotFound(), []
         return AddressMemberships(self._address)
 
     @resource.child()
@@ -137,23 +141,23 @@ class AnAddress(_AddressBase):
             'addresses/{0}'.format(self._address.email))
         return child, []
 
-    @resource.child()
+    @child()
     def verify(self, request, segments):
         """/addresses/<email>/verify"""
         if len(segments) != 0:
-            return http.bad_request()
+            return BadRequest(), []
         if self._address is None:
-            return http.not_found()
+            return NotFound(), []
         child = _VerifyResource(self._address, 'verify')
         return child, []
 
-    @resource.child()
+    @child()
     def unverify(self, request, segments):
         """/addresses/<email>/verify"""
         if len(segments) != 0:
-            return http.bad_request()
+            return BadRequest(), []
         if self._address is None:
-            return http.not_found()
+            return NotFound(), []
         child = _VerifyResource(self._address, 'unverify')
         return child, []
 
@@ -171,20 +175,23 @@ class UserAddresses(_AddressBase):
         return sorted(self._user.addresses,
                       key=attrgetter('original_email'))
 
-    @resource.GET()
-    def collection(self, request):
+    def on_get(self, request, response):
         """/addresses"""
-        resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        if self._user is None:
+            path_not_found(request, response)
+        else:
+            response.status = falcon.HTTP_200
+            resource = self._make_collection(request)
+            response.body = etag(resource)
 
-    @resource.POST()
-    def create(self, request):
+    def on_post(self, request, response):
         """POST to /addresses
 
         Add a new address to the user record.
         """
         if self._user is None:
-            return http.not_found()
+            path_not_found(request, response)
+            return
         user_manager = getUtility(IUserManager)
         validator = Validator(email=unicode,
                               display_name=unicode,
@@ -201,7 +208,8 @@ class UserAddresses(_AddressBase):
             # Link the address to the current user and return it.
             address.user = self._user
             location = path_to('addresses/{0}'.format(address.email))
-            return http.created(location, [], None)
+            response.status = falcon.HTTP_201
+            response.location = location
 
 
 

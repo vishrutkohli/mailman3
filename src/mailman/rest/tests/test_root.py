@@ -66,7 +66,7 @@ class TestRoot(unittest.TestCase):
         # /system/foo where `foo` is not `preferences`.
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/system/foo')
-        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.code, 404)
 
     def test_system_preferences_are_read_only(self):
         # /system/preferences are read-only.

@@ -21,8 +21,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'BadRequest',
+    'ChildError',
     'GetterSetter',
+    'NotFound',
     'PATCH',
+    'child',
     'etag',
     'no_content',
     'path_to',
@@ -32,6 +36,7 @@ __all__ = [
 
 import cgi
 import json
+import falcon
 import hashlib
 
 from cStringIO import StringIO
@@ -300,3 +305,40 @@ class GetterSetter:
         if self.decoder is None:
             return value
         return self.decoder(value)
+
+
+
+# Falcon REST framework add-ons.
+
+def child(matcher=None):
+    def decorator(func):
+        if matcher is None:
+            func.__matcher__ = func.__name__
+        else:
+            func.__matcher__ = matcher
+        return func
+    return decorator
+
+
+class ChildError:
+    def __init__(self, status):
+        self._status = status
+
+    def on_get(self, request, response):
+        raise falcon.HTTPError(self._status, None)
+
+
+class BadRequest(ChildError):
+    def __init__(self):
+        super(BadRequest, self).__init__(falcon.HTTP_400)
+
+
+class NotFound(ChildError):
+    def __init__(self):
+        super(NotFound, self).__init__(falcon.HTTP_404)
+
+
+def path_not_found(request, response, **kws):
+    # Like falcon.responders.path_not_found() but sets the body.
+    response.status = falcon.HTTP_404
+    response.body = b'404 Not Found'

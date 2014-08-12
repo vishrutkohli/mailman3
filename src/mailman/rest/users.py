@@ -38,7 +38,8 @@ from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, PATCH, etag, no_content, paginate, path_to)
+    CollectionMixin, GetterSetter, NotFound, PATCH, child, etag, no_content,
+    paginate, path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
@@ -63,7 +64,7 @@ ATTRIBUTES = dict(
 
 
 
-class _UserBase(resource.Resource, CollectionMixin):
+class _UserBase(CollectionMixin):
     """Shared base class for user representations."""
 
     def _resource_as_dict(self, user):
@@ -164,11 +165,11 @@ class AUser(_UserBase):
             return http.not_found()
         return http.ok([], self._resource_as_json(self._user))
 
-    @resource.child()
+    @child()
     def addresses(self, request, segments):
         """/users/<uid>/addresses"""
         if self._user is None:
-            return http.not_found()
+            return NotFound(), []
         return UserAddresses(self._user)
 
     @resource.DELETE()
