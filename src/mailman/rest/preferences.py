@@ -29,11 +29,8 @@ __all__ = [
 import falcon
 
 from lazr.config import as_boolean
-from restish import http, resource
-
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
-from mailman.rest.helpers import (
-    GetterSetter, PATCH, etag, no_content, path_to)
+from mailman.rest.helpers import GetterSetter, etag, path_to
 from mailman.rest.validator import (
     Validator, enum_validator, language_validator)
 
@@ -81,9 +78,9 @@ class ReadOnlyPreferences:
 class Preferences(ReadOnlyPreferences):
     """Preferences which can be changed."""
 
-    def patch_put(self, request, is_optional):
+    def patch_put(self, request, response, is_optional):
         if self._parent is None:
-            return http.not_found()
+            response.status = falcon.HTTP_404
         kws = dict(
             acknowledge_posts=GetterSetter(as_boolean),
             hide_address = GetterSetter(as_boolean),
@@ -99,23 +96,22 @@ class Preferences(ReadOnlyPreferences):
         try:
             Validator(**kws).update(self._parent, request)
         except ValueError as error:
-            return http.bad_request([], str(error))
-        return no_content()
+            falcon.responders.bad_request(
+                request, response, body=str(error))
+        else:
+            response.status = falcon.HTTP_204
 
-    @PATCH()
-    def patch_preferences(self, request):
+    def on_patch(self, request, response):
         """Patch the preferences."""
-        return self.patch_put(request, is_optional=True)
+        self.patch_put(request, response, is_optional=True)
 
-    @resource.PUT()
-    def put_preferences(self, request):
+    def on_put(self, request, response):
         """Change all preferences."""
-        return self.patch_put(request, is_optional=False)
+        self.patch_put(request, response, is_optional=False)
 
-    @resource.DELETE()
-    def delete_preferences(self, request):
+    def on_delete(self, request, response):
         """Delete all preferences."""
         for attr in PREFERENCES:
             if hasattr(self._parent, attr):
                 setattr(self._parent, attr, None)
-        return no_content()
+        response.status = falcon.HTTP_204

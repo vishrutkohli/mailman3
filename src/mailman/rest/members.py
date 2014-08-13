@@ -45,14 +45,14 @@ from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    CollectionMixin, PATCH, etag, no_content, paginate, path_to)
+    CollectionMixin, PATCH, child, etag, no_content, paginate, path_to)
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
 
 
 
-class _MemberBase(resource.Resource, CollectionMixin):
+class _MemberBase(CollectionMixin):
     """Shared base class for member representations."""
 
     def _resource_as_dict(self, member):
@@ -126,7 +126,7 @@ class AMember(_MemberBase):
             return http.not_found()
         return http.ok([], self._resource_as_json(self._member))
 
-    @resource.child()
+    @child()
     def preferences(self, request, segments):
         """/members/<id>/preferences"""
         if len(segments) != 0:
@@ -138,7 +138,7 @@ class AMember(_MemberBase):
             'members/{0}'.format(self._member.member_id.int))
         return child, []
 
-    @resource.child()
+    @child()
     def all(self, request, segments):
         """/members/<id>/all/preferences"""
         if len(segments) == 0:

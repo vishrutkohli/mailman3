@@ -129,7 +129,7 @@ class AnAddress(_AddressBase):
             return NotFound(), []
         return AddressMemberships(self._address)
 
-    @resource.child()
+    @child()
     def preferences(self, request, segments):
         """/addresses/<email>/preferences"""
         if len(segments) != 0:

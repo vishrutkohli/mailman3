@@ -185,7 +185,7 @@ class AUser(_UserBase):
         user_manager.delete_user(self._user)
         return no_content()
 
-    @resource.child()
+    @child()
     def preferences(self, request, segments):
         """/addresses/<email>/preferences"""
         if len(segments) != 0:
