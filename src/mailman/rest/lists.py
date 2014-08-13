@@ -26,6 +26,7 @@ __all__ = [
     'ListArchivers',
     'ListConfiguration',
     'ListsForDomain',
+    'Styles',
     ]
 
 
@@ -37,15 +38,17 @@ from restish import http, resource
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list, remove_list
+from mailman.config import config
 from mailman.interfaces.domain import BadDomainSpecificationError
 from mailman.interfaces.listmanager import (
     IListManager, ListAlreadyExistsError)
 from mailman.interfaces.mailinglist import IListArchiverSet
 from mailman.interfaces.member import MemberRole
+from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.rest.configuration import ListConfiguration
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, PATCH, etag, no_content, paginate, path_to,
+    CollectionMixin, GetterSetter, NotFound, child, etag, paginate, path_to,
     restish_matcher)
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
@@ -140,20 +143,21 @@ class AList(_ListBase):
         else:
             self._mlist = manager.get_by_list_id(list_identifier)
 
-    @resource.GET()
-    def mailing_list(self, request):
+    def on_get(self, request, response):
         """Return a single mailing list end-point."""
         if self._mlist is None:
-            return http.not_found()
-        return http.ok([], self._resource_as_json(self._mlist))
+            falcon.responders.path_not_found(request, response)
+        else:
+            response.status = falcon.HTTP_200
+            response.body = self._resource_as_json(self._mlist)
 
-    @resource.DELETE()
-    def delete_list(self, request):
+    def on_delete(self, request, response):
         """Delete the named mailing list."""
         if self._mlist is None:
-            return http.not_found()
-        remove_list(self._mlist)
-        return no_content()
+            falcon.responders.path_not_found(request, response)
+        else:
+            remove_list(self._mlist)
+            response.status = falcon.HTTP_204
 
     @resource.child(member_matcher)
     def member(self, request, segments, role, email):
@@ -195,11 +199,11 @@ class AList(_ListBase):
             return http.not_found()
         return SubscriptionRequests(self._mlist)
 
-    @resource.child()
+    @child()
     def archivers(self, request, segments):
         """Return a representation of mailing list archivers."""
         if self._mlist is None:
-            return http.not_found()
+            return NotFound(), []
         return ListArchivers(self._mlist)
 
 
@@ -229,11 +233,11 @@ class AllLists(_ListBase):
             response.status = falcon.HTTP_201
             response.location = location
 
-    @resource.GET()
-    def collection(self, request):
+    def on_get(self, request, response):
         """/lists"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
 
 
@@ -245,7 +249,7 @@ class MembersOfList(MemberCollection):
         self._mlist = mailing_list
         self._role = role
 
-    #@paginate
+    @paginate
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         # Overrides _MemberBase._get_collection() because we only want to
@@ -267,7 +271,7 @@ class ListsForDomain(_ListBase):
         response.status = falcon.HTTP_200
         response.body = etag(resource)
 
-    #@paginate
+    @paginate
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(self._domain.mailing_lists)
@@ -291,21 +295,21 @@ class ArchiverGetterSetter(GetterSetter):
         archiver.is_enabled = as_boolean(value)
 
 
-class ListArchivers(resource.Resource):
+class ListArchivers:
     """The archivers for a list, with their enabled flags."""
 
     def __init__(self, mlist):
         self._mlist = mlist
 
-    @resource.GET()
-    def statuses(self, request):
+    def on_get(self, request, response):
         """Get all the archiver statuses."""
         archiver_set = IListArchiverSet(self._mlist)
         resource = {archiver.name: archiver.is_enabled
                     for archiver in archiver_set.archivers}
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
-    def patch_put(self, request, is_optional):
+    def patch_put(self, request, response, is_optional):
         archiver_set = IListArchiverSet(self._mlist)
         kws = {archiver.name: ArchiverGetterSetter(self._mlist)
                for archiver in archiver_set.archivers}
@@ -315,15 +319,30 @@ class ListArchivers(resource.Resource):
         try:
             Validator(**kws).update(self._mlist, request)
         except ValueError as error:
-            return http.bad_request([], str(error))
-        return no_content()
+            falcon.responders.bad_request(request, response, body=str(error))
+        else:
+            response.status = falcon.HTTP_204
 
-    @resource.PUT()
-    def put_statuses(self, request):
+    def on_put(self, request, response):
         """Update all the archiver statuses."""
-        return self.patch_put(request, is_optional=False)
+        self.patch_put(request, response, is_optional=False)
 
-    @PATCH()
-    def patch_statuses(self, request):
+    def on_patch(self, request, response):
         """Patch some archiver statueses."""
-        return self.patch_put(request, is_optional=True)
+        self.patch_put(request, response, is_optional=True)
+
+
+
+class Styles:
+    """Simple resource representing all list styles."""
+
+    def __init__(self):
+        manager = getUtility(IStyleManager)
+        style_names = sorted(style.name for style in manager.styles)
+        self._resource = dict(
+            style_names=style_names,
+            default=config.styles.default)
+
+    def on_get(self, request, response):
+        response.status = falcon.HTTP_200
+        response.body = etag(self._resource)

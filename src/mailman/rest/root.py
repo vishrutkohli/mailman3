@@ -35,11 +35,10 @@ from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.system import system
 from mailman.interfaces.listmanager import IListManager
-from mailman.interfaces.styles import IStyleManager
 from mailman.rest.addresses import AllAddresses, AnAddress
 from mailman.rest.domains import ADomain, AllDomains
 from mailman.rest.helpers import BadRequest, NotFound, child, etag, path_to
-from mailman.rest.lists import AList, AllLists
+from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
 from mailman.rest.templates import TemplateFinder
@@ -139,11 +138,7 @@ class TopLevel:
         if len(segments) == 0:
             return AllLists()
         elif len(segments) == 1 and segments[0] == 'styles':
-            manager = getUtility(IStyleManager)
-            style_names = sorted(style.name for style in manager.styles)
-            resource = dict(style_names=style_names,
-                            default=config.styles.default)
-            return http.ok([], etag(resource))
+            return Styles(), []
         else:
             # list-id is preferred, but for backward compatibility,
             # fqdn_listname is also accepted.

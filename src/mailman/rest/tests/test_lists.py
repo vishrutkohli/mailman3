@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'TestListArchivers',
+    'TestListPagination',
     'TestLists',
     'TestListsMissing',
     ]
@@ -228,3 +229,84 @@ class TestListArchivers(unittest.TestCase):
                 method='PATCH')
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason, 'Invalid boolean value: sure')
+
+
+
+class TestListPagination(unittest.TestCase):
+    """Test mailing list pagination functionality.
+
+    We create a bunch of mailing lists within a domain.  When we want to
+    get all the lists in that domain via the REST API, we need to
+    paginate over them, otherwise there could be too many for display.
+    """
+
+    layer = RESTLayer
+
+    def setUp(self):
+        with transaction():
+            # Create a bunch of mailing lists in the example.com domain.
+            create_list('ant@example.com')
+            create_list('bee@example.com')
+            create_list('cat@example.com')
+            create_list('dog@example.com')
+            create_list('emu@example.com')
+            create_list('fly@example.com')
+
+    def test_first_page(self):
+        resource, response = call_api(
+            'http://localhost:9001/3.0/domains/example.com/lists'
+            '?count=1&page=1')
+        # There are 6 total lists, but only the first one in the page.
+        self.assertEqual(resource['total_size'], 1)
+        self.assertEqual(resource['start'], 0)
+        self.assertEqual(len(resource['entries']), 1)
+        entry = resource['entries'][0]
+        self.assertEqual(entry['fqdn_listname'], 'ant@example.com')
+
+    def test_second_page(self):
+        resource, response = call_api(
+            'http://localhost:9001/3.0/domains/example.com/lists'
+            '?count=1&page=2')
+        # There are 6 total lists, but only the first one in the page.
+        self.assertEqual(resource['total_size'], 1)
+        self.assertEqual(resource['start'], 0)
+        self.assertEqual(len(resource['entries']), 1)
+        entry = resource['entries'][0]
+        self.assertEqual(entry['fqdn_listname'], 'bee@example.com')
+
+    def test_last_page(self):
+        resource, response = call_api(
+            'http://localhost:9001/3.0/domains/example.com/lists'
+            '?count=1&page=6')
+        # There are 6 total lists, but only the first one in the page.
+        self.assertEqual(resource['total_size'], 1)
+        self.assertEqual(resource['start'], 0)
+        self.assertEqual(len(resource['entries']), 1)
+        entry = resource['entries'][0]
+        self.assertEqual(entry['fqdn_listname'], 'fly@example.com')
+
+    def test_zeroth_page(self):
+        # Page numbers start at one.
+        with self.assertRaises(HTTPError) as cm:
+            resource, response = call_api(
+                'http://localhost:9001/3.0/domains/example.com/lists'
+                '?count=1&page=0')
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_negative_page(self):
+        # Negative pages are not allowed.
+        with self.assertRaises(HTTPError) as cm:
+            resource, response = call_api(
+                'http://localhost:9001/3.0/domains/example.com/lists'
+                '?count=1&page=-1')
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_past_last_page(self):
+        # The 7th page doesn't exist so the collection is empty.
+        resource, response = call_api(
+            'http://localhost:9001/3.0/domains/example.com/lists'
+            '?count=1&page=7')
+        # There are 6 total lists, but only the first one in the page.
+        self.assertEqual(resource['total_size'], 0)
+        self.assertEqual(resource['start'], 0)
+        self.assertNotIn('entries', resource)

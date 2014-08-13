@@ -43,7 +43,6 @@ from cStringIO import StringIO
 from datetime import datetime, timedelta
 from enum import Enum
 from lazr.config import as_boolean
-from restish import http
 from restish.http import Response
 from restish.resource import MethodDecorator
 from webob.multidict import MultiDict
@@ -124,22 +123,15 @@ def paginate(method):
     arguments.
     """
     def wrapper(self, request, *args, **kwargs):
-        try:
-            count = int(request.GET['count'])
-            page = int(request.GET['page'])
-            if count < 0 or page < 0:
-                return http.bad_request([], b'Invalid parameters')
-        # Wrong parameter types or no GET attribute in request object.
-        except (AttributeError, ValueError, TypeError):
-            return http.bad_request([], b'Invalid parameters')
-        # No count/page params.
-        except KeyError:
-            count = page = None
+        # Allow falcon's HTTPBadRequest exceptions to percolate up.  They'll
+        # get turned into HTTP 400 errors.
+        count = request.get_param_as_int('count', min=0)
+        page = request.get_param_as_int('page', min=1)
         result = method(self, request, *args, **kwargs)
         if count is None and page is None:
             return result
-        list_start = int((page - 1) * count)
-        list_end = int(page * count)
+        list_start = (page - 1) * count
+        list_end = page * count
         return result[list_start:list_end]
     return wrapper
 
