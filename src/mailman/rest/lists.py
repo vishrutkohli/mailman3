@@ -29,6 +29,8 @@ __all__ = [
     ]
 
 
+import falcon
+
 from lazr.config import as_boolean
 from operator import attrgetter
 from restish import http, resource
@@ -103,7 +105,7 @@ def config_matcher(request, segments):
 
 
 
-class _ListBase(resource.Resource, CollectionMixin):
+class _ListBase(CollectionMixin):
     """Shared base class for mailing list representations."""
 
     def _resource_as_dict(self, mlist):
@@ -205,8 +207,7 @@ class AList(_ListBase):
 class AllLists(_ListBase):
     """The mailing lists."""
 
-    @resource.POST()
-    def create(self, request):
+    def on_post(self, request, response):
         """Create a new mailing list."""
         try:
             validator = Validator(fqdn_listname=unicode,
@@ -214,16 +215,19 @@ class AllLists(_ListBase):
                                   _optional=('style_name',))
             mlist = create_list(**validator(request))
         except ListAlreadyExistsError:
-            return http.bad_request([], b'Mailing list exists')
+            falcon.responders.bad_request(
+                request, response, body=b'Mailing list exists')
         except BadDomainSpecificationError as error:
-            return http.bad_request([], b'Domain does not exist: {0}'.format(
+            falcon.responders.bad_request(
+                request, response, body=b'Domain does not exist: {0}'.format(
                 error.domain))
         except ValueError as error:
-            return http.bad_request([], str(error))
-        # wsgiref wants headers to be bytes, not unicodes.
-        location = path_to('lists/{0}'.format(mlist.list_id))
-        # Include no extra headers or body.
-        return http.created(location, [], None)
+            falcon.responders.bad_request(
+                request, response, body=str(error))
+        else:
+            location = path_to('lists/{0}'.format(mlist.list_id))
+            response.status = falcon.HTTP_201
+            response.location = location
 
     @resource.GET()
     def collection(self, request):
@@ -241,7 +245,7 @@ class MembersOfList(MemberCollection):
         self._mlist = mailing_list
         self._role = role
 
-    @paginate
+    #@paginate
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         # Overrides _MemberBase._get_collection() because we only want to
@@ -257,13 +261,13 @@ class ListsForDomain(_ListBase):
     def __init__(self, domain):
         self._domain = domain
 
-    @resource.GET()
-    def collection(self, request):
+    def on_get(self, request, response):
         """/domains/<domain>/lists"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
-    @paginate
+    #@paginate
     def _get_collection(self, request):
         """See `CollectionMixin`."""
         return list(self._domain.mailing_lists)

@@ -26,18 +26,19 @@ __all__ = [
     ]
 
 
-from restish import http, resource
-from zope.component import getUtility
+import falcon
 
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, IDomainManager)
-from mailman.rest.helpers import CollectionMixin, etag, no_content, path_to
+from mailman.rest.helpers import (
+    BadRequest, CollectionMixin, NotFound, child, etag, path_to)
 from mailman.rest.lists import ListsForDomain
 from mailman.rest.validator import Validator
+from zope.component import getUtility
 
 
 
-class _DomainBase(resource.Resource, CollectionMixin):
+class _DomainBase(CollectionMixin):
     """Shared base class for domain representations."""
 
     def _resource_as_dict(self, domain):
@@ -62,41 +63,42 @@ class ADomain(_DomainBase):
     def __init__(self, domain):
         self._domain = domain
 
-    @resource.GET()
-    def domain(self, request):
+    def on_get(self, request, response):
         """Return a single domain end-point."""
         domain = getUtility(IDomainManager).get(self._domain)
         if domain is None:
-            return http.not_found()
-        return http.ok([], self._resource_as_json(domain))
+            falcon.responders.path_not_found(request, response)
+        else:
+            response.status = falcon.HTTP_200
+            response.body = self._resource_as_json(domain)
 
-    @resource.DELETE()
-    def delete(self, request):
+    def on_delete(self, request, response):
         """Delete the domain."""
         try:
             getUtility(IDomainManager).remove(self._domain)
         except KeyError:
             # The domain does not exist.
-            return http.not_found()
-        return no_content()
+            falcon.responders.path_not_found(
+                request, response, '404 Not Found')
+        else:
+            response.status = falcon.HTTP_204
 
-    @resource.child()
+    @child()
     def lists(self, request, segments):
         """/domains/<domain>/lists"""
         if len(segments) == 0:
             domain = getUtility(IDomainManager).get(self._domain)
             if domain is None:
-                return http.not_found()
+                return NotFound()
             return ListsForDomain(domain)
         else:
-            return http.bad_request()
+            return BadRequest(), []
 
 
 class AllDomains(_DomainBase):
     """The domains."""
 
-    @resource.POST()
-    def create(self, request):
+    def on_post(self, request, response):
         """Create a new domain."""
         domain_manager = getUtility(IDomainManager)
         try:
@@ -108,15 +110,18 @@ class AllDomains(_DomainBase):
                                              'contact_address'))
             domain = domain_manager.add(**validator(request))
         except BadDomainSpecificationError:
-            return http.bad_request([], b'Domain exists')
+            falcon.responders.bad_request(
+                request, response, body=b'Domain exists')
         except ValueError as error:
-            return http.bad_request([], str(error))
-        location = path_to('domains/{0}'.format(domain.mail_host))
-        # Include no extra headers or body.
-        return http.created(location, [], None)
+            falcon.responders.bad_request(
+                request, response, body=str(error))
+        else:
+            location = path_to('domains/{0}'.format(domain.mail_host))
+            response.status = falcon.HTTP_201
+            response.location = location
 
-    @resource.GET()
-    def collection(self, request):
+    def on_get(self, request, response):
         """/domains"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
