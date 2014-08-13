@@ -324,8 +324,11 @@ class ChildError:
     def __init__(self, status):
         self._status = status
 
-    def on_get(self, request, response):
+    def _oops(self, request, response):
         raise falcon.HTTPError(self._status, None)
+
+    on_get = _oops
+    on_post = _oops
 
 
 class BadRequest(ChildError):
@@ -336,9 +339,3 @@ class BadRequest(ChildError):
 class NotFound(ChildError):
     def __init__(self):
         super(NotFound, self).__init__(falcon.HTTP_404)
-
-
-def path_not_found(request, response, **kws):
-    # Like falcon.responders.path_not_found() but sets the body.
-    response.status = falcon.HTTP_404
-    response.body = b'404 Not Found'

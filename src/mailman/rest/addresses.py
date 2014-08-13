@@ -37,8 +37,7 @@ from mailman.interfaces.address import (
     ExistingAddressError, InvalidEmailAddressError)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    BadRequest, CollectionMixin, NotFound, child, etag, path_not_found,
-    path_to)
+    BadRequest, CollectionMixin, NotFound, child, etag, path_to)
 from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import Validator
@@ -115,7 +114,8 @@ class AnAddress(_AddressBase):
     def on_get(self, request, response):
         """Return a single address."""
         if self._address is None:
-            path_not_found(request, response)
+            falcon.responders.path_not_found(
+                request, response, b'404 Not Found')
         else:
             response.status = falcon.HTTP_200
             response.body = self._resource_as_json(self._address)
@@ -178,7 +178,8 @@ class UserAddresses(_AddressBase):
     def on_get(self, request, response):
         """/addresses"""
         if self._user is None:
-            path_not_found(request, response)
+            falcon.responders.path_not_found(
+                request, response, b'404 Not Found')
         else:
             response.status = falcon.HTTP_200
             resource = self._make_collection(request)
@@ -190,7 +191,7 @@ class UserAddresses(_AddressBase):
         Add a new address to the user record.
         """
         if self._user is None:
-            path_not_found(request, response)
+            falcon.responders.path_not_found(request, response)
             return
         user_manager = getUtility(IUserManager)
         validator = Validator(email=unicode,
@@ -199,11 +200,13 @@ class UserAddresses(_AddressBase):
         try:
             address = user_manager.create_address(**validator(request))
         except ValueError as error:
-            return http.bad_request([], str(error))
+            falcon.responders.bad_request(request, response, body=str(error))
         except InvalidEmailAddressError:
-            return http.bad_request([], b'Invalid email address')
+            falcon.responders.bad_request(
+                request, response, body=b'Invalid email address')
         except ExistingAddressError:
-            return http.bad_request([], b'Address already exists')
+            falcon.responders.bad_request(
+                request, response, body=b'Address already exists')
         else:
             # Link the address to the current user and return it.
             address.user = self._user

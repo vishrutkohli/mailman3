@@ -26,6 +26,7 @@ __all__ = [
     ]
 
 
+import falcon
 import logging
 
 from falcon import API
@@ -36,7 +37,6 @@ from wsgiref.simple_server import make_server as wsgi_server
 
 from mailman.config import config
 from mailman.database.transaction import transactional
-from mailman.rest.helpers import path_not_found
 from mailman.rest.root import Root
 
 
@@ -111,7 +111,7 @@ class RootedAPI(API):
             else:
                 # None of the attributes matched this path component, so the
                 # response is a 404.
-                return path_not_found, {}, None
+                return falcon.responders.path_not_found, {}, None
 
 
 
