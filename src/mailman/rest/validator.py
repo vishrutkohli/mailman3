@@ -62,7 +62,7 @@ def subscriber_validator(subscriber):
     try:
         return UUID(int=int(subscriber))
     except ValueError:
-        return subscriber
+        return unicode(subscriber)
 
 
 def language_validator(code):
@@ -166,7 +166,7 @@ class PatchValidator(Validator):
             that is defined as read-only.
         """
         validationators = {}
-        for attribute in request.PATCH:
+        for attribute in request.params:
             if attribute not in converters:
                 raise UnknownPATCHRequestError(attribute)
             if converters[attribute].decoder is None:

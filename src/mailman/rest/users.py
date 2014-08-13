@@ -26,8 +26,10 @@ __all__ = [
     ]
 
 
+import falcon
+
 from passlib.utils import generate_password as generate
-from restish import http, resource
+from restish import http
 from uuid import UUID
 from zope.component import getUtility
 
@@ -38,8 +40,7 @@ from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, NotFound, PATCH, child, etag, no_content,
-    paginate, path_to)
+    CollectionMixin, GetterSetter, NotFound, child, etag, paginate, path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
@@ -97,14 +98,13 @@ class _UserBase(CollectionMixin):
 class AllUsers(_UserBase):
     """The users."""
 
-    @resource.GET()
-    def collection(self, request):
+    def on_get(self, request, response):
         """/users"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
-    @resource.POST()
-    def create(self, request):
+    def on_post(self, request, response):
         """Create a new user."""
         try:
             validator = Validator(email=unicode,
@@ -113,7 +113,8 @@ class AllUsers(_UserBase):
                                   _optional=('display_name', 'password'))
             arguments = validator(request)
         except ValueError as error:
-            return http.bad_request([], str(error))
+            falcon.responders.bad_request(response, body=str(error))
+            return
         # We can't pass the 'password' argument to the user creation method,
         # so strip that out (if it exists), then create the user, adding the
         # password after the fact if successful.
@@ -121,14 +122,17 @@ class AllUsers(_UserBase):
         try:
             user = getUtility(IUserManager).create_user(**arguments)
         except ExistingAddressError as error:
-            return http.bad_request(
-                [], b'Address already exists: {0}'.format(error.address))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Address already exists: {0}'.format(error.address))
+            return
         if password is None:
             # This will have to be reset since it cannot be retrieved.
             password = generate(int(config.passwords.password_length))
         user.password = config.password_context.encrypt(password)
         location = path_to('users/{0}'.format(user.user_id.int))
-        return http.created(location, [], None)
+        response.status = falcon.HTTP_201
+        response.location = location
 
 
 
@@ -158,12 +162,14 @@ class AUser(_UserBase):
             else:
                 self._user = user_manager.get_user_by_id(user_id)
 
-    @resource.GET()
-    def user(self, request):
+    def on_get(self, request, response):
         """Return a single user end-point."""
         if self._user is None:
-            return http.not_found()
-        return http.ok([], self._resource_as_json(self._user))
+            falcon.responders.path_not_found(
+                request, response, body=b'404 Not Found')
+        else:
+            response.status = falcon.HTTP_200
+            response.body = self._resource_as_json(self._user)
 
     @child()
     def addresses(self, request, segments):
@@ -172,18 +178,18 @@ class AUser(_UserBase):
             return NotFound(), []
         return UserAddresses(self._user)
 
-    @resource.DELETE()
-    def delete_user(self, request):
+    def on_delete(self, request, response):
         """Delete the named user, all her memberships, and addresses."""
         if self._user is None:
-            return http.not_found()
+            falcon.responders.path_not_found(request, response)
+            return
         for member in self._user.memberships.members:
             member.unsubscribe()
         user_manager = getUtility(IUserManager)
         for address in self._user.addresses:
             user_manager.delete_address(address)
         user_manager.delete_user(self._user)
-        return no_content()
+        response.status = falcon.HTTP_204
 
     @child()
     def preferences(self, request, segments):
@@ -197,45 +203,65 @@ class AUser(_UserBase):
             'users/{0}'.format(self._user.user_id.int))
         return child, []
 
-    @PATCH()
-    def patch_update(self, request):
+    def on_patch(self, request, response):
         """Patch the user's configuration (i.e. partial update)."""
         if self._user is None:
-            return http.not_found()
+            falcon.responders.path_not_found(request, response)
+            return
         try:
             validator = PatchValidator(request, ATTRIBUTES)
         except UnknownPATCHRequestError as error:
-            return http.bad_request(
-                [], b'Unknown attribute: {0}'.format(error.attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Unknown attribute: {0}'.format(error.attribute))
         except ReadOnlyPATCHRequestError as error:
-            return http.bad_request(
-                [], b'Read-only attribute: {0}'.format(error.attribute))
-        validator.update(self._user, request)
-        return no_content()
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Read-only attribute: {0}'.format(error.attribute))
+        else:
+            validator.update(self._user, request)
+            response.status = falcon.HTTP_204
 
-    @resource.PUT()
-    def put_update(self, request):
+    def on_put(self, request, response):
         """Put the user's configuration (i.e. full update)."""
         if self._user is None:
-            return http.not_found()
+            falcon.responders.path_not_found(request, response)
+            return
         validator = Validator(**ATTRIBUTES)
         try:
             validator.update(self._user, request)
         except UnknownPATCHRequestError as error:
-            return http.bad_request(
-                [], b'Unknown attribute: {0}'.format(error.attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Unknown attribute: {0}'.format(error.attribute))
         except ReadOnlyPATCHRequestError as error:
-            return http.bad_request(
-                [], b'Read-only attribute: {0}'.format(error.attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Read-only attribute: {0}'.format(error.attribute))
         except ValueError as error:
-            return http.bad_request([], str(error))
-        return no_content()
+            falcon.responders.bad_request(
+                request, response,
+                body=str(error))
+        else:
+            response.status = falcon.HTTP_204
 
-    @resource.child('login')
+    @child()
     def login(self, request, segments):
         """Log the user in, sort of, by verifying a given password."""
         if self._user is None:
-            return http.not_found()
+            return NotFound(), []
+        return Login(self._user)
+
+
+
+class Login:
+    """<api>/users/<uid>/login"""
+
+    def __init__(self, user):
+        assert user is not None
+        self._user = user
+
+    def on_post(self, request, response):
         # We do not want to encrypt the plaintext password given in the POST
         # data.  That would hash the password, but we need to have the
         # plaintext in order to pass into passlib.
@@ -243,11 +269,14 @@ class AUser(_UserBase):
         try:
             values = validator(request)
         except ValueError as error:
-            return http.bad_request([], str(error))
+            falcon.responders.bad_request(request, response, body=str(error))
+            return
         is_valid, new_hash = config.password_context.verify(
             values['cleartext_password'], self._user.password)
         if is_valid:
             if new_hash is not None:
                 self._user.password = new_hash
-            return no_content()
-        return http.forbidden()
+            response.status = falcon.HTTP_204
+        else:
+            response.status = falcon.HTTP_403
+            response.body = b'403 Forbidden'

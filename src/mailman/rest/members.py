@@ -201,8 +201,7 @@ class AMember(_MemberBase):
 class AllMembers(_MemberBase):
     """The members."""
 
-    @resource.POST()
-    def create(self, request):
+    def on_post(self, request, response):
         """Create a new member."""
         service = getUtility(ISubscriptionService)
         try:
@@ -215,25 +214,29 @@ class AllMembers(_MemberBase):
                 _optional=('delivery_mode', 'display_name', 'role'))
             member = service.join(**validator(request))
         except AlreadySubscribedError:
-            return http.conflict([], b'Member already subscribed')
+            response.status = falcon.HTTP_409
+            response.body = b'Member already subscribed'
         except NoSuchListError:
-            return http.bad_request([], b'No such list')
+            falcon.responders.bad_request(
+                request, response, body=b'No such list')
         except InvalidEmailAddressError:
-            return http.bad_request([], b'Invalid email address')
+            falcon.responders.bad_request(
+                request, response, body=b'Invalid email address')
         except ValueError as error:
-            return http.bad_request([], str(error))
-        # The member_id are UUIDs.  We need to use the integer equivalent in
-        # the URL.
-        member_id = member.member_id.int
-        location = path_to('members/{0}'.format(member_id))
-        # Include no extra headers or body.
-        return http.created(location, [], None)
+            falcon.responders.bad_request(request, response, body=str(error))
+        else:
+            # The member_id are UUIDs.  We need to use the integer equivalent
+            # in the URL.
+            member_id = member.member_id.int
+            location = path_to('members/{0}'.format(member_id))
+            response.status = falcon.HTTP_201
+            response.location = location
 
-    @resource.GET()
-    def container(self, request):
+    def on_get(self, request, response):
         """/members"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
 
 
