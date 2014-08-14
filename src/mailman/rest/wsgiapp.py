@@ -26,6 +26,7 @@ __all__ = [
     ]
 
 
+import re
 import falcon
 import logging
 
@@ -42,6 +43,7 @@ from mailman.rest.root import Root
 
 log = logging.getLogger('mailman.http')
 _missing = object()
+SLASH = '/'
 
 
 
@@ -89,25 +91,60 @@ class RootedAPI(API):
                 matcher = getattr(attribute, '__matcher__', _missing)
                 if matcher is _missing:
                     continue
-                if matcher == this_segment:
-                    result = attribute(req, path_segments)
-                    if isinstance(result, tuple):
-                        resource, path_segments = result
-                    else:
-                        resource = result
-                    # The method could have truncated the remaining segments,
-                    # meaning, it's consumed all the path segments, or this is
-                    # the last path segment.  In that case the resource we're
-                    # left at is the responder.
-                    if len(path_segments) == 0:
-                        # We're at the end of the path, so the root must be the
-                        # responder.
-                        method_map = create_http_method_map(
-                            resource, None, None, None)
-                        responder = method_map[method]
-                        return responder, {}, resource
-                    this_segment = path_segments.pop(0)
-                    break
+                result = None
+                if isinstance(matcher, basestring):
+                    # Is the matcher string a regular expression or plain
+                    # string?  If it starts with a caret, it's a regexp.
+                    if matcher.startswith('^'):
+                        cre = re.compile(matcher)
+                        # Search against the entire remaining path.
+                        tmp_path_segments = path_segments[:]
+                        tmp_path_segments.insert(0, this_segment)
+                        remaining_path = SLASH.join(tmp_path_segments)
+                        mo = cre.match(remaining_path)
+                        if mo:
+                            result = attribute(
+                                req, path_segments, **mo.groupdict())
+                    elif matcher == this_segment:
+                        result = attribute(req, path_segments)
+                else:
+                    # The matcher is a callable.  It returns None if it
+                    # doesn't match, and if it does, it returns a 3-tuple
+                    # containing the positional arguments, the keyword
+                    # arguments, and the remaining segments.  The attribute is
+                    # then called with these arguments.  Note that the matcher
+                    # wants to see the full remaining path components, which
+                    # includes the current hop.
+                    tmp_path_segments = path_segments[:]
+                    tmp_path_segments.insert(0, this_segment)
+                    matcher_result = matcher(req, tmp_path_segments)
+                    if matcher_result is not None:
+                        positional, keyword, path_segments = matcher_result
+                        result = attribute(
+                            req, path_segments, *positional, **keyword)
+                # The attribute could return a 2-tuple giving the resource and
+                # remaining path segments, or it could just return the
+                # result.  Of course, if the result is None, then the matcher
+                # did not match.
+                if result is None:
+                    continue
+                elif isinstance(result, tuple):
+                    resource, path_segments = result
+                else:
+                    resource = result
+                # The method could have truncated the remaining segments,
+                # meaning, it's consumed all the path segments, or this is the
+                # last path segment.  In that case the resource we're left at
+                # is the responder.
+                if len(path_segments) == 0:
+                    # We're at the end of the path, so the root must be the
+                    # responder.
+                    method_map = create_http_method_map(
+                        resource, None, None, None)
+                    responder = method_map[method]
+                    return responder, {}, resource
+                this_segment = path_segments.pop(0)
+                break
             else:
                 # None of the attributes matched this path component, so the
                 # response is a 404.

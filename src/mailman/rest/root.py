@@ -28,7 +28,6 @@ __all__ = [
 import falcon
 
 from base64 import b64decode
-from restish import http
 from zope.component import getUtility
 
 from mailman.config import config
@@ -77,7 +76,7 @@ class Root:
                 raise falcon.HTTPUnauthorized(
                     b'401 Unauthorized',
                     b'User is not authorized for the REST API')
-        return TopLevel(), segments
+        return TopLevel()
 
 
 class System:
@@ -179,10 +178,10 @@ class TopLevel:
             fqdn_listname, template = segments
             language = 'en'
         else:
-            return http.bad_request()
+            return BadRequest(), []
         mlist = getUtility(IListManager).get(fqdn_listname)
         if mlist is None:
-            return http.not_found()
+            return NotFound(), []
         # XXX dig out content-type from request
         content_type = None
         return TemplateFinder(

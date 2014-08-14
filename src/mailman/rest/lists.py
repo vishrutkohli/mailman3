@@ -34,7 +34,6 @@ import falcon
 
 from lazr.config import as_boolean
 from operator import attrgetter
-from restish import http, resource
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list, remove_list
@@ -48,15 +47,13 @@ from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.rest.configuration import ListConfiguration
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, NotFound, child, etag, paginate, path_to,
-    restish_matcher)
+    CollectionMixin, GetterSetter, NotFound, child, etag, paginate, path_to)
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator
 
 
 
-@restish_matcher
 def member_matcher(request, segments):
     """A matcher of member URLs inside mailing lists.
 
@@ -69,13 +66,9 @@ def member_matcher(request, segments):
     except KeyError:
         # Not a valid role.
         return None
-    # No more segments.
-    # XXX 2010-02-25 barry Matchers are undocumented in restish; they return a
-    # 3-tuple of (match_args, match_kws, segments).
     return (), dict(role=role, email=segments[1]), ()
 
 
-@restish_matcher
 def roster_matcher(request, segments):
     """A matcher of all members URLs inside mailing lists.
 
@@ -90,7 +83,6 @@ def roster_matcher(request, segments):
         return None
 
 
-@restish_matcher
 def config_matcher(request, segments):
     """A matcher for a mailing list's configuration resource.
 
@@ -159,44 +151,44 @@ class AList(_ListBase):
             remove_list(self._mlist)
             response.status = falcon.HTTP_204
 
-    @resource.child(member_matcher)
+    @child(member_matcher)
     def member(self, request, segments, role, email):
         """Return a single member representation."""
         if self._mlist is None:
-            return http.not_found()
+            return NotFound(), []
         members = getUtility(ISubscriptionService).find_members(
             email, self._mlist.list_id, role)
         if len(members) == 0:
-            return http.not_found()
+            return NotFound(), []
         assert len(members) == 1, 'Too many matches'
         return AMember(members[0].member_id)
 
-    @resource.child(roster_matcher)
+    @child(roster_matcher)
     def roster(self, request, segments, role):
         """Return the collection of all a mailing list's members."""
         if self._mlist is None:
-            return http.not_found()
+            return NotFound(), []
         return MembersOfList(self._mlist, role)
 
-    @resource.child(config_matcher)
+    @child(config_matcher)
     def config(self, request, segments, attribute=None):
         """Return a mailing list configuration object."""
         if self._mlist is None:
-            return http.not_found()
+            return NotFound(), []
         return ListConfiguration(self._mlist, attribute)
 
-    @resource.child()
+    @child()
     def held(self, request, segments):
         """Return a list of held messages for the mailing list."""
         if self._mlist is None:
-            return http.not_found()
+            return NotFound(), []
         return HeldMessages(self._mlist)
 
-    @resource.child()
+    @child()
     def requests(self, request, segments):
         """Return a list of subscription/unsubscription requests."""
         if self._mlist is None:
-            return http.not_found()
+            return NotFound(), []
         return SubscriptionRequests(self._mlist)
 
     @child()

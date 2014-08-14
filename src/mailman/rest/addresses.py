@@ -30,7 +30,6 @@ __all__ = [
 import falcon
 
 from operator import attrgetter
-from restish import http, resource
 from zope.component import getUtility
 
 from mailman.interfaces.address import (
@@ -83,7 +82,7 @@ class AllAddresses(_AddressBase):
 
 
 
-class _VerifyResource(resource.Resource):
+class _VerifyResource:
     """A helper resource for verify/unverify POSTS."""
 
     def __init__(self, address, action):
@@ -133,9 +132,9 @@ class AnAddress(_AddressBase):
     def preferences(self, request, segments):
         """/addresses/<email>/preferences"""
         if len(segments) != 0:
-            return http.bad_request()
+            return NotFound(), []
         if self._address is None:
-            return http.not_found()
+            return NotFound(), []
         child = Preferences(
             self._address.preferences,
             'addresses/{0}'.format(self._address.email))

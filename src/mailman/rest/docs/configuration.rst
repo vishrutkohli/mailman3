@@ -73,9 +73,8 @@ Not all of the readable attributes can be set through the web interface.  The
 ones that can, can either be set via ``PUT`` or ``PATCH``.  ``PUT`` changes
 all the writable attributes in one request.
 
-When using PUT, all writable attributes must be included.
+When using ``PUT``, all writable attributes must be included.
 
-    >>> from mailman.interfaces.action import Action
     >>> dump_json('http://localhost:9001/3.0/lists/'
     ...           'ant@example.com/config',
     ...           dict(

@@ -29,7 +29,6 @@ __all__ = [
 import falcon
 
 from passlib.utils import generate_password as generate
-from restish import http
 from uuid import UUID
 from zope.component import getUtility
 
@@ -40,7 +39,8 @@ from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, NotFound, child, etag, paginate, path_to)
+    BadRequest, CollectionMixin, GetterSetter, NotFound, child, etag,
+    paginate, path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
@@ -195,9 +195,9 @@ class AUser(_UserBase):
     def preferences(self, request, segments):
         """/addresses/<email>/preferences"""
         if len(segments) != 0:
-            return http.bad_request()
+            return BadRequest(), []
         if self._user is None:
-            return http.not_found()
+            return NotFound(), []
         child = Preferences(
             self._user.preferences,
             'users/{0}'.format(self._user.user_id.int))

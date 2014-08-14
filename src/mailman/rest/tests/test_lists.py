@@ -162,6 +162,24 @@ class TestLists(unittest.TestCase):
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
 
+    def test_roster(self):
+        # Lists have rosters which can be accessed by role.
+        with transaction():
+            anne = self._usermanager.create_address('anne@example.com')
+            bart = self._usermanager.create_address('bart@example.com')
+            self._mlist.subscribe(anne)
+            self._mlist.subscribe(bart)
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/test@example.com/roster/member')
+        self.assertEqual(resource['start'], 0)
+        self.assertEqual(resource['total_size'], 2)
+        member = resource['entries'][0]
+        self.assertEqual(member['email'], 'anne@example.com')
+        self.assertEqual(member['role'], 'member')
+        member = resource['entries'][1]
+        self.assertEqual(member['email'], 'bart@example.com')
+        self.assertEqual(member['role'], 'member')
+
 
 
 class TestListArchivers(unittest.TestCase):

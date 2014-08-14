@@ -32,7 +32,6 @@ import falcon
 
 from uuid import UUID
 from operator import attrgetter
-from restish import http, resource
 from zope.component import getUtility
 
 from mailman.app.membership import delete_member
@@ -45,7 +44,7 @@ from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    CollectionMixin, PATCH, child, etag, no_content, paginate, path_to)
+    CollectionMixin, NotFound, child, etag, paginate, path_to)
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
@@ -119,20 +118,21 @@ class AMember(_MemberBase):
             service = getUtility(ISubscriptionService)
             self._member = service.get_member(member_id)
 
-    @resource.GET()
-    def member(self, request):
+    def on_get(self, request, response):
         """Return a single member end-point."""
         if self._member is None:
-            return http.not_found()
-        return http.ok([], self._resource_as_json(self._member))
+            falcon.responders.path_not_found(request, response)
+        else:
+            response.status = falcon.HTTP_200
+            response.body = self._resource_as_json(self._member)
 
     @child()
     def preferences(self, request, segments):
         """/members/<id>/preferences"""
         if len(segments) != 0:
-            return http.bad_request()
+            return NotFound(), []
         if self._member is None:
-            return http.not_found()
+            return NotFound(), []
         child = Preferences(
             self._member.preferences,
             'members/{0}'.format(self._member.member_id.int))
@@ -142,59 +142,65 @@ class AMember(_MemberBase):
     def all(self, request, segments):
         """/members/<id>/all/preferences"""
         if len(segments) == 0:
-            return http.not_found()
+            return NotFound(), []
         if self._member is None:
-            return http.not_found()
+            return NotFound(), []
         child = ReadOnlyPreferences(
             self._member,
             'members/{0}/all'.format(self._member.member_id.int))
         return child, []
 
-    @resource.DELETE()
-    def delete(self, request):
+    def on_delete(self, request, response):
         """Delete the member (i.e. unsubscribe)."""
         # Leaving a list is a bit different than deleting a moderator or
         # owner.  Handle the former case first.  For now too, we will not send
         # an admin or user notification.
         if self._member is None:
-            return http.not_found()
+            falcon.responders.path_not_found(request, response)
+            return
         mlist = getUtility(IListManager).get_by_list_id(self._member.list_id)
         if self._member.role is MemberRole.member:
             try:
                 delete_member(mlist, self._member.address.email, False, False)
             except NotAMemberError:
-                return http.not_found()
+                falcon.responders.path_not_found(request, response)
+                return
         else:
             self._member.unsubscribe()
-        return no_content()
+        response.status = falcon.HTTP_204
 
-    @PATCH()
-    def patch_membership(self, request):
+    def on_patch(self, request, response):
         """Patch the membership.
 
         This is how subscription changes are done.
         """
         if self._member is None:
-            return http.not_found()
+            falcon.responders.path_not_found(request, response)
+            return
         try:
             values = Validator(
                 address=unicode,
                 delivery_mode=enum_validator(DeliveryMode),
                 _optional=('address', 'delivery_mode'))(request)
         except ValueError as error:
-            return http.bad_request([], str(error))
+            falcon.responders.bad_request(request, response, body=str(error))
+            return
         if 'address' in values:
             email = values['address']
             address = getUtility(IUserManager).get_address(email)
             if address is None:
-                return http.bad_request([], b'Address not registered')
+                falcon.responders.bad_request(
+                    request, response, body=b'Address not registered')
+                return
             try:
                 self._member.address = address
             except (MembershipError, UnverifiedAddressError) as error:
-                return http.bad_request([], str(error))
+                falcon.responders.bad_request(
+                    request, response, body=str(error))
+                return
         if 'delivery_mode' in values:
             self._member.preferences.delivery_mode = values['delivery_mode']
-        return no_content()
+        response.status = falcon.HTTP_204
 
 
 
@@ -256,8 +262,7 @@ class _FoundMembers(MemberCollection):
 class FindMembers(_MemberBase):
     """/members/find"""
 
-    @resource.POST()
-    def find(self, request):
+    def on_post(self, request, response):
         """Find a member"""
         service = getUtility(ISubscriptionService)
         validator = Validator(
@@ -265,10 +270,11 @@ class FindMembers(_MemberBase):
             subscriber=unicode,
             role=enum_validator(MemberRole),
             _optional=('list_id', 'subscriber', 'role'))
-        members = service.find_members(**validator(request))
-        # We can't just return the _FoundMembers instance, because
-        # CollectionMixins have only a GET method, which is incompatible with
-        # this POSTed resource.  IOW, without doing this here, restish would
-        # throw a 405 Method Not Allowed.
-        resource = _FoundMembers(members)._make_collection(request)
-        return http.ok([], etag(resource))
+        try:
+            members = service.find_members(**validator(request))
+        except ValueError as error:
+            falcon.responders.bad_request(response, body=str(error))
+        else:
+            resource = _FoundMembers(members)._make_collection(request)
+            response.status = falcon.HTTP_200
+            response.body = etag(resource)

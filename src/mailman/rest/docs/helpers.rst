@@ -62,19 +62,19 @@ dictionary after tagging, since that's almost always what you want.
     neil     : drums
 
 
-POST unpacking
-==============
+POST and PUT unpacking
+======================
 
-Another helper unpacks ``POST`` request variables, validating and converting
-their values.
+Another helper unpacks ``POST`` and ``PUT`` request variables, validating and
+converting their values.
 ::
 
     >>> from mailman.rest.validator import Validator
     >>> validator = Validator(one=int, two=unicode, three=bool)
 
     >>> class FakeRequest:
-    ...     POST = {}
-    >>> FakeRequest.POST = dict(one='1', two='two', three='yes')
+    ...     params = {}
+    >>> FakeRequest.params = dict(one='1', two='two', three='yes')
 
 On valid input, the validator can be used as a ``**keyword`` argument.
 
@@ -85,7 +85,7 @@ On valid input, the validator can be used as a ``**keyword`` argument.
 
 On invalid input, an exception is raised.
 
-    >>> FakeRequest.POST['one'] = 'hello'
+    >>> FakeRequest.params['one'] = 'hello'
     >>> print_request(**validator(FakeRequest))
     Traceback (most recent call last):
     ...
@@ -93,7 +93,7 @@ On invalid input, an exception is raised.
 
 On missing input, an exception is raised.
 
-    >>> del FakeRequest.POST['one']
+    >>> del FakeRequest.params['one']
     >>> print_request(**validator(FakeRequest))
     Traceback (most recent call last):
     ...
@@ -101,7 +101,7 @@ On missing input, an exception is raised.
 
 If more than one key is missing, it will be reflected in the error message.
 
-    >>> del FakeRequest.POST['two']
+    >>> del FakeRequest.params['two']
     >>> print_request(**validator(FakeRequest))
     Traceback (most recent call last):
     ...
@@ -109,8 +109,8 @@ If more than one key is missing, it will be reflected in the error message.
 
 Extra keys are also not allowed.
 
-    >>> FakeRequest.POST = dict(one='1', two='two', three='yes',
-    ...                         four='', five='')
+    >>> FakeRequest.params = dict(one='1', two='two', three='yes',
+    ...                           four='', five='')
     >>> print_request(**validator(FakeRequest))
     Traceback (most recent call last):
     ...
@@ -123,25 +123,25 @@ However, if optional keys are missing, it's okay.
     ...                       four=int, five=int,
     ...                       _optional=('four', 'five'))
 
-    >>> FakeRequest.POST = dict(one='1', two='two', three='yes',
-    ...                         four='4', five='5')
+    >>> FakeRequest.params = dict(one='1', two='two', three='yes',
+    ...                           four='4', five='5')
     >>> def print_request(one, two, three, four=None, five=None):
     ...     print(repr(one), repr(two), repr(three), repr(four), repr(five))
     >>> print_request(**validator(FakeRequest))
     1 u'two' True 4 5
 
-    >>> del FakeRequest.POST['four']
+    >>> del FakeRequest.params['four']
     >>> print_request(**validator(FakeRequest))
     1 u'two' True None 5
 
-    >>> del FakeRequest.POST['five']
+    >>> del FakeRequest.params['five']
     >>> print_request(**validator(FakeRequest))
     1 u'two' True None None
 
 But if the optional values are present, they must of course also be valid.
 
-    >>> FakeRequest.POST = dict(one='1', two='two', three='yes',
-    ...                         four='no', five='maybe')
+    >>> FakeRequest.params = dict(one='1', two='two', three='yes',
+    ...                           four='no', five='maybe')
     >>> print_request(**validator(FakeRequest))
     Traceback (most recent call last):
     ...
@@ -181,7 +181,7 @@ This is a validation function that ensure the value is *not* a list.
 And a validator to pull it all together.
 
     >>> validator = Validator(one=must_be_scalar, many=must_be_list)
-    >>> FakeRequest.POST = form_data
+    >>> FakeRequest.params = form_data
     >>> values = validator(FakeRequest)
     >>> print(values['one'])
     1
@@ -195,7 +195,7 @@ form data.
     >>> form_data = MultiDict(one='1', many='3')
     >>> form_data.add('many', '5')
     >>> form_data.add('many', '4')
-    >>> FakeRequest.POST = form_data
+    >>> FakeRequest.params = form_data
     >>> values = validator(FakeRequest)
     >>> print(values['one'])
     1

@@ -36,8 +36,6 @@ from mailman.testing.layers import RESTLayer
 
 
 class _FakeRequest(Request):
-    """Fake restish.http.Request object."""
-
     def __init__(self, count=None, page=None):
         self._params = {}
         if count is not None:

@@ -25,9 +25,9 @@ __all__ = [
     ]
 
 
-from lazr.config import as_boolean, as_timedelta
-from restish import http, resource
+import falcon
 
+from lazr.config import as_boolean, as_timedelta
 from mailman.config import config
 from mailman.core.errors import (
     ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
@@ -35,7 +35,7 @@ from mailman.interfaces.action import Action
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.mailinglist import IAcceptableAliasSet, ReplyToMunging
-from mailman.rest.helpers import GetterSetter, PATCH, etag, no_content
+from mailman.rest.helpers import GetterSetter, etag
 from mailman.rest.validator import PatchValidator, Validator, enum_validator
 
 
@@ -156,15 +156,14 @@ for attribute, gettersetter in VALIDATORS.items():
 
 
 
-class ListConfiguration(resource.Resource):
+class ListConfiguration:
     """A mailing list configuration resource."""
 
     def __init__(self, mailing_list, attribute):
         self._mlist = mailing_list
         self._attribute = attribute
 
-    @resource.GET()
-    def get_configuration(self, request):
+    def on_get(self, request, response):
         """Get a mailing list configuration."""
         resource = {}
         if self._attribute is None:
@@ -173,16 +172,18 @@ class ListConfiguration(resource.Resource):
                 value = ATTRIBUTES[attribute].get(self._mlist, attribute)
                 resource[attribute] = value
         elif self._attribute not in ATTRIBUTES:
-            return http.bad_request(
-                [], b'Unknown attribute: {0}'.format(self._attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Unknown attribute: {0}'.format(self._attribute))
+            return
         else:
             attribute = self._attribute
             value = ATTRIBUTES[attribute].get(self._mlist, attribute)
             resource[attribute] = value
-        return http.ok([], etag(resource))
+        response.status = falcon.HTTP_200
+        response.body = etag(resource)
 
-    @resource.PUT()
-    def put_configuration(self, request):
+    def on_put(self, request, response):
         """Set a mailing list configuration."""
         attribute = self._attribute
         if attribute is None:
@@ -190,34 +191,46 @@ class ListConfiguration(resource.Resource):
             try:
                 validator.update(self._mlist, request)
             except ValueError as error:
-                return http.bad_request([], str(error))
+                falcon.responders.bad_request(
+                    request, response, body=str(error))
+                return
         elif attribute not in ATTRIBUTES:
-            return http.bad_request(
-                [], b'Unknown attribute: {0}'.format(attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Unknown attribute: {0}'.format(attribute))
+            return
         elif ATTRIBUTES[attribute].decoder is None:
-            return http.bad_request(
-                [], b'Read-only attribute: {0}'.format(attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Read-only attribute: {0}'.format(attribute))
+            return
         else:
             validator = Validator(**{attribute: VALIDATORS[attribute]})
             try:
                 validator.update(self._mlist, request)
             except ValueError as error:
-                return http.bad_request([], str(error))
-        return no_content()
+                falcon.responders.bad_request(
+                    request, response, body=str(error))
+                return
+        response.status = falcon.HTTP_204
 
-    @PATCH()
-    def patch_configuration(self, request):
+    def on_patch(self, request, response):
         """Patch the configuration (i.e. partial update)."""
         try:
             validator = PatchValidator(request, ATTRIBUTES)
         except UnknownPATCHRequestError as error:
-            return http.bad_request(
-                [], b'Unknown attribute: {0}'.format(error.attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Unknown attribute: {0}'.format(error.attribute))
+            return
         except ReadOnlyPATCHRequestError as error:
-            return http.bad_request(
-                [], b'Read-only attribute: {0}'.format(error.attribute))
+            falcon.responders.bad_request(
+                request, response,
+                body=b'Read-only attribute: {0}'.format(error.attribute))
+            return
         try:
             validator.update(self._mlist, request)
         except ValueError as error:
-            return http.bad_request([], str(error))
-        return no_content()
+            falcon.responders.bad_request(request, response, body=str(error))
+        else:
+            response.status = falcon.HTTP_204

@@ -25,28 +25,19 @@ __all__ = [
     'ChildError',
     'GetterSetter',
     'NotFound',
-    'PATCH',
     'child',
     'etag',
-    'no_content',
     'path_to',
-    'restish_matcher',
     ]
 
 
-import cgi
 import json
 import falcon
 import hashlib
 
-from cStringIO import StringIO
 from datetime import datetime, timedelta
 from enum import Enum
 from lazr.config import as_boolean
-from restish.http import Response
-from restish.resource import MethodDecorator
-from webob.multidict import MultiDict
-
 from mailman.config import config
 
 
@@ -161,14 +152,14 @@ class CollectionMixin:
 
         This must be implemented by subclasses.
 
-        :param request: A restish request.
+        :param request: An http request.
         :return: The collection
         :rtype: list
         """
         raise NotImplementedError
 
     def _make_collection(self, request):
-        """Provide the collection to restish."""
+        """Provide the collection to the REST layer."""
         collection = self._get_collection(request)
         if len(collection) == 0:
             return dict(start=0, total_size=0)
@@ -186,59 +177,6 @@ class CollectionMixin:
 
 
 
-# XXX 2010-02-24 barry Seems like contrary to the documentation, matchers
-# cannot be plain functions, because matchers must have a .score attribute.
-# OTOH, I think they support regexps, so that might be a better way to go.
-def restish_matcher(function):
-    """Decorator for restish matchers."""
-    function.score = ()
-    return function
-
-
-# restish doesn't support HTTP response code 204.
-def no_content():
-    """204 No Content."""
-    return Response('204 No Content', [], None)
-
-
-# These two classes implement an ugly, dirty hack to work around the fact that
-# neither WebOb nor really the stdlib cgi module support non-standard HTTP
-# verbs such as PATCH.  Note that restish handles it just fine in the sense
-# that the right method gets called, but without the following kludge, the
-# body of the request will never get decoded, so the method won't see any
-# data.
-#
-# Stuffing the MultiDict on request.PATCH is pretty ugly, but it mirrors
-# WebOb's use of request.POST and request.PUT for those standard verbs.
-# Besides, WebOb refuses to allow us to set request.POST.  This does make
-# validators.py a bit more complicated. :(
-
-class PATCHWrapper:
-    """Hack to decode the request body for PATCH."""
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, resource, request):
-        # We can't use request.body_file because that's a socket that's
-        # already had its data read off of.  IOW, if we use that directly,
-        # we'll block here.
-        field_storage = cgi.FieldStorage(
-            fp=StringIO(request.body),
-            # Yes, lie about the method so cgi will do the right thing.
-            environ=dict(REQUEST_METHOD='POST'),
-            keep_blank_values=True)
-        request.PATCH = MultiDict.from_fieldstorage(field_storage)
-        return self.func(resource, request)
-
-
-class PATCH(MethodDecorator):
-    method = 'PATCH'
-
-    def __call__(self, func):
-        really_wrapped_func = PATCHWrapper(func)
-        return super(PATCH, self).__call__(really_wrapped_func)
-
-
 class GetterSetter:
     """Get and set attributes on an object.
 
@@ -321,6 +259,9 @@ class ChildError:
 
     on_get = _oops
     on_post = _oops
+    on_put = _oops
+    on_patch = _oops
+    on_delete = _oops
 
 
 class BadRequest(ChildError):
