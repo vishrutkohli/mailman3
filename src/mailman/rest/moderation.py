@@ -28,14 +28,13 @@ __all__ = [
     ]
 
 
-import falcon
-
 from mailman.app.moderator import (
     handle_message, handle_subscription, handle_unsubscription)
 from mailman.interfaces.action import Action
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
-from mailman.rest.helpers import CollectionMixin, child, etag
+from mailman.rest.helpers import (
+    CollectionMixin, bad_request, child, etag, no_content, not_found, okay)
 from mailman.rest.validator import Validator, enum_validator
 from zope.component import getUtility
 
@@ -112,35 +111,33 @@ class HeldMessage(_HeldMessageBase):
         try:
             request_id = int(self._request_id)
         except ValueError:
-            falcon.responders.bad_request(request, response)
+            bad_request(response)
             return
         resource = self._make_resource(request_id)
         if resource is None:
-            falcon.responders.path_not_found(
-                request, response, body=b'404 Not Found')
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            response.body = etag(resource)
+            okay(response, etag(resource))
 
     def on_post(self, request, response):
         try:
             validator = Validator(action=enum_validator(Action))
             arguments = validator(request)
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
             return
         requests = IListRequests(self._mlist)
         try:
             request_id = int(self._request_id)
         except ValueError:
-            falcon.responders.bad_request(request, response)
+            bad_request(response)
             return
         results = requests.get_request(request_id, RequestType.held_message)
         if results is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
         else:
             handle_message(self._mlist, request_id, **arguments)
-            response.status = falcon.HTTP_204
+            no_content(response)
 
 
 
@@ -163,8 +160,7 @@ class HeldMessages(_HeldMessageBase, CollectionMixin):
     def on_get(self, request, response):
         """/lists/listname/held"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
     @child(r'^(?P<id>[^/]+)')
     def message(self, request, segments, **kw):
@@ -183,48 +179,47 @@ class MembershipChangeRequest(_ModerationBase):
         try:
             request_id = int(self._request_id)
         except ValueError:
-            falcon.responders.bad_request(request, response)
+            bad_request(response)
             return
         resource = self._make_resource(request_id, MEMBERSHIP_CHANGE_REQUESTS)
         if resource is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
         else:
             # Remove unnecessary keys.
             del resource['key']
-            response.status = falcon.HTTP_200
-            response.body = etag(resource)
+            okay(response, etag(resource))
 
     def on_post(self, request, response):
         try:
             validator = Validator(action=enum_validator(Action))
             arguments = validator(request)
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
             return
         requests = IListRequests(self._mlist)
         try:
             request_id = int(self._request_id)
         except ValueError:
-            falcon.responders.bad_request(request, response)
+            bad_request(response)
             return
         results = requests.get_request(request_id)
         if results is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         key, data = results
         try:
             request_type = RequestType[data['_request_type']]
         except ValueError:
-            falcon.responders.bad_request(request, response)
+            bad_request(response)
             return
         if request_type is RequestType.subscription:
             handle_subscription(self._mlist, request_id, **arguments)
         elif request_type is RequestType.unsubscription:
             handle_unsubscription(self._mlist, request_id, **arguments)
         else:
-            falcon.responders.bad_request(request, response)
+            bad_request(response)
             return
-        response.status = falcon.HTTP_204
+        no_content(response)
 
 
 class SubscriptionRequests(_ModerationBase, CollectionMixin):
@@ -253,8 +248,7 @@ class SubscriptionRequests(_ModerationBase, CollectionMixin):
     def on_get(self, request, response):
         """/lists/listname/requests"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
     @child(r'^(?P<id>[^/]+)')
     def subscription(self, request, segments, **kw):

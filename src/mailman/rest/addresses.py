@@ -27,8 +27,6 @@ __all__ = [
     ]
 
 
-import falcon
-
 from operator import attrgetter
 from zope.component import getUtility
 
@@ -36,7 +34,8 @@ from mailman.interfaces.address import (
     ExistingAddressError, InvalidEmailAddressError)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    BadRequest, CollectionMixin, NotFound, child, etag, path_to)
+    BadRequest, CollectionMixin, NotFound, bad_request, child, created, etag,
+    no_content, not_found, okay, path_to)
 from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import Validator
@@ -77,8 +76,7 @@ class AllAddresses(_AddressBase):
     def on_get(self, request, response):
         """/addresses"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
 
 
@@ -96,7 +94,7 @@ class _VerifyResource:
             self._address.verified_on = now()
         elif self._action == 'unverify':
             self._address.verified_on = None
-        response.status = falcon.HTTP_204
+        no_content(response)
 
 
 class AnAddress(_AddressBase):
@@ -113,11 +111,9 @@ class AnAddress(_AddressBase):
     def on_get(self, request, response):
         """Return a single address."""
         if self._address is None:
-            falcon.responders.path_not_found(
-                request, response, b'404 Not Found')
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            response.body = self._resource_as_json(self._address)
+            okay(response, self._resource_as_json(self._address))
 
     @child()
     def memberships(self, request, segments):
@@ -177,12 +173,9 @@ class UserAddresses(_AddressBase):
     def on_get(self, request, response):
         """/addresses"""
         if self._user is None:
-            falcon.responders.path_not_found(
-                request, response, b'404 Not Found')
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            resource = self._make_collection(request)
-            response.body = etag(resource)
+            okay(response, etag(self._make_collection(request)))
 
     def on_post(self, request, response):
         """POST to /addresses
@@ -190,7 +183,7 @@ class UserAddresses(_AddressBase):
         Add a new address to the user record.
         """
         if self._user is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         user_manager = getUtility(IUserManager)
         validator = Validator(email=unicode,
@@ -199,19 +192,15 @@ class UserAddresses(_AddressBase):
         try:
             address = user_manager.create_address(**validator(request))
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, body=str(error))
         except InvalidEmailAddressError:
-            falcon.responders.bad_request(
-                request, response, body=b'Invalid email address')
+            bad_request(response, body=b'Invalid email address')
         except ExistingAddressError:
-            falcon.responders.bad_request(
-                request, response, body=b'Address already exists')
+            bad_request(response, b'Address already exists')
         else:
             # Link the address to the current user and return it.
             address.user = self._user
-            location = path_to('addresses/{0}'.format(address.email))
-            response.status = falcon.HTTP_201
-            response.location = location
+            created(response, path_to('addresses/{0}'.format(address.email)))
 
 
 

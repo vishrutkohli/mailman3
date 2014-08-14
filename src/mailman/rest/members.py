@@ -28,8 +28,6 @@ __all__ = [
     ]
 
 
-import falcon
-
 from uuid import UUID
 from operator import attrgetter
 from zope.component import getUtility
@@ -44,7 +42,8 @@ from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    CollectionMixin, NotFound, child, etag, paginate, path_to)
+    CollectionMixin, NotFound, bad_request, child, conflict, created, etag,
+    no_content, not_found, okay, paginate, path_to)
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
@@ -98,8 +97,7 @@ class MemberCollection(_MemberBase):
     def on_get(self, request, response):
         """roster/[members|owners|moderators]"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
 
 
@@ -121,10 +119,9 @@ class AMember(_MemberBase):
     def on_get(self, request, response):
         """Return a single member end-point."""
         if self._member is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            response.body = self._resource_as_json(self._member)
+            okay(response, self._resource_as_json(self._member))
 
     @child()
     def preferences(self, request, segments):
@@ -156,18 +153,18 @@ class AMember(_MemberBase):
         # owner.  Handle the former case first.  For now too, we will not send
         # an admin or user notification.
         if self._member is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         mlist = getUtility(IListManager).get_by_list_id(self._member.list_id)
         if self._member.role is MemberRole.member:
             try:
                 delete_member(mlist, self._member.address.email, False, False)
             except NotAMemberError:
-                falcon.responders.path_not_found(request, response)
+                not_found(response)
                 return
         else:
             self._member.unsubscribe()
-        response.status = falcon.HTTP_204
+        no_content(response)
 
     def on_patch(self, request, response):
         """Patch the membership.
@@ -175,7 +172,7 @@ class AMember(_MemberBase):
         This is how subscription changes are done.
         """
         if self._member is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         try:
             values = Validator(
@@ -183,24 +180,22 @@ class AMember(_MemberBase):
                 delivery_mode=enum_validator(DeliveryMode),
                 _optional=('address', 'delivery_mode'))(request)
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
             return
         if 'address' in values:
             email = values['address']
             address = getUtility(IUserManager).get_address(email)
             if address is None:
-                falcon.responders.bad_request(
-                    request, response, body=b'Address not registered')
+                bad_request(response, b'Address not registered')
                 return
             try:
                 self._member.address = address
             except (MembershipError, UnverifiedAddressError) as error:
-                falcon.responders.bad_request(
-                    request, response, body=str(error))
+                bad_request(response, str(error))
                 return
         if 'delivery_mode' in values:
             self._member.preferences.delivery_mode = values['delivery_mode']
-        response.status = falcon.HTTP_204
+        no_content(response)
 
 
 
@@ -220,29 +215,24 @@ class AllMembers(_MemberBase):
                 _optional=('delivery_mode', 'display_name', 'role'))
             member = service.join(**validator(request))
         except AlreadySubscribedError:
-            response.status = falcon.HTTP_409
-            response.body = b'Member already subscribed'
+            conflict(response, b'Member already subscribed')
         except NoSuchListError:
-            falcon.responders.bad_request(
-                request, response, body=b'No such list')
+            bad_request(response, b'No such list')
         except InvalidEmailAddressError:
-            falcon.responders.bad_request(
-                request, response, body=b'Invalid email address')
+            bad_request(response, b'Invalid email address')
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
         else:
             # The member_id are UUIDs.  We need to use the integer equivalent
             # in the URL.
             member_id = member.member_id.int
             location = path_to('members/{0}'.format(member_id))
-            response.status = falcon.HTTP_201
-            response.location = location
+            created(response, location)
 
     def on_get(self, request, response):
         """/members"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
 
 
@@ -273,8 +263,7 @@ class FindMembers(_MemberBase):
         try:
             members = service.find_members(**validator(request))
         except ValueError as error:
-            falcon.responders.bad_request(response, body=str(error))
+            bad_request(response, str(error))
         else:
             resource = _FoundMembers(members)._make_collection(request)
-            response.status = falcon.HTTP_200
-            response.body = etag(resource)
+            okay(response, etag(resource))

@@ -25,8 +25,6 @@ __all__ = [
     ]
 
 
-import falcon
-
 from lazr.config import as_boolean, as_timedelta
 from mailman.config import config
 from mailman.core.errors import (
@@ -35,7 +33,8 @@ from mailman.interfaces.action import Action
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.mailinglist import IAcceptableAliasSet, ReplyToMunging
-from mailman.rest.helpers import GetterSetter, etag
+from mailman.rest.helpers import (
+    GetterSetter, bad_request, etag, no_content, okay)
 from mailman.rest.validator import PatchValidator, Validator, enum_validator
 
 
@@ -172,16 +171,15 @@ class ListConfiguration:
                 value = ATTRIBUTES[attribute].get(self._mlist, attribute)
                 resource[attribute] = value
         elif self._attribute not in ATTRIBUTES:
-            falcon.responders.bad_request(
-                request, response,
+            bad_request(
+                response,
                 body=b'Unknown attribute: {0}'.format(self._attribute))
             return
         else:
             attribute = self._attribute
             value = ATTRIBUTES[attribute].get(self._mlist, attribute)
             resource[attribute] = value
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
     def on_put(self, request, response):
         """Set a mailing list configuration."""
@@ -191,46 +189,41 @@ class ListConfiguration:
             try:
                 validator.update(self._mlist, request)
             except ValueError as error:
-                falcon.responders.bad_request(
-                    request, response, body=str(error))
+                bad_request(response, body=str(error))
                 return
         elif attribute not in ATTRIBUTES:
-            falcon.responders.bad_request(
-                request, response,
-                body=b'Unknown attribute: {0}'.format(attribute))
+            bad_request(response, b'Unknown attribute: {0}'.format(attribute))
             return
         elif ATTRIBUTES[attribute].decoder is None:
-            falcon.responders.bad_request(
-                request, response,
-                body=b'Read-only attribute: {0}'.format(attribute))
+            bad_request(
+                response, b'Read-only attribute: {0}'.format(attribute))
             return
         else:
             validator = Validator(**{attribute: VALIDATORS[attribute]})
             try:
                 validator.update(self._mlist, request)
             except ValueError as error:
-                falcon.responders.bad_request(
-                    request, response, body=str(error))
+                bad_request(response, str(error))
                 return
-        response.status = falcon.HTTP_204
+        no_content(response)
 
     def on_patch(self, request, response):
         """Patch the configuration (i.e. partial update)."""
         try:
             validator = PatchValidator(request, ATTRIBUTES)
         except UnknownPATCHRequestError as error:
-            falcon.responders.bad_request(
-                request, response,
+            bad_request(
+                response,
                 body=b'Unknown attribute: {0}'.format(error.attribute))
             return
         except ReadOnlyPATCHRequestError as error:
-            falcon.responders.bad_request(
-                request, response,
+            bad_request(
+                response,
                 body=b'Read-only attribute: {0}'.format(error.attribute))
             return
         try:
             validator.update(self._mlist, request)
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
         else:
-            response.status = falcon.HTTP_204
+            no_content(response)

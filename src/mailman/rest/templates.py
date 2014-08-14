@@ -25,8 +25,7 @@ __all__ = [
     ]
 
 
-import falcon
-
+from mailman.rest.helpers import not_found
 from mailman.utilities.i18n import TemplateNotFoundError, find
 
 
@@ -51,7 +50,7 @@ class TemplateFinder:
         # XXX We currently only support .txt and .html files.
         extension = EXTENSIONS.get(self.content_type)
         if extension is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         template = self.template + extension
         fp = None
@@ -59,7 +58,7 @@ class TemplateFinder:
             try:
                 path, fp = find(template, self.mlist, self.language)
             except TemplateNotFoundError:
-                falcon.responders.path_not_found(request, response)
+                not_found(response)
                 return
             else:
                 return fp.read()

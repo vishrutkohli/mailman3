@@ -26,12 +26,11 @@ __all__ = [
     ]
 
 
-import falcon
-
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, IDomainManager)
 from mailman.rest.helpers import (
-    BadRequest, CollectionMixin, NotFound, child, etag, path_to)
+    BadRequest, CollectionMixin, NotFound, bad_request, child, created, etag,
+    no_content, not_found, okay, path_to)
 from mailman.rest.lists import ListsForDomain
 from mailman.rest.validator import Validator
 from zope.component import getUtility
@@ -67,10 +66,9 @@ class ADomain(_DomainBase):
         """Return a single domain end-point."""
         domain = getUtility(IDomainManager).get(self._domain)
         if domain is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            response.body = self._resource_as_json(domain)
+            okay(response, self._resource_as_json(domain))
 
     def on_delete(self, request, response):
         """Delete the domain."""
@@ -78,10 +76,9 @@ class ADomain(_DomainBase):
             getUtility(IDomainManager).remove(self._domain)
         except KeyError:
             # The domain does not exist.
-            falcon.responders.path_not_found(
-                request, response, '404 Not Found')
+            not_found(response)
         else:
-            response.status = falcon.HTTP_204
+            no_content(response)
 
     @child()
     def lists(self, request, segments):
@@ -110,18 +107,13 @@ class AllDomains(_DomainBase):
                                              'contact_address'))
             domain = domain_manager.add(**validator(request))
         except BadDomainSpecificationError:
-            falcon.responders.bad_request(
-                request, response, body=b'Domain exists')
+            bad_request(response, b'Domain exists')
         except ValueError as error:
-            falcon.responders.bad_request(
-                request, response, body=str(error))
+            bad_request(response, str(error))
         else:
-            location = path_to('domains/{0}'.format(domain.mail_host))
-            response.status = falcon.HTTP_201
-            response.location = location
+            created(response, path_to('domains/{0}'.format(domain.mail_host)))
 
     def on_get(self, request, response):
         """/domains"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))

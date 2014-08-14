@@ -30,8 +30,6 @@ __all__ = [
     ]
 
 
-import falcon
-
 from lazr.config import as_boolean
 from operator import attrgetter
 from zope.component import getUtility
@@ -47,7 +45,8 @@ from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.rest.configuration import ListConfiguration
 from mailman.rest.helpers import (
-    CollectionMixin, GetterSetter, NotFound, child, etag, paginate, path_to)
+    CollectionMixin, GetterSetter, NotFound, bad_request, child, created,
+    etag, no_content, not_found, okay, paginate, path_to)
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator
@@ -138,18 +137,17 @@ class AList(_ListBase):
     def on_get(self, request, response):
         """Return a single mailing list end-point."""
         if self._mlist is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            response.body = self._resource_as_json(self._mlist)
+            okay(response, self._resource_as_json(self._mlist))
 
     def on_delete(self, request, response):
         """Delete the named mailing list."""
         if self._mlist is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
         else:
             remove_list(self._mlist)
-            response.status = falcon.HTTP_204
+            no_content(response)
 
     @child(member_matcher)
     def member(self, request, segments, role, email):
@@ -211,25 +209,20 @@ class AllLists(_ListBase):
                                   _optional=('style_name',))
             mlist = create_list(**validator(request))
         except ListAlreadyExistsError:
-            falcon.responders.bad_request(
-                request, response, body=b'Mailing list exists')
+            bad_request(response, b'Mailing list exists')
         except BadDomainSpecificationError as error:
-            falcon.responders.bad_request(
-                request, response, body=b'Domain does not exist: {0}'.format(
-                error.domain))
+            bad_request(
+                response,
+                b'Domain does not exist: {0}'.format(error.domain))
         except ValueError as error:
-            falcon.responders.bad_request(
-                request, response, body=str(error))
+            bad_request(response, str(error))
         else:
-            location = path_to('lists/{0}'.format(mlist.list_id))
-            response.status = falcon.HTTP_201
-            response.location = location
+            created(response, path_to('lists/{0}'.format(mlist.list_id)))
 
     def on_get(self, request, response):
         """/lists"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
 
 
@@ -260,8 +253,7 @@ class ListsForDomain(_ListBase):
     def on_get(self, request, response):
         """/domains/<domain>/lists"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
     @paginate
     def _get_collection(self, request):
@@ -298,8 +290,7 @@ class ListArchivers:
         archiver_set = IListArchiverSet(self._mlist)
         resource = {archiver.name: archiver.is_enabled
                     for archiver in archiver_set.archivers}
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
     def patch_put(self, request, response, is_optional):
         archiver_set = IListArchiverSet(self._mlist)
@@ -311,9 +302,9 @@ class ListArchivers:
         try:
             Validator(**kws).update(self._mlist, request)
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
         else:
-            response.status = falcon.HTTP_204
+            no_content(response)
 
     def on_put(self, request, response):
         """Update all the archiver statuses."""
@@ -336,5 +327,4 @@ class Styles:
             default=config.styles.default)
 
     def on_get(self, request, response):
-        response.status = falcon.HTTP_200
-        response.body = etag(self._resource)
+        okay(response, etag(self._resource))

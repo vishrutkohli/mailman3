@@ -26,11 +26,10 @@ __all__ = [
     ]
 
 
-import falcon
-
 from lazr.config import as_boolean
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
-from mailman.rest.helpers import GetterSetter, etag, path_to
+from mailman.rest.helpers import (
+    GetterSetter, bad_request, etag, no_content, not_found, okay, path_to)
 from mailman.rest.validator import (
     Validator, enum_validator, language_validator)
 
@@ -70,8 +69,7 @@ class ReadOnlyPreferences:
         # Add the self link.
         resource['self_link'] = path_to(
             '{0}/preferences'.format(self._base_url))
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
 
 
@@ -80,7 +78,8 @@ class Preferences(ReadOnlyPreferences):
 
     def patch_put(self, request, response, is_optional):
         if self._parent is None:
-            response.status = falcon.HTTP_404
+            not_found(response)
+            return
         kws = dict(
             acknowledge_posts=GetterSetter(as_boolean),
             hide_address = GetterSetter(as_boolean),
@@ -96,10 +95,9 @@ class Preferences(ReadOnlyPreferences):
         try:
             Validator(**kws).update(self._parent, request)
         except ValueError as error:
-            falcon.responders.bad_request(
-                request, response, body=str(error))
+            bad_request(response, str(error))
         else:
-            response.status = falcon.HTTP_204
+            no_content(response)
 
     def on_patch(self, request, response):
         """Patch the preferences."""
@@ -114,4 +112,4 @@ class Preferences(ReadOnlyPreferences):
         for attr in PREFERENCES:
             if hasattr(self._parent, attr):
                 setattr(self._parent, attr, None)
-        response.status = falcon.HTTP_204
+        no_content(response)

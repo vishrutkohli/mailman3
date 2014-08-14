@@ -25,8 +25,15 @@ __all__ = [
     'ChildError',
     'GetterSetter',
     'NotFound',
+    'bad_request',
     'child',
+    'conflict',
+    'created',
     'etag',
+    'forbidden',
+    'no_content',
+    'not_found',
+    'okay',
     'path_to',
     ]
 
@@ -272,3 +279,42 @@ class BadRequest(ChildError):
 class NotFound(ChildError):
     def __init__(self):
         super(NotFound, self).__init__(falcon.HTTP_404)
+
+
+def okay(response, body=None):
+    response.status = falcon.HTTP_200
+    if body is not None:
+        response.body = body
+
+
+def no_content(response):
+    response.status = falcon.HTTP_204
+
+
+def not_found(response, body=b'404 Not Found'):
+    response.status = falcon.HTTP_404
+    if body is not None:
+        response.body = body
+
+
+def bad_request(response, body='400 Bad Request'):
+    response.status = falcon.HTTP_400
+    if body is not None:
+        response.body = body
+
+
+def created(response, location):
+    response.status = falcon.HTTP_201
+    response.location = location
+
+
+def conflict(response, body=b'409 Conflict'):
+    response.status = falcon.HTTP_409
+    if body is not None:
+        response.body = body
+
+
+def forbidden(response, body=b'403 Forbidden'):
+    response.status = falcon.HTTP_403
+    if body is not None:
+        response.body = body

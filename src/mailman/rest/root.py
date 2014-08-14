@@ -36,7 +36,8 @@ from mailman.core.system import system
 from mailman.interfaces.listmanager import IListManager
 from mailman.rest.addresses import AllAddresses, AnAddress
 from mailman.rest.domains import ADomain, AllDomains
-from mailman.rest.helpers import BadRequest, NotFound, child, etag, path_to
+from mailman.rest.helpers import (
+    BadRequest, NotFound, child, etag, okay, path_to)
 from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
@@ -87,8 +88,7 @@ class System:
             python_version=system.python_version,
             self_link=path_to('system'),
             )
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
 
 class TopLevel:

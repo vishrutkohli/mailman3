@@ -26,8 +26,6 @@ __all__ = [
     ]
 
 
-import falcon
-
 from passlib.utils import generate_password as generate
 from uuid import UUID
 from zope.component import getUtility
@@ -39,8 +37,8 @@ from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
-    BadRequest, CollectionMixin, GetterSetter, NotFound, child, etag,
-    paginate, path_to)
+    BadRequest, CollectionMixin, GetterSetter, NotFound, bad_request, child,
+    created, etag, forbidden, no_content, not_found, okay, paginate, path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
@@ -101,8 +99,7 @@ class AllUsers(_UserBase):
     def on_get(self, request, response):
         """/users"""
         resource = self._make_collection(request)
-        response.status = falcon.HTTP_200
-        response.body = etag(resource)
+        okay(response, etag(resource))
 
     def on_post(self, request, response):
         """Create a new user."""
@@ -113,7 +110,7 @@ class AllUsers(_UserBase):
                                   _optional=('display_name', 'password'))
             arguments = validator(request)
         except ValueError as error:
-            falcon.responders.bad_request(response, body=str(error))
+            bad_request(response, str(error))
             return
         # We can't pass the 'password' argument to the user creation method,
         # so strip that out (if it exists), then create the user, adding the
@@ -122,8 +119,8 @@ class AllUsers(_UserBase):
         try:
             user = getUtility(IUserManager).create_user(**arguments)
         except ExistingAddressError as error:
-            falcon.responders.bad_request(
-                request, response,
+            bad_request(
+                response,
                 body=b'Address already exists: {0}'.format(error.address))
             return
         if password is None:
@@ -131,8 +128,7 @@ class AllUsers(_UserBase):
             password = generate(int(config.passwords.password_length))
         user.password = config.password_context.encrypt(password)
         location = path_to('users/{0}'.format(user.user_id.int))
-        response.status = falcon.HTTP_201
-        response.location = location
+        created(response, location)
 
 
 
@@ -165,11 +161,9 @@ class AUser(_UserBase):
     def on_get(self, request, response):
         """Return a single user end-point."""
         if self._user is None:
-            falcon.responders.path_not_found(
-                request, response, body=b'404 Not Found')
+            not_found(response)
         else:
-            response.status = falcon.HTTP_200
-            response.body = self._resource_as_json(self._user)
+            okay(response, self._resource_as_json(self._user))
 
     @child()
     def addresses(self, request, segments):
@@ -181,7 +175,7 @@ class AUser(_UserBase):
     def on_delete(self, request, response):
         """Delete the named user, all her memberships, and addresses."""
         if self._user is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         for member in self._user.memberships.members:
             member.unsubscribe()
@@ -189,7 +183,7 @@ class AUser(_UserBase):
         for address in self._user.addresses:
             user_manager.delete_address(address)
         user_manager.delete_user(self._user)
-        response.status = falcon.HTTP_204
+        no_content(response)
 
     @child()
     def preferences(self, request, segments):
@@ -206,44 +200,38 @@ class AUser(_UserBase):
     def on_patch(self, request, response):
         """Patch the user's configuration (i.e. partial update)."""
         if self._user is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         try:
             validator = PatchValidator(request, ATTRIBUTES)
         except UnknownPATCHRequestError as error:
-            falcon.responders.bad_request(
-                request, response,
-                body=b'Unknown attribute: {0}'.format(error.attribute))
+            bad_request(
+                response, b'Unknown attribute: {0}'.format(error.attribute))
         except ReadOnlyPATCHRequestError as error:
-            falcon.responders.bad_request(
-                request, response,
-                body=b'Read-only attribute: {0}'.format(error.attribute))
+            bad_request(
+                response, b'Read-only attribute: {0}'.format(error.attribute))
         else:
             validator.update(self._user, request)
-            response.status = falcon.HTTP_204
+            no_content(response)
 
     def on_put(self, request, response):
         """Put the user's configuration (i.e. full update)."""
         if self._user is None:
-            falcon.responders.path_not_found(request, response)
+            not_found(response)
             return
         validator = Validator(**ATTRIBUTES)
         try:
             validator.update(self._user, request)
         except UnknownPATCHRequestError as error:
-            falcon.responders.bad_request(
-                request, response,
-                body=b'Unknown attribute: {0}'.format(error.attribute))
+            bad_request(
+                response, b'Unknown attribute: {0}'.format(error.attribute))
         except ReadOnlyPATCHRequestError as error:
-            falcon.responders.bad_request(
-                request, response,
-                body=b'Read-only attribute: {0}'.format(error.attribute))
+            bad_request(
+                response, b'Read-only attribute: {0}'.format(error.attribute))
         except ValueError as error:
-            falcon.responders.bad_request(
-                request, response,
-                body=str(error))
+            bad_request(response, str(error))
         else:
-            response.status = falcon.HTTP_204
+            no_content(response)
 
     @child()
     def login(self, request, segments):
@@ -269,14 +257,13 @@ class Login:
         try:
             values = validator(request)
         except ValueError as error:
-            falcon.responders.bad_request(request, response, body=str(error))
+            bad_request(response, str(error))
             return
         is_valid, new_hash = config.password_context.verify(
             values['cleartext_password'], self._user.password)
         if is_valid:
             if new_hash is not None:
                 self._user.password = new_hash
-            response.status = falcon.HTTP_204
+            no_content(response)
         else:
-            response.status = falcon.HTTP_403
-            response.body = b'403 Forbidden'
+            forbidden(response)
