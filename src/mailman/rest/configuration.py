@@ -172,8 +172,7 @@ class ListConfiguration:
                 resource[attribute] = value
         elif self._attribute not in ATTRIBUTES:
             bad_request(
-                response,
-                body=b'Unknown attribute: {0}'.format(self._attribute))
+                response, b'Unknown attribute: {0}'.format(self._attribute))
             return
         else:
             attribute = self._attribute
@@ -189,7 +188,7 @@ class ListConfiguration:
             try:
                 validator.update(self._mlist, request)
             except ValueError as error:
-                bad_request(response, body=str(error))
+                bad_request(response, str(error))
                 return
         elif attribute not in ATTRIBUTES:
             bad_request(response, b'Unknown attribute: {0}'.format(attribute))
@@ -213,13 +212,11 @@ class ListConfiguration:
             validator = PatchValidator(request, ATTRIBUTES)
         except UnknownPATCHRequestError as error:
             bad_request(
-                response,
-                body=b'Unknown attribute: {0}'.format(error.attribute))
+                response, b'Unknown attribute: {0}'.format(error.attribute))
             return
         except ReadOnlyPATCHRequestError as error:
             bad_request(
-                response,
-                body=b'Read-only attribute: {0}'.format(error.attribute))
+                response, b'Read-only attribute: {0}'.format(error.attribute))
             return
         try:
             validator.update(self._mlist, request)

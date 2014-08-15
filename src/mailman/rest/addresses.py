@@ -192,9 +192,9 @@ class UserAddresses(_AddressBase):
         try:
             address = user_manager.create_address(**validator(request))
         except ValueError as error:
-            bad_request(response, body=str(error))
+            bad_request(response, str(error))
         except InvalidEmailAddressError:
-            bad_request(response, body=b'Invalid email address')
+            bad_request(response, b'Invalid email address')
         except ExistingAddressError:
             bad_request(response, b'Address already exists')
         else:
