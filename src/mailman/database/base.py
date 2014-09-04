@@ -29,6 +29,8 @@ import logging
 
 from lazr.config import as_boolean
 from pkg_resources import resource_listdir, resource_string
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from storm.cache import GenerationalCache
 from storm.locals import create_database, Store
 from zope.interface import implementer
@@ -42,6 +44,42 @@ log = logging.getLogger('mailman.config')
 
 NL = '\n'
 
+
+
+@implementer(IDatabase)
+class SABaseDatabase:
+    """The database base class for use with SQLAlchemy.
+
+    Use this as a base class for your DB_Specific derived classes.
+    """
+    TAG=''
+
+    def __inti__(self):
+        self.url = None
+        self.store = None
+
+    def begin(self):
+        pass
+
+    def commit(self):
+        self.store.commit()
+
+    def abort(self):
+        self.store.rollback()
+
+    def _prepare(self, url):
+        pass
+
+    def initialize(Self, debug=None):
+        url = expand(config.database.url, config.paths)
+        log.debug('Database url: %s', url)
+        self.url = url
+        self._prepare(url)
+        engine = create_engine(url)
+        Session = sessionmaker(bind=engine)
+        store = Session()
+        self.store = session()
+        store.commit()
 
 
 @implementer(IDatabase)
