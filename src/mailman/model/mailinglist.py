@@ -29,7 +29,10 @@ import os
 
 from storm.locals import (
     And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, Store,
-    TimeDelta, Unicode)
+    TimeDelta, Unicode, Enum)
+from sqlalchemy import ( Boolean, DateTime, Float, Integer, Unicode
+                         PickleType, Interval)
+
 from urlparse import urljoin
 from zope.component import getUtility
 from zope.event import notify
@@ -73,121 +76,121 @@ UNDERSCORE = '_'
 class MailingList(Model):
     """See `IMailingList`."""
 
-    id = Int(primary=True)
+    id = Column(Integer, primary_key=True)
 
     # XXX denotes attributes that should be part of the public interface but
     # are currently missing.
 
     # List identity
-    list_name = Unicode()
-    mail_host = Unicode()
-    _list_id = Unicode(name='list_id')
-    allow_list_posts = Bool()
-    include_rfc2369_headers = Bool()
-    advertised = Bool()
-    anonymous_list = Bool()
+    list_name = Column(Unicode)
+    mail_host = Column(Unicode)
+    _list_id = Column('list_id', Unicode)
+    allow_list_posts = Column(Boolean)
+    include_rfc2369_headers = Column(Boolean)
+    advertised = Column(Boolean)
+    anonymous_list = Column(Boolean)
     # Attributes not directly modifiable via the web u/i
-    created_at = DateTime()
+    created_at = Column(DateTime)
     # Attributes which are directly modifiable via the web u/i.  The more
     # complicated attributes are currently stored as pickles, though that
     # will change as the schema and implementation is developed.
-    next_request_id = Int()
-    next_digest_number = Int()
-    digest_last_sent_at = DateTime()
-    volume = Int()
-    last_post_at = DateTime()
+    next_request_id = Column(Integer)
+    next_digest_number = Column(Integer)
+    digest_last_sent_at = Column(DateTime)
+    volume = Column(Integer)
+    last_post_at = Column(DateTime)
     # Implicit destination.
-    acceptable_aliases_id = Int()
-    acceptable_alias = Reference(acceptable_aliases_id, 'AcceptableAlias.id')
+    acceptable_aliases_id = Column(Integer, ForeignKey('acceptablealias.id'))
+    # acceptable_alias = Reference(acceptable_aliases_id, 'AcceptableAlias.id')
     # Attributes which are directly modifiable via the web u/i.  The more
     # complicated attributes are currently stored as pickles, though that
     # will change as the schema and implementation is developed.
-    accept_these_nonmembers = Pickle() # XXX
-    admin_immed_notify = Bool()
-    admin_notify_mchanges = Bool()
-    administrivia = Bool()
-    archive_policy = Enum(ArchivePolicy)
+    accept_these_nonmembers = Column(PickleType) # XXX
+    admin_immed_notify = Column(Boolean)
+    admin_notify_mchanges = Column(Boolean)
+    administrivia = Column(Boolean)
+    archive_policy = Column(Enum(ArchivePolicy)
     # Automatic responses.
-    autoresponse_grace_period = TimeDelta()
-    autorespond_owner = Enum(ResponseAction)
-    autoresponse_owner_text = Unicode()
-    autorespond_postings = Enum(ResponseAction)
-    autoresponse_postings_text = Unicode()
-    autorespond_requests = Enum(ResponseAction)
-    autoresponse_request_text = Unicode()
+    autoresponse_grace_period = Column(Interval)
+    autorespond_owner = Column(Enum(ResponseAction))
+    autoresponse_owner_text = Column(Unicode)
+    autorespond_postings = Column(Enum(ResponseAction))
+    autoresponse_postings_text = Column(Unicode)
+    autorespond_requests = Column(Enum(ResponseAction))
+    autoresponse_request_text = Column(Unicode)
     # Content filters.
-    filter_action = Enum(FilterAction)
-    filter_content = Bool()
-    collapse_alternatives = Bool()
-    convert_html_to_plaintext = Bool()
+    filter_action = Column(Enum(FilterAction))
+    filter_content = Column(Boolean)
+    collapse_alternatives = Column(Boolean)
+    convert_html_to_plaintext = Column(Boolean)
     # Bounces.
-    bounce_info_stale_after = TimeDelta() # XXX
-    bounce_matching_headers = Unicode() # XXX
-    bounce_notify_owner_on_disable = Bool() # XXX
-    bounce_notify_owner_on_removal = Bool() # XXX
-    bounce_score_threshold = Int() # XXX
-    bounce_you_are_disabled_warnings = Int() # XXX
-    bounce_you_are_disabled_warnings_interval = TimeDelta() # XXX
-    forward_unrecognized_bounces_to = Enum(UnrecognizedBounceDisposition)
-    process_bounces = Bool()
+    bounce_info_stale_after = Column(Interval) # XXX
+    bounce_matching_headers = Column(Unicode) # XXX
+    bounce_notify_owner_on_disable = Column(Boolean) # XXX
+    bounce_notify_owner_on_removal = Column(Boolean) # XXX
+    bounce_score_threshold = Column(Integer) # XXX
+    bounce_you_are_disabled_warnings = Column(Integer) # XXX
+    bounce_you_are_disabled_warnings_interval = Column(Interval) # XXX
+    forward_unrecognized_bounces_to = Column(Enum(UnrecognizedBounceDisposition))
+    process_bounces = Column(Boolean)
     # Miscellaneous
-    default_member_action = Enum(Action)
-    default_nonmember_action = Enum(Action)
-    description = Unicode()
-    digest_footer_uri = Unicode()
-    digest_header_uri = Unicode()
-    digest_is_default = Bool()
-    digest_send_periodic = Bool()
-    digest_size_threshold = Float()
-    digest_volume_frequency = Enum(DigestFrequency)
-    digestable = Bool()
-    discard_these_nonmembers = Pickle()
-    emergency = Bool()
-    encode_ascii_prefixes = Bool()
-    first_strip_reply_to = Bool()
-    footer_uri = Unicode()
-    forward_auto_discards = Bool()
-    gateway_to_mail = Bool()
-    gateway_to_news = Bool()
-    goodbye_message_uri = Unicode()
-    header_matches = Pickle()
-    header_uri = Unicode()
-    hold_these_nonmembers = Pickle()
-    info = Unicode()
-    linked_newsgroup = Unicode()
-    max_days_to_hold = Int()
-    max_message_size = Int()
-    max_num_recipients = Int()
-    member_moderation_notice = Unicode()
-    mime_is_default_digest = Bool()
+    default_member_action = Column(Enum(Action))
+    default_nonmember_action = Column(Enum(Action))
+    description = Column(Unicode)
+    digest_footer_uri = Column(Unicode)
+    digest_header_uri = Column(Unicode)
+    digest_is_default = Column(Boolean)
+    digest_send_periodic = Column(Boolean)
+    digest_size_threshold = Column(Float)
+    digest_volume_frequency = Column(Enum(DigestFrequency))
+    digestable = Column(Boolean)
+    discard_these_nonmembers = Column(PickleType)
+    emergency = Column(Boolean)
+    encode_ascii_prefixes = Column(Boolean)
+    first_strip_reply_to = Column(Boolean)
+    footer_uri = Column(Unicode)
+    forward_auto_discards = Column(Boolean)
+    gateway_to_mail = Column(Boolean)
+    gateway_to_news = Column(Boolean)
+    goodbye_message_uri = Column(Unicode)
+    header_matches = Column(PickleType)
+    header_uri = Column(Unicode)
+    hold_these_nonmembers = Column(PickleType)
+    info = Column(Unicode)
+    linked_newsgroup = Column(Unicode)
+    max_days_to_hold = Column(Integer)
+    max_message_size = Column(Integer)
+    max_num_recipients = Column(Integer)
+    member_moderation_notice = Column(Unicode)
+    mime_is_default_digest = Column(Boolean)
     # FIXME: There should be no moderator_password
     moderator_password = RawStr()
-    newsgroup_moderation = Enum(NewsgroupModeration)
-    nntp_prefix_subject_too = Bool()
-    nondigestable = Bool()
-    nonmember_rejection_notice = Unicode()
-    obscure_addresses = Bool()
-    owner_chain = Unicode()
-    owner_pipeline = Unicode()
-    personalize = Enum(Personalization)
-    post_id = Int()
-    posting_chain = Unicode()
-    posting_pipeline = Unicode()
-    _preferred_language = Unicode(name='preferred_language')
-    display_name = Unicode()
-    reject_these_nonmembers = Pickle()
-    reply_goes_to_list = Enum(ReplyToMunging)
-    reply_to_address = Unicode()
-    require_explicit_destination = Bool()
-    respond_to_post_requests = Bool()
-    scrub_nondigest = Bool()
-    send_goodbye_message = Bool()
-    send_welcome_message = Bool()
-    subject_prefix = Unicode()
-    topics = Pickle()
-    topics_bodylines_limit = Int()
-    topics_enabled = Bool()
-    welcome_message_uri = Unicode()
+    newsgroup_moderation = Column(Enum(NewsgroupModeration))
+    nntp_prefix_subject_too = Column(Boolean)
+    nondigestable = Column(Boolean)
+    nonmember_rejection_notice = Column(Unicode)
+    obscure_addresses = Column(Boolean)
+    owner_chain = Column(Unicode)
+    owner_pipeline = Column(Unicode)
+    personalize = Column(Enum(Personalization))
+    post_id = Column(Integer)
+    posting_chain = Column(Unicode)
+    posting_pipeline = Column(Unicode)
+    _preferred_language = Column('preferred_language', Unicode)
+    display_name = Column(Unicode)
+    reject_these_nonmembers = Column(PickleType)
+    reply_goes_to_list = Column(Enum(ReplyToMunging))
+    reply_to_address = Column(Unicode)
+    require_explicit_destination = Column(Boolean)
+    respond_to_post_requests = Column(Boolean)
+    scrub_nondigest = Column(Boolean)
+    send_goodbye_message = Column(Boolean)
+    send_welcome_message = Column(Boolean)
+    subject_prefix = Column(Unicode)
+    topics = Column(PickleType)
+    topics_bodylines_limit = Column(Integer)
+    topics_enabled = Column(Boolean)
+    welcome_message_uri = Column(Unicode)
 
     def __init__(self, fqdn_listname):
         super(MailingList, self).__init__()
@@ -496,10 +499,10 @@ class AcceptableAlias(Model):
 
     id = Int(primary=True)
 
-    mailing_list_id = Int()
+    mailing_list_id = Column(Integer)
     mailing_list = Reference(mailing_list_id, MailingList.id)
 
-    alias = Unicode()
+    alias = Column(Unicode)
 
     def __init__(self, mailing_list, alias):
         self.mailing_list = mailing_list
@@ -548,10 +551,10 @@ class ListArchiver(Model):
 
     id = Int(primary=True)
 
-    mailing_list_id = Int()
+    mailing_list_id = Column(Integer)
     mailing_list = Reference(mailing_list_id, MailingList.id)
-    name = Unicode()
-    _is_enabled = Bool()
+    name = Column(Unicode)
+    _is_enabled = Column(Boolean)
 
     def __init__(self, mailing_list, archiver_name, system_archiver):
         self.mailing_list = mailing_list

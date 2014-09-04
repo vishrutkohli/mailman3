@@ -27,6 +27,7 @@ __all__ = [
 
 
 from urlparse import urljoin, urlparse
+from sqlalchemy import Column, Unicode, Integer
 from storm.locals import Int, Unicode
 from zope.event import notify
 from zope.interface import implementer
@@ -44,12 +45,12 @@ from mailman.model.mailinglist import MailingList
 class Domain(Model):
     """Domains."""
 
-    id = Int(primary=True)
+    id = Column(Integer, primary_key=True)
 
-    mail_host = Unicode()
-    base_url = Unicode()
-    description = Unicode()
-    contact_address = Unicode()
+    mail_host = Column(Unicode)
+    base_url = Column(Unicode)
+    description = Column(Unicode)
+    contact_address = Column(Unicode)
 
     def __init__(self, mail_host,
                  description=None,

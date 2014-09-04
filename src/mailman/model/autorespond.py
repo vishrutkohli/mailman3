@@ -26,6 +26,8 @@ __all__ = [
     ]
 
 
+from sqlalchemy import (Column, Integer, String, Unicode,
+                        ForeignKey, Date)
 from storm.locals import And, Date, Desc, Int, Reference
 from zope.interface import implementer
 
@@ -42,16 +44,14 @@ from mailman.utilities.datetime import today
 class AutoResponseRecord(Model):
     """See `IAutoResponseRecord`."""
 
-    id = Int(primary=True)
+    id = Column(Integer, primary_key=True)
 
-    address_id = Int()
-    address = Reference(address_id, 'Address.id')
+    address_id = Column(Integer, ForeignKey('address.id'))
 
-    mailing_list_id = Int()
-    mailing_list = Reference(mailing_list_id, 'MailingList.id')
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
 
     response_type = Enum(Response)
-    date_sent = Date()
+    date_sent = Column(Date)
 
     def __init__(self, mailing_list, address, response_type):
         self.mailing_list = mailing_list

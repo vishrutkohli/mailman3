@@ -29,7 +29,7 @@ import re
 
 from storm.locals import Int, Unicode
 from zope.interface import implementer
-
+from sqlalchemy import Column, Integer, Unicode
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.bans import IBan, IBanManager
@@ -40,9 +40,9 @@ from mailman.interfaces.bans import IBan, IBanManager
 class Ban(Model):
     """See `IBan`."""
 
-    id = Int(primary=True)
-    email = Unicode()
-    list_id = Unicode()
+    id = Column(Integer, primary_key=True)
+    email = Column(Unicode)
+    list_id = Column(Unicode)
 
     def __init__(self, email, list_id):
         super(Ban, self).__init__()

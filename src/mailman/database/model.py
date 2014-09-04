@@ -27,8 +27,11 @@ __all__ = [
 
 from operator import attrgetter
 
+from sqlalchemy.ext.declarative import declarative_base
 from storm.properties import PropertyPublisherMeta
 
+
+Base = declerative_base()
 
 
 class ModelMeta(PropertyPublisherMeta):
@@ -65,4 +68,4 @@ class ModelMeta(PropertyPublisherMeta):
 
 class Model:
     """Like Storm's `Storm` subclass, but with a bit extra."""
-    __metaclass__ = ModelMeta
+    __metaclass__ = Base

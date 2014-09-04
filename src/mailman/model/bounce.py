@@ -28,6 +28,7 @@ __all__ = [
 
 from storm.locals import Bool, Int, DateTime, Unicode
 from zope.interface import implementer
+from sqlalchemy import Column, Integer, Unicode, DateTime, Boolean
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
@@ -42,13 +43,13 @@ from mailman.utilities.datetime import now
 class BounceEvent(Model):
     """See `IBounceEvent`."""
 
-    id = Int(primary=True)
-    list_id = Unicode()
-    email = Unicode()
+    id = Unicode(Integer, primary_key=True)
+    list_id = Column(Unicode)
+    email = Column(Unicode)
     timestamp = DateTime()
-    message_id = Unicode()
+    message_id = Column(Unicode)
     context = Enum(BounceContext)
-    processed = Bool()
+    processed = COlumn(Boolean)
 
     def __init__(self, list_id, email, msg, context=None):
         self.list_id = list_id
