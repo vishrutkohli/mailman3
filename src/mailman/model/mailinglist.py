@@ -27,12 +27,8 @@ __all__ = [
 
 import os
 
-from storm.locals import (
-    And, Bool, DateTime, Float, Int, Pickle, RawStr, Reference, Store,
-    TimeDelta, Unicode, Enum)
 from sqlalchemy import ( Boolean, DateTime, Float, Integer, Unicode
                          PickleType, Interval)
-
 from urlparse import urljoin
 from zope.component import getUtility
 from zope.event import notify
@@ -76,6 +72,8 @@ UNDERSCORE = '_'
 class MailingList(Model):
     """See `IMailingList`."""
 
+    __tablename__ = 'mailinglist'
+
     id = Column(Integer, primary_key=True)
 
     # XXX denotes attributes that should be part of the public interface but
@@ -109,17 +107,17 @@ class MailingList(Model):
     admin_immed_notify = Column(Boolean)
     admin_notify_mchanges = Column(Boolean)
     administrivia = Column(Boolean)
-    archive_policy = Column(Enum(ArchivePolicy)
+    archive_policy = Column(Enum(enum=ArchivePolicy))
     # Automatic responses.
     autoresponse_grace_period = Column(Interval)
-    autorespond_owner = Column(Enum(ResponseAction))
+    autorespond_owner = Column(Enum(enum=ResponseAction))
     autoresponse_owner_text = Column(Unicode)
-    autorespond_postings = Column(Enum(ResponseAction))
+    autorespond_postings = Column(Enum(enum=ResponseAction))
     autoresponse_postings_text = Column(Unicode)
-    autorespond_requests = Column(Enum(ResponseAction))
+    autorespond_requests = Column(Enum(Enum=ResponseAction))
     autoresponse_request_text = Column(Unicode)
     # Content filters.
-    filter_action = Column(Enum(FilterAction))
+    filter_action = Column(Enum(enum=FilterAction))
     filter_content = Column(Boolean)
     collapse_alternatives = Column(Boolean)
     convert_html_to_plaintext = Column(Boolean)
@@ -131,18 +129,18 @@ class MailingList(Model):
     bounce_score_threshold = Column(Integer) # XXX
     bounce_you_are_disabled_warnings = Column(Integer) # XXX
     bounce_you_are_disabled_warnings_interval = Column(Interval) # XXX
-    forward_unrecognized_bounces_to = Column(Enum(UnrecognizedBounceDisposition))
+    forward_unrecognized_bounces_to = Column(Enum(enum=UnrecognizedBounceDisposition))
     process_bounces = Column(Boolean)
     # Miscellaneous
-    default_member_action = Column(Enum(Action))
-    default_nonmember_action = Column(Enum(Action))
+    default_member_action = Column(Enum(enum=Action))
+    default_nonmember_action = Column(Enum(enum=Action))
     description = Column(Unicode)
     digest_footer_uri = Column(Unicode)
     digest_header_uri = Column(Unicode)
     digest_is_default = Column(Boolean)
     digest_send_periodic = Column(Boolean)
     digest_size_threshold = Column(Float)
-    digest_volume_frequency = Column(Enum(DigestFrequency))
+    digest_volume_frequency = Column(Enum(enum=DigestFrequency))
     digestable = Column(Boolean)
     discard_these_nonmembers = Column(PickleType)
     emergency = Column(Boolean)
@@ -164,22 +162,22 @@ class MailingList(Model):
     member_moderation_notice = Column(Unicode)
     mime_is_default_digest = Column(Boolean)
     # FIXME: There should be no moderator_password
-    moderator_password = RawStr()
-    newsgroup_moderation = Column(Enum(NewsgroupModeration))
+    moderator_password = Column(Unicode) # TODO : was RawStr()
+    newsgroup_moderation = Column(Enum(enum=NewsgroupModeration))
     nntp_prefix_subject_too = Column(Boolean)
     nondigestable = Column(Boolean)
     nonmember_rejection_notice = Column(Unicode)
     obscure_addresses = Column(Boolean)
     owner_chain = Column(Unicode)
     owner_pipeline = Column(Unicode)
-    personalize = Column(Enum(Personalization))
+    personalize = Column(Enum(enum=Personalization))
     post_id = Column(Integer)
     posting_chain = Column(Unicode)
     posting_pipeline = Column(Unicode)
     _preferred_language = Column('preferred_language', Unicode)
     display_name = Column(Unicode)
     reject_these_nonmembers = Column(PickleType)
-    reply_goes_to_list = Column(Enum(ReplyToMunging))
+    reply_goes_to_list = Column(Enum(enum=ReplyToMunging))
     reply_to_address = Column(Unicode)
     require_explicit_destination = Column(Boolean)
     respond_to_post_requests = Column(Boolean)

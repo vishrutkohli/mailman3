@@ -31,7 +31,8 @@ import random
 import hashlib
 
 from lazr.config import as_timedelta
-from storm.locals import DateTime, Int, RawStr, ReferenceSet, Unicode
+from sqlalchemy import Column, Integer, Unicode, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
@@ -53,10 +54,10 @@ class PendedKeyValue(Model):
         self.key = key
         self.value = value
 
-    id = Int(primary=True)
-    key = Unicode()
-    value = Unicode()
-    pended_id = Int()
+    id = Column(Integer, primary_key=True)
+    key = Column(Unicode)
+    value = Column(Unicode)
+    pended_id = Column(Integer)
 
 
 
@@ -69,11 +70,10 @@ class Pended(Model):
         self.token = token
         self.expiration_date = expiration_date
 
-    id = Int(primary=True)
-    token = RawStr()
-    expiration_date = DateTime()
-    key_values = ReferenceSet(id, PendedKeyValue.pended_id)
-
+    id = Column(Integer. primary_key=True)
+    token = Column(Unicode) # TODO : was RawStr()
+    expiration_date = Column(DateTime)
+    key_values = relationship('PendedKeyValues')
 
 
 @implementer(IPendable)

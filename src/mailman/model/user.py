@@ -24,14 +24,14 @@ __all__ = [
     'User',
     ]
 
-from storm.locals import (
-    DateTime, Int, RawStr, Reference, ReferenceSet, Unicode)
-from storm.properties import UUID
+from sqlalchemy import Column, Unicode, Integer, DateTime, ForeignKey
+from sqlalchemy import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
+from mailman.database.types import UUID
 from mailman.interfaces.address import (
     AddressAlreadyLinkedError, AddressNotLinkedError)
 from mailman.interfaces.user import (
@@ -51,17 +51,23 @@ uid_factory = UniqueIDFactory(context='users')
 class User(Model):
     """Mailman users."""
 
-    id = Int(primary=True)
-    display_name = Unicode()
-    _password = RawStr(name='password')
-    _user_id = UUID()
-    _created_on = DateTime()
+    __tablename__ = 'user'
 
-    addresses = ReferenceSet(id, 'Address.user_id')
-    _preferred_address_id = Int()
-    _preferred_address = Reference(_preferred_address_id, 'Address.id')
-    preferences_id = Int()
-    preferences = Reference(preferences_id, 'Preferences.id')
+    id = Column(Integer, primary_key=True)
+    display_name = Column(Unicode)
+    _password = Column('password', Unicode) # TODO : was RawStr()
+    _user_id = Column(UUID)
+    _created_on = Column(DateTime)
+
+    addresses = relationship('Address', backref='user')
+
+    _preferred_address_id = Column(Integer, ForeignKey='address.id')
+    _preferred_address = relationship('Address',
+                                      backred=backref('user', uselist=False))
+
+    preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    preferences = relationship('Preferences',
+                               backref=backref('user', uselist=False))
 
     @dbconnection
     def __init__(self, store, display_name=None, preferences=None):

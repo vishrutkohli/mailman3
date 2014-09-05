@@ -26,7 +26,8 @@ __all__ = [
 
 from cPickle import dumps, loads
 from datetime import timedelta
-from storm.locals import AutoReload, Int, RawStr, Reference, Unicode
+from sqlalchemy import Column, Unicode, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.interface import implementer
 
@@ -142,13 +143,15 @@ class ListRequests:
 class _Request(Model):
     """Table for mailing list hold requests."""
 
-    id = Int(primary=True, default=AutoReload)
-    key = Unicode()
-    request_type = Enum(RequestType)
-    data_hash = RawStr()
+    __tablename__ == 'request'
 
-    mailing_list_id = Int()
-    mailing_list = Reference(mailing_list_id, 'MailingList.id')
+    id = Column(Integer, primary_key=True)# TODO: ???, default=AutoReload)
+    key = Column(Unicode)
+    request_type = Column(Enum(enum=RequestType))
+    data_hash = Column(Unicode) # TODO : was RawStr()
+
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList')
 
     def __init__(self, key, request_type, mailing_list, data_hash):
         super(_Request, self).__init__()

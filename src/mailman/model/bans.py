@@ -27,9 +27,9 @@ __all__ = [
 
 import re
 
-from storm.locals import Int, Unicode
-from zope.interface import implementer
 from sqlalchemy import Column, Integer, Unicode
+from zope.interface import implementer
+
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.bans import IBan, IBanManager
@@ -39,6 +39,8 @@ from mailman.interfaces.bans import IBan, IBanManager
 @implementer(IBan)
 class Ban(Model):
     """See `IBan`."""
+
+    __tablename__ = 'ban'
 
     id = Column(Integer, primary_key=True)
     email = Column(Unicode)

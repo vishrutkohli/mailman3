@@ -44,13 +44,17 @@ from mailman.utilities.datetime import today
 class AutoResponseRecord(Model):
     """See `IAutoResponseRecord`."""
 
+    __tablename__ = 'autorespondrecord'
+
     id = Column(Integer, primary_key=True)
 
     address_id = Column(Integer, ForeignKey('address.id'))
+    address = relationship('Address')
 
     mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList')
 
-    response_type = Enum(Response)
+    response_type = Column(Enum(enum=Response))
     date_sent = Column(Date)
 
     def __init__(self, mailing_list, address, response_type):

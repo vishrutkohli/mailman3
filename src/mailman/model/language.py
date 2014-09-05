@@ -25,7 +25,6 @@ __all__ = [
     ]
 
 
-from storm.locals import Int, Unicode
 from zope.interface import implementer
 from sqlalchemy import Column, Unicode, Integer
 
@@ -37,6 +36,8 @@ from mailman.interfaces import ILanguage
 @implementer(ILanguage)
 class Language(Model):
     """See `ILanguage`."""
+
+    __tablename__ = 'language'
 
     id = Column(Integer, primary_key=True)
     code = Column(Unicode)

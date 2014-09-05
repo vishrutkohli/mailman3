@@ -25,7 +25,7 @@ __all__ = [
     ]
 
 
-from storm.locals import Bool, Int, Unicode
+from sqlalchemy import Column, Integer, Unicode,  Boolean
 from zope.component import getUtility
 from zope.interface import implementer
 
@@ -41,14 +41,16 @@ from mailman.interfaces.preferences import IPreferences
 class Preferences(Model):
     """See `IPreferences`."""
 
-    id = Int(primary=True)
-    acknowledge_posts = Bool()
-    hide_address = Bool()
-    _preferred_language = Unicode(name='preferred_language')
-    receive_list_copy = Bool()
-    receive_own_postings = Bool()
-    delivery_mode = Enum(DeliveryMode)
-    delivery_status = Enum(DeliveryStatus)
+    __tablename__ == 'preferences'
+
+    id = Column(Integer, primary_key=True)
+    acknowledge_posts = Column(Boolean)
+    hide_address = Column(Boolean)
+    _preferred_language = Column('preferred_language', Unicode)
+    receive_list_copy = Column(Boolean)
+    receive_own_postings = Column(Boolean)
+    delivery_mode = Column(Enum(enum=DeliveryMode))
+    delivery_status = Column(Enum(enum=DeliveryStatus))
 
     def __repr__(self):
         return '<Preferences object at {0:#x}>'.format(id(self))

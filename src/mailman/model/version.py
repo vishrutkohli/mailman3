@@ -24,15 +24,19 @@ __all__ = [
     'Version',
     ]
 
-from storm.locals import Int, Unicode
+from sqlalchemy import Column, Unicode, Integer
+
 from mailman.database.model import Model
 
 
 
 class Version(Model):
-    id = Int(primary=True)
-    component = Unicode()
-    version = Unicode()
+
+    __tablename_ = 'version'
+
+    id = Column(Integer, primary_key=True)
+    component = Column(Unicode)
+    version = Column(Unicode)
 
     # The testing machinery will generally reset all tables, however because
     # this table tracks schema migrations, we do not want to reset it.

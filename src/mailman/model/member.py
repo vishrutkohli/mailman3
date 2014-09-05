@@ -24,8 +24,7 @@ __all__ = [
     'Member',
     ]
 
-from storm.locals import Int, Reference, Unicode
-from storm.properties import UUID
+from sqlalchemy import Integer, Unicode, ForeignKey, Column
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
@@ -33,7 +32,7 @@ from zope.interface import implementer
 from mailman.core.constants import system_preferences
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
-from mailman.database.types import Enum
+from mailman.database.types import Enum, UUID
 from mailman.interfaces.action import Action
 from mailman.interfaces.address import IAddress
 from mailman.interfaces.listmanager import IListManager
@@ -52,18 +51,17 @@ uid_factory = UniqueIDFactory(context='members')
 class Member(Model):
     """See `IMember`."""
 
-    id = Int(primary=True)
-    _member_id = UUID()
-    role = Enum(MemberRole)
-    list_id = Unicode()
-    moderation_action = Enum(Action)
+    __tablename__ = 'member'
 
-    address_id = Int()
-    _address = Reference(address_id, 'Address.id')
-    preferences_id = Int()
-    preferences = Reference(preferences_id, 'Preferences.id')
-    user_id = Int()
-    _user = Reference(user_id, 'User.id')
+    id = Column(Integer, primary_key=True)
+    _member_id = UUID()
+    role = Column(Enum(enum=MemberRole))
+    list_id = Column(Unicode)
+    moderation_action = Column(Enum(enum=Action))
+
+    address_id = Column(Integer, ForegignKey('address.id'))
+    preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    user_id = Column(Integer, ForiegnKey('user.id'))
 
     def __init__(self, role, list_id, subscriber):
         self._member_id = uid_factory.new_uid()

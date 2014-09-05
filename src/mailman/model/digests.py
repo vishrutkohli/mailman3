@@ -25,9 +25,9 @@ __all__ = [
     ]
 
 
-from storm.locals import Int, Reference
-from zope.interface import implementer
 from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy.orm import relationship
+from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.types import Enum
@@ -40,15 +40,17 @@ from mailman.interfaces.member import DeliveryMode
 class OneLastDigest(Model):
     """See `IOneLastDigest`."""
 
+    __tablename__ = 'onelastdigest'
+
     id = Column(Integer, primary_key=True)
 
     mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
-    #mailing_list = Reference(mailing_list_id, 'MailingList.id')
+    maling_list = relationship('MailingList')
 
     address_id = Columne(Integer, ForeignKey('address.id'))
-    #address = Reference(address_id, 'Address.id')
+    address = relationship('Address')
 
-    delivery_mode = Enum(DeliveryMode)
+    delivery_mode = Column(Enum(enum=DeliveryMode))
 
     def __init__(self, mailing_list, address, delivery_mode):
         self.mailing_list = mailing_list
