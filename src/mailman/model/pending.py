@@ -50,6 +50,8 @@ from mailman.utilities.modules import call_name
 class PendedKeyValue(Model):
     """A pended key/value pair, tied to a token."""
 
+    __tablename__ = 'pendedkeyvalue'
+
     def __init__(self, key, value):
         self.key = key
         self.value = value
@@ -57,7 +59,7 @@ class PendedKeyValue(Model):
     id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     value = Column(Unicode)
-    pended_id = Column(Integer)
+    pended_id = Column(Integer, ForeignKey('pended.id'))
 
 
 
@@ -65,15 +67,17 @@ class PendedKeyValue(Model):
 class Pended(Model):
     """A pended event, tied to a token."""
 
+    __tablename__ = 'pended'
+
     def __init__(self, token, expiration_date):
         super(Pended, self).__init__()
         self.token = token
         self.expiration_date = expiration_date
 
-    id = Column(Integer. primary_key=True)
+    id = Column(Integer, primary_key=True)
     token = Column(Unicode) # TODO : was RawStr()
     expiration_date = Column(DateTime)
-    key_values = relationship('PendedKeyValues')
+    key_values = relationship('PendedKeyValue')
 
 
 @implementer(IPendable)

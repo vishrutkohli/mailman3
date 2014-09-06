@@ -28,7 +28,7 @@ __all__ = [
 
 from sqlalchemy import (Column, Integer, String, Unicode,
                         ForeignKey, Date)
-from storm.locals import And, Date, Desc, Int, Reference
+from sqlalchemy.orm import relationship
 from zope.interface import implementer
 
 from mailman.database.model import Model

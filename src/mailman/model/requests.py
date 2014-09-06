@@ -143,7 +143,7 @@ class ListRequests:
 class _Request(Model):
     """Table for mailing list hold requests."""
 
-    __tablename__ == 'request'
+    __tablename__ = 'request'
 
     id = Column(Integer, primary_key=True)# TODO: ???, default=AutoReload)
     key = Column(Unicode)

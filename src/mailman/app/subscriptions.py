@@ -28,7 +28,7 @@ __all__ = [
 
 from operator import attrgetter
 from passlib.utils import generate_password as generate
-from storm.expr import And, Or
+#from storm.expr import And, Or
 from uuid import UUID
 from zope.component import getUtility
 from zope.interface import implementer

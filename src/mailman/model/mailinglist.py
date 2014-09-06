@@ -27,8 +27,9 @@ __all__ = [
 
 import os
 
-from sqlalchemy import ( Boolean, DateTime, Float, Integer, Unicode
-                         PickleType, Interval)
+from sqlalchemy import (Column, Boolean, DateTime, Float, Integer, Unicode,
+                        PickleType, Interval, ForeignKey)
+from sqlalchemy.orm import relationship
 from urlparse import urljoin
 from zope.component import getUtility
 from zope.event import notify
@@ -65,7 +66,6 @@ from mailman.utilities.string import expand
 
 SPACE = ' '
 UNDERSCORE = '_'
-
 
 
 @implementer(IMailingList)
@@ -114,7 +114,7 @@ class MailingList(Model):
     autoresponse_owner_text = Column(Unicode)
     autorespond_postings = Column(Enum(enum=ResponseAction))
     autoresponse_postings_text = Column(Unicode)
-    autorespond_requests = Column(Enum(Enum=ResponseAction))
+    autorespond_requests = Column(Enum(enum=ResponseAction))
     autoresponse_request_text = Column(Unicode)
     # Content filters.
     filter_action = Column(Enum(enum=FilterAction))
@@ -495,10 +495,13 @@ class MailingList(Model):
 class AcceptableAlias(Model):
     """See `IAcceptableAlias`."""
 
-    id = Int(primary=True)
+    __tablename__ = 'acceptablealias'
+
+    id = Column(Integer, primary_key=True)
 
     mailing_list_id = Column(Integer)
-    mailing_list = Reference(mailing_list_id, MailingList.id)
+    mailing_list = relationship('MailingList')
+    #mailing_list = Reference(mailing_list_id, MailingList.id)
 
     alias = Column(Unicode)
 
@@ -547,10 +550,12 @@ class AcceptableAliasSet:
 class ListArchiver(Model):
     """See `IListArchiver`."""
 
-    id = Int(primary=True)
+    __tablename__ = 'listarchiver'
 
-    mailing_list_id = Column(Integer)
-    mailing_list = Reference(mailing_list_id, MailingList.id)
+    id = Column(Integer, primary_key=True)
+
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList')
     name = Column(Unicode)
     _is_enabled = Column(Boolean)
 

@@ -31,8 +31,6 @@ from lazr.config import as_boolean
 from pkg_resources import resource_listdir, resource_string
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from storm.cache import GenerationalCache
-from storm.locals import create_database, Store
 from zope.interface import implementer
 
 from mailman.config import config
@@ -54,7 +52,7 @@ class SABaseDatabase:
     """
     TAG=''
 
-    def __inti__(self):
+    def __init__(self):
         self.url = None
         self.store = None
 
@@ -69,56 +67,6 @@ class SABaseDatabase:
 
     def _prepare(self, url):
         pass
-
-    def initialize(Self, debug=None):
-        url = expand(config.database.url, config.paths)
-        log.debug('Database url: %s', url)
-        self.url = url
-        self._prepare(url)
-        engine = create_engine(url)
-        Session = sessionmaker(bind=engine)
-        store = Session()
-        self.store = session()
-        store.commit()
-
-
-@implementer(IDatabase)
-class StormBaseDatabase:
-    """The database base class for use with the Storm ORM.
-
-    Use this as a base class for your DB-specific derived classes.
-    """
-
-    # Tag used to distinguish the database being used.  Override this in base
-    # classes.
-    TAG = ''
-
-    def __init__(self):
-        self.url = None
-        self.store = None
-
-    def begin(self):
-        """See `IDatabase`."""
-        # Storm takes care of this for us.
-        pass
-
-    def commit(self):
-        """See `IDatabase`."""
-        self.store.commit()
-
-    def abort(self):
-        """See `IDatabase`."""
-        self.store.rollback()
-
-    def _database_exists(self):
-        """Return True if the database exists and is initialized.
-
-        Return False when Mailman needs to create and initialize the
-        underlying database schema.
-
-        Base classes *must* override this.
-        """
-        raise NotImplementedError
 
     def _pre_reset(self, store):
         """Clean up method for testing.
@@ -137,41 +85,14 @@ class StormBaseDatabase:
         database-specific post-removal cleanup.
         """
         pass
-
-    def _prepare(self, url):
-        """Prepare the database for creation.
-
-        Some database backends need to do so me prep work before letting Storm
-        create the database.  For example, we have to touch the SQLite .db
-        file first so that it has the proper file modes.
-        """
-        pass
-
     def initialize(self, debug=None):
-        """See `IDatabase`."""
-        # Calculate the engine url.
         url = expand(config.database.url, config.paths)
         log.debug('Database url: %s', url)
-        # XXX By design of SQLite, database file creation does not honor
-        # umask.  See their ticket #1193:
-        # http://www.sqlite.org/cvstrac/tktview?tn=1193,31
-        #
-        # This sucks for us because the mailman.db file /must/ be group
-        # writable, however even though we guarantee our umask is 002 here, it
-        # still gets created without the necessary g+w permission, due to
-        # SQLite's policy.  This should only affect SQLite engines because its
-        # the only one that creates a little file on the local file system.
-        # This kludges around their bug by "touch"ing the database file before
-        # SQLite has any chance to create it, thus honoring the umask and
-        # ensuring the right permissions.  We only try to do this for SQLite
-        # engines, and yes, we could have chmod'd the file after the fact, but
-        # half dozen and all...
         self.url = url
         self._prepare(url)
-        database = create_database(url)
-        store = Store(database, GenerationalCache())
-        database.DEBUG = (as_boolean(config.database.debug)
-                          if debug is None else debug)
+        engine = create_engine(url)
+        Session = sessionmaker(bind=engine)
+        store = Session()
         self.store = store
         store.commit()
 
@@ -261,6 +182,8 @@ class StormBaseDatabase:
             self.load_sql(store, contents)
         # Add a marker that indicates the migration version being applied.
         store.add(Version(component='schema', version=version))
+
+
 
     @staticmethod
     def _make_temporary():

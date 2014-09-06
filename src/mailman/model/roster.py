@@ -37,7 +37,7 @@ __all__ = [
     ]
 
 
-from storm.expr import And, Or
+#from storm.expr import And, Or
 from zope.interface import implementer
 
 from mailman.database.transaction import dbconnection

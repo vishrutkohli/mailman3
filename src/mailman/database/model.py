@@ -24,26 +24,21 @@ __all__ = [
     'Model',
     ]
 
-
 from operator import attrgetter
 
 from sqlalchemy.ext.declarative import declarative_base
-from storm.properties import PropertyPublisherMeta
 
 
-Base = declerative_base()
-
-
-class ModelMeta(PropertyPublisherMeta):
+class ModelMeta(object):
     """Do more magic on table classes."""
 
     _class_registry = set()
 
     def __init__(self, name, bases, dict):
-        # Before we let the base class do it's thing, force an __storm_table__
+        # Before we let the base class do it's thing, force an __tablename__
         # property to enforce our table naming convention.
-        self.__storm_table__ = name.lower()
-        super(ModelMeta, self).__init__(name, bases, dict)
+        self.__tablename__ = name.lower()
+        # super(ModelMeta, self).__init__(name, bases, dict)
         # Register the model class so that it can be more easily cleared.
         # This is required by the test framework so that the corresponding
         # table can be reset between tests.
@@ -60,12 +55,8 @@ class ModelMeta(PropertyPublisherMeta):
         config.db._pre_reset(store)
         # Make sure this is deterministic, by sorting on the storm table name.
         classes = sorted(ModelMeta._class_registry,
-                         key=attrgetter('__storm_table__'))
+                         key=attrgetter('__tablename__'))
         for model_class in classes:
-            store.find(model_class).remove()
+            store.query(model_class).delete()
 
-
-
-class Model:
-    """Like Storm's `Storm` subclass, but with a bit extra."""
-    __metaclass__ = Base
+Model = declarative_base(cls=ModelMeta)

@@ -142,14 +142,14 @@ class DomainManager:
     def remove(self, store, mail_host):
         domain = self[mail_host]
         notify(DomainDeletingEvent(domain))
-        store.remove(domain)
+        store.delete(domain)
         notify(DomainDeletedEvent(mail_host))
         return domain
 
     @dbconnection
     def get(self, store, mail_host, default=None):
         """See `IDomainManager`."""
-        domains = store.find(Domain, mail_host=mail_host)
+        domains = store.query(Domain).filter_by(mail_host=mail_host)
         if domains.count() < 1:
             return default
         assert domains.count() == 1, (
@@ -166,15 +166,15 @@ class DomainManager:
 
     @dbconnection
     def __len__(self, store):
-        return store.find(Domain).count()
+        return store.query(Domain).count()
 
     @dbconnection
     def __iter__(self, store):
         """See `IDomainManager`."""
-        for domain in store.find(Domain):
+        for domain in store.query(Domain).all():
             yield domain
 
     @dbconnection
     def __contains__(self, store, mail_host):
         """See `IDomainManager`."""
-        return store.find(Domain, mail_host=mail_host).count() > 0
+        return store.query(Domain).filter_by(mail_host=mail_host).count() > 0

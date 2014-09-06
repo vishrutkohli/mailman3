@@ -34,12 +34,12 @@ import tempfile
 from functools import partial
 from urlparse import urlparse
 
-from mailman.database.base import StormBaseDatabase
+from mailman.database.base import SABaseDatabase
 from mailman.testing.helpers import configuration
 
 
 
-class SQLiteDatabase(StormBaseDatabase):
+class SQLiteDatabase(SABaseDatabase):
     """Database class for SQLite."""
 
     TAG = 'sqlite'

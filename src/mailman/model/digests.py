@@ -47,7 +47,7 @@ class OneLastDigest(Model):
     mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
     maling_list = relationship('MailingList')
 
-    address_id = Columne(Integer, ForeignKey('address.id'))
+    address_id = Column(Integer, ForeignKey('address.id'))
     address = relationship('Address')
 
     delivery_mode = Column(Enum(enum=DeliveryMode))

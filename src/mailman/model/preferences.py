@@ -41,7 +41,7 @@ from mailman.interfaces.preferences import IPreferences
 class Preferences(Model):
     """See `IPreferences`."""
 
-    __tablename__ == 'preferences'
+    __tablename__ = 'preferences'
 
     id = Column(Integer, primary_key=True)
     acknowledge_posts = Column(Boolean)

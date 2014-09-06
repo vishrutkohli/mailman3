@@ -25,7 +25,7 @@ __all__ = [
     ]
 
 from sqlalchemy import Column, Unicode, Integer, DateTime, ForeignKey
-from sqlalchemy import relationship, backref
+from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
 
@@ -59,11 +59,13 @@ class User(Model):
     _user_id = Column(UUID)
     _created_on = Column(DateTime)
 
-    addresses = relationship('Address', backref='user')
+    addresses = relationship('Address', 
+                             backref='user',
+                             foreign_keys='[Address.user_id]')
 
-    _preferred_address_id = Column(Integer, ForeignKey='address.id')
+    _preferred_address_id = Column(Integer, ForeignKey('address.id'))
     _preferred_address = relationship('Address',
-                                      backred=backref('user', uselist=False))
+                                      foreign_keys=[_preferred_address_id])
 
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
     preferences = relationship('Preferences',

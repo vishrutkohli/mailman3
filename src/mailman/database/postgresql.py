@@ -32,12 +32,12 @@ from functools import partial
 from operator import attrgetter
 from urlparse import urlsplit, urlunsplit
 
-from mailman.database.base import StormBaseDatabase
+from mailman.database.base import SABaseDatabase
 from mailman.testing.helpers import configuration
 
 
 
-class PostgreSQLDatabase(StormBaseDatabase):
+class PostgreSQLDatabase(SABaseDatabase):
     """Database class for PostgreSQL."""
 
     TAG = 'postgres'

@@ -128,14 +128,14 @@ class MessageStore:
     @property
     @dbconnection
     def messages(self, store):
-        for row in store.find(Message):
+        for row in store.query(Message).all():
             yield self._get_message(row)
 
     @dbconnection
     def delete_message(self, store, message_id):
-        row = store.find(Message, message_id=message_id).one()
+        row = store.query(Message).filter_by(message_id=message_id).one()
         if row is None:
             raise LookupError(message_id)
         path = os.path.join(config.MESSAGES_DIR, row.path)
         os.remove(path)
-        store.remove(row)
+        store.delete(row)

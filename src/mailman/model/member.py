@@ -54,14 +54,14 @@ class Member(Model):
     __tablename__ = 'member'
 
     id = Column(Integer, primary_key=True)
-    _member_id = UUID()
+    _member_id = Column(UUID)
     role = Column(Enum(enum=MemberRole))
     list_id = Column(Unicode)
     moderation_action = Column(Enum(enum=Action))
 
-    address_id = Column(Integer, ForegignKey('address.id'))
+    address_id = Column(Integer, ForeignKey('address.id'))
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
-    user_id = Column(Integer, ForiegnKey('user.id'))
+    user_id = Column(Integer, ForeignKey('user.id'))
 
     def __init__(self, role, list_id, subscriber):
         self._member_id = uid_factory.new_uid()

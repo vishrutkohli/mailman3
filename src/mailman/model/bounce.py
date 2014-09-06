@@ -45,7 +45,7 @@ class BounceEvent(Model):
 
     __tablename__ = 'bounceevent'
 
-    id = Unicode(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     list_id = Column(Unicode)
     email = Column(Unicode)
     timestamp = Column(DateTime)

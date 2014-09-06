@@ -32,7 +32,7 @@ from mailman.database.model import Model
 
 class Version(Model):
 
-    __tablename_ = 'version'
+    __tablename__ = 'version'
 
     id = Column(Integer, primary_key=True)
     component = Column(Unicode)

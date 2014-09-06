@@ -52,9 +52,7 @@ class ListManager:
             raise InvalidEmailAddressError(fqdn_listname)
         list_id = '{0}.{1}'.format(listname, hostname)
         notify(ListCreatingEvent(fqdn_listname))
-        mlist = store.find(
-            MailingList,
-            MailingList._list_id == list_id).one()
+        mlist = store.query(MailingList).filter_by(_list_id=list_id).first()
         if mlist:
             raise ListAlreadyExistsError(fqdn_listname)
         mlist = MailingList(fqdn_listname)
@@ -68,40 +66,40 @@ class ListManager:
         """See `IListManager`."""
         listname, at, hostname = fqdn_listname.partition('@')
         list_id = '{0}.{1}'.format(listname, hostname)
-        return store.find(MailingList, MailingList._list_id == list_id).one()
+        return store.query(MailingList).filter_by(_list_id=list_id).one()
 
     @dbconnection
     def get_by_list_id(self, store, list_id):
         """See `IListManager`."""
-        return store.find(MailingList, MailingList._list_id == list_id).one()
+        return store.query(MailingList).filter_by(_list_id=list_id).one()
 
     @dbconnection
     def delete(self, store, mlist):
         """See `IListManager`."""
         fqdn_listname = mlist.fqdn_listname
         notify(ListDeletingEvent(mlist))
-        store.find(ContentFilter, ContentFilter.mailing_list == mlist).remove()
-        store.remove(mlist)
+        store.query(ContentFilter).filter_by(mailing_list=mlist).delete()
+        store.delete(mlist)
         notify(ListDeletedEvent(fqdn_listname))
 
     @property
     @dbconnection
     def mailing_lists(self, store):
         """See `IListManager`."""
-        for mlist in store.find(MailingList):
+        for mlist in store.query(MailingList).all():
             yield mlist
 
     @dbconnection
     def __iter__(self, store):
         """See `IListManager`."""
-        for mlist in store.find(MailingList):
+        for mlist in store.query(MailingList).all():
             yield mlist
 
     @property
     @dbconnection
     def names(self, store):
         """See `IListManager`."""
-        result_set = store.find(MailingList)
+        result_set = store.query(MailingList).all()
         for mail_host, list_name in result_set.values(MailingList.mail_host,
                                                       MailingList.list_name):
             yield '{0}@{1}'.format(list_name, mail_host)
@@ -110,7 +108,7 @@ class ListManager:
     @dbconnection
     def list_ids(self, store):
         """See `IListManager`."""
-        result_set = store.find(MailingList)
+        result_set = store.query(MailingList).all()
         for list_id in result_set.values(MailingList._list_id):
             yield list_id
 
@@ -118,7 +116,7 @@ class ListManager:
     @dbconnection
     def name_components(self, store):
         """See `IListManager`."""
-        result_set = store.find(MailingList)
+        result_set = store.query(MailingList).all()
         for mail_host, list_name in result_set.values(MailingList.mail_host,
                                                       MailingList.list_name):
             yield list_name, mail_host

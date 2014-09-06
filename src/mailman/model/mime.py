@@ -39,11 +39,11 @@ from mailman.interfaces.mime import IContentFilter, FilterType
 class ContentFilter(Model):
     """A single filter criteria."""
 
-    __tablename__ == 'contentfilter'
+    __tablename__ = 'contentfilter'
 
     id = Column(Integer, primary_key=True)
 
-    mailing_list_id = Column(Integer, ForiegnKey('mailinglist.id'))
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
     mailing_list = relationship('MailingList')
 
     filter_type = Column(Enum(enum=FilterType))

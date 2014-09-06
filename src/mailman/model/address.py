@@ -27,7 +27,7 @@ __all__ = [
 
 from email.utils import formataddr
 from sqlalchemy import (Column, Integer, String, Unicode,
-                        ForeignKey, Datetime)
+                        ForeignKey, DateTime)
 from sqlalchemy.orm import relationship, backref
 from zope.component import getUtility
 from zope.event import notify
@@ -50,10 +50,11 @@ class Address(Model):
     email = Column(Unicode)
     _original = Column(Unicode)
     display_name = Column(Unicode)
-    _verified_on = Column('verified_on', Datetime)
+    _verified_on = Column('verified_on', DateTime)
     registered_on = Column(DateTime)
 
     user_id = Column(Integer, ForeignKey('user.id'))
+
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
     prefereces = relationship('Preferences',
                               backref=backref('Address', uselist=False))

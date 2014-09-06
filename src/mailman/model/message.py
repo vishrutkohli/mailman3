@@ -39,7 +39,7 @@ class Message(Model):
 
     __tablename__ = 'message'
 
-    id = Column(Integer, primary_key=True, default=AutoReload))
+    id = Column(Integer, primary_key=True)
     message_id = Column(Unicode)
     message_id_hash = Column(Unicode)
     path = Column(Unicode) # TODO : was RawStr()

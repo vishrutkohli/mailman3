@@ -23,13 +23,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Enum',
-    'UUID'
+    'UUID',
     ]
 
 import uuid
 
+from sqlalchemy import Integer
 from sqlalchemy.types import TypeDecorator, BINARY, CHAR
-from sqlalchemy.dailects import postgresql
+from sqlalchemy.dialects import postgresql
 
 
 

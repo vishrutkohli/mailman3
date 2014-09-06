@@ -54,7 +54,7 @@ class DatabaseFactory:
             database = call_name(database_class)
             verifyObject(IDatabase, database)
             database.initialize()
-            database.load_migrations()
+            #database.load_migrations()
             database.commit()
             return database
 
