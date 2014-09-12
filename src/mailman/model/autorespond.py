@@ -75,12 +75,11 @@ class AutoResponseSet:
     @dbconnection
     def todays_count(self, store, address, response_type):
         """See `IAutoResponseSet`."""
-        return store.find(
-            AutoResponseRecord,
-            And(AutoResponseRecord.address == address,
-                AutoResponseRecord.mailing_list == self._mailing_list,
-                AutoResponseRecord.response_type == response_type,
-                AutoResponseRecord.date_sent == today())).count()
+        return store.find(AutoResponseRecord).filter_by(
+            address = address,
+            mailing_list = self._mailing_list,
+            response_type = response_type,
+            date_sent = today()).count()
 
     @dbconnection
     def response_sent(self, store, address, response_type):
@@ -92,10 +91,9 @@ class AutoResponseSet:
     @dbconnection
     def last_response(self, store, address, response_type):
         """See `IAutoResponseSet`."""
-        results = store.find(
-            AutoResponseRecord,
-            And(AutoResponseRecord.address == address,
-                AutoResponseRecord.mailing_list == self._mailing_list,
-                AutoResponseRecord.response_type == response_type)
+        results = store.find(AutoResponseRecord).filter_by(
+            address = address,
+            mailing_list = self._mailing_list,
+            response_type = response_type
             ).order_by(Desc(AutoResponseRecord.date_sent))
         return (None if results.count() == 0 else results.first())

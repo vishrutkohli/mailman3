@@ -66,12 +66,12 @@ class ListManager:
         """See `IListManager`."""
         listname, at, hostname = fqdn_listname.partition('@')
         list_id = '{0}.{1}'.format(listname, hostname)
-        return store.query(MailingList).filter_by(_list_id=list_id).one()
+        return store.query(MailingList).filter_by(_list_id=list_id).first()
 
     @dbconnection
     def get_by_list_id(self, store, list_id):
         """See `IListManager`."""
-        return store.query(MailingList).filter_by(_list_id=list_id).one()
+        return store.query(MailingList).filter_by(_list_id=list_id).first()
 
     @dbconnection
     def delete(self, store, mlist):

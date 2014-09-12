@@ -50,13 +50,14 @@ class ModelMeta(object):
             ModelMeta._class_registry.add(self)
 
     @staticmethod
-    def _reset(store):
-        from mailman.config import config
-        config.db._pre_reset(store)
+    def _reset(db):
+        Model.metadata.drop_all(db.engine)
+        Model.metadata.create_all(db.engine)
+
         # Make sure this is deterministic, by sorting on the storm table name.
-        classes = sorted(ModelMeta._class_registry,
-                         key=attrgetter('__tablename__'))
-        for model_class in classes:
-            store.query(model_class).delete()
+        # classes = sorted(ModelMeta._class_registry,
+        #                  key=attrgetter('__tablename__'))
+        # for model_class in classes:
+        #    store.query(model_class).delete()
 
 Model = declarative_base(cls=ModelMeta)

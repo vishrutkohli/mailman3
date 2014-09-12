@@ -85,5 +85,5 @@ class BounceProcessor:
     @dbconnection
     def unprocessed(self, store):
         """See `IBounceProcessor`."""
-        for event in store.find(BounceEvent, BounceEvent.processed == False):
+        for event in store.query(BounceEvent).filter_by(processed = False):
             yield event

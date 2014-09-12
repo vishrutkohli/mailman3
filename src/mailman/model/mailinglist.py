@@ -355,10 +355,9 @@ class MailingList(Model):
         """See `IMailingList`."""
         # First, delete all existing MIME type filter patterns.
         store = Store.of(self)
-        results = store.find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.filter_mime))
+        results = store.query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.filter_mime)
         results.remove()
         # Now add all the new filter types.
         for mime_type in sequence:

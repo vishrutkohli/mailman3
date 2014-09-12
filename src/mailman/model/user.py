@@ -59,11 +59,13 @@ class User(Model):
     _user_id = Column(UUID)
     _created_on = Column(DateTime)
 
-    addresses = relationship('Address', 
+    addresses = relationship('Address',
                              backref='user',
                              foreign_keys='[Address.user_id]')
 
-    _preferred_address_id = Column(Integer, ForeignKey('address.id'))
+    _preferred_address_id = Column(Integer, ForeignKey('address.id',
+                                                       use_alter=True,
+                                                       name='prefered_address_id'))
     _preferred_address = relationship('Address',
                                       foreign_keys=[_preferred_address_id])
 

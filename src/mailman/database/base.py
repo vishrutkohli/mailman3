@@ -68,6 +68,16 @@ class SABaseDatabase:
     def _prepare(self, url):
         pass
 
+    def _database_exists(self):
+        """Return True if the database exists and is initialized.
+
+        Return False when Mailman needs to create and initialize the
+        underlying database schema.
+
+        Base classes *must* override this.
+        """
+        raise NotImplementedError
+
     def _pre_reset(self, store):
         """Clean up method for testing.
 
@@ -90,11 +100,10 @@ class SABaseDatabase:
         log.debug('Database url: %s', url)
         self.url = url
         self._prepare(url)
-        engine = create_engine(url)
-        Session = sessionmaker(bind=engine)
-        store = Session()
-        self.store = store
-        store.commit()
+        self.engine = create_engine(url)
+        Session = sessionmaker(bind=self.engine)
+        self.store = Session()
+        self.store.commit()
 
     def load_migrations(self, until=None):
         """Load schema migrations.
@@ -103,45 +112,47 @@ class SABaseDatabase:
             With default value of None, load all migrations.
         :type until: string
         """
-        migrations_path = config.database.migrations_path
-        if '.' in migrations_path:
-            parent, dot, child = migrations_path.rpartition('.')
-        else:
-            parent = migrations_path
-            child = ''
-        # If the database does not yet exist, load the base schema.
-        filenames = sorted(resource_listdir(parent, child))
-        # Find out which schema migrations have already been loaded.
-        if self._database_exists(self.store):
-            versions = set(version.version for version in
-                           self.store.find(Version, component='schema'))
-        else:
-            versions = set()
-        for filename in filenames:
-            module_fn, extension = os.path.splitext(filename)
-            if extension != '.py':
-                continue
-            parts = module_fn.split('_')
-            if len(parts) < 2:
-                continue
-            version = parts[1].strip()
-            if len(version) == 0:
-                # Not a schema migration file.
-                continue
-            if version in versions:
-                log.debug('already migrated to %s', version)
-                continue
-            if until is not None and version > until:
-                # We're done.
-                break
-            module_path = migrations_path + '.' + module_fn
-            __import__(module_path)
-            upgrade = getattr(sys.modules[module_path], 'upgrade', None)
-            if upgrade is None:
-                continue
-            log.debug('migrating db to %s: %s', version, module_path)
-            upgrade(self, self.store, version, module_path)
-        self.commit()
+        from mailman.database.model import Model
+        Model.metadata.create_all(self.engine)
+        # migrations_path = config.database.migrations_path
+        # if '.' in migrations_path:
+        #     parent, dot, child = migrations_path.rpartition('.')
+        # else:
+        #     parent = migrations_path
+        #     child = ''
+        # # If the database does not yet exist, load the base schema.
+        # filenames = sorted(resource_listdir(parent, child))
+        # # Find out which schema migrations have already been loaded.
+        # if self._database_exists(self.store):
+        #     versions = set(version.version for version in
+        #                    self.store.query(Version, component='schema'))
+        # else:
+        #     versions = set()
+        # for filename in filenames:
+        #     module_fn, extension = os.path.splitext(filename)
+        #     if extension != '.py':
+        #         continue
+        #     parts = module_fn.split('_')
+        #     if len(parts) < 2:
+        #         continue
+        #     version = parts[1].strip()
+        #     if len(version) == 0:
+        #         # Not a schema migration file.
+        #         continue
+        #     if version in versions:
+        #         log.debug('already migrated to %s', version)
+        #         continue
+        #     if until is not None and version > until:
+        #         # We're done.
+        #         break
+        #     module_path = migrations_path + '.' + module_fn
+        #     __import__(module_path)
+        #     upgrade = getattr(sys.modules[module_path], 'upgrade', None)
+        #     if upgrade is None:
+        #         continue
+        #     log.debug('migrating db to %s: %s', version, module_path)
+        #     upgrade(self, self.store, version, module_path)
+        # self.commit()
 
     def load_sql(self, store, sql):
         """Load the given SQL into the store.
