@@ -24,7 +24,7 @@ __all__ = [
     'Message',
     ]
 
-from sqlalchemy import Column, Integer, Unicode
+from sqlalchemy import Column, Integer, Unicode, LargeBinary
 from zope.interface import implementer
 
 from mailman.database.model import Model
@@ -42,7 +42,7 @@ class Message(Model):
     id = Column(Integer, primary_key=True)
     message_id = Column(Unicode)
     message_id_hash = Column(Unicode)
-    path = Column(Unicode) # TODO : was RawStr()
+    path = Column(LargeBinary) # TODO : was RawStr()
     # This is a Messge-ID field representation, not a database row id.
 
     @dbconnection

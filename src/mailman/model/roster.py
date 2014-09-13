@@ -37,7 +37,6 @@ __all__ = [
     ]
 
 
-#from storm.expr import And, Or
 from sqlalchemy import and_, or_
 from zope.interface import implementer
 
@@ -203,9 +202,9 @@ class DeliveryMemberRoster(AbstractRoster):
         :return: A generator of members.
         :rtype: generator
         """
-        results = store.query(Member).filter(
-            list_id == self._mlist.list_id,
-            role == MemberRole.member)
+        results = store.query(Member).filter_by(
+            list_id = self._mlist.list_id,
+            role = MemberRole.member)
         for member in results:
             if member.delivery_mode in delivery_modes:
                 yield member
@@ -263,9 +262,9 @@ class Memberships:
     def _query(self, store):
         results = store.query(Member).filter(
             or_(Member.user_id == self._user.id,
-            and_(Member.user_id == self._user.id,
+            and_(Address.user_id == self._user.id,
                  Member.address_id == Address.id)))
-        return results.config(distinct=True)
+        return results.distinct()
 
     @property
     def member_count(self):

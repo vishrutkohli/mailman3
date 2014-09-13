@@ -28,8 +28,8 @@ __all__ = [
 import os
 
 from sqlalchemy import (Column, Boolean, DateTime, Float, Integer, Unicode,
-                        PickleType, Interval, ForeignKey)
-from sqlalchemy.orm import relationship
+                        PickleType, Interval, ForeignKey, LargeBinary)
+from sqlalchemy.orm import relationship, sessionmaker
 from urlparse import urljoin
 from zope.component import getUtility
 from zope.event import notify
@@ -66,6 +66,8 @@ from mailman.utilities.string import expand
 
 SPACE = ' '
 UNDERSCORE = '_'
+
+Session = sessionmaker()
 
 
 @implementer(IMailingList)
@@ -162,7 +164,7 @@ class MailingList(Model):
     member_moderation_notice = Column(Unicode)
     mime_is_default_digest = Column(Boolean)
     # FIXME: There should be no moderator_password
-    moderator_password = Column(Unicode) # TODO : was RawStr()
+    moderator_password = Column(LargeBinary) # TODO : was RawStr()
     newsgroup_moderation = Column(Enum(enum=NewsgroupModeration))
     nntp_prefix_subject_too = Column(Boolean)
     nondigestable = Column(Boolean)
@@ -327,26 +329,24 @@ class MailingList(Model):
     def send_one_last_digest_to(self, address, delivery_mode):
         """See `IMailingList`."""
         digest = OneLastDigest(self, address, delivery_mode)
-        Store.of(self).add(digest)
+        Session.object_session(self).add(digest)
 
     @property
     def last_digest_recipients(self):
         """See `IMailingList`."""
-        results = Store.of(self).find(
-            OneLastDigest,
+        results = Session.object_session(self).query(OneLastDigest).filter(
             OneLastDigest.mailing_list == self)
         recipients = [(digest.address, digest.delivery_mode)
                       for digest in results]
-        results.remove()
+        results.delete()
         return recipients
 
     @property
     def filter_types(self):
         """See `IMailingList`."""
-        results = Store.of(self).find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.filter_mime))
+        results = Session.object_session(self).query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.filter_mime)
         for content_filter in results:
             yield content_filter.filter_pattern
 
@@ -354,11 +354,11 @@ class MailingList(Model):
     def filter_types(self, sequence):
         """See `IMailingList`."""
         # First, delete all existing MIME type filter patterns.
-        store = Store.of(self)
+        store = Session.object_session(self)
         results = store.query(ContentFilter).filter(
             ContentFilter.mailing_list == self,
             ContentFilter.filter_type == FilterType.filter_mime)
-        results.remove()
+        results.delete()
         # Now add all the new filter types.
         for mime_type in sequence:
             content_filter = ContentFilter(
@@ -368,10 +368,9 @@ class MailingList(Model):
     @property
     def pass_types(self):
         """See `IMailingList`."""
-        results = Store.of(self).find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.pass_mime))
+        results = Session.object_session(self).query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.pass_mime)
         for content_filter in results:
             yield content_filter.filter_pattern
 
@@ -379,12 +378,11 @@ class MailingList(Model):
     def pass_types(self, sequence):
         """See `IMailingList`."""
         # First, delete all existing MIME type pass patterns.
-        store = Store.of(self)
-        results = store.find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.pass_mime))
-        results.remove()
+        store = Session.object_session(self)
+        results = store.query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.pass_mime)
+        results.delete()
         # Now add all the new filter types.
         for mime_type in sequence:
             content_filter = ContentFilter(
@@ -394,10 +392,9 @@ class MailingList(Model):
     @property
     def filter_extensions(self):
         """See `IMailingList`."""
-        results = Store.of(self).find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.filter_extension))
+        results = Session.object_session(self).query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.filter_extension)
         for content_filter in results:
             yield content_filter.filter_pattern
 
@@ -405,12 +402,11 @@ class MailingList(Model):
     def filter_extensions(self, sequence):
         """See `IMailingList`."""
         # First, delete all existing file extensions filter patterns.
-        store = Store.of(self)
-        results = store.find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.filter_extension))
-        results.remove()
+        store = Session.object_session(self)
+        results = store.query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.filter_extension)
+        results.delete()
         # Now add all the new filter types.
         for mime_type in sequence:
             content_filter = ContentFilter(
@@ -420,10 +416,9 @@ class MailingList(Model):
     @property
     def pass_extensions(self):
         """See `IMailingList`."""
-        results = Store.of(self).find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.pass_extension))
+        results = Session.object_session(self).query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.pass_extension)
         for content_filter in results:
             yield content_filter.pass_pattern
 
@@ -431,12 +426,11 @@ class MailingList(Model):
     def pass_extensions(self, sequence):
         """See `IMailingList`."""
         # First, delete all existing file extensions pass patterns.
-        store = Store.of(self)
-        results = store.find(
-            ContentFilter,
-            And(ContentFilter.mailing_list == self,
-                ContentFilter.filter_type == FilterType.pass_extension))
-        results.remove()
+        store = Session.object_session(self)
+        results = store.query(ContentFilter).filter(
+            ContentFilter.mailing_list == self,
+            ContentFilter.filter_type == FilterType.pass_extension)
+        results.delete()
         # Now add all the new filter types.
         for mime_type in sequence:
             content_filter = ContentFilter(
@@ -457,24 +451,22 @@ class MailingList(Model):
 
     def subscribe(self, subscriber, role=MemberRole.member):
         """See `IMailingList`."""
-        store = Store.of(self)
+        store = Session.object_session(self)
         if IAddress.providedBy(subscriber):
-            member = store.find(
-                Member,
+            member = store.query(Member).filter(
                 Member.role == role,
                 Member.list_id == self._list_id,
-                Member._address == subscriber).one()
+                Member._address == subscriber).first()
             if member:
                 raise AlreadySubscribedError(
                     self.fqdn_listname, subscriber.email, role)
         elif IUser.providedBy(subscriber):
             if subscriber.preferred_address is None:
                 raise MissingPreferredAddressError(subscriber)
-            member = store.find(
-                Member,
+            member = store.query(Member).filter(
                 Member.role == role,
                 Member.list_id == self._list_id,
-                Member._user == subscriber).one()
+                Member._user == subscriber).first()
             if member:
                 raise AlreadySubscribedError(
                     self.fqdn_listname, subscriber, role)
@@ -518,27 +510,27 @@ class AcceptableAliasSet:
 
     def clear(self):
         """See `IAcceptableAliasSet`."""
-        Store.of(self._mailing_list).find(
-            AcceptableAlias,
-            AcceptableAlias.mailing_list == self._mailing_list).remove()
+        Session.object_session(self._mailing_list).query(
+            AcceptableAlias).filter(
+                AcceptableAlias.mailing_list == self._mailing_list).delete()
 
     def add(self, alias):
         if not (alias.startswith('^') or '@' in alias):
             raise ValueError(alias)
         alias = AcceptableAlias(self._mailing_list, alias.lower())
-        Store.of(self._mailing_list).add(alias)
+        Session.object_session(self._mailing_list).add(alias)
 
     def remove(self, alias):
-        Store.of(self._mailing_list).find(
-            AcceptableAlias,
-            And(AcceptableAlias.mailing_list == self._mailing_list,
-                AcceptableAlias.alias == alias.lower())).remove()
+        Session.object_session(self._mailing_list).query(
+            AcceptableAlias).filter(
+                AcceptableAlias.mailing_list == self._mailing_list,
+                AcceptableAlias.alias == alias.lower()).delete()
 
     @property
     def aliases(self):
-        aliases = Store.of(self._mailing_list).find(
-            AcceptableAlias,
-            AcceptableAlias.mailing_list == self._mailing_list)
+        aliases = Session.object_session(self._mailing_list).query(
+            AcceptableAlias).filter(
+                AcceptableAlias.mailing_list == self._mailing_list)
         for alias in aliases:
             yield alias.alias
 
@@ -587,25 +579,24 @@ class ListArchiverSet:
             system_archivers[archiver.name] = archiver
         # Add any system enabled archivers which aren't already associated
         # with the mailing list.
-        store = Store.of(self._mailing_list)
+        store = Session.object_session(self._mailing_list)
         for archiver_name in system_archivers:
-            exists = store.find(
-                ListArchiver,
-                And(ListArchiver.mailing_list == mailing_list,
-                    ListArchiver.name == archiver_name)).one()
+            exists = store.query(ListArchiver).filter(
+                ListArchiver.mailing_list == mailing_list,
+                ListArchiver.name == archiver_name).first()
             if exists is None:
                 store.add(ListArchiver(mailing_list, archiver_name,
                                        system_archivers[archiver_name]))
 
     @property
     def archivers(self):
-        entries = Store.of(self._mailing_list).find(
-            ListArchiver, ListArchiver.mailing_list == self._mailing_list)
+        entries = Session.object_session(self._mailing_list).query(
+            ListArchiver).filter(ListArchiver.mailing_list == self._mailing_list)
         for entry in entries:
             yield entry
 
     def get(self, archiver_name):
-        return Store.of(self._mailing_list).find(
-            ListArchiver,
-            And(ListArchiver.mailing_list == self._mailing_list,
-                ListArchiver.name == archiver_name)).one()
+        return Session.object_session(self._mailing_list).query(
+            ListArchiver).filter(
+                ListArchiver.mailing_list == self._mailing_list,
+                ListArchiver.name == archiver_name).first()

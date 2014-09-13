@@ -25,6 +25,7 @@ __all__ = [
     ]
 
 from sqlalchemy import Integer, Unicode, ForeignKey, Column
+from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
@@ -60,8 +61,11 @@ class Member(Model):
     moderation_action = Column(Enum(enum=Action))
 
     address_id = Column(Integer, ForeignKey('address.id'))
+    _address = relationship('Address')
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    preferences = relationship('Preferences')
     user_id = Column(Integer, ForeignKey('user.id'))
+    _user = relationship('User')
 
     def __init__(self, role, list_id, subscriber):
         self._member_id = uid_factory.new_uid()
@@ -196,5 +200,5 @@ class Member(Model):
         """See `IMember`."""
         # Yes, this must get triggered before self is deleted.
         notify(UnsubscriptionEvent(self.mailing_list, self))
-        store.remove(self.preferences)
-        store.remove(self)
+        store.delete(self.preferences)
+        store.delete(self)

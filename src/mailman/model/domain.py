@@ -94,8 +94,7 @@ class Domain(Model):
     @dbconnection
     def mailing_lists(self, store):
         """See `IDomain`."""
-        mailing_lists = store.find(
-            MailingList,
+        mailing_lists = store.query(MailingList).filter(
             MailingList.mail_host == self.mail_host)
         for mlist in mailing_lists:
             yield mlist

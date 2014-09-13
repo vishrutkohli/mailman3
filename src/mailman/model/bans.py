@@ -103,7 +103,7 @@ class BanManager:
             if bans.count() > 0:
                 return True
             # Now try specific mailing list bans, but with a pattern.
-            bans = store.query(Ban).filteR_by(list_id=list_id)
+            bans = store.query(Ban).filter_by(list_id=list_id)
             for ban in bans:
                 if (ban.email.startswith('^') and
                     re.match(ban.email, email, re.IGNORECASE) is not None):

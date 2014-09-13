@@ -78,7 +78,7 @@ class BounceProcessor:
     @dbconnection
     def events(self, store):
         """See `IBounceProcessor`."""
-        for event in store.find(BounceEvent):
+        for event in store.query(BounceEvent).all():
             yield event
 
     @property

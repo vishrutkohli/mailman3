@@ -75,7 +75,7 @@ class AutoResponseSet:
     @dbconnection
     def todays_count(self, store, address, response_type):
         """See `IAutoResponseSet`."""
-        return store.find(AutoResponseRecord).filter_by(
+        return store.query(AutoResponseRecord).filter_by(
             address = address,
             mailing_list = self._mailing_list,
             response_type = response_type,
@@ -91,7 +91,7 @@ class AutoResponseSet:
     @dbconnection
     def last_response(self, store, address, response_type):
         """See `IAutoResponseSet`."""
-        results = store.find(AutoResponseRecord).filter_by(
+        results = store.query(AutoResponseRecord).filter_by(
             address = address,
             mailing_list = self._mailing_list,
             response_type = response_type

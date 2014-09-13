@@ -116,7 +116,7 @@ class ListManager:
     @dbconnection
     def name_components(self, store):
         """See `IListManager`."""
-        result_set = store.query(MailingList).all()
+        result_set = store.query(MailingList)
         for mail_host, list_name in result_set.values(MailingList.mail_host,
                                                       MailingList.list_name):
             yield list_name, mail_host

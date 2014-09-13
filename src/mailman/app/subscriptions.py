@@ -28,7 +28,7 @@ __all__ = [
 
 from operator import attrgetter
 from passlib.utils import generate_password as generate
-#from storm.expr import And, Or
+from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
 from zope.interface import implementer
@@ -88,8 +88,7 @@ class SubscriptionService:
     @dbconnection
     def get_member(self, store, member_id):
         """See `ISubscriptionService`."""
-        members = store.find(
-            Member,
+        members = store.query(Member).filter(
             Member._member_id == member_id)
         if members.count() == 0:
             return None
@@ -117,7 +116,7 @@ class SubscriptionService:
                 # This probably could be made more efficient.
                 if address is None or user is None:
                     return []
-                query.append(Or(Member.address_id == address.id,
+                query.append(or_(Member.address_id == address.id,
                                 Member.user_id == user.id))
             else:
                 # subscriber is a user id.
@@ -126,7 +125,7 @@ class SubscriptionService:
                                    if address.id is not None)
                 if len(address_ids) == 0 or user is None:
                     return []
-                query.append(Or(Member.user_id == user.id,
+                query.append(or_(Member.user_id == user.id,
                                 Member.address_id.is_in(address_ids)))
         # Calculate the rest of the query expression, which will get And'd
         # with the Or clause above (if there is one).
@@ -134,7 +133,7 @@ class SubscriptionService:
             query.append(Member.list_id == list_id)
         if role is not None:
             query.append(Member.role == role)
-        results = store.find(Member, And(*query))
+        results = store.query(Member).filter(and_(*query))
         return sorted(results, key=_membership_sort_key)
 
     def __iter__(self):

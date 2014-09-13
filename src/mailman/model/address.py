@@ -56,7 +56,7 @@ class Address(Model):
     user_id = Column(Integer, ForeignKey('user.id'))
 
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
-    prefereces = relationship('Preferences',
+    preferences = relationship('Preferences',
                               backref=backref('Address', uselist=False))
 
     def __init__(self, email, display_name):

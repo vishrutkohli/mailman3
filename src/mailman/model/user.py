@@ -24,7 +24,8 @@ __all__ = [
     'User',
     ]
 
-from sqlalchemy import Column, Unicode, Integer, DateTime, ForeignKey
+from sqlalchemy import (
+    Column, Unicode, Integer, DateTime, ForeignKey, LargeBinary)
 from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
@@ -55,7 +56,7 @@ class User(Model):
 
     id = Column(Integer, primary_key=True)
     display_name = Column(Unicode)
-    _password = Column('password', Unicode) # TODO : was RawStr()
+    _password = Column('password', LargeBinary) # TODO : was RawStr()
     _user_id = Column(UUID)
     _created_on = Column(DateTime)
 
