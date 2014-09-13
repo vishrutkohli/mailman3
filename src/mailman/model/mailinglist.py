@@ -500,7 +500,6 @@ class AcceptableAlias(Model):
 
     mailing_list_id = Column(Integer)
     mailing_list = relationship('MailingList')
-    #mailing_list = Reference(mailing_list_id, MailingList.id)
 
     alias = Column(Unicode)
 

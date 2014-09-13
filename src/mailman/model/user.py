@@ -78,7 +78,7 @@ class User(Model):
         super(User, self).__init__()
         self._created_on = date_factory.now()
         user_id = uid_factory.new_uid()
-        assert store.find(User, _user_id=user_id).count() == 0, (
+        assert store.query(User).filter_by(_user_id=user_id).count() == 0, (
             'Duplicate user id {0}'.format(user_id))
         self._user_id = user_id
         self.display_name = ('' if display_name is None else display_name)
@@ -148,7 +148,7 @@ class User(Model):
     @dbconnection
     def controls(self, store, email):
         """See `IUser`."""
-        found = store.find(Address, email=email)
+        found = store.query(Address).filter_by(email=email)
         if found.count() == 0:
             return False
         assert found.count() == 1, 'Unexpected count'
@@ -158,7 +158,7 @@ class User(Model):
     def register(self, store, email, display_name=None):
         """See `IUser`."""
         # First, see if the address already exists
-        address = store.find(Address, email=email).one()
+        address = store.query(Address).filter_by(email=email).first()
         if address is None:
             if display_name is None:
                 display_name = ''

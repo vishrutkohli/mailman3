@@ -80,7 +80,7 @@ class UserManager:
     @dbconnection
     def create_address(self, store, email, display_name=None):
         """See `IUserManager`."""
-        addresses = store.query(Address).filter_by(email=email.lower())
+        addresses = store.query(Address).filter(Address.email==email.lower())
         if addresses.count() == 1:
             found = addresses[0]
             raise ExistingAddressError(found.original_email)

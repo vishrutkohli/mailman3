@@ -74,7 +74,7 @@ class UID(Model):
         :type uid: unicode
         :raises ValueError: if the id is not unique.
         """
-        existing = store.find(UID, uid=uid)
+        existing = store.query(UID).filter_by(uid=uid)
         if existing.count() != 0:
             raise ValueError(uid)
         return UID(uid)
