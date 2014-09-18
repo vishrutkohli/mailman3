@@ -29,6 +29,7 @@ import os
 
 from sqlalchemy import (Column, Boolean, DateTime, Float, Integer, Unicode,
                         PickleType, Interval, ForeignKey, LargeBinary)
+from sqlalchemy import event
 from sqlalchemy.orm import relationship, sessionmaker
 from urlparse import urljoin
 from zope.component import getUtility
@@ -100,8 +101,8 @@ class MailingList(Model):
     volume = Column(Integer)
     last_post_at = Column(DateTime)
     # Implicit destination.
-    acceptable_aliases_id = Column(Integer, ForeignKey('acceptablealias.id'))
-    # acceptable_alias = Reference(acceptable_aliases_id, 'AcceptableAlias.id')
+    # acceptable_aliases_id = Column(Integer, ForeignKey('acceptablealias.id'))
+    # acceptable_alias = relationship('AcceptableAlias', backref='mailing_list')
     # Attributes which are directly modifiable via the web u/i.  The more
     # complicated attributes are currently stored as pickles, though that
     # will change as the schema and implementation is developed.
@@ -193,7 +194,6 @@ class MailingList(Model):
     welcome_message_uri = Column(Unicode)
 
     def __init__(self, fqdn_listname):
-        super(MailingList, self).__init__()
         listname, at, hostname = fqdn_listname.partition('@')
         assert hostname, 'Bad list name: {0}'.format(fqdn_listname)
         self.list_name = listname
@@ -205,10 +205,11 @@ class MailingList(Model):
         # called when the MailingList object is loaded from the database, but
         # that's not the case when the constructor is called.  So, set up the
         # rosters explicitly.
-        self.__storm_loaded__()
+        self._post_load()
         makedirs(self.data_path)
 
-    def __storm_loaded__(self):
+
+    def _post_load(self, *args):
         self.owners = roster.OwnerRoster(self)
         self.moderators = roster.ModeratorRoster(self)
         self.administrators = roster.AdministratorRoster(self)
@@ -217,6 +218,10 @@ class MailingList(Model):
         self.digest_members = roster.DigestMemberRoster(self)
         self.subscribers = roster.Subscribers(self)
         self.nonmembers = roster.NonmemberRoster(self)
+
+    @classmethod
+    def __declare_last__(cls):
+        event.listen(cls, 'load', cls._post_load)
 
     def __repr__(self):
         return '<mailing list "{0}" at {1:#x}>'.format(
@@ -490,9 +495,8 @@ class AcceptableAlias(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mailing_list_id = Column(Integer)
-    mailing_list = relationship('MailingList')
-
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList', backref='acceptable_alias')
     alias = Column(Unicode)
 
     def __init__(self, mailing_list, alias):
@@ -530,7 +534,7 @@ class AcceptableAliasSet:
     def aliases(self):
         aliases = Session.object_session(self._mailing_list).query(
             AcceptableAlias).filter(
-                AcceptableAlias.mailing_list == self._mailing_list)
+                AcceptableAlias.mailing_list_id == self._mailing_list.id)
         for alias in aliases:
             yield alias.alias
 

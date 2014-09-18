@@ -52,7 +52,7 @@ class UserManager:
     @dbconnection
     def delete_user(self, store, user):
         """See `IUserManager`."""
-        store.remove(user)
+        store.delete(user)
 
     @dbconnection
     def get_user(self, store, email):
@@ -101,7 +101,7 @@ class UserManager:
         # unlinked before the address can be deleted.
         if address.user:
             address.user.unlink(address)
-        store.remove(address)
+        store.delete(address)
 
     @dbconnection
     def get_address(self, store, email):
