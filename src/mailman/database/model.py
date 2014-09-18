@@ -24,10 +24,13 @@ __all__ = [
     'Model',
     ]
 
+
+import contextlib
 from operator import attrgetter
 
 from sqlalchemy.ext.declarative import declarative_base
 
+from mailman.config import config
 
 class ModelMeta(object):
     """Do more magic on table classes."""
@@ -51,14 +54,12 @@ class ModelMeta(object):
 
     @staticmethod
     def _reset(db):
-        Model.metadata.drop_all(db.engine)
-        Model.metadata.create_all(db.engine)
-
-        # Make sure this is deterministic, by sorting on the storm table name.
-        # classes = sorted(ModelMeta._class_registry,
-        #                  key=attrgetter('__tablename__'))
-        # print("\n\n" + str(classes) + "\n\n")
-        # for model_class in classes:
-        #    store.query(model_class).delete()
+        meta = Model.metadata
+        engine = config.db.engine
+        with contextlib.closing(engine.connect()) as con:
+            trans = con.begin()
+            for table in reversed(meta.sorted_tables):
+                con.execute(table.delete())
+            trans.commit()
 
 Model = declarative_base(cls=ModelMeta)
