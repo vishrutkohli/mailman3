@@ -60,6 +60,7 @@ class Address(Model):
                               backref=backref('Address', uselist=False))
 
     def __init__(self, email, display_name):
+        super(Address, self).__init__()
         getUtility(IEmailValidator).validate(email)
         lower_case = email.lower()
         self.email = lower_case

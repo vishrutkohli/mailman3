@@ -57,6 +57,7 @@ class ModelMeta(object):
         # Make sure this is deterministic, by sorting on the storm table name.
         # classes = sorted(ModelMeta._class_registry,
         #                  key=attrgetter('__tablename__'))
+        # print("\n\n" + str(classes) + "\n\n")
         # for model_class in classes:
         #    store.query(model_class).delete()
 

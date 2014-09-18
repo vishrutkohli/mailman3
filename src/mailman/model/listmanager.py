@@ -99,7 +99,7 @@ class ListManager:
     @dbconnection
     def names(self, store):
         """See `IListManager`."""
-        result_set = store.query(MailingList).all()
+        result_set = store.query(MailingList)
         for mail_host, list_name in result_set.values(MailingList.mail_host,
                                                       MailingList.list_name):
             yield '{0}@{1}'.format(list_name, mail_host)
@@ -108,7 +108,7 @@ class ListManager:
     @dbconnection
     def list_ids(self, store):
         """See `IListManager`."""
-        result_set = store.query(MailingList).all()
+        result_set = store.query(MailingList)
         for list_id in result_set.values(MailingList._list_id):
             yield list_id
 
