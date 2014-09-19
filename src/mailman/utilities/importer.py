@@ -198,6 +198,14 @@ NAME_MAPPINGS = dict(
     send_welcome_msg='send_welcome_message',
     )
 
+# Datetime Fields that need a type conversion to python datetime
+# object for SQLite database.
+DATETIME_OBJECTS = [
+    'created_at',
+    'digest_last_sent_at',
+    'last_post_time',
+]
+
 EXCLUDES = set((
     'digest_members',
     'members',
@@ -216,6 +224,9 @@ def import_config_pck(mlist, config_dict):
     for key, value in config_dict.items():
         # Some attributes must not be directly imported.
         if key in EXCLUDES:
+            continue
+        # Created at must not be set, it needs a type conversion
+        if key in DATETIME_OBJECTS:
             continue
         # Some attributes from Mailman 2 were renamed in Mailman 3.
         key = NAME_MAPPINGS.get(key, key)
@@ -238,6 +249,15 @@ def import_config_pck(mlist, config_dict):
             except (TypeError, KeyError):
                 print('Type conversion error for key "{}": {}'.format(
                     key, value), file=sys.stderr)
+    for key in DATETIME_OBJECTS:
+        try:
+            value = datetime.datetime.utcfromtimestamp(config_dict[key])
+        except KeyError:
+            continue
+        if key == 'last_post_time':
+            setattr(mlist, 'last_post_at', value)
+            continue
+        setattr(mlist, key, value)
     # Handle the archiving policy.  In MM2.1 there were two boolean options
     # but only three of the four possible states were valid.  Now there's just
     # an enum.

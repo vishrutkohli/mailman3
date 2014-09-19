@@ -62,13 +62,16 @@ class User(Model):
 
     addresses = relationship('Address',
                              backref='user',
-                             foreign_keys='[Address.user_id]')
+                             primaryjoin=
+                                 id==Address.user_id)
 
     _preferred_address_id = Column(Integer, ForeignKey('address.id',
                                                        use_alter=True,
-                                                       name='prefered_address_id'))
+                                                       name='_preferred_address'))
     _preferred_address = relationship('Address',
-                                      foreign_keys=[_preferred_address_id])
+                                      primaryjoin=
+                                          _preferred_address_id==Address.id,
+                                      post_update=True)
 
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
     preferences = relationship('Preferences',

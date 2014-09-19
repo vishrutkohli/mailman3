@@ -49,9 +49,7 @@ class Enum(TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
-        if not isinstance(value, self.enum):
-            raise ValueError("{} must be a value of the {} enum".format(
-                             value, self.enum.__name__))
+
         return value.value
 
 

@@ -75,7 +75,7 @@ class BanManager:
         ban = store.query(Ban).filter_by(email=email,
                                          list_id=self._list_id).first()
         if ban is not None:
-            store.remove(ban)
+            store.delete(ban)
 
     @dbconnection
     def is_banned(self, store, email):

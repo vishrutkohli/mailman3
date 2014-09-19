@@ -126,7 +126,7 @@ class SubscriptionService:
                 if len(address_ids) == 0 or user is None:
                     return []
                 query.append(or_(Member.user_id == user.id,
-                                Member.address_id.is_in(address_ids)))
+                                Member.address_id.in_(address_ids)))
         # Calculate the rest of the query expression, which will get And'd
         # with the Or clause above (if there is one).
         if list_id is not None:

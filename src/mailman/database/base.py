@@ -107,18 +107,6 @@ class SABaseDatabase:
         self.store = session()
         self.store.commit()
 
-    # def initialize_testing(self):
-    #     url = expand(config.database.url, config.paths)
-    #     log.debug('Database url: %s', url)
-    #     self.url = url
-    #     self._prepare(url)
-    #     self.engine = create_engine(url)
-    #     connection = self.engine.connect()
-    #     self.transaction = connection.begin_nested()
-    #     self.store = Session(connection)
-    #     self.store.commit()
-
-
     def load_migrations(self, until=None):
         """Load schema migrations.
 

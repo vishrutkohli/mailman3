@@ -28,6 +28,7 @@ __all__ = [
 
 from sqlalchemy import (Column, Integer, String, Unicode,
                         ForeignKey, Date)
+from sqlalchemy import desc
 from sqlalchemy.orm import relationship
 from zope.interface import implementer
 
@@ -95,5 +96,5 @@ class AutoResponseSet:
             address = address,
             mailing_list = self._mailing_list,
             response_type = response_type
-            ).order_by(Desc(AutoResponseRecord.date_sent))
+            ).order_by(desc(AutoResponseRecord.date_sent))
         return (None if results.count() == 0 else results.first())
