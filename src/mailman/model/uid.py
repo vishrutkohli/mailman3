@@ -54,7 +54,6 @@ class UID(Model):
 
     @dbconnection
     def __init__(self, store, uid):
-        super(UID, self).__init__()
         self.uid = uid
         store.add(self)
 

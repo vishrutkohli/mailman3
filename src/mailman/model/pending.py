@@ -71,7 +71,6 @@ class Pended(Model):
     __tablename__ = 'pended'
 
     def __init__(self, token, expiration_date):
-        super(Pended, self).__init__()
         self.token = token
         self.expiration_date = expiration_date
 

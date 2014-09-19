@@ -49,9 +49,12 @@ NL = '\n'
 class SABaseDatabase:
     """The database base class for use with SQLAlchemy.
 
-    Use this as a base class for your DB_Specific derived classes.
+    Use this as a base class for your DB-Specific derived classes.
     """
-    TAG=''
+    # Tag used to distinguish the database being used.  Override this in base
+    # classes.
+
+    TAG = ''
 
     def __init__(self):
         self.url = None
@@ -59,16 +62,17 @@ class SABaseDatabase:
         self.transaction = None
 
     def begin(self):
+        """See `IDatabase`."""
+        # SA does this for us.
         pass
 
     def commit(self):
+        """See `IDatabase`."""
         self.store.commit()
 
     def abort(self):
+        """See `IDatabase`."""
         self.store.rollback()
-
-    def _prepare(self, url):
-        pass
 
     def _database_exists(self):
         """Return True if the database exists and is initialized.
@@ -97,11 +101,27 @@ class SABaseDatabase:
         database-specific post-removal cleanup.
         """
         pass
+
     def initialize(self, debug=None):
+        """See `IDatabase`"""
+        # Calculate the engine url
         url = expand(config.database.url, config.paths)
         log.debug('Database url: %s', url)
+        # XXX By design of SQLite, database file creation does not honor
+        # umask.  See their ticket #1193:
+        # http://www.sqlite.org/cvstrac/tktview?tn=1193,31
+        #
+        # This sucks for us because the mailman.db file /must/ be group
+        # writable, however even though we guarantee our umask is 002 here, it
+        # still gets created without the necessary g+w permission, due to
+        # SQLite's policy.  This should only affect SQLite engines because its
+        # the only one that creates a little file on the local file system.
+        # This kludges around their bug by "touch"ing the database file before
+        # SQLite has any chance to create it, thus honoring the umask and
+        # ensuring the right permissions.  We only try to do this for SQLite
+        # engines, and yes, we could have chmod'd the file after the fact, but
+        # half dozen and all...
         self.url = url
-        self._prepare(url)
         self.engine = create_engine(url)
         session = sessionmaker(bind=self.engine)
         self.store = session()
@@ -132,31 +152,6 @@ class SABaseDatabase:
         for statement in sql.split(';'):
             if statement.strip() != '':
                 store.execute(statement + ';')
-
-    def load_schema(self, store, version, filename, module_path):
-        """Load the schema from a file.
-
-        This is a helper method for migration classes to call.
-
-        :param store: The Storm store to load the schema into.
-        :type store: storm.locals.Store`
-        :param version: The schema version identifier of the form
-            YYYYMMDDHHMMSS.
-        :type version: string
-        :param filename: The file name containing the schema to load.  Pass
-            `None` if there is no schema file to load.
-        :type filename: string
-        :param module_path: The fully qualified Python module path to the
-            migration module being loaded.  This is used to record information
-            for use by the test suite.
-        :type module_path: string
-        """
-        if filename is not None:
-            contents = resource_string('mailman.database.schema', filename)
-            self.load_sql(store, contents)
-        # Add a marker that indicates the migration version being applied.
-        store.add(Version(component='schema', version=version))
-
 
 
     @staticmethod

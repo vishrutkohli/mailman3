@@ -35,23 +35,6 @@ from mailman.config import config
 class ModelMeta(object):
     """Do more magic on table classes."""
 
-    _class_registry = set()
-
-    def __init__(self, name, bases, dict):
-        # Before we let the base class do it's thing, force an __tablename__
-        # property to enforce our table naming convention.
-        self.__tablename__ = name.lower()
-        # super(ModelMeta, self).__init__(name, bases, dict)
-        # Register the model class so that it can be more easily cleared.
-        # This is required by the test framework so that the corresponding
-        # table can be reset between tests.
-        #
-        # The PRESERVE flag indicates whether the table should be reset or
-        # not.  We have to handle the actual Model base class explicitly
-        # because it does not correspond to a table in the database.
-        if not getattr(self, 'PRESERVE', False) and name != 'Model':
-            ModelMeta._class_registry.add(self)
-
     @staticmethod
     def _reset(db):
         meta = Model.metadata

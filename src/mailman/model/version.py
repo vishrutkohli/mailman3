@@ -43,6 +43,5 @@ class Version(Model):
     PRESERVE = True
 
     def __init__(self, component, version):
-        super(Version, self).__init__()
         self.component = component
         self.version = version
