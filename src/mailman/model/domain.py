@@ -27,7 +27,7 @@ __all__ = [
 
 
 from urlparse import urljoin, urlparse
-from storm.locals import Int, Unicode
+from sqlalchemy import Column, Unicode, Integer
 from zope.event import notify
 from zope.interface import implementer
 
@@ -44,12 +44,14 @@ from mailman.model.mailinglist import MailingList
 class Domain(Model):
     """Domains."""
 
-    id = Int(primary=True)
+    __tablename__ = 'domain'
 
-    mail_host = Unicode()
-    base_url = Unicode()
-    description = Unicode()
-    contact_address = Unicode()
+    id = Column(Integer, primary_key=True)
+
+    mail_host = Column(Unicode)
+    base_url = Column(Unicode)
+    description = Column(Unicode)
+    contact_address = Column(Unicode)
 
     def __init__(self, mail_host,
                  description=None,
@@ -92,8 +94,7 @@ class Domain(Model):
     @dbconnection
     def mailing_lists(self, store):
         """See `IDomain`."""
-        mailing_lists = store.find(
-            MailingList,
+        mailing_lists = store.query(MailingList).filter(
             MailingList.mail_host == self.mail_host)
         for mlist in mailing_lists:
             yield mlist
@@ -140,14 +141,14 @@ class DomainManager:
     def remove(self, store, mail_host):
         domain = self[mail_host]
         notify(DomainDeletingEvent(domain))
-        store.remove(domain)
+        store.delete(domain)
         notify(DomainDeletedEvent(mail_host))
         return domain
 
     @dbconnection
     def get(self, store, mail_host, default=None):
         """See `IDomainManager`."""
-        domains = store.find(Domain, mail_host=mail_host)
+        domains = store.query(Domain).filter_by(mail_host=mail_host)
         if domains.count() < 1:
             return default
         assert domains.count() == 1, (
@@ -164,15 +165,15 @@ class DomainManager:
 
     @dbconnection
     def __len__(self, store):
-        return store.find(Domain).count()
+        return store.query(Domain).count()
 
     @dbconnection
     def __iter__(self, store):
         """See `IDomainManager`."""
-        for domain in store.find(Domain):
+        for domain in store.query(Domain).all():
             yield domain
 
     @dbconnection
     def __contains__(self, store, mail_host):
         """See `IDomainManager`."""
-        return store.find(Domain, mail_host=mail_host).count() > 0
+        return store.query(Domain).filter_by(mail_host=mail_host).count() > 0

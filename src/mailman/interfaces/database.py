@@ -61,7 +61,7 @@ class IDatabase(Interface):
         """Abort the current transaction."""
 
     store = Attribute(
-        """The underlying Storm store on which you can do queries.""")
+        """The underlying SQLAlchemy store on which you can do queries.""")
 
 
 

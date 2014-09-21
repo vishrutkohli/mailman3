@@ -26,7 +26,10 @@ __all__ = [
     ]
 
 
-from storm.locals import And, Date, Desc, Int, Reference
+from sqlalchemy import (Column, Integer, String, Unicode,
+                        ForeignKey, Date)
+from sqlalchemy import desc
+from sqlalchemy.orm import relationship
 from zope.interface import implementer
 
 from mailman.database.model import Model
@@ -42,16 +45,18 @@ from mailman.utilities.datetime import today
 class AutoResponseRecord(Model):
     """See `IAutoResponseRecord`."""
 
-    id = Int(primary=True)
+    __tablename__ = 'autorespondrecord'
 
-    address_id = Int()
-    address = Reference(address_id, 'Address.id')
+    id = Column(Integer, primary_key=True)
 
-    mailing_list_id = Int()
-    mailing_list = Reference(mailing_list_id, 'MailingList.id')
+    address_id = Column(Integer, ForeignKey('address.id'))
+    address = relationship('Address')
 
-    response_type = Enum(Response)
-    date_sent = Date()
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList')
+
+    response_type = Column(Enum(enum=Response))
+    date_sent = Column(Date)
 
     def __init__(self, mailing_list, address, response_type):
         self.mailing_list = mailing_list
@@ -71,12 +76,11 @@ class AutoResponseSet:
     @dbconnection
     def todays_count(self, store, address, response_type):
         """See `IAutoResponseSet`."""
-        return store.find(
-            AutoResponseRecord,
-            And(AutoResponseRecord.address == address,
-                AutoResponseRecord.mailing_list == self._mailing_list,
-                AutoResponseRecord.response_type == response_type,
-                AutoResponseRecord.date_sent == today())).count()
+        return store.query(AutoResponseRecord).filter_by(
+            address = address,
+            mailing_list = self._mailing_list,
+            response_type = response_type,
+            date_sent = today()).count()
 
     @dbconnection
     def response_sent(self, store, address, response_type):
@@ -88,10 +92,9 @@ class AutoResponseSet:
     @dbconnection
     def last_response(self, store, address, response_type):
         """See `IAutoResponseSet`."""
-        results = store.find(
-            AutoResponseRecord,
-            And(AutoResponseRecord.address == address,
-                AutoResponseRecord.mailing_list == self._mailing_list,
-                AutoResponseRecord.response_type == response_type)
-            ).order_by(Desc(AutoResponseRecord.date_sent))
+        results = store.query(AutoResponseRecord).filter_by(
+            address = address,
+            mailing_list = self._mailing_list,
+            response_type = response_type
+            ).order_by(desc(AutoResponseRecord.date_sent))
         return (None if results.count() == 0 else results.first())

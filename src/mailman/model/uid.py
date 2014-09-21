@@ -25,10 +25,11 @@ __all__ = [
     ]
 
 
-from storm.locals import Int
-from storm.properties import UUID
+
+from sqlalchemy import Column, Integer
 
 from mailman.database.model import Model
+from mailman.database.types import UUID
 from mailman.database.transaction import dbconnection
 
 
@@ -45,12 +46,14 @@ class UID(Model):
     There is no interface for this class, because it's purely an internal
     implementation detail.
     """
-    id = Int(primary=True)
-    uid = UUID()
+
+    __tablename__ = 'uid'
+
+    id = Column(Integer, primary_key=True)
+    uid = Column(UUID)
 
     @dbconnection
     def __init__(self, store, uid):
-        super(UID, self).__init__()
         self.uid = uid
         store.add(self)
 
@@ -70,7 +73,7 @@ class UID(Model):
         :type uid: unicode
         :raises ValueError: if the id is not unique.
         """
-        existing = store.find(UID, uid=uid)
+        existing = store.query(UID).filter_by(uid=uid)
         if existing.count() != 0:
             raise ValueError(uid)
         return UID(uid)

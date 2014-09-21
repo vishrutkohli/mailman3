@@ -29,7 +29,7 @@ __all__ = [
 
 import unittest
 
-from storm.locals import Store
+from sqlalchemy.orm import sessionmaker
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
@@ -139,9 +139,9 @@ Message-ID: <argon>
         for name in filter_names:
             setattr(self._ant, name, ['test-filter-1', 'test-filter-2'])
         getUtility(IListManager).delete(self._ant)
-        store = Store.of(self._ant)
-        filters = store.find(ContentFilter,
-                             ContentFilter.mailing_list == self._ant)
+        Session = sessionmaker()
+        store = Session.object_session(self._ant)
+        filters = store.query(ContentFilter).filter_by(mailing_list = self._ant)
         self.assertEqual(filters.count(), 0)
 
 

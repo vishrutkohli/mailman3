@@ -37,7 +37,7 @@ __all__ = [
     ]
 
 
-from storm.expr import And, Or
+from sqlalchemy import and_, or_
 from zope.interface import implementer
 
 from mailman.database.transaction import dbconnection
@@ -65,8 +65,7 @@ class AbstractRoster:
 
     @dbconnection
     def _query(self, store):
-        return store.find(
-            Member,
+        return store.query(Member).filter(
             Member.list_id == self._mlist.list_id,
             Member.role == self.role)
 
@@ -104,8 +103,7 @@ class AbstractRoster:
     @dbconnection
     def get_member(self, store, address):
         """See `IRoster`."""
-        results = store.find(
-            Member,
+        results = store.query(Member).filter(
             Member.list_id == self._mlist.list_id,
             Member.role == self.role,
             Address.email == address,
@@ -160,19 +158,17 @@ class AdministratorRoster(AbstractRoster):
 
     @dbconnection
     def _query(self, store):
-        return store.find(
-            Member,
+        return store.query(Member).filter(
             Member.list_id == self._mlist.list_id,
-            Or(Member.role == MemberRole.owner,
+            or_(Member.role == MemberRole.owner,
                Member.role == MemberRole.moderator))
 
     @dbconnection
     def get_member(self, store, address):
         """See `IRoster`."""
-        results = store.find(
-                Member,
+        results = store.query(Member).filter(
                 Member.list_id == self._mlist.list_id,
-                Or(Member.role == MemberRole.moderator,
+                or_(Member.role == MemberRole.moderator,
                    Member.role == MemberRole.owner),
                 Address.email == address,
                 Member.address_id == Address.id)
@@ -206,10 +202,9 @@ class DeliveryMemberRoster(AbstractRoster):
         :return: A generator of members.
         :rtype: generator
         """
-        results = store.find(
-            Member,
-            And(Member.list_id == self._mlist.list_id,
-                Member.role == MemberRole.member))
+        results = store.query(Member).filter_by(
+            list_id = self._mlist.list_id,
+            role = MemberRole.member)
         for member in results:
             if member.delivery_mode in delivery_modes:
                 yield member
@@ -250,7 +245,7 @@ class Subscribers(AbstractRoster):
 
     @dbconnection
     def _query(self, store):
-        return store.find(Member, Member.list_id == self._mlist.list_id)
+        return store.query(Member).filter_by(list_id = self._mlist.list_id)
 
 
 
@@ -265,12 +260,11 @@ class Memberships:
 
     @dbconnection
     def _query(self, store):
-        results = store.find(
-            Member,
-            Or(Member.user_id == self._user.id,
-               And(Address.user_id == self._user.id,
-                   Member.address_id == Address.id)))
-        return results.config(distinct=True)
+        results = store.query(Member).filter(
+            or_(Member.user_id == self._user.id,
+            and_(Address.user_id == self._user.id,
+                 Member.address_id == Address.id)))
+        return results.distinct()
 
     @property
     def member_count(self):
@@ -297,8 +291,7 @@ class Memberships:
     @dbconnection
     def get_member(self, store, address):
         """See `IRoster`."""
-        results = store.find(
-            Member,
+        results = store.query(Member).filter(
             Member.address_id == Address.id,
             Address.user_id == self._user.id)
         if results.count() == 0:

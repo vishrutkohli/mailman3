@@ -34,12 +34,12 @@ import tempfile
 from functools import partial
 from urlparse import urlparse
 
-from mailman.database.base import StormBaseDatabase
+from mailman.database.base import SABaseDatabase
 from mailman.testing.helpers import configuration
 
 
 
-class SQLiteDatabase(StormBaseDatabase):
+class SQLiteDatabase(SABaseDatabase):
     """Database class for SQLite."""
 
     TAG = 'sqlite'
@@ -72,7 +72,7 @@ def _cleanup(self, tempdir):
 def make_temporary(database):
     """Adapts by monkey patching an existing SQLite IDatabase."""
     tempdir = tempfile.mkdtemp()
-    url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
+    url = 'sqlite:///'   + os.path.join(tempdir, 'mailman.db')
     with configuration('database', url=url):
         database.initialize()
     database._cleanup = types.MethodType(

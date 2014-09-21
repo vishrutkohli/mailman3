@@ -23,43 +23,108 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Enum',
+    'UUID',
     ]
 
+import uuid
 
-from storm.properties import SimpleProperty
-from storm.variables import Variable
+from sqlalchemy import Integer
+from sqlalchemy.types import TypeDecorator, BINARY, CHAR
+from sqlalchemy.dialects import postgresql
 
 
 
-class _EnumVariable(Variable):
-    """Storm variable for supporting enum types.
-
-    To use this, make the database column a INTEGER.
+class Enum(TypeDecorator):
+    """
+    Stores an integer-based Enum as an integer in the database, and converts it
+    on-the-fly.
     """
 
-    def __init__(self, *args, **kws):
-        self._enum = kws.pop('enum')
-        super(_EnumVariable, self).__init__(*args, **kws)
+    impl = Integer
 
-    def parse_set(self, value, from_db):
+    def __init__(self, *args, **kw):
+        self.enum = kw.pop("enum")
+        TypeDecorator.__init__(self, *args, **kw)
+
+    def process_bind_param(self, value, dialect):
         if value is None:
             return None
-        if not from_db:
-            return value
-        return self._enum(value)
 
-    def parse_get(self, value, to_db):
-        if value is None:
-            return None
-        if not to_db:
-            return value
         return value.value
 
 
-class Enum(SimpleProperty):
-    """Custom type for Storm supporting enums."""
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return self.enum(value)
 
-    variable_class = _EnumVariable
 
-    def __init__(self, enum=None):
-        super(Enum, self).__init__(enum=enum)
+
+class UUID(TypeDecorator):
+    """
+    Stores a UUID in the database natively when it can and falls back to
+    a BINARY(16) or a CHAR(32) when it can't.
+
+    ::
+
+        from sqlalchemy_utils import UUIDType
+        import uuid
+
+        class User(Base):
+            __tablename__ = 'user'
+
+            # Pass `binary=False` to fallback to CHAR instead of BINARY
+            id = sa.Column(UUIDType(binary=False), primary_key=True)
+    """
+    impl = BINARY(16)
+
+    python_type = uuid.UUID
+
+    def __init__(self, binary=True, native=True):
+        """
+        :param binary: Whether to use a BINARY(16) or CHAR(32) fallback.
+        """
+        self.binary = binary
+        self.native = native
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql' and self.native:
+            # Use the native UUID type.
+            return dialect.type_descriptor(postgresql.UUID())
+
+        else:
+            # Fallback to either a BINARY or a CHAR.
+            kind = self.impl if self.binary else CHAR(32)
+            return dialect.type_descriptor(kind)
+
+    @staticmethod
+    def _coerce(value):
+        if value and not isinstance(value, uuid.UUID):
+            try:
+                value = uuid.UUID(value)
+
+            except (TypeError, ValueError):
+                value = uuid.UUID(bytes=value)
+
+        return value
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+
+        if not isinstance(value, uuid.UUID):
+            value = self._coerce(value)
+
+        if self.native and dialect.name == 'postgresql':
+            return str(value)
+
+        return value.bytes if self.binary else value.hex
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+
+        if self.native and dialect.name == 'postgresql':
+            return uuid.UUID(value)
+
+        return uuid.UUID(bytes=value) if self.binary else uuid.UUID(value)

@@ -62,10 +62,10 @@ class DatabaseFactory:
 
 def _reset(self):
     """See `IDatabase`."""
-    from mailman.database.model import ModelMeta
+    from mailman.database.model import Model
     self.store.rollback()
     self._pre_reset(self.store)
-    ModelMeta._reset(self.store)
+    Model._reset(self)
     self._post_reset(self.store)
     self.store.commit()
 

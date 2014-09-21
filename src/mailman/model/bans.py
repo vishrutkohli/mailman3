@@ -27,7 +27,7 @@ __all__ = [
 
 import re
 
-from storm.locals import Int, Unicode
+from sqlalchemy import Column, Integer, Unicode
 from zope.interface import implementer
 
 from mailman.database.model import Model
@@ -40,9 +40,11 @@ from mailman.interfaces.bans import IBan, IBanManager
 class Ban(Model):
     """See `IBan`."""
 
-    id = Int(primary=True)
-    email = Unicode()
-    list_id = Unicode()
+    __tablename__ = 'ban'
+
+    id = Column(Integer, primary_key=True)
+    email = Column(Unicode)
+    list_id = Column(Unicode)
 
     def __init__(self, email, list_id):
         super(Ban, self).__init__()
@@ -62,7 +64,7 @@ class BanManager:
     @dbconnection
     def ban(self, store, email):
         """See `IBanManager`."""
-        bans = store.find(Ban, email=email, list_id=self._list_id)
+        bans = store.query(Ban).filter_by(email=email, list_id=self._list_id)
         if bans.count() == 0:
             ban = Ban(email, self._list_id)
             store.add(ban)
@@ -70,9 +72,10 @@ class BanManager:
     @dbconnection
     def unban(self, store, email):
         """See `IBanManager`."""
-        ban = store.find(Ban, email=email, list_id=self._list_id).one()
+        ban = store.query(Ban).filter_by(email=email,
+                                         list_id=self._list_id).first()
         if ban is not None:
-            store.remove(ban)
+            store.delete(ban)
 
     @dbconnection
     def is_banned(self, store, email):
@@ -81,32 +84,32 @@ class BanManager:
         if list_id is None:
             # The client is asking for global bans.  Look up bans on the
             # specific email address first.
-            bans = store.find(Ban, email=email, list_id=None)
+            bans = store.query(Ban).filter_by(email=email, list_id=None)
             if bans.count() > 0:
                 return True
             # And now look for global pattern bans.
-            bans = store.find(Ban, list_id=None)
+            bans = store.query(Ban).filter_by(list_id=None)
             for ban in bans:
                 if (ban.email.startswith('^') and
                     re.match(ban.email, email, re.IGNORECASE) is not None):
                     return True
         else:
             # This is a list-specific ban.
-            bans = store.find(Ban, email=email, list_id=list_id)
+            bans = store.query(Ban).filter_by(email=email, list_id=list_id)
             if bans.count() > 0:
                 return True
             # Try global bans next.
-            bans = store.find(Ban, email=email, list_id=None)
+            bans = store.query(Ban).filter_by(email=email, list_id=None)
             if bans.count() > 0:
                 return True
             # Now try specific mailing list bans, but with a pattern.
-            bans = store.find(Ban, list_id=list_id)
+            bans = store.query(Ban).filter_by(list_id=list_id)
             for ban in bans:
                 if (ban.email.startswith('^') and
                     re.match(ban.email, email, re.IGNORECASE) is not None):
                     return True
             # And now try global pattern bans.
-            bans = store.find(Ban, list_id=None)
+            bans = store.query(Ban).filter_by(list_id=None)
             for ban in bans:
                 if (ban.email.startswith('^') and
                     re.match(ban.email, email, re.IGNORECASE) is not None):

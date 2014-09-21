@@ -24,14 +24,15 @@ __all__ = [
     'User',
     ]
 
-from storm.locals import (
-    DateTime, Int, RawStr, Reference, ReferenceSet, Unicode)
-from storm.properties import UUID
+from sqlalchemy import (
+    Column, Unicode, Integer, DateTime, ForeignKey, LargeBinary)
+from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
+from mailman.database.types import UUID
 from mailman.interfaces.address import (
     AddressAlreadyLinkedError, AddressNotLinkedError)
 from mailman.interfaces.user import (
@@ -51,24 +52,36 @@ uid_factory = UniqueIDFactory(context='users')
 class User(Model):
     """Mailman users."""
 
-    id = Int(primary=True)
-    display_name = Unicode()
-    _password = RawStr(name='password')
-    _user_id = UUID()
-    _created_on = DateTime()
+    __tablename__ = 'user'
 
-    addresses = ReferenceSet(id, 'Address.user_id')
-    _preferred_address_id = Int()
-    _preferred_address = Reference(_preferred_address_id, 'Address.id')
-    preferences_id = Int()
-    preferences = Reference(preferences_id, 'Preferences.id')
+    id = Column(Integer, primary_key=True)
+    display_name = Column(Unicode)
+    _password = Column('password', LargeBinary) # TODO : was RawStr()
+    _user_id = Column(UUID)
+    _created_on = Column(DateTime)
+
+    addresses = relationship('Address',
+                             backref='user',
+                             primaryjoin=
+                                 id==Address.user_id)
+
+    _preferred_address_id = Column(Integer, ForeignKey('address.id',
+                                                       use_alter=True,
+                                                       name='_preferred_address'))
+    _preferred_address = relationship('Address',
+                                      primaryjoin=
+                                          _preferred_address_id==Address.id,
+                                      post_update=True)
+
+    preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    preferences = relationship('Preferences',
+                               backref=backref('user', uselist=False))
 
     @dbconnection
     def __init__(self, store, display_name=None, preferences=None):
-        super(User, self).__init__()
         self._created_on = date_factory.now()
         user_id = uid_factory.new_uid()
-        assert store.find(User, _user_id=user_id).count() == 0, (
+        assert store.query(User).filter_by(_user_id=user_id).count() == 0, (
             'Duplicate user id {0}'.format(user_id))
         self._user_id = user_id
         self.display_name = ('' if display_name is None else display_name)
@@ -138,7 +151,7 @@ class User(Model):
     @dbconnection
     def controls(self, store, email):
         """See `IUser`."""
-        found = store.find(Address, email=email)
+        found = store.query(Address).filter_by(email=email)
         if found.count() == 0:
             return False
         assert found.count() == 1, 'Unexpected count'
@@ -148,7 +161,7 @@ class User(Model):
     def register(self, store, email, display_name=None):
         """See `IUser`."""
         # First, see if the address already exists
-        address = store.find(Address, email=email).one()
+        address = store.query(Address).filter_by(email=email).first()
         if address is None:
             if display_name is None:
                 display_name = ''

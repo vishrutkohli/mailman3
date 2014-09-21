@@ -26,7 +26,8 @@ __all__ = [
 
 from cPickle import dumps, loads
 from datetime import timedelta
-from storm.locals import AutoReload, Int, RawStr, Reference, Unicode
+from sqlalchemy import Column, Unicode, Integer, ForeignKey, LargeBinary
+from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.interface import implementer
 
@@ -68,25 +69,23 @@ class ListRequests:
     @property
     @dbconnection
     def count(self, store):
-        return store.find(_Request, mailing_list=self.mailing_list).count()
+        return store.query(_Request).filter_by(mailing_list=self.mailing_list).count()
 
     @dbconnection
     def count_of(self, store, request_type):
-        return store.find(
-            _Request,
+        return store.query(_Request).filter_by(
             mailing_list=self.mailing_list, request_type=request_type).count()
 
     @property
     @dbconnection
     def held_requests(self, store):
-        results = store.find(_Request, mailing_list=self.mailing_list)
+        results = store.query(_Request).filter_by(mailing_list=self.mailing_list)
         for request in results:
             yield request
 
     @dbconnection
     def of_type(self, store, request_type):
-        results = store.find(
-            _Request,
+        results = store.query(_Request).filter_by(
             mailing_list=self.mailing_list, request_type=request_type)
         for request in results:
             yield request
@@ -104,11 +103,12 @@ class ListRequests:
             data_hash = token
         request = _Request(key, request_type, self.mailing_list, data_hash)
         store.add(request)
+        store.flush()
         return request.id
 
     @dbconnection
     def get_request(self, store, request_id, request_type=None):
-        result = store.get(_Request, request_id)
+        result = store.query(_Request).get(request_id)
         if result is None:
             return None
         if request_type is not None and result.request_type != request_type:
@@ -130,28 +130,29 @@ class ListRequests:
 
     @dbconnection
     def delete_request(self, store, request_id):
-        request = store.get(_Request, request_id)
+        request = store.query(_Request).get(request_id)
         if request is None:
             raise KeyError(request_id)
         # Throw away the pended data.
         getUtility(IPendings).confirm(request.data_hash)
-        store.remove(request)
+        store.delete(request)
 
 
 
 class _Request(Model):
     """Table for mailing list hold requests."""
 
-    id = Int(primary=True, default=AutoReload)
-    key = Unicode()
-    request_type = Enum(RequestType)
-    data_hash = RawStr()
+    __tablename__ = 'request'
 
-    mailing_list_id = Int()
-    mailing_list = Reference(mailing_list_id, 'MailingList.id')
+    id = Column(Integer, primary_key=True)# TODO: ???, default=AutoReload)
+    key = Column(Unicode)
+    request_type = Column(Enum(enum=RequestType))
+    data_hash = Column(LargeBinary)
+
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList')
 
     def __init__(self, key, request_type, mailing_list, data_hash):
-        super(_Request, self).__init__()
         self.key = key
         self.request_type = request_type
         self.mailing_list = mailing_list

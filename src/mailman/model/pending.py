@@ -31,7 +31,9 @@ import random
 import hashlib
 
 from lazr.config import as_timedelta
-from storm.locals import DateTime, Int, RawStr, ReferenceSet, Unicode
+from sqlalchemy import (
+    Column, Integer, Unicode, ForeignKey, DateTime, LargeBinary)
+from sqlalchemy.orm import relationship
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
@@ -49,14 +51,16 @@ from mailman.utilities.modules import call_name
 class PendedKeyValue(Model):
     """A pended key/value pair, tied to a token."""
 
+    __tablename__ = 'pendedkeyvalue'
+
     def __init__(self, key, value):
         self.key = key
         self.value = value
 
-    id = Int(primary=True)
-    key = Unicode()
-    value = Unicode()
-    pended_id = Int()
+    id = Column(Integer, primary_key=True)
+    key = Column(Unicode)
+    value = Column(Unicode)
+    pended_id = Column(Integer, ForeignKey('pended.id'))
 
 
 
@@ -64,16 +68,16 @@ class PendedKeyValue(Model):
 class Pended(Model):
     """A pended event, tied to a token."""
 
+    __tablename__ = 'pended'
+
     def __init__(self, token, expiration_date):
-        super(Pended, self).__init__()
         self.token = token
         self.expiration_date = expiration_date
 
-    id = Int(primary=True)
-    token = RawStr()
-    expiration_date = DateTime()
-    key_values = ReferenceSet(id, PendedKeyValue.pended_id)
-
+    id = Column(Integer, primary_key=True)
+    token = Column(LargeBinary) # TODO : was RawStr()
+    expiration_date = Column(DateTime)
+    key_values = relationship('PendedKeyValue')
 
 
 @implementer(IPendable)
@@ -105,7 +109,7 @@ class Pendings:
             token = hashlib.sha1(repr(x)).hexdigest()
             # In practice, we'll never get a duplicate, but we'll be anal
             # about checking anyway.
-            if store.find(Pended, token=token).count() == 0:
+            if store.query(Pended).filter_by(token=token).count() == 0:
                 break
         else:
             raise AssertionError('Could not find a valid pendings token')
@@ -129,7 +133,7 @@ class Pendings:
                 value = ('mailman.model.pending.unpack_list\1' +
                          '\2'.join(value))
             keyval = PendedKeyValue(key=key, value=value)
-            pending.key_values.add(keyval)
+            pending.key_values.append(keyval)
         store.add(pending)
         return token
 
@@ -137,7 +141,7 @@ class Pendings:
     def confirm(self, store, token, expunge=True):
         # Token can come in as a unicode, but it's stored in the database as
         # bytes.  They must be ascii.
-        pendings = store.find(Pended, token=str(token))
+        pendings = store.query(Pended).filter_by(token=str(token))
         if pendings.count() == 0:
             return None
         assert pendings.count() == 1, (
@@ -146,7 +150,7 @@ class Pendings:
         pendable = UnpendedPendable()
         # Find all PendedKeyValue entries that are associated with the pending
         # object's ID.  Watch out for type conversions.
-        for keyvalue in store.find(PendedKeyValue,
+        for keyvalue in store.query(PendedKeyValue).filter(
                                    PendedKeyValue.pended_id == pending.id):
             if keyvalue.value is not None and '\1' in keyvalue.value:
                 type_name, value = keyvalue.value.split('\1', 1)
@@ -154,23 +158,23 @@ class Pendings:
             else:
                 pendable[keyvalue.key] = keyvalue.value
             if expunge:
-                store.remove(keyvalue)
+                store.delete(keyvalue)
         if expunge:
-            store.remove(pending)
+            store.delete(pending)
         return pendable
 
     @dbconnection
     def evict(self, store):
         right_now = now()
-        for pending in store.find(Pended):
+        for pending in store.query(Pended).all():
             if pending.expiration_date < right_now:
                 # Find all PendedKeyValue entries that are associated with the
                 # pending object's ID.
-                q = store.find(PendedKeyValue,
+                q = store.query(PendedKeyValue).filter(
                                PendedKeyValue.pended_id == pending.id)
                 for keyvalue in q:
-                    store.remove(keyvalue)
-                store.remove(pending)
+                    store.delete(keyvalue)
+                store.delete(pending)
 
 
 

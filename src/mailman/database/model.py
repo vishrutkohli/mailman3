@@ -25,44 +25,24 @@ __all__ = [
     ]
 
 
+import contextlib
 from operator import attrgetter
 
-from storm.properties import PropertyPublisherMeta
+from sqlalchemy.ext.declarative import declarative_base
 
+from mailman.config import config
 
-
-class ModelMeta(PropertyPublisherMeta):
+class ModelMeta(object):
     """Do more magic on table classes."""
 
-    _class_registry = set()
-
-    def __init__(self, name, bases, dict):
-        # Before we let the base class do it's thing, force an __storm_table__
-        # property to enforce our table naming convention.
-        self.__storm_table__ = name.lower()
-        super(ModelMeta, self).__init__(name, bases, dict)
-        # Register the model class so that it can be more easily cleared.
-        # This is required by the test framework so that the corresponding
-        # table can be reset between tests.
-        #
-        # The PRESERVE flag indicates whether the table should be reset or
-        # not.  We have to handle the actual Model base class explicitly
-        # because it does not correspond to a table in the database.
-        if not getattr(self, 'PRESERVE', False) and name != 'Model':
-            ModelMeta._class_registry.add(self)
-
     @staticmethod
-    def _reset(store):
-        from mailman.config import config
-        config.db._pre_reset(store)
-        # Make sure this is deterministic, by sorting on the storm table name.
-        classes = sorted(ModelMeta._class_registry,
-                         key=attrgetter('__storm_table__'))
-        for model_class in classes:
-            store.find(model_class).remove()
+    def _reset(db):
+        meta = Model.metadata
+        engine = config.db.engine
+        with contextlib.closing(engine.connect()) as con:
+            trans = con.begin()
+            for table in reversed(meta.sorted_tables):
+                con.execute(table.delete())
+            trans.commit()
 
-
-
-class Model:
-    """Like Storm's `Storm` subclass, but with a bit extra."""
-    __metaclass__ = ModelMeta
+Model = declarative_base(cls=ModelMeta)

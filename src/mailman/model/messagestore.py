@@ -59,7 +59,7 @@ class MessageStore:
         # Calculate and insert the X-Message-ID-Hash.
         message_id = message_ids[0]
         # Complain if the Message-ID already exists in the storage.
-        existing = store.find(Message, Message.message_id == message_id).one()
+        existing = store.query(Message).filter(Message.message_id == message_id).first()
         if existing is not None:
             raise ValueError(
                 'Message ID already exists in message store: {0}'.format(
@@ -107,7 +107,7 @@ class MessageStore:
 
     @dbconnection
     def get_message_by_id(self, store, message_id):
-        row = store.find(Message, message_id=message_id).one()
+        row = store.query(Message).filter_by(message_id=message_id).first()
         if row is None:
             return None
         return self._get_message(row)
@@ -120,7 +120,7 @@ class MessageStore:
         # US-ASCII.
         if isinstance(message_id_hash, unicode):
             message_id_hash = message_id_hash.encode('ascii')
-        row = store.find(Message, message_id_hash=message_id_hash).one()
+        row = store.query(Message).filter_by(message_id_hash=message_id_hash).first()
         if row is None:
             return None
         return self._get_message(row)
@@ -128,14 +128,14 @@ class MessageStore:
     @property
     @dbconnection
     def messages(self, store):
-        for row in store.find(Message):
+        for row in store.query(Message).all():
             yield self._get_message(row)
 
     @dbconnection
     def delete_message(self, store, message_id):
-        row = store.find(Message, message_id=message_id).one()
+        row = store.query(Message).filter_by(message_id=message_id).first()
         if row is None:
             raise LookupError(message_id)
         path = os.path.join(config.MESSAGES_DIR, row.path)
         os.remove(path)
-        store.remove(row)
+        store.delete(row)

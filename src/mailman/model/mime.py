@@ -25,7 +25,8 @@ __all__ = [
     ]
 
 
-from storm.locals import Int, Reference, Unicode
+from sqlalchemy import Column, Integer, Unicode, ForeignKey
+from sqlalchemy.orm import relationship
 from zope.interface import implementer
 
 from mailman.database.model import Model
@@ -38,13 +39,15 @@ from mailman.interfaces.mime import IContentFilter, FilterType
 class ContentFilter(Model):
     """A single filter criteria."""
 
-    id = Int(primary=True)
+    __tablename__ = 'contentfilter'
 
-    mailing_list_id = Int()
-    mailing_list = Reference(mailing_list_id, 'MailingList.id')
+    id = Column(Integer, primary_key=True)
 
-    filter_type = Enum(FilterType)
-    filter_pattern = Unicode()
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list = relationship('MailingList')
+
+    filter_type = Column(Enum(enum=FilterType))
+    filter_pattern = Column(Unicode)
 
     def __init__(self, mailing_list, filter_pattern, filter_type):
         self.mailing_list = mailing_list

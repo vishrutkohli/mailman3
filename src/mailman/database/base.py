@@ -29,8 +29,9 @@ import logging
 
 from lazr.config import as_boolean
 from pkg_resources import resource_listdir, resource_string
-from storm.cache import GenerationalCache
-from storm.locals import create_database, Store
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
 from zope.interface import implementer
 
 from mailman.config import config
@@ -45,23 +46,24 @@ NL = '\n'
 
 
 @implementer(IDatabase)
-class StormBaseDatabase:
-    """The database base class for use with the Storm ORM.
+class SABaseDatabase:
+    """The database base class for use with SQLAlchemy.
 
-    Use this as a base class for your DB-specific derived classes.
+    Use this as a base class for your DB-Specific derived classes.
     """
-
     # Tag used to distinguish the database being used.  Override this in base
     # classes.
+
     TAG = ''
 
     def __init__(self):
         self.url = None
         self.store = None
+        self.transaction = None
 
     def begin(self):
         """See `IDatabase`."""
-        # Storm takes care of this for us.
+        # SA does this for us.
         pass
 
     def commit(self):
@@ -100,18 +102,9 @@ class StormBaseDatabase:
         """
         pass
 
-    def _prepare(self, url):
-        """Prepare the database for creation.
-
-        Some database backends need to do so me prep work before letting Storm
-        create the database.  For example, we have to touch the SQLite .db
-        file first so that it has the proper file modes.
-        """
-        pass
-
     def initialize(self, debug=None):
-        """See `IDatabase`."""
-        # Calculate the engine url.
+        """See `IDatabase`"""
+        # Calculate the engine url
         url = expand(config.database.url, config.paths)
         log.debug('Database url: %s', url)
         # XXX By design of SQLite, database file creation does not honor
@@ -129,13 +122,10 @@ class StormBaseDatabase:
         # engines, and yes, we could have chmod'd the file after the fact, but
         # half dozen and all...
         self.url = url
-        self._prepare(url)
-        database = create_database(url)
-        store = Store(database, GenerationalCache())
-        database.DEBUG = (as_boolean(config.database.debug)
-                          if debug is None else debug)
-        self.store = store
-        store.commit()
+        self.engine = create_engine(url)
+        session = sessionmaker(bind=self.engine)
+        self.store = session()
+        self.store.commit()
 
     def load_migrations(self, until=None):
         """Load schema migrations.
@@ -144,45 +134,8 @@ class StormBaseDatabase:
             With default value of None, load all migrations.
         :type until: string
         """
-        migrations_path = config.database.migrations_path
-        if '.' in migrations_path:
-            parent, dot, child = migrations_path.rpartition('.')
-        else:
-            parent = migrations_path
-            child = ''
-        # If the database does not yet exist, load the base schema.
-        filenames = sorted(resource_listdir(parent, child))
-        # Find out which schema migrations have already been loaded.
-        if self._database_exists(self.store):
-            versions = set(version.version for version in
-                           self.store.find(Version, component='schema'))
-        else:
-            versions = set()
-        for filename in filenames:
-            module_fn, extension = os.path.splitext(filename)
-            if extension != '.py':
-                continue
-            parts = module_fn.split('_')
-            if len(parts) < 2:
-                continue
-            version = parts[1].strip()
-            if len(version) == 0:
-                # Not a schema migration file.
-                continue
-            if version in versions:
-                log.debug('already migrated to %s', version)
-                continue
-            if until is not None and version > until:
-                # We're done.
-                break
-            module_path = migrations_path + '.' + module_fn
-            __import__(module_path)
-            upgrade = getattr(sys.modules[module_path], 'upgrade', None)
-            if upgrade is None:
-                continue
-            log.debug('migrating db to %s: %s', version, module_path)
-            upgrade(self, self.store, version, module_path)
-        self.commit()
+        from mailman.database.model import Model
+        Model.metadata.create_all(self.engine)
 
     def load_sql(self, store, sql):
         """Load the given SQL into the store.
@@ -200,29 +153,6 @@ class StormBaseDatabase:
             if statement.strip() != '':
                 store.execute(statement + ';')
 
-    def load_schema(self, store, version, filename, module_path):
-        """Load the schema from a file.
-
-        This is a helper method for migration classes to call.
-
-        :param store: The Storm store to load the schema into.
-        :type store: storm.locals.Store`
-        :param version: The schema version identifier of the form
-            YYYYMMDDHHMMSS.
-        :type version: string
-        :param filename: The file name containing the schema to load.  Pass
-            `None` if there is no schema file to load.
-        :type filename: string
-        :param module_path: The fully qualified Python module path to the
-            migration module being loaded.  This is used to record information
-            for use by the test suite.
-        :type module_path: string
-        """
-        if filename is not None:
-            contents = resource_string('mailman.database.schema', filename)
-            self.load_sql(store, contents)
-        # Add a marker that indicates the migration version being applied.
-        store.add(Version(component='schema', version=version))
 
     @staticmethod
     def _make_temporary():
