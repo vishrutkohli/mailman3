@@ -94,6 +94,15 @@ class SABaseDatabase:
         """
         pass
 
+    def _prepare(self, url):
+        """Prepare the database for creation.
+
+        Some database backends need to do so me prep work before letting Storm
+        create the database.  For example, we have to touch the SQLite .db
+        file first so that it has the proper file modes.
+        """
+        pass
+
     # XXX Abhilash removed teh _prepare() method.  Is that because SA takes
     # care of this for us?  If so, then the comment below must be updated.
     # For reference, the SQLite bug is marked "won't fix".
@@ -102,6 +111,7 @@ class SABaseDatabase:
         """See `IDatabase`."""
         # Calculate the engine url.
         url = expand(config.database.url, config.paths)
+        self._prepare(url)
         log.debug('Database url: %s', url)
         # XXX By design of SQLite, database file creation does not honor
         # umask.  See their ticket #1193:
