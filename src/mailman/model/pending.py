@@ -53,14 +53,14 @@ class PendedKeyValue(Model):
 
     __tablename__ = 'pendedkeyvalue'
 
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-
     id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     value = Column(Unicode)
     pended_id = Column(Integer, ForeignKey('pended.id'))
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
 
 
 
@@ -70,15 +70,15 @@ class Pended(Model):
 
     __tablename__ = 'pended'
 
-    def __init__(self, token, expiration_date):
-        super(Pended, self).__init__()
-        self.token = token
-        self.expiration_date = expiration_date
-
     id = Column(Integer, primary_key=True)
     token = Column(LargeBinary) # TODO : was RawStr()
     expiration_date = Column(DateTime)
     key_values = relationship('PendedKeyValue')
+
+    def __init__(self, token, expiration_date):
+        super(Pended, self).__init__()
+        self.token = token
+        self.expiration_date = expiration_date
 
 
 
@@ -120,10 +120,10 @@ class Pendings:
             token=token,
             expiration_date=now() + lifetime)
         for key, value in pendable.items():
-            if isinstance(key, str):
-                key = key.encode('utf-8')
-            if isinstance(value, str):
-                value = value.encode('utf-8')
+            if isinstance(key, bytes):
+                key = key.decode('utf-8')
+            if isinstance(value, bytes):
+                value = value.decode('utf-8')
             elif type(value) is int:
                 value = '__builtin__.int\1%s' % value
             elif type(value) is float:

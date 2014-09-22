@@ -83,7 +83,7 @@ class IMessageStore(Interface):
 
     def get_message_by_hash(message_id_hash):
         """Return the message with the matching X-Message-ID-Hash.
-        
+
         :param message_id_hash: The X-Message-ID-Hash header contents to
             search for.
         :returns: The message, or None if no matching message was found.

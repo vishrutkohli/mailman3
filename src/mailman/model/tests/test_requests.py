@@ -70,10 +70,10 @@ Something else.
         # Calling hold_request() with a bogus request type is an error.
         with self.assertRaises(TypeError) as cm:
             self._requests_db.hold_request(5, 'foo')
-        self.assertEqual(cm.exception.message, 5)
+        self.assertEqual(cm.exception.args[0], 5)
 
     def test_delete_missing_request(self):
         # Trying to delete a missing request is an error.
         with self.assertRaises(KeyError) as cm:
             self._requests_db.delete_request(801)
-        self.assertEqual(cm.exception.message, 801)
+        self.assertEqual(cm.exception.args[0], 801)
