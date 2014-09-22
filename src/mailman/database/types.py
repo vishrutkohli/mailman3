@@ -29,29 +29,27 @@ __all__ = [
 import uuid
 
 from sqlalchemy import Integer
-from sqlalchemy.types import TypeDecorator, BINARY, CHAR
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.types import TypeDecorator, BINARY, CHAR
 
 
 
 class Enum(TypeDecorator):
-    """
-    Stores an integer-based Enum as an integer in the database, and converts it
-    on-the-fly.
-    """
+    """Handle Python 3.4 style enums.
 
+    Stores an integer-based Enum as an integer in the database, and
+    converts it on-the-fly.
+    """
     impl = Integer
 
-    def __init__(self, *args, **kw):
-        self.enum = kw.pop("enum")
-        TypeDecorator.__init__(self, *args, **kw)
+    def __init__(self, enum, *args, **kw):
+        self.enum = enum
+        super(Enum, self).__init__(*args, **kw)
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
-
         return value.value
-
 
     def process_result_value(self, value, dialect):
         if value is None:
@@ -61,29 +59,12 @@ class Enum(TypeDecorator):
 
 
 class UUID(TypeDecorator):
-    """
-    Stores a UUID in the database natively when it can and falls back to
-    a BINARY(16) or a CHAR(32) when it can't.
+    """Handle UUIds."""
 
-    ::
-
-        from sqlalchemy_utils import UUIDType
-        import uuid
-
-        class User(Base):
-            __tablename__ = 'user'
-
-            # Pass `binary=False` to fallback to CHAR instead of BINARY
-            id = sa.Column(UUIDType(binary=False), primary_key=True)
-    """
     impl = BINARY(16)
-
     python_type = uuid.UUID
 
     def __init__(self, binary=True, native=True):
-        """
-        :param binary: Whether to use a BINARY(16) or CHAR(32) fallback.
-        """
         self.binary = binary
         self.native = native
 
@@ -91,7 +72,6 @@ class UUID(TypeDecorator):
         if dialect.name == 'postgresql' and self.native:
             # Use the native UUID type.
             return dialect.type_descriptor(postgresql.UUID())
-
         else:
             # Fallback to either a BINARY or a CHAR.
             kind = self.impl if self.binary else CHAR(32)
@@ -102,29 +82,22 @@ class UUID(TypeDecorator):
         if value and not isinstance(value, uuid.UUID):
             try:
                 value = uuid.UUID(value)
-
             except (TypeError, ValueError):
                 value = uuid.UUID(bytes=value)
-
         return value
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-
         if not isinstance(value, uuid.UUID):
             value = self._coerce(value)
-
         if self.native and dialect.name == 'postgresql':
             return str(value)
-
         return value.bytes if self.binary else value.hex
 
     def process_result_value(self, value, dialect):
         if value is None:
             return value
-
         if self.native and dialect.name == 'postgresql':
             return uuid.UUID(value)
-
         return uuid.UUID(bytes=value) if self.binary else uuid.UUID(value)

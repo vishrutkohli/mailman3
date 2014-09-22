@@ -26,7 +26,7 @@ __all__ = [
 
 from cPickle import dumps, loads
 from datetime import timedelta
-from sqlalchemy import Column, Unicode, Integer, ForeignKey, LargeBinary
+from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Unicode
 from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.interface import implementer
@@ -69,7 +69,8 @@ class ListRequests:
     @property
     @dbconnection
     def count(self, store):
-        return store.query(_Request).filter_by(mailing_list=self.mailing_list).count()
+        return store.query(_Request).filter_by(
+            mailing_list=self.mailing_list).count()
 
     @dbconnection
     def count_of(self, store, request_type):
@@ -79,7 +80,8 @@ class ListRequests:
     @property
     @dbconnection
     def held_requests(self, store):
-        results = store.query(_Request).filter_by(mailing_list=self.mailing_list)
+        results = store.query(_Request).filter_by(
+            mailing_list=self.mailing_list)
         for request in results:
             yield request
 
@@ -148,13 +150,14 @@ class _Request(Model):
 
     id = Column(Integer, primary_key=True)# TODO: ???, default=AutoReload)
     key = Column(Unicode)
-    request_type = Column(Enum(enum=RequestType))
+    request_type = Column(Enum(RequestType))
     data_hash = Column(LargeBinary)
 
     mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
     mailing_list = relationship('MailingList')
 
     def __init__(self, key, request_type, mailing_list, data_hash):
+        super(_Request, self).__init__()
         self.key = key
         self.request_type = request_type
         self.mailing_list = mailing_list

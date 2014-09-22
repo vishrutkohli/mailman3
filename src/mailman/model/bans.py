@@ -72,8 +72,8 @@ class BanManager:
     @dbconnection
     def unban(self, store, email):
         """See `IBanManager`."""
-        ban = store.query(Ban).filter_by(email=email,
-                                         list_id=self._list_id).first()
+        ban = store.query(Ban).filter_by(
+            email=email, list_id=self._list_id).first()
         if ban is not None:
             store.delete(ban)
 

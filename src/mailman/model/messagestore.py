@@ -54,12 +54,13 @@ class MessageStore:
     def add(self, store, message):
         # Ensure that the message has the requisite headers.
         message_ids = message.get_all('message-id', [])
-        if len(message_ids) <> 1:
+        if len(message_ids) != 1:
             raise ValueError('Exactly one Message-ID header required')
         # Calculate and insert the X-Message-ID-Hash.
         message_id = message_ids[0]
         # Complain if the Message-ID already exists in the storage.
-        existing = store.query(Message).filter(Message.message_id == message_id).first()
+        existing = store.query(Message).filter(
+            Message.message_id == message_id).first()
         if existing is not None:
             raise ValueError(
                 'Message ID already exists in message store: {0}'.format(
@@ -80,9 +81,9 @@ class MessageStore:
         # providing a unique serial number, but to get this information, we
         # have to use a straight insert instead of relying on Elixir to create
         # the object.
-        row = Message(message_id=message_id,
-                      message_id_hash=hash32,
-                      path=relpath)
+        Message(message_id=message_id,
+                message_id_hash=hash32,
+                path=relpath)
         # Now calculate the full file system path.
         path = os.path.join(config.MESSAGES_DIR, relpath)
         # Write the file to the path, but catch the appropriate exception in
@@ -95,7 +96,7 @@ class MessageStore:
                     pickle.dump(message, fp, -1)
                     break
             except IOError as error:
-                if error.errno <> errno.ENOENT:
+                if error.errno != errno.ENOENT:
                     raise
             makedirs(os.path.dirname(path))
         return hash32
@@ -120,7 +121,8 @@ class MessageStore:
         # US-ASCII.
         if isinstance(message_id_hash, unicode):
             message_id_hash = message_id_hash.encode('ascii')
-        row = store.query(Message).filter_by(message_id_hash=message_id_hash).first()
+        row = store.query(Message).filter_by(
+            message_id_hash=message_id_hash).first()
         if row is None:
             return None
         return self._get_message(row)

@@ -25,7 +25,7 @@ __all__ = [
     ]
 
 
-from sqlalchemy import Column, Integer, Unicode,  Boolean
+from sqlalchemy import Boolean, Column, Integer, Unicode
 from zope.component import getUtility
 from zope.interface import implementer
 
@@ -49,8 +49,8 @@ class Preferences(Model):
     _preferred_language = Column('preferred_language', Unicode)
     receive_list_copy = Column(Boolean)
     receive_own_postings = Column(Boolean)
-    delivery_mode = Column(Enum(enum=DeliveryMode))
-    delivery_status = Column(Enum(enum=DeliveryStatus))
+    delivery_mode = Column(Enum(DeliveryMode))
+    delivery_status = Column(Enum(DeliveryStatus))
 
     def __repr__(self):
         return '<Preferences object at {0:#x}>'.format(id(self))

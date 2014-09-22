@@ -62,6 +62,7 @@ class DatabaseFactory:
 
 def _reset(self):
     """See `IDatabase`."""
+    # Avoid a circular import at module level.
     from mailman.database.model import Model
     self.store.rollback()
     self._pre_reset(self.store)

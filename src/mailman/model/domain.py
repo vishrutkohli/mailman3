@@ -26,8 +26,8 @@ __all__ = [
     ]
 
 
+from sqlalchemy import Column, Integer, Unicode
 from urlparse import urljoin, urlparse
-from sqlalchemy import Column, Unicode, Integer
 from zope.event import notify
 from zope.interface import implementer
 

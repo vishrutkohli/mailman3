@@ -19,28 +19,22 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'StormBaseDatabase',
+    'SABaseDatabase',
     ]
 
 
-import os
-import sys
 import logging
 
-from lazr.config import as_boolean
-from pkg_resources import resource_listdir, resource_string
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
 from zope.interface import implementer
 
 from mailman.config import config
 from mailman.interfaces.database import IDatabase
-from mailman.model.version import Version
 from mailman.utilities.string import expand
 
-log = logging.getLogger('mailman.config')
 
+log = logging.getLogger('mailman.config')
 NL = '\n'
 
 
@@ -53,17 +47,15 @@ class SABaseDatabase:
     """
     # Tag used to distinguish the database being used.  Override this in base
     # classes.
-
     TAG = ''
 
     def __init__(self):
         self.url = None
         self.store = None
-        self.transaction = None
 
     def begin(self):
         """See `IDatabase`."""
-        # SA does this for us.
+        # SQLAlchemy does this for us.
         pass
 
     def commit(self):
@@ -102,9 +94,13 @@ class SABaseDatabase:
         """
         pass
 
+    # XXX Abhilash removed teh _prepare() method.  Is that because SA takes
+    # care of this for us?  If so, then the comment below must be updated.
+    # For reference, the SQLite bug is marked "won't fix".
+
     def initialize(self, debug=None):
-        """See `IDatabase`"""
-        # Calculate the engine url
+        """See `IDatabase`."""
+        # Calculate the engine url.
         url = expand(config.database.url, config.paths)
         log.debug('Database url: %s', url)
         # XXX By design of SQLite, database file creation does not honor
@@ -126,6 +122,9 @@ class SABaseDatabase:
         session = sessionmaker(bind=self.engine)
         self.store = session()
         self.store.commit()
+
+    # XXX We should probably rename load_migrations() and perhaps get rid of
+    # load_sql().  The latter is never called any more.
 
     def load_migrations(self, until=None):
         """Load schema migrations.

@@ -50,7 +50,7 @@ class OneLastDigest(Model):
     address_id = Column(Integer, ForeignKey('address.id'))
     address = relationship('Address')
 
-    delivery_mode = Column(Enum(enum=DeliveryMode))
+    delivery_mode = Column(Enum(DeliveryMode))
 
     def __init__(self, mailing_list, address, delivery_mode):
         self.mailing_list = mailing_list

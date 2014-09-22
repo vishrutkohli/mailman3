@@ -24,7 +24,7 @@ __all__ = [
     'Member',
     ]
 
-from sqlalchemy import Integer, Unicode, ForeignKey, Column
+from sqlalchemy import Column, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.event import notify
@@ -56,9 +56,9 @@ class Member(Model):
 
     id = Column(Integer, primary_key=True)
     _member_id = Column(UUID)
-    role = Column(Enum(enum=MemberRole))
+    role = Column(Enum(MemberRole))
     list_id = Column(Unicode)
-    moderation_action = Column(Enum(enum=Action))
+    moderation_action = Column(Enum(Action))
 
     address_id = Column(Integer, ForeignKey('address.id'))
     _address = relationship('Address')

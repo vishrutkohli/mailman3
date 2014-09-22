@@ -26,8 +26,8 @@ __all__ = [
 
 
 from email.utils import formataddr
-from sqlalchemy import (Column, Integer, String, Unicode,
-                        ForeignKey, DateTime)
+from sqlalchemy import (
+    Column, DateTime, ForeignKey, Integer, Unicode)
 from sqlalchemy.orm import relationship, backref
 from zope.component import getUtility
 from zope.event import notify
@@ -56,10 +56,11 @@ class Address(Model):
     user_id = Column(Integer, ForeignKey('user.id'))
 
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
-    preferences = relationship('Preferences',
-                              backref=backref('Address', uselist=False))
+    preferences = relationship(
+        'Preferences', backref=backref('Address', uselist=False))
 
     def __init__(self, email, display_name):
+        super(Address, self).__init__()
         getUtility(IEmailValidator).validate(email)
         lower_case = email.lower()
         self.email = lower_case

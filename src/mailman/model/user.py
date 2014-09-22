@@ -25,7 +25,7 @@ __all__ = [
     ]
 
 from sqlalchemy import (
-    Column, Unicode, Integer, DateTime, ForeignKey, LargeBinary)
+    Column, DateTime, ForeignKey, Integer, LargeBinary, Unicode)
 from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
@@ -60,25 +60,24 @@ class User(Model):
     _user_id = Column(UUID)
     _created_on = Column(DateTime)
 
-    addresses = relationship('Address',
-                             backref='user',
-                             primaryjoin=
-                                 id==Address.user_id)
+    addresses = relationship(
+        'Address', backref='user',
+        primaryjoin=(id==Address.user_id))
 
-    _preferred_address_id = Column(Integer, ForeignKey('address.id',
-                                                       use_alter=True,
-                                                       name='_preferred_address'))
-    _preferred_address = relationship('Address',
-                                      primaryjoin=
-                                          _preferred_address_id==Address.id,
-                                      post_update=True)
+    _preferred_address_id = Column(
+        Integer,
+        ForeignKey('address.id', use_alter=True, name='_preferred_address'))
+    _preferred_address = relationship(
+        'Address', primaryjoin=(_preferred_address_id==Address.id),
+        post_update=True)
 
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
-    preferences = relationship('Preferences',
-                               backref=backref('user', uselist=False))
+    preferences = relationship(
+        'Preferences', backref=backref('user', uselist=False))
 
     @dbconnection
     def __init__(self, store, display_name=None, preferences=None):
+        super(User, self).__init__()
         self._created_on = date_factory.now()
         user_id = uid_factory.new_uid()
         assert store.query(User).filter_by(_user_id=user_id).count() == 0, (

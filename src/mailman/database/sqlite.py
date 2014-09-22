@@ -56,7 +56,7 @@ class SQLiteDatabase(SABaseDatabase):
         assert parts.scheme == 'sqlite', (
             'Database url mismatch (expected sqlite prefix): {0}'.format(url))
         path = os.path.normpath(parts.path)
-        fd = os.open(path, os.O_WRONLY |  os.O_NONBLOCK | os.O_CREAT, 0666)
+        fd = os.open(path, os.O_WRONLY |  os.O_NONBLOCK | os.O_CREAT, 0o666)
         # Ignore errors
         if fd > 0:
             os.close(fd)
@@ -72,7 +72,7 @@ def _cleanup(self, tempdir):
 def make_temporary(database):
     """Adapts by monkey patching an existing SQLite IDatabase."""
     tempdir = tempfile.mkdtemp()
-    url = 'sqlite:///'   + os.path.join(tempdir, 'mailman.db')
+    url = 'sqlite:///' + os.path.join(tempdir, 'mailman.db')
     with configuration('database', url=url):
         database.initialize()
     database._cleanup = types.MethodType(

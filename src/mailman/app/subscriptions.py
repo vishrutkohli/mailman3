@@ -88,8 +88,7 @@ class SubscriptionService:
     @dbconnection
     def get_member(self, store, member_id):
         """See `ISubscriptionService`."""
-        members = store.query(Member).filter(
-            Member._member_id == member_id)
+        members = store.query(Member).filter(Member._member_id == member_id)
         if members.count() == 0:
             return None
         else:
@@ -117,7 +116,7 @@ class SubscriptionService:
                 if address is None or user is None:
                     return []
                 query.append(or_(Member.address_id == address.id,
-                                Member.user_id == user.id))
+                                 Member.user_id == user.id))
             else:
                 # subscriber is a user id.
                 user = user_manager.get_user_by_id(subscriber)
@@ -126,7 +125,7 @@ class SubscriptionService:
                 if len(address_ids) == 0 or user is None:
                     return []
                 query.append(or_(Member.user_id == user.id,
-                                Member.address_id.in_(address_ids)))
+                                 Member.address_id.in_(address_ids)))
         # Calculate the rest of the query expression, which will get And'd
         # with the Or clause above (if there is one).
         if list_id is not None:

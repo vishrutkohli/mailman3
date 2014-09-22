@@ -29,8 +29,8 @@ __all__ = [
 from sqlalchemy import Column, Integer
 
 from mailman.database.model import Model
-from mailman.database.types import UUID
 from mailman.database.transaction import dbconnection
+from mailman.database.types import UUID
 
 
 
@@ -54,6 +54,7 @@ class UID(Model):
 
     @dbconnection
     def __init__(self, store, uid):
+        super(UID, self).__init__()
         self.uid = uid
         store.add(self)
 

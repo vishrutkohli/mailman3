@@ -24,9 +24,9 @@ __all__ = [
     'Version',
     ]
 
-from sqlalchemy import Column, Unicode, Integer
 
 from mailman.database.model import Model
+from sqlalchemy import Column, Integer, Unicode
 
 
 
@@ -43,5 +43,6 @@ class Version(Model):
     PRESERVE = True
 
     def __init__(self, component, version):
+        super(Version, self).__init__()
         self.component = component
         self.version = version

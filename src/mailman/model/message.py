@@ -24,7 +24,7 @@ __all__ = [
     'Message',
     ]
 
-from sqlalchemy import Column, Integer, Unicode, LargeBinary
+from sqlalchemy import Column, Integer, LargeBinary, Unicode
 from zope.interface import implementer
 
 from mailman.database.model import Model
@@ -47,6 +47,7 @@ class Message(Model):
 
     @dbconnection
     def __init__(self, store, message_id, message_id_hash, path):
+        super(Message, self).__init__()
         self.message_id = message_id
         self.message_id_hash = message_id_hash
         self.path = path

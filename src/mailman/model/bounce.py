@@ -27,7 +27,7 @@ __all__ = [
 
 
 
-from sqlalchemy import Column, Integer, Unicode, DateTime, Boolean
+from sqlalchemy import Boolean, Column, DateTime, Integer, Unicode
 from zope.interface import implementer
 
 from mailman.database.model import Model
@@ -50,7 +50,7 @@ class BounceEvent(Model):
     email = Column(Unicode)
     timestamp = Column(DateTime)
     message_id = Column(Unicode)
-    context = Column(Enum(enum=BounceContext))
+    context = Column(Enum(BounceContext))
     processed = Column(Boolean)
 
     def __init__(self, list_id, email, msg, context=None):
@@ -85,5 +85,5 @@ class BounceProcessor:
     @dbconnection
     def unprocessed(self, store):
         """See `IBounceProcessor`."""
-        for event in store.query(BounceEvent).filter_by(processed = False):
+        for event in store.query(BounceEvent).filter_by(processed=False):
             yield event

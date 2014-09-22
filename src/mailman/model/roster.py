@@ -161,7 +161,7 @@ class AdministratorRoster(AbstractRoster):
         return store.query(Member).filter(
             Member.list_id == self._mlist.list_id,
             or_(Member.role == MemberRole.owner,
-               Member.role == MemberRole.moderator))
+                Member.role == MemberRole.moderator))
 
     @dbconnection
     def get_member(self, store, address):
@@ -169,7 +169,7 @@ class AdministratorRoster(AbstractRoster):
         results = store.query(Member).filter(
                 Member.list_id == self._mlist.list_id,
                 or_(Member.role == MemberRole.moderator,
-                   Member.role == MemberRole.owner),
+                    Member.role == MemberRole.owner),
                 Address.email == address,
                 Member.address_id == Address.id)
         if results.count() == 0:
