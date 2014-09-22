@@ -80,6 +80,15 @@ class TestListManager(unittest.TestCase):
         self.assertTrue(isinstance(self._events[1], ListDeletedEvent))
         self.assertEqual(self._events[1].fqdn_listname, 'another@example.com')
 
+    def test_list_manager_list_ids(self):
+        # You can get all the list ids for all the existing mailing lists.
+        create_list('ant@example.com')
+        create_list('bee@example.com')
+        create_list('cat@example.com')
+        self.assertEqual(
+            sorted(getUtility(IListManager).list_ids),
+            ['ant.example.com', 'bee.example.com', 'cat.example.com'])
+
 
 
 class TestListLifecycleEvents(unittest.TestCase):

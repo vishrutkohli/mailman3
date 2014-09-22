@@ -117,6 +117,8 @@ class ListRequests:
             return result.key, None
         pendable = getUtility(IPendings).confirm(
             result.data_hash, expunge=False)
+        if pendable is None:
+            return None
         data = dict()
         # Unpickle any non-Unicode values.
         for key, value in pendable.items():

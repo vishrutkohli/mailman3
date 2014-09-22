@@ -39,7 +39,7 @@ PostgreSQL
 First, you need to configure PostgreSQL itself.  This `Ubuntu article`_ may
 help.  Let's say you create the `mailman` database in PostgreSQL via::
 
-    $ sudo -u postgres createdb -O myuser mailman
+    $ sudo -u postgres createdb -O $USER mailman
 
 You would then need to set both the `class` and `url` variables in
 `mailman.cfg` like so::
@@ -52,8 +52,8 @@ That should be it.
 
 Note that if you want to run the full test suite against PostgreSQL, you
 should make these changes to the ``mailman/testing/testing.cfg`` file (yes,
-eventually we'll make this easier), start up PostgreSQL and run ``bin/test``
-as normal.
+eventually we'll make this easier), start up PostgreSQL, enter the virtual
+environment, and run ``nose2 -vv`` as normal.
 
 If you have any problems, you may need to delete the database and re-create
 it::

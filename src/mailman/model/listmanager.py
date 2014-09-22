@@ -110,7 +110,8 @@ class ListManager:
         """See `IListManager`."""
         result_set = store.query(MailingList)
         for list_id in result_set.values(MailingList._list_id):
-            yield list_id
+            assert isinstance(list_id, tuple) and len(list_id) == 1
+            yield list_id[0]
 
     @property
     @dbconnection
