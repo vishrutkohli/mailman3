@@ -44,6 +44,8 @@ class ModelMeta:
         with contextlib.closing(config.db.engine.connect()) as connection:
             transaction = connection.begin()
             try:
+                # Delete all the tables in reverse foreign key dependency
+                # order.  http://tinyurl.com/on8dy6f
                 for table in reversed(Model.metadata.sorted_tables):
                     connection.execute(table.delete())
             except:

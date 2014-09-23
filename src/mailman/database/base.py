@@ -62,16 +62,6 @@ class SABaseDatabase:
         """See `IDatabase`."""
         self.store.rollback()
 
-    def _database_exists(self):
-        """Return True if the database exists and is initialized.
-
-        Return False when Mailman needs to create and initialize the
-        underlying database schema.
-
-        Base classes *must* override this.
-        """
-        raise NotImplementedError
-
     def _pre_reset(self, store):
         """Clean up method for testing.
 
@@ -124,7 +114,3 @@ class SABaseDatabase:
         session = sessionmaker(bind=self.engine)
         self.store = session()
         self.store.commit()
-
-    @staticmethod
-    def _make_temporary():
-        raise NotImplementedError
