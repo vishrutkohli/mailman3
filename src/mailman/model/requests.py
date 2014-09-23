@@ -105,6 +105,9 @@ class ListRequests:
             data_hash = token
         request = _Request(key, request_type, self.mailing_list, data_hash)
         store.add(request)
+        # XXX The caller needs a valid id immediately, so flush the changes
+        # now to the SA transaction context.  Otherwise .id would not be
+        # valid.  Hopefully this has no unintended side-effects.
         store.flush()
         return request.id
 
@@ -148,7 +151,7 @@ class _Request(Model):
 
     __tablename__ = 'request'
 
-    id = Column(Integer, primary_key=True)# TODO: ???, default=AutoReload)
+    id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     request_type = Column(Enum(RequestType))
     data_hash = Column(LargeBinary)
