@@ -26,23 +26,31 @@ __all__ = [
 
 
 import contextlib
-from operator import attrgetter
 
 from sqlalchemy.ext.declarative import declarative_base
 
 from mailman.config import config
 
-class ModelMeta(object):
-    """Do more magic on table classes."""
 
+class ModelMeta:
+    """The custom metaclass for all model base classes.
+
+    This is used in the test suite to quickly reset the database after each
+    test.  It works by iterating over all the tables, deleting each.  The test
+    suite will then recreate the tables before each test.
+    """
     @staticmethod
     def _reset(db):
-        meta = Model.metadata
-        engine = config.db.engine
-        with contextlib.closing(engine.connect()) as con:
-            trans = con.begin()
-            for table in reversed(meta.sorted_tables):
-                con.execute(table.delete())
-            trans.commit()
+        with contextlib.closing(config.db.engine.connect()) as connection:
+            transaction = connection.begin()
+            try:
+                for table in reversed(Model.metadata.sorted_tables):
+                    connection.execute(table.delete())
+            except:
+                transaction.abort()
+                raise
+            else:
+                transaction.commit()
+
 
 Model = declarative_base(cls=ModelMeta)

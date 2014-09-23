@@ -25,8 +25,8 @@ __all__ = [
     ]
 
 
+from sqlalchemy import Column, Integer, Unicode
 from zope.interface import implementer
-from sqlalchemy import Column, Unicode, Integer
 
 from mailman.database import Model
 from mailman.interfaces import ILanguage

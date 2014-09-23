@@ -29,11 +29,11 @@ __all__ = [
 
 import unittest
 
-from sqlalchemy.orm import sessionmaker
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message
+from mailman.config import config
 from mailman.interfaces.listmanager import (
     IListManager, ListCreatedEvent, ListCreatingEvent, ListDeletedEvent,
     ListDeletingEvent)
@@ -148,9 +148,8 @@ Message-ID: <argon>
         for name in filter_names:
             setattr(self._ant, name, ['test-filter-1', 'test-filter-2'])
         getUtility(IListManager).delete(self._ant)
-        Session = sessionmaker()
-        store = Session.object_session(self._ant)
-        filters = store.query(ContentFilter).filter_by(mailing_list = self._ant)
+        filters = config.db.store.query(ContentFilter).filter_by(
+            mailing_list = self._ant)
         self.assertEqual(filters.count(), 0)
 
 

@@ -32,7 +32,7 @@ import hashlib
 
 from lazr.config import as_timedelta
 from sqlalchemy import (
-    Column, Integer, Unicode, ForeignKey, DateTime, LargeBinary)
+    Column, DateTime, ForeignKey, Integer, LargeBinary, Unicode)
 from sqlalchemy.orm import relationship
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
@@ -53,14 +53,14 @@ class PendedKeyValue(Model):
 
     __tablename__ = 'pendedkeyvalue'
 
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-
     id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     value = Column(Unicode)
     pended_id = Column(Integer, ForeignKey('pended.id'))
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
 
 
 
@@ -70,14 +70,16 @@ class Pended(Model):
 
     __tablename__ = 'pended'
 
-    def __init__(self, token, expiration_date):
-        self.token = token
-        self.expiration_date = expiration_date
-
     id = Column(Integer, primary_key=True)
     token = Column(LargeBinary) # TODO : was RawStr()
     expiration_date = Column(DateTime)
     key_values = relationship('PendedKeyValue')
+
+    def __init__(self, token, expiration_date):
+        super(Pended, self).__init__()
+        self.token = token
+        self.expiration_date = expiration_date
+
 
 
 @implementer(IPendable)
@@ -118,10 +120,10 @@ class Pendings:
             token=token,
             expiration_date=now() + lifetime)
         for key, value in pendable.items():
-            if isinstance(key, str):
-                key = unicode(key, 'utf-8')
-            if isinstance(value, str):
-                value = unicode(value, 'utf-8')
+            if isinstance(key, bytes):
+                key = key.decode('utf-8')
+            if isinstance(value, bytes):
+                value = value.decode('utf-8')
             elif type(value) is int:
                 value = '__builtin__.int\1%s' % value
             elif type(value) is float:
@@ -150,8 +152,9 @@ class Pendings:
         pendable = UnpendedPendable()
         # Find all PendedKeyValue entries that are associated with the pending
         # object's ID.  Watch out for type conversions.
-        for keyvalue in store.query(PendedKeyValue).filter(
-                                   PendedKeyValue.pended_id == pending.id):
+        entries = store.query(PendedKeyValue).filter(
+            PendedKeyValue.pended_id == pending.id)
+        for keyvalue in entries:
             if keyvalue.value is not None and '\1' in keyvalue.value:
                 type_name, value = keyvalue.value.split('\1', 1)
                 pendable[keyvalue.key] = call_name(type_name, value)
@@ -171,7 +174,7 @@ class Pendings:
                 # Find all PendedKeyValue entries that are associated with the
                 # pending object's ID.
                 q = store.query(PendedKeyValue).filter(
-                               PendedKeyValue.pended_id == pending.id)
+                    PendedKeyValue.pended_id == pending.id)
                 for keyvalue in q:
                     store.delete(keyvalue)
                 store.delete(pending)

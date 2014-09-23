@@ -25,7 +25,7 @@ __all__ = [
     ]
 
 
-from sqlalchemy import Column, Integer, Unicode, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship
 from zope.interface import implementer
 
@@ -46,7 +46,7 @@ class ContentFilter(Model):
     mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
     mailing_list = relationship('MailingList')
 
-    filter_type = Column(Enum(enum=FilterType))
+    filter_type = Column(Enum(FilterType))
     filter_pattern = Column(Unicode)
 
     def __init__(self, mailing_list, filter_pattern, filter_type):

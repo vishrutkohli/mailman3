@@ -55,7 +55,7 @@ class TestMasterLock(unittest.TestCase):
         lock = master.acquire_lock_1(False, self.lock_file)
         is_locked = lock.is_locked
         lock.unlock()
-        self.failUnless(is_locked)
+        self.assertTrue(is_locked)
 
     def test_master_state(self):
         my_lock = Lock(self.lock_file)

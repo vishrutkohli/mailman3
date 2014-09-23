@@ -186,7 +186,6 @@ NAME_MAPPINGS = dict(
     filter_mime_types='filter_types',
     generic_nonmember_action='default_nonmember_action',
     include_list_post_header='allow_list_posts',
-    last_post_time='last_post_at',
     member_moderation_action='default_member_action',
     mod_password='moderator_password',
     news_moderation='newsgroup_moderation',
@@ -198,13 +197,13 @@ NAME_MAPPINGS = dict(
     send_welcome_msg='send_welcome_message',
     )
 
-# Datetime Fields that need a type conversion to python datetime
-# object for SQLite database.
-DATETIME_OBJECTS = [
+# These DateTime fields of the mailinglist table need a type conversion to
+# Python datetime object for SQLite databases.
+DATETIME_COLUMNS = [
     'created_at',
     'digest_last_sent_at',
     'last_post_time',
-]
+    ]
 
 EXCLUDES = set((
     'digest_members',
@@ -225,8 +224,8 @@ def import_config_pck(mlist, config_dict):
         # Some attributes must not be directly imported.
         if key in EXCLUDES:
             continue
-        # Created at must not be set, it needs a type conversion
-        if key in DATETIME_OBJECTS:
+        # These objects need explicit type conversions.
+        if key in DATETIME_COLUMNS:
             continue
         # Some attributes from Mailman 2 were renamed in Mailman 3.
         key = NAME_MAPPINGS.get(key, key)
@@ -249,7 +248,7 @@ def import_config_pck(mlist, config_dict):
             except (TypeError, KeyError):
                 print('Type conversion error for key "{}": {}'.format(
                     key, value), file=sys.stderr)
-    for key in DATETIME_OBJECTS:
+    for key in DATETIME_COLUMNS:
         try:
             value = datetime.datetime.utcfromtimestamp(config_dict[key])
         except KeyError:
