@@ -40,20 +40,6 @@
     factory="mailman.model.requests.ListRequests"
     />
 
-  <adapter
-    for="mailman.interfaces.database.IDatabase"
-    provides="mailman.interfaces.database.ITemporaryDatabase"
-    factory="mailman.database.sqlite.make_temporary"
-    name="sqlite"
-    />
-
-  <adapter
-    for="mailman.interfaces.database.IDatabase"
-    provides="mailman.interfaces.database.ITemporaryDatabase"
-    factory="mailman.database.postgresql.make_temporary"
-    name="postgres"
-    />
-
   <utility
     provides="mailman.interfaces.bounce.IBounceProcessor"
     factory="mailman.model.bounce.BounceProcessor"
@@ -69,12 +55,6 @@
     provides="mailman.interfaces.database.IDatabaseFactory"
     factory="mailman.database.factory.DatabaseTestingFactory"
     name="testing"
-    />
-
-  <utility
-    provides="mailman.interfaces.database.IDatabaseFactory"
-    factory="mailman.database.factory.DatabaseTemporaryFactory"
-    name="temporary"
     />
 
   <utility

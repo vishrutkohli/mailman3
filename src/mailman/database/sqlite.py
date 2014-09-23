@@ -42,8 +42,6 @@ from mailman.testing.helpers import configuration
 class SQLiteDatabase(SABaseDatabase):
     """Database class for SQLite."""
 
-    TAG = 'sqlite'
-
     def _database_exists(self, store):
         """See `BaseDatabase`."""
         table_query = 'select tbl_name from sqlite_master;'

@@ -40,8 +40,6 @@ from mailman.testing.helpers import configuration
 class PostgreSQLDatabase(SABaseDatabase):
     """Database class for PostgreSQL."""
 
-    TAG = 'postgres'
-
     def _database_exists(self, store):
         """See `BaseDatabase`."""
         table_query = ('SELECT table_name FROM information_schema.tables '

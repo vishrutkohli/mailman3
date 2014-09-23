@@ -45,10 +45,6 @@ class SABaseDatabase:
 
     Use this as a base class for your DB-Specific derived classes.
     """
-    # Tag used to distinguish the database being used.  Override this in base
-    # classes.
-    TAG = ''
-
     def __init__(self):
         self.url = None
         self.store = None
@@ -103,10 +99,6 @@ class SABaseDatabase:
         """
         pass
 
-    # XXX Abhilash removed teh _prepare() method.  Is that because SA takes
-    # care of this for us?  If so, then the comment below must be updated.
-    # For reference, the SQLite bug is marked "won't fix".
-
     def initialize(self, debug=None):
         """See `IDatabase`."""
         # Calculate the engine url.
@@ -132,36 +124,6 @@ class SABaseDatabase:
         session = sessionmaker(bind=self.engine)
         self.store = session()
         self.store.commit()
-
-    # XXX We should probably rename load_migrations() and perhaps get rid of
-    # load_sql().  The latter is never called any more.
-
-    def load_migrations(self, until=None):
-        """Load schema migrations.
-
-        :param until: Load only the migrations up to the specified timestamp.
-            With default value of None, load all migrations.
-        :type until: string
-        """
-        from mailman.database.model import Model
-        Model.metadata.create_all(self.engine)
-
-    def load_sql(self, store, sql):
-        """Load the given SQL into the store.
-
-        :param store: The Storm store to load the schema into.
-        :type store: storm.locals.Store`
-        :param sql: The possibly multi-line SQL to load.
-        :type sql: string
-        """
-        # Discard all blank and comment lines.
-        lines = (line for line in sql.splitlines()
-                 if line.strip() != '' and line.strip()[:2] != '--')
-        sql = NL.join(lines)
-        for statement in sql.split(';'):
-            if statement.strip() != '':
-                store.execute(statement + ';')
-
 
     @staticmethod
     def _make_temporary():
