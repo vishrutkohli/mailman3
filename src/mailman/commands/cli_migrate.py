@@ -39,13 +39,20 @@ class Migrate:
 
     name = 'migrate'
 
-    def add(self, parser, comman_parser):
+    def add(self, parser, command_parser):
         """See `ICLISubCommand`."""
+        command_parser.add_argument(
+            '-a', '--autogenerate',
+            action="store_true", help=_("""\
+            Autogenerate the migration script using alembic"""))
         pass
 
     def process(self, args):
         alembic_cfg= Config()
         alembic_cfg.set_main_option(
             "script_location", config.alembic['script_location'])
-        command.upgrade(alembic_cfg, "head")
-        print("Updated the database schema.")
+        if args.autogenerate:
+            command.revision(alembic_cfg, autogenerate=True)
+        else:
+            command.upgrade(alembic_cfg, "head")
+            print("Updated the database schema.")

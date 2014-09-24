@@ -20,7 +20,6 @@ from __future__ import with_statement
 from alembic import context
 from alembic.config import Config
 from sqlalchemy import create_engine, pool
-from logging.config import fileConfig
 
 from mailman.config import config
 from mailman.utilities.string import expand
@@ -58,9 +57,9 @@ def run_migrations_online():
     alembic_cfg= Config()
     alembic_cfg.set_main_option(
         "script_location", config.alembic['script_location'])
-
     url = expand(config.database.url, config.paths)
     engine = create_engine(url)
+
     connection = engine.connect()
     context.configure(
         connection=connection,
