@@ -190,6 +190,10 @@ class ConfigLayer(MockAndMonkeyLayer):
     @classmethod
     def tearDown(cls):
         assert cls.var_dir is not None, 'Layer not set up'
+        # Reset the test database after the tests are done so that there
+        # is no data incase the tests are rerun with a database layer like
+        # mysql or postgresql which are not deleted in teardown.
+        reset_the_world()
         config.pop('test config')
         shutil.rmtree(cls.var_dir)
         cls.var_dir = None
