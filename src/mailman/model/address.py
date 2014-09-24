@@ -57,7 +57,7 @@ class Address(Model):
 
     preferences_id = Column(Integer, ForeignKey('preferences.id'))
     preferences = relationship(
-        'Preferences', backref=backref('Address', uselist=False))
+        'Preferences', backref=backref('address', uselist=False))
 
     def __init__(self, email, display_name):
         super(Address, self).__init__()

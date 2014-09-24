@@ -29,8 +29,7 @@ __all__ = [
 import uuid
 
 from sqlalchemy import Integer
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.types import TypeDecorator, BINARY, CHAR
+from sqlalchemy.types import TypeDecorator, CHAR
 
 
 
@@ -59,45 +58,34 @@ class Enum(TypeDecorator):
 
 
 class UUID(TypeDecorator):
-    """Handle UUIds."""
+    """Platform-independent GUID type.
 
-    impl = BINARY(16)
-    python_type = uuid.UUID
+    Uses Postgresql's UUID type, otherwise uses
+    CHAR(32), storing as stringified hex values.
 
-    def __init__(self, binary=True, native=True):
-        self.binary = binary
-        self.native = native
+    """
+    impl = CHAR
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql' and self.native:
-            # Use the native UUID type.
-            return dialect.type_descriptor(postgresql.UUID())
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(UUID())
         else:
-            # Fallback to either a BINARY or a CHAR.
-            kind = self.impl if self.binary else CHAR(32)
-            return dialect.type_descriptor(kind)
-
-    @staticmethod
-    def _coerce(value):
-        if value and not isinstance(value, uuid.UUID):
-            try:
-                value = uuid.UUID(value)
-            except (TypeError, ValueError):
-                value = uuid.UUID(bytes=value)
-        return value
+            return dialect.type_descriptor(CHAR(32))
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-        if not isinstance(value, uuid.UUID):
-            value = self._coerce(value)
-        if self.native and dialect.name == 'postgresql':
+        elif dialect.name == 'postgresql':
             return str(value)
-        return value.bytes if self.binary else value.hex
+        else:
+            if not isinstance(value, uuid.UUID):
+                return "%.32x" % uuid.UUID(value)
+            else:
+                # hexstring
+                return "%.32x" % value
 
     def process_result_value(self, value, dialect):
         if value is None:
             return value
-        if self.native and dialect.name == 'postgresql':
+        else:
             return uuid.UUID(value)
-        return uuid.UUID(bytes=value) if self.binary else uuid.UUID(value)

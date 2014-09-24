@@ -22,7 +22,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'DatabaseFactory',
-    'DatabaseTemporaryFactory',
     'DatabaseTestingFactory',
     ]
 
@@ -31,13 +30,12 @@ import os
 import types
 
 from flufl.lock import Lock
-from zope.component import getAdapter
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
 from mailman.config import config
-from mailman.interfaces.database import (
-    IDatabase, IDatabaseFactory, ITemporaryDatabase)
+from mailman.database.model import Model
+from mailman.interfaces.database import IDatabase, IDatabaseFactory
 from mailman.utilities.modules import call_name
 
 
@@ -54,7 +52,7 @@ class DatabaseFactory:
             database = call_name(database_class)
             verifyObject(IDatabase, database)
             database.initialize()
-            database.load_migrations()
+            Model.metadata.create_all(database.engine)
             database.commit()
             return database
 
@@ -82,24 +80,8 @@ class DatabaseTestingFactory:
         database = call_name(database_class)
         verifyObject(IDatabase, database)
         database.initialize()
-        database.load_migrations()
+        Model.metadata.create_all(database.engine)
         database.commit()
         # Make _reset() a bound method of the database instance.
         database._reset = types.MethodType(_reset, database)
         return database
-
-
-
-@implementer(IDatabaseFactory)
-class DatabaseTemporaryFactory:
-    """Create a temporary database for some of the migration tests."""
-
-    @staticmethod
-    def create():
-        """See `IDatabaseFactory`."""
-        database_class_name = config.database['class']
-        database = call_name(database_class_name)
-        verifyObject(IDatabase, database)
-        adapted_database = getAdapter(
-            database, ITemporaryDatabase, database.TAG)
-        return adapted_database

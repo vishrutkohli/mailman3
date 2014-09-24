@@ -24,7 +24,6 @@ __all__ = [
     'DatabaseError',
     'IDatabase',
     'IDatabaseFactory',
-    'ITemporaryDatabase',
     ]
 
 
@@ -62,11 +61,6 @@ class IDatabase(Interface):
 
     store = Attribute(
         """The underlying database object on which you can do queries.""")
-
-
-
-class ITemporaryDatabase(Interface):
-    """Marker interface for test suite adaptation."""
 
 
 
