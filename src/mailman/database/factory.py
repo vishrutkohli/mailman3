@@ -87,7 +87,6 @@ class DatabaseTestingFactory:
         verifyObject(IDatabase, database)
         database.initialize()
         Model.metadata.create_all(database.engine)
-        command.stamp(alembic_cfg, "head")
         database.commit()
         # Make _reset() a bound method of the database instance.
         database._reset = types.MethodType(_reset, database)
