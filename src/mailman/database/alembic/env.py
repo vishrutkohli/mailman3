@@ -18,30 +18,15 @@
 from __future__ import with_statement
 
 from alembic import context
+from alembic.config import Config
 from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
 from mailman.config import config
 from mailman.utilities.string import expand
+from mailman.database.model import Model
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
-alembic_config = context.config
-
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(alembic_config.config_file_name)
-
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+target_metadata = Model.metadata
 
 
 def run_migrations_offline():
@@ -70,6 +55,10 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    alembic_cfg= Config()
+    alembic_cfg.set_main_option(
+        "script_location", config.alembic['script_location'])
+
     url = expand(config.database.url, config.paths)
     engine = create_engine(url)
     connection = engine.connect()
