@@ -57,6 +57,7 @@ def run_migrations_online():
     alembic_cfg= Config()
     alembic_cfg.set_main_option(
         "script_location", config.alembic['script_location'])
+    alembic_cfg.set_section_option('logger_alembic' ,'level' , 'ERROR')
     url = expand(config.database.url, config.paths)
     engine = create_engine(url)
 

@@ -25,6 +25,8 @@ __all__ = [
 
 import logging
 
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from zope.interface import implementer
@@ -88,6 +90,18 @@ class SABaseDatabase:
         file first so that it has the proper file modes.
         """
         pass
+
+    def stamp(self, debug=False):
+        """Stamp the database with the latest alembic version.
+        """
+        # Newly created database don't need to migrations from alembic, since
+        # `create_all`` ceates the latest schema. SO patch the database with
+        # the latest alembic version to add a entry in alembic_version table.
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option(
+            "script_location", config.alembic['script_location'])
+        command.stamp(alembic_cfg, "head")
+
 
     def initialize(self, debug=None):
         """See `IDatabase`."""
