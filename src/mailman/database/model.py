@@ -49,7 +49,7 @@ class ModelMeta:
                 for table in reversed(Model.metadata.sorted_tables):
                     connection.execute(table.delete())
             except:
-                transaction.abort()
+                transaction.rollback()
                 raise
             else:
                 transaction.commit()

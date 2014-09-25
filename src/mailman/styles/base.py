@@ -67,9 +67,9 @@ class Identity:
         # Set this to Never if the list's preferred language uses us-ascii,
         # otherwise set it to As Needed.
         if mlist.preferred_language.charset == 'us-ascii':
-            mlist.encode_ascii_prefixes = 0
+            mlist.encode_ascii_prefixes = False
         else:
-            mlist.encode_ascii_prefixes = 2
+            mlist.encode_ascii_prefixes = True
 
 
 

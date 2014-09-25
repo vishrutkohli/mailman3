@@ -30,6 +30,7 @@ import uuid
 
 from sqlalchemy import Integer
 from sqlalchemy.types import TypeDecorator, CHAR
+from sqlalchemy.dialects import postgresql
 
 
 
@@ -68,7 +69,7 @@ class UUID(TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == 'postgresql':
-            return dialect.type_descriptor(UUID())
+            return dialect.type_descriptor(postgresql.UUID())
         else:
             return dialect.type_descriptor(CHAR(32))
 
