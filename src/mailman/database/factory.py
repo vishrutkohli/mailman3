@@ -29,7 +29,11 @@ __all__ = [
 import os
 import types
 
+from alembic import command
+from alembic.config import Config
+
 from flufl.lock import Lock
+from pkg_resources import resource_filename
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
@@ -53,6 +57,9 @@ class DatabaseFactory:
             verifyObject(IDatabase, database)
             database.initialize()
             Model.metadata.create_all(database.engine)
+            alembic_cfg = Config(
+                resource_filename('mailman.config', 'alembic.ini'))
+            command.stamp(alembic_cfg, 'head')
             database.commit()
             return database
 

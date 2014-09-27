@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'call_name',
+    'expand_path',
     'find_components',
     'find_name',
     'scan_module',
@@ -31,7 +32,7 @@ __all__ = [
 import os
 import sys
 
-from pkg_resources import resource_listdir
+from pkg_resources import resource_filename, resource_listdir
 
 
 
@@ -110,3 +111,15 @@ def find_components(package, interface):
             continue
         for component in scan_module(module, interface):
             yield component
+
+
+
+def expand_path(url):
+    """Expand a python: path, returning the absolute file system path."""
+    # Is the context coming from a file system or Python path?
+    if url.startswith('python:'):
+        resource_path = url[7:]
+        package, dot, resource = resource_path.rpartition('.')
+        return resource_filename(package, resource + '.cfg')
+    else:
+        return url
