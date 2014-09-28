@@ -71,7 +71,7 @@ class Pended(Model):
     __tablename__ = 'pended'
 
     id = Column(Integer, primary_key=True)
-    token = Column(LargeBinary) # TODO : was RawStr()
+    token = Column(LargeBinary)
     expiration_date = Column(DateTime)
     key_values = relationship('PendedKeyValue')
 

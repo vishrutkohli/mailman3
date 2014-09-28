@@ -172,6 +172,9 @@ TYPES = dict(
     personalize=Personalization,
     preferred_language=check_language_code,
     reply_goes_to_list=ReplyToMunging,
+    allow_list_posts=bool,
+    include_rfc2369_headers=bool,
+    nntp_prefix_subject_too=bool,
     )
 
 

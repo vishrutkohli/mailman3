@@ -26,7 +26,7 @@ __all__ = [
 
 
 from mailman.database.base import SABaseDatabase
-from operator import attrgetter
+from mailman.database.model import Model
 
 
 
@@ -40,15 +40,13 @@ class PostgreSQLDatabase(SABaseDatabase):
         restart from zero for new tests.
         """
         super(PostgreSQLDatabase, self)._post_reset(store)
-        from mailman.database.model import ModelMeta
-        classes = sorted(ModelMeta._class_registry,
-                         key=attrgetter('__storm_table__'))
+        tables = reversed(Model.metadata.sorted_tables)
         # Recipe adapted from
         # http://stackoverflow.com/questions/544791/
         # django-postgresql-how-to-reset-primary-key
-        for model_class in classes:
+        for table in tables:
             store.execute("""\
                 SELECT setval('"{0}_id_seq"', coalesce(max("id"), 1),
                               max("id") IS NOT null)
                        FROM "{0}";
-                """.format(model_class.__storm_table__))
+                """.format(table))

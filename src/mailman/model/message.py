@@ -40,10 +40,10 @@ class Message(Model):
     __tablename__ = 'message'
 
     id = Column(Integer, primary_key=True)
-    message_id = Column(Unicode)
-    message_id_hash = Column(Unicode)
-    path = Column(LargeBinary) # TODO : was RawStr()
     # This is a Messge-ID field representation, not a database row id.
+    message_id = Column(Unicode)
+    message_id_hash = Column(LargeBinary)
+    path = Column(LargeBinary)
 
     @dbconnection
     def __init__(self, store, message_id, message_id_hash, path):
