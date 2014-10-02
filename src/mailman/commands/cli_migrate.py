@@ -48,7 +48,7 @@ class Migrate:
             '-a', '--autogenerate',
             action='store_true', help=_("""\
             Autogenerate the migration script using Alembic."""))
-        command.parser_add_argument(
+        command_parser.add_argument(
             '-q', '--quiet',
             action='store_true', default=False,
             help=('Produce less output.'))

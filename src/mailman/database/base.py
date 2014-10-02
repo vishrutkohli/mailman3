@@ -100,7 +100,7 @@ class SABaseDatabase:
         # alembic_version table.
         alembic_cfg = Config()
         alembic_cfg.set_main_option(
-            'script_location', expand_path(config.database['alembic_scripts']))
+            'script_location', config.database['alembic_scripts'])
         command.stamp(alembic_cfg, 'head')
 
 
