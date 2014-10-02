@@ -33,7 +33,7 @@ import sys
 from ConfigParser import SafeConfigParser
 from flufl.lock import Lock
 from lazr.config import ConfigSchema, as_boolean
-from pkg_resources import resource_filename, resource_stream, resource_string
+from pkg_resources import resource_stream, resource_string
 from string import Template
 from zope.component import getUtility
 from zope.event import notify
@@ -46,7 +46,7 @@ from mailman.interfaces.configuration import (
     ConfigurationUpdatedEvent, IConfiguration, MissingConfigurationFileError)
 from mailman.interfaces.languages import ILanguageManager
 from mailman.utilities.filesystem import makedirs
-from mailman.utilities.modules import call_name
+from mailman.utilities.modules import call_name, expand_path
 
 
 SPACE = ' '
@@ -306,12 +306,7 @@ def external_configuration(path):
     :return: A `ConfigParser` instance.
     """
     # Is the context coming from a file system or Python path?
-    if path.startswith('python:'):
-        resource_path = path[7:]
-        package, dot, resource = resource_path.rpartition('.')
-        cfg_path = resource_filename(package, resource + '.cfg')
-    else:
-        cfg_path = path
+    cfg_path = expand_path(path)
     parser = SafeConfigParser()
     files = parser.read(cfg_path)
     if files != [cfg_path]:

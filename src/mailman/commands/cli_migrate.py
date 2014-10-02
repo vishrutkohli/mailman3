@@ -22,7 +22,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Migrate',
-]
+    ]
+
 
 from alembic import command
 from alembic.config import Config
@@ -31,11 +32,13 @@ from zope.interface import implementer
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
+from mailman.utilities.modules import expand_path
+
 
 
 @implementer(ICLISubCommand)
 class Migrate:
-    """Migrate the mailman database to the schema."""
+    """Migrate the Mailman database to the latest schema."""
 
     name = 'migrate'
 
@@ -43,16 +46,20 @@ class Migrate:
         """See `ICLISubCommand`."""
         command_parser.add_argument(
             '-a', '--autogenerate',
-            action="store_true", help=_("""\
-            Autogenerate the migration script using alembic"""))
-        pass
+            action='store_true', help=_("""\
+            Autogenerate the migration script using Alembic."""))
+        command_parser.add_argument(
+            '-q', '--quiet',
+            action='store_true', default=False,
+            help=('Produce less output.'))
 
     def process(self, args):
-        alembic_cfg= Config()
+        alembic_cfg = Config()
         alembic_cfg.set_main_option(
-            "script_location", config.alembic['script_location'])
+            'script_location', expand_path(config.database['alembic_scripts']))
         if args.autogenerate:
             command.revision(alembic_cfg, autogenerate=True)
         else:
-            command.upgrade(alembic_cfg, "head")
-            print("Updated the database schema.")
+            command.upgrade(alembic_cfg, 'head')
+            if not args.quiet:
+                print('Updated the database schema.')

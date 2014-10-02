@@ -28,8 +28,9 @@ header, you will get an exception.
 However, if the message has a ``Message-ID`` header, it can be stored.
 
     >>> msg['Message-ID'] = '<87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>'
-    >>> message_store.add(msg)
-	'AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35'
+    >>> x_message_id_hash = message_store.add(msg)
+    >>> print(x_message_id_hash)
+    AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35
     >>> print(msg.as_string())
     Subject: An important message
     Message-ID: <87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>

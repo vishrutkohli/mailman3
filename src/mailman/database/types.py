@@ -29,8 +29,8 @@ __all__ = [
 import uuid
 
 from sqlalchemy import Integer
-from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.types import TypeDecorator, CHAR
 
 
 
