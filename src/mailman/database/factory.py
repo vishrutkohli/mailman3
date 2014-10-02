@@ -109,7 +109,7 @@ class SchemaManager:
                 # Run migrations to remove the Storm-specific table and
                 # upgrade to SQLAlchemy & Alembic
                 command.upgrade(self.alembic_cfg, "head")
-        elif db_rev != head_rev:
+        elif current_rev != head_rev:
             command.upgrade(self.alembic_cfg, "head")
         return head_rev
 
