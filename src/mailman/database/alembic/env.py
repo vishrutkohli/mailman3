@@ -41,7 +41,8 @@ def run_migrations_offline():
     script output.
 
     """
-    initialize.initialize_1(context.config.config_file_name)
+    if not config.initialized:
+        initialize.initialize_1(context.config.config_file_name)
     alembic_cfg= Config()
     alembic_cfg.set_main_option(
         "script_location", config.alembic['script_location'])
@@ -59,7 +60,8 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    initialize.initialize_1(context.config.config_file_name)
+    if not config.initialized:
+        initialize.initialize_1(context.config.config_file_name)
     alembic_cfg= Config()
     alembic_cfg.set_main_option(
         "script_location", config.alembic['script_location'])
