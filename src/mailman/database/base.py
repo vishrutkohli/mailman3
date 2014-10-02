@@ -34,7 +34,6 @@ from zope.interface import implementer
 from mailman.config import config
 from mailman.interfaces.database import IDatabase
 from mailman.utilities.string import expand
-from mailman.utilities.modules import expand_path
 
 
 log = logging.getLogger('mailman.config')
