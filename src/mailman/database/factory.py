@@ -29,7 +29,12 @@ __all__ = [
 import os
 import types
 
+from alembic import command
+from alembic.config import Config as AlembicConfig
+from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from flufl.lock import Lock
+from sqlalchemy import MetaData
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
@@ -52,10 +57,61 @@ class DatabaseFactory:
             database = call_name(database_class)
             verifyObject(IDatabase, database)
             database.initialize()
-            Model.metadata.create_all(database.engine)
-            database.stamp()
+            schema_mgr = SchemaManager(database)
+            schema_mgr.setup_db()
             database.commit()
             return database
+
+
+
+class SchemaManager:
+
+    LAST_STORM_SCHEMA_VERSION = '20130406000000'
+
+    def __init__(self, database):
+        self.database = database
+        self.alembic_cfg = AlembicConfig()
+        self.alembic_cfg.set_main_option(
+            "script_location", config.alembic['script_location'])
+        self.script = ScriptDirectory.from_config(self.alembic_cfg)
+
+    def get_storm_schema_version(self):
+        md = MetaData()
+        md.reflect(bind=self.database.engine)
+        if "version" not in md.tables:
+            return None
+        Version = md.tables["version"]
+        last_version = self.database.store.query(Version.c.version).filter(
+                Version.c.component == "schema"
+                ).order_by(Version.c.version.desc()).first()
+        return last_version
+
+    def setup_db(self):
+        context = MigrationContext.configure(self.database.store.connection())
+        current_rev = context.get_current_revision()
+        head_rev = self.script.get_current_head()
+        if current_rev == head_rev:
+            return head_rev # already at the latest revision, nothing to do
+        if current_rev == None:
+            # no alembic information
+            storm_version = self.get_storm_schema_version()
+            if storm_version is None:
+                # initial DB creation
+                Model.metadata.create_all(self.database.engine)
+                command.stamp(self.alembic_cfg, "head")
+            else:
+                # DB from a previous version managed by Storm
+                if storm_version.version < self.LAST_STORM_SCHEMA_VERSION:
+                    raise RuntimeError(
+                            "Upgrading while skipping beta version is "
+                            "unsupported, please install the previous "
+                            "Mailman beta release")
+                # Run migrations to remove the Storm-specific table and
+                # upgrade to SQLAlchemy & Alembic
+                command.upgrade(self.alembic_cfg, "head")
+        elif db_rev != head_rev:
+            command.upgrade(self.alembic_cfg, "head")
+        return head_rev
 
 
 
