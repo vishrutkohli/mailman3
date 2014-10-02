@@ -13,3 +13,5 @@ prune eggs
 prune parts
 include MANIFEST.in
 include src/mailman/testing/config.pck
+include src/mailman/databases/alembic/scripts.py.mako
+include src/mailman/databases/alembic/versions/*.py
