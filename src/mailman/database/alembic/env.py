@@ -21,6 +21,7 @@ from alembic import context
 from alembic.config import Config
 from sqlalchemy import create_engine, pool
 
+from mailman.core import initialize
 from mailman.config import config
 from mailman.utilities.string import expand
 from mailman.database.model import Model
@@ -40,6 +41,10 @@ def run_migrations_offline():
     script output.
 
     """
+    initialize.initialize_1(context.config.config_file_name)
+    alembic_cfg= Config()
+    alembic_cfg.set_main_option(
+        "script_location", config.alembic['script_location'])
     url = expand(config.database.url, config.paths)
     context.configure(url=url, target_metadata=target_metadata)
 
@@ -54,6 +59,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    initialize.initialize_1(context.config.config_file_name)
     alembic_cfg= Config()
     alembic_cfg.set_main_option(
         "script_location", config.alembic['script_location'])
