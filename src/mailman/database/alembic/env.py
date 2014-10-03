@@ -27,16 +27,19 @@ __all__ = [
 
 
 from alembic import context
-from alembic.config import Config
 from contextlib import closing
+from logging.config import fileConfig
 from sqlalchemy import create_engine
 
 from mailman.core import initialize
 from mailman.config import config
+from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
 from mailman.utilities.modules import expand_path
 from mailman.utilities.string import expand
 
+
+fileConfig(alembic_cfg.config_file_name)
 
 
 def run_migrations_offline():
@@ -49,11 +52,6 @@ def run_migrations_offline():
     Calls to context.execute() here emit the given string to the script
     output.
     """
-    if not config.initialized:
-        initialize.initialize_1(context.config.config_file_name)
-    alembic_cfg= Config()
-    alembic_cfg.set_main_option(
-        "script_location", config.alembic['script_location'])
     url = expand(config.database.url, config.paths)
     context.configure(url=url, target_metadata=Model.metadata)
     with context.begin_transaction():
@@ -66,13 +64,6 @@ def run_migrations_online():
     In this scenario we need to create an Engine and associate a
     connection with the context.
     """
-
-    if not config.initialized:
-        initialize.initialize_1(context.config.config_file_name)
-    alembic_cfg = Config()
-    alembic_cfg.set_main_option(
-        'script_location', expand_path(config.database['alembic_scripts']))
-    alembic_cfg.set_section_option('logger_alembic' ,'level' , 'ERROR')
     url = expand(config.database.url, config.paths)
     engine = create_engine(url)
 

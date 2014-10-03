@@ -26,12 +26,12 @@ __all__ = [
 import logging
 
 from alembic import command
-from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from zope.interface import implementer
 
 from mailman.config import config
+from mailman.database.alembic import alembic_cfg
 from mailman.interfaces.database import IDatabase
 from mailman.utilities.string import expand
 
@@ -97,9 +97,6 @@ class SABaseDatabase:
         # create_all() ceates the latest schema.  This patches the database
         # with the latest Alembic version to add an entry in the
         # alembic_version table.
-        alembic_cfg = Config()
-        alembic_cfg.set_main_option(
-            'script_location', config.database['alembic_scripts'])
         command.stamp(alembic_cfg, 'head')
 
 

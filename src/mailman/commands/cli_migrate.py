@@ -26,11 +26,11 @@ __all__ = [
 
 
 from alembic import command
-from alembic.config import Config
 from zope.interface import implementer
 
 from mailman.config import config
 from mailman.core.i18n import _
+from mailman.database.alembic import alembic_cfg
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.modules import expand_path
 
@@ -54,9 +54,6 @@ class Migrate:
             help=('Produce less output.'))
 
     def process(self, args):
-        alembic_cfg = Config()
-        alembic_cfg.set_main_option(
-            'script_location', expand_path(config.database['alembic_scripts']))
         if args.autogenerate:
             command.revision(alembic_cfg, autogenerate=True)
         else:
