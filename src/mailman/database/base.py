@@ -91,18 +91,6 @@ class SABaseDatabase:
         """
         pass
 
-    def stamp(self, debug=False):
-        """Stamp the database with the latest alembic version.
-        """
-        # Newly created database don't need to migrations from alembic, since
-        # `create_all`` ceates the latest schema. SO patch the database with
-        # the latest alembic version to add a entry in alembic_version table.
-        alembic_cfg = Config()
-        alembic_cfg.set_main_option(
-            "script_location", config.alembic['script_location'])
-        command.stamp(alembic_cfg, "head")
-
-
     def initialize(self, debug=None):
         """See `IDatabase`."""
         # Calculate the engine url.
