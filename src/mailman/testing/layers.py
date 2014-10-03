@@ -47,6 +47,7 @@ import tempfile
 
 from lazr.config import as_boolean
 from pkg_resources import resource_string
+from sqlalchemy import MetaData
 from textwrap import dedent
 from zope.component import getUtility
 
@@ -54,6 +55,7 @@ from mailman.config import config
 from mailman.core import initialize
 from mailman.core.initialize import INHIBIT_CONFIG_FILE
 from mailman.core.logging import get_handler
+from mailman.database.model import Model
 from mailman.database.transaction import transaction
 from mailman.interfaces.domain import IDomainManager
 from mailman.testing.helpers import (
@@ -307,6 +309,34 @@ class RESTLayer(SMTPLayer):
         assert cls.server is not None, 'Layer not set up'
         cls.server.stop()
         cls.server = None
+
+
+
+class DatabaseLayer(MockAndMonkeyLayer):
+    """Layer for database tests"""
+
+    @classmethod
+    def _drop_all_tables(cls):
+        Model.metadata.drop_all(config.db.engine)
+        md = MetaData()
+        md.reflect(bind=config.db.engine)
+        if "alembic_version" in md.tables:
+            md.tables["alembic_version"].drop(config.db.engine)
+
+    @classmethod
+    def setUp(cls):
+        # Set up the basic configuration stuff. Turn off path creation.
+        config.create_paths = False
+        initialize.initialize_1(INHIBIT_CONFIG_FILE)
+        # Don't initialize the database.
+
+    @classmethod
+    def tearDown(cls):
+        cls._drop_all_tables()
+
+    @classmethod
+    def testTearDown(cls):
+        cls._drop_all_tables()
 
 
 
