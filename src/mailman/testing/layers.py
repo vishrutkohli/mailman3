@@ -49,6 +49,7 @@ from lazr.config import as_boolean
 from pkg_resources import resource_string
 from sqlalchemy import MetaData
 from textwrap import dedent
+from zope import event
 from zope.component import getUtility
 
 from mailman.config import config
@@ -100,7 +101,9 @@ class ConfigLayer(MockAndMonkeyLayer):
         # Set up the basic configuration stuff.  Turn off path creation until
         # we've pushed the testing config.
         config.create_paths = False
-        initialize.initialize_1(INHIBIT_CONFIG_FILE)
+        if not event.subscribers:
+            # only if not yet initialized by another layer
+            initialize.initialize_1(INHIBIT_CONFIG_FILE)
         assert cls.var_dir is None, 'Layer already set up'
         # Calculate a temporary VAR_DIR directory so that run-time artifacts
         # of the tests won't tread on the installation's data.  This also
@@ -312,8 +315,10 @@ class RESTLayer(SMTPLayer):
 
 
 
-class DatabaseLayer(MockAndMonkeyLayer):
+class DatabaseLayer:
     """Layer for database tests"""
+
+    var_dir = None
 
     @classmethod
     def _drop_all_tables(cls):
@@ -327,12 +332,37 @@ class DatabaseLayer(MockAndMonkeyLayer):
     def setUp(cls):
         # Set up the basic configuration stuff. Turn off path creation.
         config.create_paths = False
-        initialize.initialize_1(INHIBIT_CONFIG_FILE)
+        if not event.subscribers:
+            # only if not yet initialized by another layer
+            initialize.initialize_1(INHIBIT_CONFIG_FILE)
         # Don't initialize the database.
+        cls.var_dir = tempfile.mkdtemp()
+        test_config = dedent("""
+        [mailman]
+        layout: testing
+        [paths.testing]
+        var_dir: {0}
+        [devmode]
+        testing: yes
+        """.format(cls.var_dir))
+        # Read the testing config and push it.
+        test_config += resource_string('mailman.testing', 'testing.cfg')
+        config.create_paths = True
+        config.push('test config', test_config)
+        # Write the configuration file for subprocesses and set up the config
+        # object to pass that properly on the -C option.
+        config_file = os.path.join(cls.var_dir, 'test.cfg')
+        with open(config_file, 'w') as fp:
+            fp.write(test_config)
+            print(file=fp)
+        config.filename = config_file
 
     @classmethod
     def tearDown(cls):
-        cls._drop_all_tables()
+        assert cls.var_dir is not None, 'Layer not set up'
+        shutil.rmtree(cls.var_dir)
+        config.pop('test config')
+        cls.var_dir = None
 
     @classmethod
     def testTearDown(cls):

@@ -40,6 +40,7 @@ from mailman.database.model import Model
 
 
 class TestSchemaManager(unittest.TestCase):
+
     layer = DatabaseLayer
 
     def setUp(self):
@@ -55,23 +56,22 @@ class TestSchemaManager(unittest.TestCase):
             Model.metadata.remove(version)
 
 
-    def _db_is_setup(self):
-        md = MetaData()
-        md.reflect(bind=config.db.engine)
-        return "mailinglist" in md.tables and "alembic_version" in md.tables
-
     def _table_exists(self, tablename):
         md = MetaData()
         md.reflect(bind=config.db.engine)
         return tablename in md.tables
 
-    def _create_storm_version_table(self):
-        table = Table("version", Model.metadata,
-                    Column("id", Integer, primary_key=True),
-                    Column("component", Unicode),
-                    Column("version", Unicode),
-                    )
-        table.create(config.db.engine)
+    def _create_storm_version_table(self, revision):
+        version_table = Table("version", Model.metadata,
+                Column("id", Integer, primary_key=True),
+                Column("component", Unicode),
+                Column("version", Unicode),
+                )
+        version_table.create(config.db.engine)
+        config.db.store.execute(version_table.insert().values(
+                component='schema', version=revision))
+        config.db.commit()
+
 
     def test_current_db(self):
         """The database is already at the latest version"""
@@ -84,27 +84,19 @@ class TestSchemaManager(unittest.TestCase):
 
     def test_initial(self):
         """No existing database"""
-        self.assertFalse(self._table_exists("mailinglist")
-                     and self._table_exists("alembic_version"))
+        self.assertFalse(self._table_exists("mailinglist"))
+        self.assertFalse(self._table_exists("alembic_version"))
         self.schema_mgr._upgrade = Mock()
         self.schema_mgr.setup_db()
         self.assertFalse(self.schema_mgr._upgrade.called)
-        self.assertTrue(self._table_exists("mailinglist")
-                    and self._table_exists("alembic_version"))
+        self.assertTrue(self._table_exists("mailinglist"))
+        self.assertTrue(self._table_exists("alembic_version"))
 
     def test_storm(self):
         """Existing Storm database"""
         Model.metadata.create_all(config.db.engine)
-        version_table = Table("version", Model.metadata,
-                Column("id", Integer, primary_key=True),
-                Column("component", Unicode),
-                Column("version", Unicode),
-                )
-        version_table.create(config.db.engine)
-        config.db.store.execute(version_table.insert().values(
-                component='schema',
-                version=self.schema_mgr.LAST_STORM_SCHEMA_VERSION))
-        config.db.commit()
+        self._create_storm_version_table(
+                self.schema_mgr.LAST_STORM_SCHEMA_VERSION)
         self.schema_mgr._create = Mock()
         self.schema_mgr.setup_db()
         self.assertFalse(self.schema_mgr._create.called)
@@ -115,15 +107,7 @@ class TestSchemaManager(unittest.TestCase):
     def test_old_storm(self):
         """Existing Storm database in an old version"""
         Model.metadata.create_all(config.db.engine)
-        version_table = Table("version", Model.metadata,
-                Column("id", Integer, primary_key=True),
-                Column("component", Unicode),
-                Column("version", Unicode),
-                )
-        version_table.create(config.db.engine)
-        config.db.store.execute(version_table.insert().values(
-                component='schema', version='001'))
-        config.db.commit()
+        self._create_storm_version_table("001")
         self.schema_mgr._create = Mock()
         self.assertRaises(RuntimeError, self.schema_mgr.setup_db)
         self.assertFalse(self.schema_mgr._create.called)
