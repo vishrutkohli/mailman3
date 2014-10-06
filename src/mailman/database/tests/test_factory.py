@@ -32,7 +32,7 @@ from mock import Mock
 from sqlalchemy import MetaData, Table, Column, Integer, Unicode
 
 from mailman.config import config
-from mailman.testing.layers import DatabaseLayer
+from mailman.testing.layers import ConfigLayer
 from mailman.database.factory import SchemaManager, _reset
 from mailman.database.sqlite import SQLiteDatabase
 from mailman.database.alembic import alembic_cfg
@@ -42,12 +42,15 @@ from mailman.database.model import Model
 
 class TestSchemaManager(unittest.TestCase):
 
-    layer = DatabaseLayer
+    layer = ConfigLayer
 
     def setUp(self):
-        config.db = SQLiteDatabase()
-        config.db.initialize()
-        config.db._reset = types.MethodType(_reset, config.db)
+        # Drop the existing database
+        Model.metadata.drop_all(config.db.engine)
+        md = MetaData()
+        md.reflect(bind=config.db.engine)
+        if "alembic_version" in md.tables:
+            md.tables["alembic_version"].drop(config.db.engine)
         self.schema_mgr = SchemaManager(config.db)
 
     def tearDown(self):
@@ -55,6 +58,8 @@ class TestSchemaManager(unittest.TestCase):
             version = Model.metadata.tables["version"]
             version.drop(config.db.engine, checkfirst=True)
             Model.metadata.remove(version)
+        # Restore a virgin DB
+        Model.metadata.create_all(config.db.engine)
 
 
     def _table_exists(self, tablename):
