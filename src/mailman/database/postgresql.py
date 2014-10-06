@@ -26,7 +26,7 @@ __all__ = [
 
 
 from mailman.database.base import SABaseDatabase
-from operator import attrgetter
+from mailman.database.model import Model
 
 
 
@@ -40,7 +40,6 @@ class PostgreSQLDatabase(SABaseDatabase):
         restart from zero for new tests.
         """
         super(PostgreSQLDatabase, self)._post_reset(store)
-        from mailman.database.model import Model
         tables = reversed(Model.metadata.sorted_tables)
         # Recipe adapted from
         # http://stackoverflow.com/questions/544791/

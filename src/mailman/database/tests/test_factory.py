@@ -35,6 +35,7 @@ from mailman.config import config
 from mailman.testing.layers import DatabaseLayer
 from mailman.database.factory import SchemaManager, _reset
 from mailman.database.sqlite import SQLiteDatabase
+from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
 
 
@@ -75,7 +76,7 @@ class TestSchemaManager(unittest.TestCase):
 
     def test_current_db(self):
         """The database is already at the latest version"""
-        alembic.command.stamp(self.schema_mgr.alembic_cfg, "head")
+        alembic.command.stamp(alembic_cfg, "head")
         self.schema_mgr._create = Mock()
         self.schema_mgr._upgrade = Mock()
         self.schema_mgr.setup_db()
@@ -114,7 +115,7 @@ class TestSchemaManager(unittest.TestCase):
 
     def test_old_db(self):
         """The database is in an old revision, must upgrade"""
-        alembic.command.stamp(self.schema_mgr.alembic_cfg, "head")
+        alembic.command.stamp(alembic_cfg, "head")
         md = MetaData()
         md.reflect(bind=config.db.engine)
         config.db.store.execute(md.tables["alembic_version"].delete())

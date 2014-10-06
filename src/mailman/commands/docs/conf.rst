@@ -22,7 +22,7 @@ To get a list of all key-value pairs of any section, you need to call the
 command without any options.
 
     >>> command.process(FakeArgs)
-	[alembic] script_location: mailman:database/alembic
+    [logging.archiver] path: mailman.log
     ...
     [passwords] password_length: 8
     ...

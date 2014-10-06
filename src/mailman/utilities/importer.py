@@ -128,12 +128,6 @@ def nonmember_action_mapping(value):
         }[value]
 
 
-def int_to_bool(value):
-    if value:
-        return True
-    else:
-        return False
-
 
 def check_language_code(code):
     if code is None:
@@ -178,9 +172,9 @@ TYPES = dict(
     personalize=Personalization,
     preferred_language=check_language_code,
     reply_goes_to_list=ReplyToMunging,
-    allow_list_posts=int_to_bool,
-    include_rfc2369_headers=int_to_bool,
-    nntp_prefix_subject_too=int_to_bool,
+    allow_list_posts=bool,
+    include_rfc2369_headers=bool,
+    nntp_prefix_subject_too=bool,
     )
 
 

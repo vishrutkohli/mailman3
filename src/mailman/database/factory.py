@@ -30,7 +30,6 @@ import os
 import types
 
 from alembic import command
-from alembic.config import Config as AlembicConfig
 from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from flufl.lock import Lock
@@ -40,8 +39,9 @@ from zope.interface.verify import verifyObject
 
 from mailman.config import config
 from mailman.database.model import Model
+from mailman.database.alembic import alembic_cfg
 from mailman.interfaces.database import IDatabase, IDatabaseFactory
-from mailman.utilities.modules import call_name
+from mailman.utilities.modules import call_name, expand_path
 
 
 
@@ -70,10 +70,7 @@ class SchemaManager:
 
     def __init__(self, database):
         self.database = database
-        self.alembic_cfg = AlembicConfig()
-        self.alembic_cfg.set_main_option(
-            "script_location", config.alembic['script_location'])
-        self.script = ScriptDirectory.from_config(self.alembic_cfg)
+        self.script = ScriptDirectory.from_config(alembic_cfg)
 
     def get_storm_schema_version(self):
         md = MetaData()
@@ -89,10 +86,10 @@ class SchemaManager:
     def _create(self):
         # initial DB creation
         Model.metadata.create_all(self.database.engine)
-        command.stamp(self.alembic_cfg, "head")
+        command.stamp(alembic_cfg, "head")
 
     def _upgrade(self):
-        command.upgrade(self.alembic_cfg, "head")
+        command.upgrade(alembic_cfg, "head")
 
     def setup_db(self):
         context = MigrationContext.configure(self.database.store.connection())
