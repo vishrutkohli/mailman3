@@ -126,6 +126,10 @@ def initialize(propagate=None):
             continue
         if sub_name == 'locks':
             log = logging.getLogger('flufl.lock')
+        elif sub_name == 'database':
+            log = logging.getLogger('sqlalchemy')
+        elif sub_name == 'dbmigration':
+            log = logging.getLogger('alembic')
         else:
             logger_name = 'mailman.' + sub_name
             log = logging.getLogger(logger_name)

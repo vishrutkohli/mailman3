@@ -22,7 +22,7 @@ To get a list of all key-value pairs of any section, you need to call the
 command without any options.
 
     >>> command.process(FakeArgs)
-    [logging.archiver] path: mailman.log
+    [logging.dbmigration] path: mailman.log
     ...
     [passwords] password_length: 8
     ...
@@ -43,12 +43,14 @@ key, along with the names of the corresponding sections.
     >>> FakeArgs.section = None
     >>> FakeArgs.key = 'path'
     >>> command.process(FakeArgs)
+    [logging.dbmigration] path: mailman.log
     [logging.archiver] path: mailman.log
     [logging.locks] path: mailman.log
     [logging.mischief] path: mailman.log
     [logging.config] path: mailman.log
     [logging.error] path: mailman.log
     [logging.smtp] path: smtp.log
+    [logging.database] path: mailman.log
     [logging.http] path: mailman.log
     [logging.root] path: mailman.log
     [logging.fromusenet] path: mailman.log
