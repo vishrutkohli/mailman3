@@ -81,6 +81,8 @@ class SchemaManager:
         last_version = self.database.store.query(Version.c.version).filter(
                 Version.c.component == "schema"
                 ).order_by(Version.c.version.desc()).first()
+        # Don't leave open transactions or they will block any schema change
+        self.database.commit()
         return last_version
 
     def _create(self):
