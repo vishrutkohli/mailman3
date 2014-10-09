@@ -66,7 +66,10 @@ class User(Model):
 
     _preferred_address_id = Column(
         Integer,
-        ForeignKey('address.id', use_alter=True, name='_preferred_address'))
+        ForeignKey('address.id', use_alter=True,
+                   name='_preferred_address',
+                   ondelete="SET NULL"))
+
     _preferred_address = relationship(
         'Address', primaryjoin=(_preferred_address_id==Address.id),
         post_update=True)
