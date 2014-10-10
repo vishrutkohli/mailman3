@@ -504,9 +504,12 @@ class AcceptableAlias(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list_id = Column(Integer,
+                             ForeignKey('mailinglist.id'),
+                             index=True,
+                             nullable=False)
     mailing_list = relationship('MailingList', backref='acceptable_alias')
-    alias = Column(Unicode)
+    alias = Column(Unicode, index=True, nullable=False)
 
     def __init__(self, mailing_list, alias):
         self.mailing_list = mailing_list
@@ -558,9 +561,10 @@ class ListArchiver(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'),
+                             index=True, nullable=False)
     mailing_list = relationship('MailingList')
-    name = Column(Unicode)
+    name = Column(Unicode, nullable=False)
     _is_enabled = Column(Boolean)
 
     def __init__(self, mailing_list, archiver_name, system_archiver):

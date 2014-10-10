@@ -29,4 +29,4 @@ from alembic.config import Config
 from mailman.utilities.modules import expand_path
 
 
-alembic_cfg=Config(expand_path("python:mailman.config.alembic"))
+alembic_cfg=Config(expand_path("python:mailman.config.schema"))

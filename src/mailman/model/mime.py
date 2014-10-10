@@ -43,7 +43,7 @@ class ContentFilter(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'), index=True)
     mailing_list = relationship('MailingList')
 
     filter_type = Column(Enum(FilterType))

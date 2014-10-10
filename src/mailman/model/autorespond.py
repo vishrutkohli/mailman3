@@ -44,14 +44,14 @@ from mailman.utilities.datetime import today
 class AutoResponseRecord(Model):
     """See `IAutoResponseRecord`."""
 
-    __tablename__ = 'autorespondrecord'
+    __tablename__ = 'autoresponserecord'
 
     id = Column(Integer, primary_key=True)
 
-    address_id = Column(Integer, ForeignKey('address.id'))
+    address_id = Column(Integer, ForeignKey('address.id'), index=True)
     address = relationship('Address')
 
-    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'), index=True)
     mailing_list = relationship('MailingList')
 
     response_type = Column(Enum(Response))
