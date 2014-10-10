@@ -30,6 +30,8 @@ import types
 import alembic.command
 from mock import Mock
 from sqlalchemy import MetaData, Table, Column, Integer, Unicode
+from sqlalchemy.schema import Index
+from sqlalchemy.exc import ProgrammingError
 
 from mailman.config import config
 from mailman.testing.layers import ConfigLayer
@@ -49,15 +51,13 @@ class TestSchemaManager(unittest.TestCase):
         Model.metadata.drop_all(config.db.engine)
         md = MetaData()
         md.reflect(bind=config.db.engine)
-        if "alembic_version" in md.tables:
-            md.tables["alembic_version"].drop(config.db.engine)
+        for tablename in ("alembic_version", "version"):
+            if tablename in md.tables:
+                md.tables[tablename].drop(config.db.engine)
         self.schema_mgr = SchemaManager(config.db)
 
     def tearDown(self):
-        if "version" in Model.metadata.tables:
-            version = Model.metadata.tables["version"]
-            version.drop(config.db.engine, checkfirst=True)
-            Model.metadata.remove(version)
+        self._drop_storm_database()
         # Restore a virgin DB
         Model.metadata.create_all(config.db.engine)
 
@@ -67,7 +67,7 @@ class TestSchemaManager(unittest.TestCase):
         md.reflect(bind=config.db.engine)
         return tablename in md.tables
 
-    def _create_storm_version_table(self, revision):
+    def _create_storm_database(self, revision):
         version_table = Table("version", Model.metadata,
                 Column("id", Integer, primary_key=True),
                 Column("component", Unicode),
@@ -76,6 +76,32 @@ class TestSchemaManager(unittest.TestCase):
         version_table.create(config.db.engine)
         config.db.store.execute(version_table.insert().values(
                 component='schema', version=revision))
+        config.db.commit()
+        # Other Storm specific changes, those SQL statements hopefully work on
+        # all DB engines...
+        config.db.engine.execute(
+            "ALTER TABLE mailinglist ADD COLUMN acceptable_aliases_id INT")
+        Index("ix_user__user_id").drop(bind=config.db.engine)
+        # Don't pollute our main metadata object, create a new one
+        md = MetaData()
+        user_table = Model.metadata.tables["user"].tometadata(md)
+        Index("ix_user_user_id", user_table.c._user_id
+              ).create(bind=config.db.engine)
+        config.db.commit()
+
+    def _drop_storm_database(self):
+        """
+        Remove the leftovers from a Storm DB.
+        (you must issue a drop_all() afterwards)
+        """
+        if "version" in Model.metadata.tables:
+            version = Model.metadata.tables["version"]
+            version.drop(config.db.engine, checkfirst=True)
+            Model.metadata.remove(version)
+        try:
+            Index("ix_user_user_id").drop(bind=config.db.engine)
+        except ProgrammingError as e:
+            pass # non-existant
         config.db.commit()
 
 
@@ -101,7 +127,7 @@ class TestSchemaManager(unittest.TestCase):
     def test_storm(self):
         """Existing Storm database"""
         Model.metadata.create_all(config.db.engine)
-        self._create_storm_version_table(
+        self._create_storm_database(
                 self.schema_mgr.LAST_STORM_SCHEMA_VERSION)
         self.schema_mgr._create = Mock()
         self.schema_mgr.setup_db()
@@ -113,7 +139,7 @@ class TestSchemaManager(unittest.TestCase):
     def test_old_storm(self):
         """Existing Storm database in an old version"""
         Model.metadata.create_all(config.db.engine)
-        self._create_storm_version_table("001")
+        self._create_storm_database("001")
         self.schema_mgr._create = Mock()
         self.assertRaises(RuntimeError, self.schema_mgr.setup_db)
         self.assertFalse(self.schema_mgr._create.called)
