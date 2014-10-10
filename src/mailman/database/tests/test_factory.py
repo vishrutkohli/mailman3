@@ -31,7 +31,7 @@ import alembic.command
 from mock import Mock
 from sqlalchemy import MetaData, Table, Column, Integer, Unicode
 from sqlalchemy.schema import Index
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import ProgrammingError, OperationalError
 
 from mailman.config import config
 from mailman.testing.layers import ConfigLayer
@@ -100,8 +100,10 @@ class TestSchemaManager(unittest.TestCase):
             Model.metadata.remove(version)
         try:
             Index("ix_user_user_id").drop(bind=config.db.engine)
-        except ProgrammingError as e:
-            pass # non-existant
+        except (ProgrammingError, OperationalError) as e:
+            # non-existant (PGSQL raises a ProgrammingError, while SQLite
+            # raises an OperationalError)
+            pass
         config.db.commit()
 
 
