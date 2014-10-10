@@ -53,9 +53,9 @@ class Address(Model):
     _verified_on = Column('verified_on', DateTime)
     registered_on = Column(DateTime)
 
-    user_id = Column(Integer, ForeignKey('user.id'))
+    user_id = Column(Integer, ForeignKey('user.id'), index=True)
 
-    preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    preferences_id = Column(Integer, ForeignKey('preferences.id'), index=True)
     preferences = relationship(
         'Preferences', backref=backref('address', uselist=False))
 

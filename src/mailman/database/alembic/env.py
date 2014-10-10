@@ -36,6 +36,9 @@ from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
 from mailman.utilities.string import expand
 
+if not config.initialized:
+    initialize.initialize_1(context.config.config_file_name)
+
 
 
 def run_migrations_offline():

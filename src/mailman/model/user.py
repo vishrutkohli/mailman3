@@ -57,7 +57,7 @@ class User(Model):
     id = Column(Integer, primary_key=True)
     display_name = Column(Unicode)
     _password = Column('password', LargeBinary) # TODO : was RawStr()
-    _user_id = Column(UUID)
+    _user_id = Column(UUID, index=True)
     _created_on = Column(DateTime)
 
     addresses = relationship(
@@ -74,7 +74,7 @@ class User(Model):
         'Address', primaryjoin=(_preferred_address_id==Address.id),
         post_update=True)
 
-    preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    preferences_id = Column(Integer, ForeignKey('preferences.id'), index=True)
     preferences = relationship(
         'Preferences', backref=backref('user', uselist=False))
 

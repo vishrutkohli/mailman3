@@ -56,7 +56,7 @@ class PendedKeyValue(Model):
     id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     value = Column(Unicode)
-    pended_id = Column(Integer, ForeignKey('pended.id'))
+    pended_id = Column(Integer, ForeignKey('pended.id'), index=True)
 
     def __init__(self, key, value):
         self.key = key
