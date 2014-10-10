@@ -47,13 +47,16 @@ import tempfile
 
 from lazr.config import as_boolean
 from pkg_resources import resource_string
+from sqlalchemy import MetaData
 from textwrap import dedent
+from zope import event
 from zope.component import getUtility
 
 from mailman.config import config
 from mailman.core import initialize
 from mailman.core.initialize import INHIBIT_CONFIG_FILE
 from mailman.core.logging import get_handler
+from mailman.database.model import Model
 from mailman.database.transaction import transaction
 from mailman.interfaces.domain import IDomainManager
 from mailman.testing.helpers import (
@@ -98,7 +101,9 @@ class ConfigLayer(MockAndMonkeyLayer):
         # Set up the basic configuration stuff.  Turn off path creation until
         # we've pushed the testing config.
         config.create_paths = False
-        initialize.initialize_1(INHIBIT_CONFIG_FILE)
+        if not event.subscribers:
+            # only if not yet initialized by another layer
+            initialize.initialize_1(INHIBIT_CONFIG_FILE)
         assert cls.var_dir is None, 'Layer already set up'
         # Calculate a temporary VAR_DIR directory so that run-time artifacts
         # of the tests won't tread on the installation's data.  This also

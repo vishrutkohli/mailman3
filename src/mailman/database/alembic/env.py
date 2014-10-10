@@ -28,7 +28,6 @@ __all__ = [
 
 from alembic import context
 from contextlib import closing
-from logging.config import fileConfig
 from sqlalchemy import create_engine
 
 from mailman.core import initialize
@@ -37,8 +36,6 @@ from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
 from mailman.utilities.string import expand
 
-
-fileConfig(alembic_cfg.config_file_name)
 
 
 def run_migrations_offline():

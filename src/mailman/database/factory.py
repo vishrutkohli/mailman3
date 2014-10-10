@@ -70,8 +70,7 @@ class SchemaManager:
 
     def __init__(self, database):
         self.database = database
-        self.alembic_cfg = alembic_cfg
-        self.script = ScriptDirectory.from_config(self.alembic_cfg)
+        self.script = ScriptDirectory.from_config(alembic_cfg)
 
     def get_storm_schema_version(self):
         md = MetaData()
@@ -82,7 +81,17 @@ class SchemaManager:
         last_version = self.database.store.query(Version.c.version).filter(
                 Version.c.component == "schema"
                 ).order_by(Version.c.version.desc()).first()
+        # Don't leave open transactions or they will block any schema change
+        self.database.commit()
         return last_version
+
+    def _create(self):
+        # initial DB creation
+        Model.metadata.create_all(self.database.engine)
+        command.stamp(alembic_cfg, "head")
+
+    def _upgrade(self):
+        command.upgrade(alembic_cfg, "head")
 
     def setup_db(self):
         context = MigrationContext.configure(self.database.store.connection())
@@ -95,8 +104,7 @@ class SchemaManager:
             storm_version = self.get_storm_schema_version()
             if storm_version is None:
                 # initial DB creation
-                Model.metadata.create_all(self.database.engine)
-                command.stamp(self.alembic_cfg, "head")
+                self._create()
             else:
                 # DB from a previous version managed by Storm
                 if storm_version.version < self.LAST_STORM_SCHEMA_VERSION:
@@ -106,9 +114,9 @@ class SchemaManager:
                             "Mailman beta release")
                 # Run migrations to remove the Storm-specific table and
                 # upgrade to SQLAlchemy & Alembic
-                command.upgrade(self.alembic_cfg, "head")
+                self._upgrade()
         elif current_rev != head_rev:
-            command.upgrade(self.alembic_cfg, "head")
+            self._upgrade()
         return head_rev
 
 

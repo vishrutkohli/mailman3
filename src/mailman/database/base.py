@@ -31,7 +31,6 @@ from sqlalchemy.orm import sessionmaker
 from zope.interface import implementer
 
 from mailman.config import config
-from mailman.database.alembic import alembic_cfg
 from mailman.interfaces.database import IDatabase
 from mailman.utilities.string import expand
 
@@ -90,15 +89,6 @@ class SABaseDatabase:
         file first so that it has the proper file modes.
         """
         pass
-
-    def stamp(self, debug=False):
-        """Stamp the database with the latest Alembic version."""
-        # Newly created databases don't need migrations from Alembic, since
-        # create_all() ceates the latest schema.  This patches the database
-        # with the latest Alembic version to add an entry in the
-        # alembic_version table.
-        command.stamp(alembic_cfg, 'head')
-
 
     def initialize(self, debug=None):
         """See `IDatabase`."""
