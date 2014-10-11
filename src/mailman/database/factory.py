@@ -88,6 +88,7 @@ class SchemaManager:
     def _create(self):
         # initial DB creation
         Model.metadata.create_all(self.database.engine)
+        self.database.commit()
         command.stamp(alembic_cfg, "head")
 
     def _upgrade(self):
