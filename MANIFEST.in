@@ -1,4 +1,4 @@
-include *.py *.rc
+include *.py *.rc *.mako
 include COPYING
 recursive-include .buildout *
 recursive-include contrib *
@@ -6,12 +6,9 @@ recursive-include cron *
 recursive-include data *
 global-include *.txt *.rst *.po *.mo *.cfg *.sql *.zcml *.html
 global-exclude *.egg-info
-exclude MANIFEST.in
 prune src/attic
 prune src/web
 prune eggs
 prune parts
 include MANIFEST.in
 include src/mailman/testing/config.pck
-include src/mailman/databases/alembic/scripts.py.mako
-include src/mailman/databases/alembic/versions/*.py

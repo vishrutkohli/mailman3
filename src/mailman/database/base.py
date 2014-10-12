@@ -99,7 +99,6 @@ class SABaseDatabase:
         # alembic_version table.
         command.stamp(alembic_cfg, 'head')
 
-
     def initialize(self, debug=None):
         """See `IDatabase`."""
         # Calculate the engine url.

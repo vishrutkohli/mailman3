@@ -38,10 +38,14 @@ from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
 from mailman.config import config
-from mailman.database.model import Model
 from mailman.database.alembic import alembic_cfg
-from mailman.interfaces.database import IDatabase, IDatabaseFactory
-from mailman.utilities.modules import call_name, expand_path
+from mailman.database.model import Model
+from mailman.interfaces.database import (
+    DatabaseError, IDatabase, IDatabaseFactory)
+from mailman.utilities.modules import call_name
+
+
+LAST_STORM_SCHEMA_VERSION = '20130406000000'
 
 
 
@@ -57,58 +61,55 @@ class DatabaseFactory:
             database = call_name(database_class)
             verifyObject(IDatabase, database)
             database.initialize()
-            schema_mgr = SchemaManager(database)
-            schema_mgr.setup_db()
+            SchemaManager(database).setup_database()
             database.commit()
             return database
 
 
 
 class SchemaManager:
-
-    LAST_STORM_SCHEMA_VERSION = '20130406000000'
+    "Manage schema migrations."""
 
     def __init__(self, database):
-        self.database = database
-        self.alembic_cfg = alembic_cfg
-        self.script = ScriptDirectory.from_config(self.alembic_cfg)
+        self._database = database
+        self._script = ScriptDirectory.from_config(alembic_cfg)
 
-    def get_storm_schema_version(self):
-        md = MetaData()
-        md.reflect(bind=self.database.engine)
-        if "version" not in md.tables:
+    def _get_storm_schema_version(self):
+        metadata = MetaData()
+        metadata.reflect(bind=self._database.engine)
+        if 'version' not in metadata.tables:
+            # There are no Storm artifacts left.
             return None
-        Version = md.tables["version"]
-        last_version = self.database.store.query(Version.c.version).filter(
-                Version.c.component == "schema"
-                ).order_by(Version.c.version.desc()).first()
+        Version = metadata.tables['version']
+        last_version = self._database.store.query(Version.c.version).filter(
+            Version.c.component == 'schema'
+            ).order_by(Version.c.version.desc()).first()
         return last_version
 
-    def setup_db(self):
-        context = MigrationContext.configure(self.database.store.connection())
+    def setup_database(self):
+        context = MigrationContext.configure(self._database.store.connection())
         current_rev = context.get_current_revision()
-        head_rev = self.script.get_current_head()
+        head_rev = self._script.get_current_head()
         if current_rev == head_rev:
-            return head_rev # already at the latest revision, nothing to do
-        if current_rev == None:
-            # no alembic information
-            storm_version = self.get_storm_schema_version()
+             # We're already at the latest revision so there's nothing to do.
+            return head_rev
+        if current_rev is None:
+            # No Alembic information is available.
+            storm_version = self._get_storm_schema_version()
             if storm_version is None:
-                # initial DB creation
-                Model.metadata.create_all(self.database.engine)
-                command.stamp(self.alembic_cfg, "head")
+                # Initial database creation.
+                Model.metadata.create_all(self._database.engine)
+                command.stamp(alembic_cfg, 'head')
             else:
-                # DB from a previous version managed by Storm
-                if storm_version.version < self.LAST_STORM_SCHEMA_VERSION:
-                    raise RuntimeError(
-                            "Upgrading while skipping beta version is "
-                            "unsupported, please install the previous "
-                            "Mailman beta release")
-                # Run migrations to remove the Storm-specific table and
-                # upgrade to SQLAlchemy & Alembic
-                command.upgrade(self.alembic_cfg, "head")
+                # The database was previously managed by Storm.
+                if storm_version.version < LAST_STORM_SCHEMA_VERSION:
+                    raise DatabaseError(
+                        'Upgrades skipping beta versions is not supported.')
+                # Run migrations to remove the Storm-specific table and upgrade
+                # to SQLAlchemy and Alembic.
+                command.upgrade(alembic_cfg, 'head')
         elif current_rev != head_rev:
-            command.upgrade(self.alembic_cfg, "head")
+            command.upgrade(alembic_cfg, 'head')
         return head_rev
 
 
