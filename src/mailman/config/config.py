@@ -87,7 +87,6 @@ class Configuration:
         self.pipelines = {}
         self.commands = {}
         self.password_context = None
-        #self.initialized = False
 
     def _clear(self):
         """Clear the cached configuration variables."""
@@ -137,7 +136,6 @@ class Configuration:
         # Expand and set up all directories.
         self._expand_paths()
         self.ensure_directories_exist()
-        #self.initialized = True
         notify(ConfigurationUpdatedEvent(self))
 
     def _expand_paths(self):
