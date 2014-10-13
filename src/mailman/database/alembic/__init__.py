@@ -15,18 +15,18 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"Alembic config init."
+"""Alembic configuration initization."""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'alembic_cfg'
-]
+    'alembic_cfg',
+    ]
 
 
 from alembic.config import Config
 from mailman.utilities.modules import expand_path
 
 
-alembic_cfg=Config(expand_path("python:mailman.config.schema"))
+alembic_cfg = Config(expand_path("python:mailman.config.schema"))

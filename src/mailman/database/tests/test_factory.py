@@ -28,14 +28,16 @@ import unittest
 import types
 
 import alembic.command
-from mock import Mock
+from mock import patch
 from sqlalchemy import MetaData, Table, Column, Integer, Unicode
 from sqlalchemy.schema import Index
 from sqlalchemy.exc import ProgrammingError, OperationalError
 
 from mailman.config import config
+from mailman.interfaces.database import DatabaseError
 from mailman.testing.layers import ConfigLayer
-from mailman.database.factory import SchemaManager, _reset
+from mailman.database.factory import (
+    SchemaManager, _reset, LAST_STORM_SCHEMA_VERSION)
 from mailman.database.sqlite import SQLiteDatabase
 from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
@@ -110,41 +112,40 @@ class TestSchemaManager(unittest.TestCase):
     def test_current_db(self):
         """The database is already at the latest version"""
         alembic.command.stamp(alembic_cfg, "head")
-        self.schema_mgr._create = Mock()
-        self.schema_mgr._upgrade = Mock()
-        self.schema_mgr.setup_db()
-        self.assertFalse(self.schema_mgr._create.called)
-        self.assertFalse(self.schema_mgr._upgrade.called)
+        with patch("alembic.command") as alembic_command:
+            self.schema_mgr.setup_database()
+            self.assertFalse(alembic_command.stamp.called)
+            self.assertFalse(alembic_command.upgrade.called)
 
-    def test_initial(self):
+    @patch("alembic.command")
+    def test_initial(self, alembic_command):
         """No existing database"""
         self.assertFalse(self._table_exists("mailinglist"))
         self.assertFalse(self._table_exists("alembic_version"))
-        self.schema_mgr._upgrade = Mock()
-        self.schema_mgr.setup_db()
-        self.assertFalse(self.schema_mgr._upgrade.called)
+        self.schema_mgr.setup_database()
+        self.assertFalse(alembic_command.upgrade.called)
         self.assertTrue(self._table_exists("mailinglist"))
         self.assertTrue(self._table_exists("alembic_version"))
 
-    def test_storm(self):
+    @patch("alembic.command.stamp")
+    def test_storm(self, alembic_command_stamp):
         """Existing Storm database"""
         Model.metadata.create_all(config.db.engine)
-        self._create_storm_database(
-                self.schema_mgr.LAST_STORM_SCHEMA_VERSION)
-        self.schema_mgr._create = Mock()
-        self.schema_mgr.setup_db()
-        self.assertFalse(self.schema_mgr._create.called)
+        self._create_storm_database(LAST_STORM_SCHEMA_VERSION)
+        self.schema_mgr.setup_database()
+        self.assertFalse(alembic_command_stamp.called)
         self.assertTrue(self._table_exists("mailinglist")
                     and self._table_exists("alembic_version")
                     and not self._table_exists("version"))
 
-    def test_old_storm(self):
+    @patch("alembic.command")
+    def test_old_storm(self, alembic_command):
         """Existing Storm database in an old version"""
         Model.metadata.create_all(config.db.engine)
         self._create_storm_database("001")
-        self.schema_mgr._create = Mock()
-        self.assertRaises(RuntimeError, self.schema_mgr.setup_db)
-        self.assertFalse(self.schema_mgr._create.called)
+        self.assertRaises(DatabaseError, self.schema_mgr.setup_database)
+        self.assertFalse(alembic_command.stamp.called)
+        self.assertFalse(alembic_command.upgrade.called)
 
     def test_old_db(self):
         """The database is in an old revision, must upgrade"""
@@ -155,8 +156,7 @@ class TestSchemaManager(unittest.TestCase):
         config.db.store.execute(md.tables["alembic_version"].insert().values(
                 version_num="dummyrevision"))
         config.db.commit()
-        self.schema_mgr._create = Mock()
-        self.schema_mgr._upgrade = Mock()
-        self.schema_mgr.setup_db()
-        self.assertFalse(self.schema_mgr._create.called)
-        self.assertTrue(self.schema_mgr._upgrade.called)
+        with patch("alembic.command") as alembic_command:
+            self.schema_mgr.setup_database()
+            self.assertFalse(alembic_command.stamp.called)
+            self.assertTrue(alembic_command.upgrade.called)

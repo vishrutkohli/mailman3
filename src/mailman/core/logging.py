@@ -104,6 +104,27 @@ class ReopenableFileHandler(logging.Handler):
 
 
 
+def _init_logger(propagate, sub_name, log, logger_config):
+    # Get settings from log configuration file (or defaults).
+    log_format = logger_config.format
+    log_datefmt = logger_config.datefmt
+    # Propagation to the root logger is how we handle logging to stderr
+    # when the runners are not run as a subprocess of 'bin/mailman start'.
+    log.propagate = (as_boolean(logger_config.propagate)
+                     if propagate is None else propagate)
+    # Set the logger's level.
+    log.setLevel(as_log_level(logger_config.level))
+    # Create a formatter for this logger, then a handler, and link the
+    # formatter to the handler.
+    formatter = logging.Formatter(fmt=log_format, datefmt=log_datefmt)
+    path_str = logger_config.path
+    path_abs = os.path.normpath(os.path.join(config.LOG_DIR, path_str))
+    handler = ReopenableFileHandler(sub_name, path_abs)
+    _handlers[sub_name] = handler
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+
+
 def initialize(propagate=None):
     """Initialize all logs.
 
@@ -126,32 +147,18 @@ def initialize(propagate=None):
             continue
         if sub_name == 'locks':
             log = logging.getLogger('flufl.lock')
-        elif sub_name == 'database':
+        if sub_name == 'database':
+            # Set both the SQLAlchemy and Alembic logs to the mailman.database
+            # log configuration, essentially ignoring the alembic.cfg
+            # settings.  Do the SQLAlchemy one first, then let the Alembic one
+            # fall through to the common code path.
             log = logging.getLogger('sqlalchemy')
-        elif sub_name == 'dbmigration':
+            _init_logger(propagate, sub_name, log, logger_config)
             log = logging.getLogger('alembic')
         else:
             logger_name = 'mailman.' + sub_name
             log = logging.getLogger(logger_name)
-        # Get settings from log configuration file (or defaults).
-        log_format = logger_config.format
-        log_datefmt = logger_config.datefmt
-        # Propagation to the root logger is how we handle logging to stderr
-        # when the runners are not run as a subprocess of 'bin/mailman start'.
-        log.propagate = (as_boolean(logger_config.propagate)
-                         if propagate is None else propagate)
-        # Set the logger's level.
-        log.setLevel(as_log_level(logger_config.level))
-        # Create a formatter for this logger, then a handler, and link the
-        # formatter to the handler.
-        formatter = logging.Formatter(fmt=log_format, datefmt=log_datefmt)
-        path_str = logger_config.path
-        path_abs = os.path.normpath(os.path.join(config.LOG_DIR, path_str))
-        handler = ReopenableFileHandler(sub_name, path_abs)
-        _handlers[sub_name] = handler
-        handler.setFormatter(formatter)
-        log.addHandler(handler)
-
+        _init_logger(propagate, sub_name, log, logger_config)
 
 
 def reopen():

@@ -30,14 +30,9 @@ from alembic import context
 from contextlib import closing
 from sqlalchemy import create_engine
 
-from mailman.core import initialize
 from mailman.config import config
-from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
 from mailman.utilities.string import expand
-
-if not config.initialized:
-    initialize.initialize_1(context.config.config_file_name)
 
 
 
