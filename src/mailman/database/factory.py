@@ -28,8 +28,8 @@ __all__ = [
 
 import os
 import types
+import alembic.command
 
-from alembic import command
 from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from flufl.lock import Lock
@@ -84,6 +84,8 @@ class SchemaManager:
         last_version = self._database.store.query(Version.c.version).filter(
             Version.c.component == 'schema'
             ).order_by(Version.c.version.desc()).first()
+        # Don't leave open transactions or they will block any schema change.
+        self._database.commit()
         return last_version
 
     def setup_database(self):
@@ -99,7 +101,8 @@ class SchemaManager:
             if storm_version is None:
                 # Initial database creation.
                 Model.metadata.create_all(self._database.engine)
-                command.stamp(alembic_cfg, 'head')
+                self._database.commit()
+                alembic.command.stamp(alembic_cfg, 'head')
             else:
                 # The database was previously managed by Storm.
                 if storm_version.version < LAST_STORM_SCHEMA_VERSION:
@@ -107,9 +110,9 @@ class SchemaManager:
                         'Upgrades skipping beta versions is not supported.')
                 # Run migrations to remove the Storm-specific table and upgrade
                 # to SQLAlchemy and Alembic.
-                command.upgrade(alembic_cfg, 'head')
+                alembic.command.upgrade(alembic_cfg, 'head')
         elif current_rev != head_rev:
-            command.upgrade(alembic_cfg, 'head')
+            alembic.command.upgrade(alembic_cfg, 'head')
         return head_rev
 
 

@@ -149,14 +149,14 @@ class ListRequests:
 class _Request(Model):
     """Table for mailing list hold requests."""
 
-    __tablename__ = 'request'
+    __tablename__ = '_request'
 
     id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     request_type = Column(Enum(RequestType))
     data_hash = Column(LargeBinary)
 
-    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'))
+    mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'), index=True)
     mailing_list = relationship('MailingList')
 
     def __init__(self, key, request_type, mailing_list, data_hash):

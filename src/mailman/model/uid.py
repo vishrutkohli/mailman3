@@ -50,7 +50,7 @@ class UID(Model):
     __tablename__ = 'uid'
 
     id = Column(Integer, primary_key=True)
-    uid = Column(UUID)
+    uid = Column(UUID, index=True)
 
     @dbconnection
     def __init__(self, store, uid):

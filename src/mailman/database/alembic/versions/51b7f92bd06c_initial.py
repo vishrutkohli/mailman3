@@ -22,29 +22,45 @@ in the database.  As a consequence, if the database version is reported
 as None, it means the database needs to be created from scratch with
 SQLAlchemy itself.
 
-It also removes the `version` table left over from Storm (if it exists).
+It also removes schema items left over from Storm.
 
-Revision ID: 429e08420177
+Revision ID: 51b7f92bd06c
 Revises: None
-Create Date: 2014-10-02 10:18:17.333354
+Create Date: 2014-10-10 09:53:35.624472
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'downgrade',
+    'upgrade',
     ]
 
-# Revision identifiers, used by Alembic.
-revision = '429e08420177'
-down_revision = None
 
 from alembic import op
+import sqlalchemy as sa
+
+
+# Revision identifiers, used by Alembic.
+revision = '51b7f92bd06c'
+down_revision = None
 
 
 def upgrade():
     op.drop_table('version')
+    if op.get_bind().dialect.name != 'sqlite':
+        # SQLite does not support dropping columns.
+        op.drop_column('mailinglist', 'acceptable_aliases_id')
+    op.create_index(op.f('ix_user__user_id'), 'user',
+                    ['_user_id'], unique=False)
+    op.drop_index('ix_user_user_id', table_name='user')
 
 
 def downgrade():
-    pass
+    op.create_table('version')
+    op.create_index('ix_user_user_id', 'user', ['_user_id'], unique=False)
+    op.drop_index(op.f('ix_user__user_id'), table_name='user')
+    op.add_column(
+        'mailinglist',
+        sa.Column('acceptable_aliases_id', sa.INTEGER(), nullable=True))
