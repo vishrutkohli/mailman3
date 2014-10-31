@@ -152,6 +152,7 @@ enabled: yes
 
 # Attributes in Mailman 2 which have a different type in Mailman 3.
 TYPES = dict(
+    allow_list_posts=bool,
     autorespond_owner=ResponseAction,
     autorespond_postings=ResponseAction,
     autorespond_requests=ResponseAction,
@@ -161,20 +162,20 @@ TYPES = dict(
     default_member_action=member_action_mapping,
     default_nonmember_action=nonmember_action_mapping,
     digest_volume_frequency=DigestFrequency,
+    encode_ascii_prefixes=bool,
     filter_action=filter_action_mapping,
     filter_extensions=list_members_to_unicode,
     filter_types=list_members_to_unicode,
     forward_unrecognized_bounces_to=UnrecognizedBounceDisposition,
+    include_rfc2369_headers=bool,
     moderator_password=unicode_to_string,
     newsgroup_moderation=NewsgroupModeration,
+    nntp_prefix_subject_too=bool,
     pass_extensions=list_members_to_unicode,
     pass_types=list_members_to_unicode,
     personalize=Personalization,
     preferred_language=check_language_code,
     reply_goes_to_list=ReplyToMunging,
-    allow_list_posts=bool,
-    include_rfc2369_headers=bool,
-    nntp_prefix_subject_too=bool,
     )
 
 

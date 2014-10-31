@@ -34,6 +34,7 @@ import unittest
 from datetime import timedelta, datetime
 from enum import Enum
 from pkg_resources import resource_filename
+from sqlalchemy.exc import IntegrityError
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
@@ -290,6 +291,15 @@ class TestBasicImport(unittest.TestCase):
             self.assertIn('[language.xx_XX]', str(error))
         else:
             self.fail('Import21Error was not raised')
+
+    def test_encode_ascii_prefixes(self):
+        self._pckdict['encode_ascii_prefixes'] = 2
+        self.assertEqual(self._mlist.encode_ascii_prefixes, False)
+        try:
+            self._import()
+        except IntegrityError as e:
+            self.fail(e)
+        self.assertEqual(self._mlist.encode_ascii_prefixes, True)
 
 
 
