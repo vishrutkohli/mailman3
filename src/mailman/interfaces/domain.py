@@ -166,6 +166,8 @@ class IDomainManager(Interface):
     def __iter__():
         """An iterator over all the domains.
 
+        Domains are returned sorted by `mail_host`.
+
         :return: iterator over `IDomain`.
         """
 

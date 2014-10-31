@@ -50,7 +50,10 @@ receive a copy of any message sent to the mailing list.
 
 Both addresses appear on the roster of members.
 
-    >>> for member in mlist.members.members:
+    >>> from operator import attrgetter
+    >>> sort_key = attrgetter('address.email')
+
+    >>> for member in sorted(mlist.members.members, key=sort_key):
     ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
@@ -72,7 +75,7 @@ A Person is now both a member and an owner of the mailing list.  C Person is
 an owner and a moderator.
 ::
 
-    >>> for member in mlist.owners.members:
+    >>> for member in sorted(mlist.owners.members, key=sort_key):
     ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.owner>
     <Member: cperson@example.com on aardvark@example.com as MemberRole.owner>
@@ -87,13 +90,13 @@ All rosters can also be accessed indirectly.
 ::
 
     >>> roster = mlist.get_roster(MemberRole.member)
-    >>> for member in roster.members:
+    >>> for member in sorted(roster.members, key=sort_key):
     ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
 
     >>> roster = mlist.get_roster(MemberRole.owner)
-    >>> for member in roster.members:
+    >>> for member in sorted(roster.members, key=sort_key):
     ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.owner>
     <Member: cperson@example.com on aardvark@example.com as MemberRole.owner>
@@ -122,7 +125,7 @@ just by changing their preferred address.
     >>> mlist.subscribe(user)
     <Member: Dave Person <dperson@example.com> on aardvark@example.com
              as MemberRole.member>
-    >>> for member in mlist.members.members:
+    >>> for member in sorted(mlist.members.members, key=sort_key):
     ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
@@ -133,7 +136,7 @@ just by changing their preferred address.
     >>> new_address.verified_on = now()
     >>> user.preferred_address = new_address
 
-    >>> for member in mlist.members.members:
+    >>> for member in sorted(mlist.members.members, key=sort_key):
     ...     print(member)
     <Member: aperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>

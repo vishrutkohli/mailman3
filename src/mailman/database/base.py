@@ -114,3 +114,9 @@ class SABaseDatabase:
         session = sessionmaker(bind=self.engine)
         self.store = session()
         self.store.commit()
+
+    # XXX BAW Why doesn't model.py _reset() do this?
+    def destroy(self):
+        """Drop all database tables"""
+        from mailman.database.model import Model
+        Model.metadata.drop_all(self.engine)

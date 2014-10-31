@@ -86,7 +86,8 @@ class ListManager:
     @dbconnection
     def mailing_lists(self, store):
         """See `IListManager`."""
-        for mlist in store.query(MailingList).all():
+        for mlist in store.query(MailingList).order_by(
+                MailingList._list_id).all():
             yield mlist
 
     @dbconnection

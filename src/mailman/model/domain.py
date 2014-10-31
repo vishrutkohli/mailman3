@@ -48,7 +48,7 @@ class Domain(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mail_host = Column(Unicode)
+    mail_host = Column(Unicode) # TODO: add index?
     base_url = Column(Unicode)
     description = Column(Unicode)
     contact_address = Column(Unicode)
@@ -170,7 +170,7 @@ class DomainManager:
     @dbconnection
     def __iter__(self, store):
         """See `IDomainManager`."""
-        for domain in store.query(Domain).all():
+        for domain in store.query(Domain).order_by(Domain.mail_host).all():
             yield domain
 
     @dbconnection
