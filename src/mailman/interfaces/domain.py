@@ -97,7 +97,10 @@ class IDomain(Interface):
     E.g. postmaster@example.com""")
 
     mailing_lists = Attribute(
-        'All mailing lists for this domain.')
+        """All mailing lists for this domain.
+
+        The mailing lists are returned in order sorted by list-id.
+        """)
 
     def confirm_url(token=''):
         """The url used for various forms of confirmation.

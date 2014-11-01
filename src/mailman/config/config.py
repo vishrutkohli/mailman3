@@ -141,7 +141,7 @@ class Configuration:
     def _expand_paths(self):
         """Expand all configuration paths."""
         # Set up directories.
-        bin_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+        bin_dir = os.path.abspath(os.path.dirname(sys.executable))
         # Now that we've loaded all the configuration files we're going to
         # load, set up some useful directories based on the settings in the
         # configuration file.

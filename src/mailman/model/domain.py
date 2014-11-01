@@ -95,7 +95,8 @@ class Domain(Model):
     def mailing_lists(self, store):
         """See `IDomain`."""
         mailing_lists = store.query(MailingList).filter(
-            MailingList.mail_host == self.mail_host)
+            MailingList.mail_host == self.mail_host
+            ).order_by(MailingList._list_id)
         for mlist in mailing_lists:
             yield mlist
 
