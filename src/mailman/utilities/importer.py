@@ -152,6 +152,7 @@ enabled: yes
 
 # Attributes in Mailman 2 which have a different type in Mailman 3.
 TYPES = dict(
+    allow_list_posts=bool,
     autorespond_owner=ResponseAction,
     autorespond_postings=ResponseAction,
     autorespond_requests=ResponseAction,
@@ -161,12 +162,15 @@ TYPES = dict(
     default_member_action=member_action_mapping,
     default_nonmember_action=nonmember_action_mapping,
     digest_volume_frequency=DigestFrequency,
+    encode_ascii_prefixes=bool,
     filter_action=filter_action_mapping,
     filter_extensions=list_members_to_unicode,
     filter_types=list_members_to_unicode,
     forward_unrecognized_bounces_to=UnrecognizedBounceDisposition,
+    include_rfc2369_headers=bool,
     moderator_password=unicode_to_string,
     newsgroup_moderation=NewsgroupModeration,
+    nntp_prefix_subject_too=bool,
     pass_extensions=list_members_to_unicode,
     pass_types=list_members_to_unicode,
     personalize=Personalization,
@@ -186,7 +190,6 @@ NAME_MAPPINGS = dict(
     filter_mime_types='filter_types',
     generic_nonmember_action='default_nonmember_action',
     include_list_post_header='allow_list_posts',
-    last_post_time='last_post_at',
     member_moderation_action='default_member_action',
     mod_password='moderator_password',
     news_moderation='newsgroup_moderation',
@@ -197,6 +200,14 @@ NAME_MAPPINGS = dict(
     send_goodbye_msg='send_goodbye_message',
     send_welcome_msg='send_welcome_message',
     )
+
+# These DateTime fields of the mailinglist table need a type conversion to
+# Python datetime object for SQLite databases.
+DATETIME_COLUMNS = [
+    'created_at',
+    'digest_last_sent_at',
+    'last_post_time',
+    ]
 
 EXCLUDES = set((
     'digest_members',
@@ -216,6 +227,9 @@ def import_config_pck(mlist, config_dict):
     for key, value in config_dict.items():
         # Some attributes must not be directly imported.
         if key in EXCLUDES:
+            continue
+        # These objects need explicit type conversions.
+        if key in DATETIME_COLUMNS:
             continue
         # Some attributes from Mailman 2 were renamed in Mailman 3.
         key = NAME_MAPPINGS.get(key, key)
@@ -238,6 +252,15 @@ def import_config_pck(mlist, config_dict):
             except (TypeError, KeyError):
                 print('Type conversion error for key "{}": {}'.format(
                     key, value), file=sys.stderr)
+    for key in DATETIME_COLUMNS:
+        try:
+            value = datetime.datetime.utcfromtimestamp(config_dict[key])
+        except KeyError:
+            continue
+        if key == 'last_post_time':
+            setattr(mlist, 'last_post_at', value)
+            continue
+        setattr(mlist, key, value)
     # Handle the archiving policy.  In MM2.1 there were two boolean options
     # but only three of the four possible states were valid.  Now there's just
     # an enum.

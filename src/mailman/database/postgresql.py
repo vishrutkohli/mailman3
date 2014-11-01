@@ -22,33 +22,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'PostgreSQLDatabase',
-    'make_temporary',
     ]
 
 
-import types
-
-from functools import partial
-from operator import attrgetter
-from urlparse import urlsplit, urlunsplit
-
-from mailman.database.base import StormBaseDatabase
-from mailman.testing.helpers import configuration
+from mailman.database.base import SABaseDatabase
+from mailman.database.model import Model
 
 
 
-class PostgreSQLDatabase(StormBaseDatabase):
+class PostgreSQLDatabase(SABaseDatabase):
     """Database class for PostgreSQL."""
-
-    TAG = 'postgres'
-
-    def _database_exists(self, store):
-        """See `BaseDatabase`."""
-        table_query = ('SELECT table_name FROM information_schema.tables '
-                       "WHERE table_schema = 'public'")
-        results = store.execute(table_query)
-        table_names = set(item[0] for item in results)
-        return 'version' in table_names
 
     def _post_reset(self, store):
         """PostgreSQL-specific test suite cleanup.
@@ -57,49 +40,13 @@ class PostgreSQLDatabase(StormBaseDatabase):
         restart from zero for new tests.
         """
         super(PostgreSQLDatabase, self)._post_reset(store)
-        from mailman.database.model import ModelMeta
-        classes = sorted(ModelMeta._class_registry,
-                         key=attrgetter('__storm_table__'))
+        tables = reversed(Model.metadata.sorted_tables)
         # Recipe adapted from
         # http://stackoverflow.com/questions/544791/
         # django-postgresql-how-to-reset-primary-key
-        for model_class in classes:
+        for table in tables:
             store.execute("""\
                 SELECT setval('"{0}_id_seq"', coalesce(max("id"), 1),
                               max("id") IS NOT null)
                        FROM "{0}";
-                """.format(model_class.__storm_table__))
-
-
-
-# Test suite adapter for ITemporaryDatabase.
-
-def _cleanup(self, store, tempdb_name):
-    from mailman.config import config
-    store.rollback()
-    store.close()
-    # From the original database connection, drop the now unused database.
-    config.db.store.execute('DROP DATABASE {0}'.format(tempdb_name))
-
-
-def make_temporary(database):
-    """Adapts by monkey patching an existing PostgreSQL IDatabase."""
-    from mailman.config import config
-    parts = urlsplit(config.database.url)
-    assert parts.scheme == 'postgres'
-    new_parts = list(parts)
-    new_parts[2] = '/mmtest'
-    url = urlunsplit(new_parts)
-    # Use the existing database connection to create a new testing
-    # database.
-    config.db.store.execute('ABORT;')
-    config.db.store.execute('CREATE DATABASE mmtest;')
-    with configuration('database', url=url):
-        database.initialize()
-    database._cleanup = types.MethodType(
-        partial(_cleanup, store=database.store, tempdb_name='mmtest'),
-        database)
-    # bool column values in PostgreSQL.
-    database.FALSE = 'False'
-    database.TRUE = 'True'
-    return database
+                """.format(table))

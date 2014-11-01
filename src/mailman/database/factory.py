@@ -22,23 +22,30 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'DatabaseFactory',
-    'DatabaseTemporaryFactory',
     'DatabaseTestingFactory',
     ]
 
 
 import os
 import types
+import alembic.command
 
+from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from flufl.lock import Lock
-from zope.component import getAdapter
+from sqlalchemy import MetaData
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
 
 from mailman.config import config
+from mailman.database.alembic import alembic_cfg
+from mailman.database.model import Model
 from mailman.interfaces.database import (
-    IDatabase, IDatabaseFactory, ITemporaryDatabase)
+    DatabaseError, IDatabase, IDatabaseFactory)
 from mailman.utilities.modules import call_name
+
+
+LAST_STORM_SCHEMA_VERSION = '20130406000000'
 
 
 
@@ -54,18 +61,69 @@ class DatabaseFactory:
             database = call_name(database_class)
             verifyObject(IDatabase, database)
             database.initialize()
-            database.load_migrations()
+            SchemaManager(database).setup_database()
             database.commit()
             return database
 
 
 
+class SchemaManager:
+    "Manage schema migrations."""
+
+    def __init__(self, database):
+        self._database = database
+        self._script = ScriptDirectory.from_config(alembic_cfg)
+
+    def _get_storm_schema_version(self):
+        metadata = MetaData()
+        metadata.reflect(bind=self._database.engine)
+        if 'version' not in metadata.tables:
+            # There are no Storm artifacts left.
+            return None
+        Version = metadata.tables['version']
+        last_version = self._database.store.query(Version.c.version).filter(
+            Version.c.component == 'schema'
+            ).order_by(Version.c.version.desc()).first()
+        # Don't leave open transactions or they will block any schema change.
+        self._database.commit()
+        return last_version
+
+    def setup_database(self):
+        context = MigrationContext.configure(self._database.store.connection())
+        current_rev = context.get_current_revision()
+        head_rev = self._script.get_current_head()
+        if current_rev == head_rev:
+             # We're already at the latest revision so there's nothing to do.
+            return head_rev
+        if current_rev is None:
+            # No Alembic information is available.
+            storm_version = self._get_storm_schema_version()
+            if storm_version is None:
+                # Initial database creation.
+                Model.metadata.create_all(self._database.engine)
+                self._database.commit()
+                alembic.command.stamp(alembic_cfg, 'head')
+            else:
+                # The database was previously managed by Storm.
+                if storm_version.version < LAST_STORM_SCHEMA_VERSION:
+                    raise DatabaseError(
+                        'Upgrades skipping beta versions is not supported.')
+                # Run migrations to remove the Storm-specific table and upgrade
+                # to SQLAlchemy and Alembic.
+                alembic.command.upgrade(alembic_cfg, 'head')
+        elif current_rev != head_rev:
+            alembic.command.upgrade(alembic_cfg, 'head')
+        return head_rev
+
+
+
 def _reset(self):
     """See `IDatabase`."""
-    from mailman.database.model import ModelMeta
+    # Avoid a circular import at module level.
+    from mailman.database.model import Model
     self.store.rollback()
     self._pre_reset(self.store)
-    ModelMeta._reset(self.store)
+    Model._reset(self)
     self._post_reset(self.store)
     self.store.commit()
 
@@ -81,24 +139,8 @@ class DatabaseTestingFactory:
         database = call_name(database_class)
         verifyObject(IDatabase, database)
         database.initialize()
-        database.load_migrations()
+        Model.metadata.create_all(database.engine)
         database.commit()
         # Make _reset() a bound method of the database instance.
         database._reset = types.MethodType(_reset, database)
         return database
-
-
-
-@implementer(IDatabaseFactory)
-class DatabaseTemporaryFactory:
-    """Create a temporary database for some of the migration tests."""
-
-    @staticmethod
-    def create():
-        """See `IDatabaseFactory`."""
-        database_class_name = config.database['class']
-        database = call_name(database_class_name)
-        verifyObject(IDatabase, database)
-        adapted_database = getAdapter(
-            database, ITemporaryDatabase, database.TAG)
-        return adapted_database

@@ -29,11 +29,11 @@ __all__ = [
 
 import unittest
 
-from storm.locals import Store
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message
+from mailman.config import config
 from mailman.interfaces.listmanager import (
     IListManager, ListCreatedEvent, ListCreatingEvent, ListDeletedEvent,
     ListDeletingEvent)
@@ -79,6 +79,15 @@ class TestListManager(unittest.TestCase):
         self.assertEqual(self._events[0].mailing_list, mlist)
         self.assertTrue(isinstance(self._events[1], ListDeletedEvent))
         self.assertEqual(self._events[1].fqdn_listname, 'another@example.com')
+
+    def test_list_manager_list_ids(self):
+        # You can get all the list ids for all the existing mailing lists.
+        create_list('ant@example.com')
+        create_list('bee@example.com')
+        create_list('cat@example.com')
+        self.assertEqual(
+            sorted(getUtility(IListManager).list_ids),
+            ['ant.example.com', 'bee.example.com', 'cat.example.com'])
 
 
 
@@ -139,9 +148,8 @@ Message-ID: <argon>
         for name in filter_names:
             setattr(self._ant, name, ['test-filter-1', 'test-filter-2'])
         getUtility(IListManager).delete(self._ant)
-        store = Store.of(self._ant)
-        filters = store.find(ContentFilter,
-                             ContentFilter.mailing_list == self._ant)
+        filters = config.db.store.query(ContentFilter).filter_by(
+            mailing_list = self._ant)
         self.assertEqual(filters.count(), 0)
 
 

@@ -24,8 +24,8 @@ __all__ = [
     'Member',
     ]
 
-from storm.locals import Int, Reference, Unicode
-from storm.properties import UUID
+from sqlalchemy import Column, ForeignKey, Integer, Unicode
+from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
@@ -33,7 +33,7 @@ from zope.interface import implementer
 from mailman.core.constants import system_preferences
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
-from mailman.database.types import Enum
+from mailman.database.types import Enum, UUID
 from mailman.interfaces.action import Action
 from mailman.interfaces.address import IAddress
 from mailman.interfaces.listmanager import IListManager
@@ -52,18 +52,20 @@ uid_factory = UniqueIDFactory(context='members')
 class Member(Model):
     """See `IMember`."""
 
-    id = Int(primary=True)
-    _member_id = UUID()
-    role = Enum(MemberRole)
-    list_id = Unicode()
-    moderation_action = Enum(Action)
+    __tablename__ = 'member'
 
-    address_id = Int()
-    _address = Reference(address_id, 'Address.id')
-    preferences_id = Int()
-    preferences = Reference(preferences_id, 'Preferences.id')
-    user_id = Int()
-    _user = Reference(user_id, 'User.id')
+    id = Column(Integer, primary_key=True)
+    _member_id = Column(UUID)
+    role = Column(Enum(MemberRole))
+    list_id = Column(Unicode)
+    moderation_action = Column(Enum(Action))
+
+    address_id = Column(Integer, ForeignKey('address.id'))
+    _address = relationship('Address')
+    preferences_id = Column(Integer, ForeignKey('preferences.id'))
+    preferences = relationship('Preferences')
+    user_id = Column(Integer, ForeignKey('user.id'))
+    _user = relationship('User')
 
     def __init__(self, role, list_id, subscriber):
         self._member_id = uid_factory.new_uid()
@@ -198,5 +200,5 @@ class Member(Model):
         """See `IMember`."""
         # Yes, this must get triggered before self is deleted.
         notify(UnsubscriptionEvent(self.mailing_list, self))
-        store.remove(self.preferences)
-        store.remove(self)
+        store.delete(self.preferences)
+        store.delete(self)

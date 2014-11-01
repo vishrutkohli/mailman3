@@ -25,44 +25,33 @@ __all__ = [
     ]
 
 
-from operator import attrgetter
+import contextlib
 
-from storm.properties import PropertyPublisherMeta
+from mailman.config import config
+from sqlalchemy.ext.declarative import declarative_base
 
 
-
-class ModelMeta(PropertyPublisherMeta):
-    """Do more magic on table classes."""
+class ModelMeta:
+    """The custom metaclass for all model base classes.
 
-    _class_registry = set()
-
-    def __init__(self, name, bases, dict):
-        # Before we let the base class do it's thing, force an __storm_table__
-        # property to enforce our table naming convention.
-        self.__storm_table__ = name.lower()
-        super(ModelMeta, self).__init__(name, bases, dict)
-        # Register the model class so that it can be more easily cleared.
-        # This is required by the test framework so that the corresponding
-        # table can be reset between tests.
-        #
-        # The PRESERVE flag indicates whether the table should be reset or
-        # not.  We have to handle the actual Model base class explicitly
-        # because it does not correspond to a table in the database.
-        if not getattr(self, 'PRESERVE', False) and name != 'Model':
-            ModelMeta._class_registry.add(self)
-
+    This is used in the test suite to quickly reset the database after each
+    test.  It works by iterating over all the tables, deleting each.  The test
+    suite will then recreate the tables before each test.
+    """
     @staticmethod
-    def _reset(store):
-        from mailman.config import config
-        config.db._pre_reset(store)
-        # Make sure this is deterministic, by sorting on the storm table name.
-        classes = sorted(ModelMeta._class_registry,
-                         key=attrgetter('__storm_table__'))
-        for model_class in classes:
-            store.find(model_class).remove()
+    def _reset(db):
+        with contextlib.closing(config.db.engine.connect()) as connection:
+            transaction = connection.begin()
+            try:
+                # Delete all the tables in reverse foreign key dependency
+                # order.  http://tinyurl.com/on8dy6f
+                for table in reversed(Model.metadata.sorted_tables):
+                    connection.execute(table.delete())
+            except:
+                transaction.rollback()
+                raise
+            else:
+                transaction.commit()
 
 
-
-class Model:
-    """Like Storm's `Storm` subclass, but with a bit extra."""
-    __metaclass__ = ModelMeta
+Model = declarative_base(cls=ModelMeta)

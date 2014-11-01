@@ -24,16 +24,13 @@ __all__ = [
     'DatabaseError',
     'IDatabase',
     'IDatabaseFactory',
-    'ITemporaryDatabase',
     ]
 
 
+from mailman.interfaces.errors import MailmanError
 from zope.interface import Attribute, Interface
 
-from mailman.interfaces.errors import MailmanError
 
-
-
 class DatabaseError(MailmanError):
     """A problem with the database occurred."""
 
@@ -61,12 +58,7 @@ class IDatabase(Interface):
         """Abort the current transaction."""
 
     store = Attribute(
-        """The underlying Storm store on which you can do queries.""")
-
-
-
-class ITemporaryDatabase(Interface):
-    """Marker interface for test suite adaptation."""
+        """The underlying database object on which you can do queries.""")
 
 
 

@@ -37,34 +37,34 @@ have already been sent today.
     ...     'aperson@example.com')
 
     >>> from mailman.interfaces.autorespond import Response
-    >>> response_set.todays_count(address, Response.hold)
+    >>> print(response_set.todays_count(address, Response.hold))
     0
-    >>> response_set.todays_count(address, Response.command)
+    >>> print(response_set.todays_count(address, Response.command))
     0
 
 Using the response set, we can record that a hold response is sent to the
 address.
 
     >>> response_set.response_sent(address, Response.hold)
-    >>> response_set.todays_count(address, Response.hold)
+    >>> print(response_set.todays_count(address, Response.hold))
     1
-    >>> response_set.todays_count(address, Response.command)
+    >>> print(response_set.todays_count(address, Response.command))
     0
 
 We can also record that a command response was sent.
 
     >>> response_set.response_sent(address, Response.command)
-    >>> response_set.todays_count(address, Response.hold)
+    >>> print(response_set.todays_count(address, Response.hold))
     1
-    >>> response_set.todays_count(address, Response.command)
+    >>> print(response_set.todays_count(address, Response.command))
     1
 
 Let's send one more.
 
     >>> response_set.response_sent(address, Response.command)
-    >>> response_set.todays_count(address, Response.hold)
+    >>> print(response_set.todays_count(address, Response.hold))
     1
-    >>> response_set.todays_count(address, Response.command)
+    >>> print(response_set.todays_count(address, Response.command))
     2
 
 Now the day flips over and all the counts reset.
@@ -73,9 +73,9 @@ Now the day flips over and all the counts reset.
     >>> from mailman.utilities.datetime import factory
     >>> factory.fast_forward()
 
-    >>> response_set.todays_count(address, Response.hold)
+    >>> print(response_set.todays_count(address, Response.hold))
     0
-    >>> response_set.todays_count(address, Response.command)
+    >>> print(response_set.todays_count(address, Response.command))
     0
 
 
@@ -110,7 +110,7 @@ If there's been no response sent to a particular address, None is returned.
 
     >>> address = getUtility(IUserManager).create_address(
     ...     'bperson@example.com')
-    >>> response_set.todays_count(address, Response.command)
+    >>> print(response_set.todays_count(address, Response.command))
     0
     >>> print(response_set.last_response(address, Response.command))
     None

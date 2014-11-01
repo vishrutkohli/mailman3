@@ -211,9 +211,9 @@ moderators.
     ...
     ... Here's something important about our mailing list.
     ... """)
-    >>> hold_message(mlist, msg, {}, 'Needs approval')
-    2
-    >>> handle_message(mlist, 2, Action.discard, forward=['zack@example.com'])
+    >>> req_id = hold_message(mlist, msg, {}, 'Needs approval')
+    >>> handle_message(mlist, req_id, Action.discard,
+    ...                forward=['zack@example.com'])
 
 The forwarded message is in the virgin queue, destined for the moderator.
 ::
@@ -243,10 +243,9 @@ choosing and their preferred language.
 
     >>> from mailman.app.moderator import hold_subscription
     >>> from mailman.interfaces.member import DeliveryMode
-    >>> hold_subscription(mlist,
-    ...     'fred@example.org', 'Fred Person',
+    >>> req_id = hold_subscription(
+    ...     mlist, 'fred@example.org', 'Fred Person',
     ...     '{NONE}abcxyz', DeliveryMode.regular, 'en')
-    2
 
 
 Disposing of membership change requests
@@ -257,26 +256,27 @@ dispositions for this membership change request.  The most trivial is to
 simply defer a decision for now.
 
     >>> from mailman.app.moderator import handle_subscription
-    >>> handle_subscription(mlist, 2, Action.defer)
-    >>> requests.get_request(2) is not None
+    >>> handle_subscription(mlist, req_id, Action.defer)
+    >>> requests.get_request(req_id) is not None
     True
 
 The held subscription can also be discarded.
 
-    >>> handle_subscription(mlist, 2, Action.discard)
-    >>> print(requests.get_request(2))
+    >>> handle_subscription(mlist, req_id, Action.discard)
+    >>> print(requests.get_request(req_id))
     None
 
 Gwen tries to subscribe to the mailing list, but...
 
-    >>> hold_subscription(mlist,
-    ...     'gwen@example.org', 'Gwen Person',
+    >>> req_id = hold_subscription(
+    ...     mlist, 'gwen@example.org', 'Gwen Person',
     ...     '{NONE}zyxcba', DeliveryMode.regular, 'en')
-    2
+
 
 ...her request is rejected...
 
-    >>> handle_subscription(mlist, 2, Action.reject, 'This is a closed list')
+    >>> handle_subscription(
+    ...     mlist, req_id, Action.reject, 'This is a closed list')
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -304,14 +304,13 @@ The subscription can also be accepted.  This subscribes the address to the
 mailing list.
 
     >>> mlist.send_welcome_message = False
-    >>> hold_subscription(mlist,
-    ...     'herb@example.org', 'Herb Person',
+    >>> req_id = hold_subscription(
+    ...     mlist, 'herb@example.org', 'Herb Person',
     ...     'abcxyz', DeliveryMode.regular, 'en')
-    2
 
 The moderators accept the subscription request.
 
-    >>> handle_subscription(mlist, 2, Action.accept)
+    >>> handle_subscription(mlist, req_id, Action.accept)
 
 And now Herb is a member of the mailing list.
 
@@ -328,29 +327,27 @@ the unsubscribing address is required.
 Herb now wants to leave the mailing list, but his request must be approved.
 
     >>> from mailman.app.moderator import hold_unsubscription
-    >>> hold_unsubscription(mlist, 'herb@example.org')
-    2
+    >>> req_id = hold_unsubscription(mlist, 'herb@example.org')
 
 As with subscription requests, the unsubscription request can be deferred.
 
     >>> from mailman.app.moderator import handle_unsubscription
-    >>> handle_unsubscription(mlist, 2, Action.defer)
+    >>> handle_unsubscription(mlist, req_id, Action.defer)
     >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
 The held unsubscription can also be discarded, and the member will remain
 subscribed.
 
-    >>> handle_unsubscription(mlist, 2, Action.discard)
+    >>> handle_unsubscription(mlist, req_id, Action.discard)
     >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
 The request can be rejected, in which case a message is sent to the member,
 and the person remains a member of the mailing list.
 
-    >>> hold_unsubscription(mlist, 'herb@example.org')
-    2
-    >>> handle_unsubscription(mlist, 2, Action.reject, 'No can do')
+    >>> req_id = hold_unsubscription(mlist, 'herb@example.org')
+    >>> handle_unsubscription(mlist, req_id, Action.reject, 'No can do')
     >>> print(mlist.members.get_member('herb@example.org').address)
     Herb Person <herb@example.org>
 
@@ -381,10 +378,9 @@ Herb gets a rejection notice.
 The unsubscription request can also be accepted.  This removes the member from
 the mailing list.
 
-    >>> hold_unsubscription(mlist, 'herb@example.org')
-    2
+    >>> req_id = hold_unsubscription(mlist, 'herb@example.org')
     >>> mlist.send_goodbye_message = False
-    >>> handle_unsubscription(mlist, 2, Action.accept)
+    >>> handle_unsubscription(mlist, req_id, Action.accept)
     >>> print(mlist.members.get_member('herb@example.org'))
     None
 
@@ -403,9 +399,8 @@ list is configured to send them.
 
 Iris tries to subscribe to the mailing list.
 
-    >>> hold_subscription(mlist, 'iris@example.org', 'Iris Person',
+    >>> req_id = hold_subscription(mlist, 'iris@example.org', 'Iris Person',
     ...                   'password', DeliveryMode.regular, 'en')
-    2
 
 There's now a message in the virgin queue, destined for the list owner.
 
@@ -429,8 +424,7 @@ There's now a message in the virgin queue, destined for the list owner.
 Similarly, the administrator gets notifications on unsubscription requests.
 Jeff is a member of the mailing list, and chooses to unsubscribe.
 
-    >>> hold_unsubscription(mlist, 'jeff@example.org')
-    3
+    >>> unsub_req_id = hold_unsubscription(mlist, 'jeff@example.org')
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -457,7 +451,7 @@ receive a membership change notice.
 
     >>> mlist.admin_notify_mchanges = True
     >>> mlist.admin_immed_notify = False
-    >>> handle_subscription(mlist, 2, Action.accept)
+    >>> handle_subscription(mlist, req_id, Action.accept)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -474,9 +468,8 @@ receive a membership change notice.
 Similarly when an unsubscription request is accepted, the administrators can
 get a notification.
 
-    >>> hold_unsubscription(mlist, 'iris@example.org')
-    4
-    >>> handle_unsubscription(mlist, 4, Action.accept)
+    >>> req_id = hold_unsubscription(mlist, 'iris@example.org')
+    >>> handle_unsubscription(mlist, req_id, Action.accept)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -498,10 +491,9 @@ can get a welcome message.
 
     >>> mlist.admin_notify_mchanges = False
     >>> mlist.send_welcome_message = True
-    >>> hold_subscription(mlist, 'kate@example.org', 'Kate Person',
-    ...                   'password', DeliveryMode.regular, 'en')
-    4
-    >>> handle_subscription(mlist, 4, Action.accept)
+    >>> req_id = hold_subscription(mlist, 'kate@example.org', 'Kate Person',
+    ...                            'password', DeliveryMode.regular, 'en')
+    >>> handle_subscription(mlist, req_id, Action.accept)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -523,9 +515,8 @@ Similarly, when the member's unsubscription request is approved, she'll get a
 goodbye message.
 
     >>> mlist.send_goodbye_message = True
-    >>> hold_unsubscription(mlist, 'kate@example.org')
-    4
-    >>> handle_unsubscription(mlist, 4, Action.accept)
+    >>> req_id = hold_unsubscription(mlist, 'kate@example.org')
+    >>> handle_unsubscription(mlist, req_id, Action.accept)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1

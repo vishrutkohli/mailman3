@@ -54,7 +54,7 @@ class enum_validator:
             return self._enum_class[enum_value]
         except KeyError as exception:
             # Retain the error message.
-            raise ValueError(exception.message)
+            raise ValueError(exception.args[0])
 
 
 def subscriber_validator(subscriber):

@@ -49,6 +49,7 @@ key, along with the names of the corresponding sections.
     [logging.config] path: mailman.log
     [logging.error] path: mailman.log
     [logging.smtp] path: smtp.log
+    [logging.database] path: mailman.log
     [logging.http] path: mailman.log
     [logging.root] path: mailman.log
     [logging.fromusenet] path: mailman.log

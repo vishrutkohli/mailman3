@@ -73,3 +73,7 @@ on instance variables.
     version  : 3
 
 XXX More of the Runner API should be tested.
+
+..
+    Clean up.
+    >>> config.pop('test-runner')

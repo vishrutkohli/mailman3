@@ -26,7 +26,8 @@ __all__ = [
 
 
 from email.utils import formataddr
-from storm.locals import DateTime, Int, Reference, Unicode
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
+from sqlalchemy.orm import relationship, backref
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
@@ -42,17 +43,20 @@ from mailman.utilities.datetime import now
 class Address(Model):
     """See `IAddress`."""
 
-    id = Int(primary=True)
-    email = Unicode()
-    _original = Unicode()
-    display_name = Unicode()
-    _verified_on = DateTime(name='verified_on')
-    registered_on = DateTime()
+    __tablename__ = 'address'
 
-    user_id = Int()
-    user = Reference(user_id, 'User.id')
-    preferences_id = Int()
-    preferences = Reference(preferences_id, 'Preferences.id')
+    id = Column(Integer, primary_key=True)
+    email = Column(Unicode)
+    _original = Column(Unicode)
+    display_name = Column(Unicode)
+    _verified_on = Column('verified_on', DateTime)
+    registered_on = Column(DateTime)
+
+    user_id = Column(Integer, ForeignKey('user.id'), index=True)
+
+    preferences_id = Column(Integer, ForeignKey('preferences.id'), index=True)
+    preferences = relationship(
+        'Preferences', backref=backref('address', uselist=False))
 
     def __init__(self, email, display_name):
         super(Address, self).__init__()
