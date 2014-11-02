@@ -71,11 +71,6 @@ class RootedAPI(API):
         # Since the path is always rooted at /, skip the first segment, which
         # will always be the empty string.
         path_segments.pop(0)
-        if len(path_segments) == 0:
-            # We're at the end of the path, so the root must be the responder.
-            method_map = create_http_method_map(self._root, None, None, None)
-            responder = method_map[method]
-            return responder, {}, self._root
         this_segment = path_segments.pop(0)
         resource = self._root
         while True:
