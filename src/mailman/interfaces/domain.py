@@ -31,9 +31,8 @@ __all__ = [
     ]
 
 
-from zope.interface import Interface, Attribute
-
 from mailman.core.errors import MailmanError
+from zope.interface import Interface, Attribute
 
 
 
@@ -97,7 +96,10 @@ class IDomain(Interface):
     E.g. postmaster@example.com""")
 
     mailing_lists = Attribute(
-        'All mailing lists for this domain.')
+        """All mailing lists for this domain.
+
+        The mailing lists are returned in order sorted by list-id.
+        """)
 
     def confirm_url(token=''):
         """The url used for various forms of confirmation.
@@ -165,6 +167,8 @@ class IDomainManager(Interface):
 
     def __iter__():
         """An iterator over all the domains.
+
+        Domains are returned sorted by `mail_host`.
 
         :return: iterator over `IDomain`.
         """

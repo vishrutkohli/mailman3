@@ -52,12 +52,12 @@ class UserManager:
     @dbconnection
     def delete_user(self, store, user):
         """See `IUserManager`."""
-        store.remove(user)
+        store.delete(user)
 
     @dbconnection
     def get_user(self, store, email):
         """See `IUserManager`."""
-        addresses = store.find(Address, email=email.lower())
+        addresses = store.query(Address).filter_by(email=email.lower())
         if addresses.count() == 0:
             return None
         return addresses.one().user
@@ -65,7 +65,7 @@ class UserManager:
     @dbconnection
     def get_user_by_id(self, store, user_id):
         """See `IUserManager`."""
-        users = store.find(User, _user_id=user_id)
+        users = store.query(User).filter_by(_user_id=user_id)
         if users.count() == 0:
             return None
         return users.one()
@@ -74,13 +74,13 @@ class UserManager:
     @dbconnection
     def users(self, store):
         """See `IUserManager`."""
-        for user in store.find(User):
+        for user in store.query(User).all():
             yield user
 
     @dbconnection
     def create_address(self, store, email, display_name=None):
         """See `IUserManager`."""
-        addresses = store.find(Address, email=email.lower())
+        addresses = store.query(Address).filter(Address.email==email.lower())
         if addresses.count() == 1:
             found = addresses[0]
             raise ExistingAddressError(found.original_email)
@@ -101,12 +101,12 @@ class UserManager:
         # unlinked before the address can be deleted.
         if address.user:
             address.user.unlink(address)
-        store.remove(address)
+        store.delete(address)
 
     @dbconnection
     def get_address(self, store, email):
         """See `IUserManager`."""
-        addresses = store.find(Address, email=email.lower())
+        addresses = store.query(Address).filter_by(email=email.lower())
         if addresses.count() == 0:
             return None
         return addresses.one()
@@ -115,12 +115,12 @@ class UserManager:
     @dbconnection
     def addresses(self, store):
         """See `IUserManager`."""
-        for address in store.find(Address):
+        for address in store.query(Address).all():
             yield address
 
     @property
     @dbconnection
     def members(self, store):
         """See `IUserManager."""
-        for member in store.find(Member):
+        for member in store.query(Member).all():
                 yield member

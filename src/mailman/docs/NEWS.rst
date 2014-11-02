@@ -12,6 +12,26 @@ Here is a history of user visible changes to Mailman.
 ====================================
 (2014-XX-XX)
 
+Database
+--------
+ * The ORM layer, previously implemented with Storm, has been replaced by
+   SQLAlchemy, thanks to the fantastic work by Abhilash Raj and Aurélien
+   Bompard.  Alembic is now used for all database schema migrations.
+ * The new logger `mailman.database` logs any errors at the database layer.
+
+API
+---
+ * Several changes to the internal API:
+   - `IListManager.mailing_lists` is guaranteed to be sorted in List-ID order.
+   - `IDomains.mailing_lists` is guaranteed to be sorted in List-ID order.
+   - Iteration over domains via the `IDomainManager` is guaranteed to be sorted
+     by `IDomain.mail_host` order.
+   - `ITemporaryDatabase` interface and all implementations are removed.
+
+Configuration
+-------------
+ * The ``[database]migrations_path`` setting is removed.
+
 
 3.0 beta 4 -- "Time and Motion"
 ===============================

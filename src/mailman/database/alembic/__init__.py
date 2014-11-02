@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2014 by the Free Software Foundation, Inc.
+# Copyright (C) 2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -15,29 +15,18 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Schema migration helpers."""
+"""Alembic configuration initization."""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'make_listid',
+    'alembic_cfg',
     ]
 
 
-
-def make_listid(fqdn_listname):
-    """Turn a FQDN list name into a List-ID."""
-    list_name, at, mail_host = fqdn_listname.partition('@')
-    if at == '':
-        # If there is no @ sign in the value, assume it already contains the
-        # list-id.
-        return fqdn_listname
-    return '{0}.{1}'.format(list_name, mail_host)
+from alembic.config import Config
+from mailman.utilities.modules import expand_path
 
 
-
-def pivot(store, table_name):
-    """Pivot a backup table into the real table name."""
-    store.execute('DROP TABLE {}'.format(table_name))
-    store.execute('ALTER TABLE {0}_backup RENAME TO {0}'.format(table_name))
+alembic_cfg = Config(expand_path('python:mailman.config.alembic'))

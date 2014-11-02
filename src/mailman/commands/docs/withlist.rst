@@ -90,13 +90,13 @@ must start with a caret.
     >>> args.listname = '^.*example.com'
     >>> command.process(args)
     The list's display name is Aardvark
-    The list's display name is Badger
     The list's display name is Badboys
+    The list's display name is Badger
 
     >>> args.listname = '^bad.*'
     >>> command.process(args)
-    The list's display name is Badger
     The list's display name is Badboys
+    The list's display name is Badger
 
     >>> args.listname = '^foo'
     >>> command.process(args)

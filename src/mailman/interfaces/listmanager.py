@@ -31,9 +31,8 @@ __all__ = [
     ]
 
 
-from zope.interface import Interface, Attribute
-
 from mailman.interfaces.errors import MailmanError
+from zope.interface import Interface, Attribute
 
 
 
@@ -130,8 +129,10 @@ class IListManager(Interface):
         """
 
     mailing_lists = Attribute(
-        """An iterator over all the mailing list objects managed by this list
-        manager.""")
+        """An iterator over all the mailing list objects.
+
+        The mailing lists are returned in order sorted by `list_id`.
+        """)
 
     def __iter__():
         """An iterator over all the mailing lists.

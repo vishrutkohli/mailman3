@@ -64,12 +64,8 @@ class Identity:
         mlist.info = ''
         mlist.preferred_language = 'en'
         mlist.subject_prefix = _('[$mlist.display_name] ')
-        # Set this to Never if the list's preferred language uses us-ascii,
-        # otherwise set it to As Needed.
-        if mlist.preferred_language.charset == 'us-ascii':
-            mlist.encode_ascii_prefixes = 0
-        else:
-            mlist.encode_ascii_prefixes = 2
+        mlist.encode_ascii_prefixes = (
+            mlist.preferred_language.charset != 'us-ascii')
 
 
 

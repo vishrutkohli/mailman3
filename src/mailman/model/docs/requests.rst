@@ -35,7 +35,7 @@ Holding requests
 
 The list's requests database starts out empty.
 
-    >>> requests.count
+    >>> print(requests.count)
     0
     >>> dump_list(requests.held_requests)
     *Empty*
@@ -68,21 +68,21 @@ Getting requests
 
 We can see the total number of requests being held.
 
-    >>> requests.count
+    >>> print(requests.count)
     3
 
 We can also see the number of requests being held by request type.
 
-    >>> requests.count_of(RequestType.subscription)
+    >>> print(requests.count_of(RequestType.subscription))
     1
-    >>> requests.count_of(RequestType.unsubscription)
+    >>> print(requests.count_of(RequestType.unsubscription))
     1
 
 We can also see when there are multiple held requests of a particular type.
 
-    >>> requests.hold_request(RequestType.held_message, 'hold_4')
+    >>> print(requests.hold_request(RequestType.held_message, 'hold_4'))
     4
-    >>> requests.count_of(RequestType.held_message)
+    >>> print(requests.count_of(RequestType.held_message))
     2
 
 We can ask the requests database for a specific request, by providing the id
@@ -132,7 +132,7 @@ Iterating over requests
 To make it easier to find specific requests, the list requests can be iterated
 over by type.
 
-    >>> requests.count_of(RequestType.held_message)
+    >>> print(requests.count_of(RequestType.held_message))
     3
     >>> for request in requests.of_type(RequestType.held_message):
     ...     key, data = requests.get_request(request.id)
@@ -154,10 +154,10 @@ Deleting requests
 Once a specific request has been handled, it can be deleted from the requests
 database.
 
-    >>> requests.count
+    >>> print(requests.count)
     5
     >>> requests.delete_request(2)
-    >>> requests.count
+    >>> print(requests.count)
     4
 
 Request 2 is no longer in the database.
@@ -167,5 +167,5 @@ Request 2 is no longer in the database.
 
     >>> for request in requests.held_requests:
     ...     requests.delete_request(request.id)
-    >>> requests.count
+    >>> print(requests.count)
     0

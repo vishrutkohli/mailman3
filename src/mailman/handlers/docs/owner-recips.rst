@@ -41,7 +41,7 @@ Anne disables her owner delivery, so she will not receive `-owner` emails.
     >>> handler.process(mlist_1, msg, msgdata)
     >>> dump_list(msgdata['recipients'])
     bart@example.com
-    
+
 If Bart also disables his owner delivery, then no one could contact the list's
 owners.  Since this is unacceptable, the site owner is used as a fallback.
 
@@ -55,7 +55,7 @@ For mailing lists which have no owners at all, the site owner is also used as
 a fallback.
 
     >>> mlist_2 = create_list('beta@example.com')
-    >>> mlist_2.administrators.member_count
+    >>> print(mlist_2.administrators.member_count)
     0
     >>> msgdata = {}
     >>> handler.process(mlist_2, msg, msgdata)
