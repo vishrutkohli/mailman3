@@ -73,7 +73,7 @@ converting their values.
     >>> validator = Validator(one=int, two=unicode, three=bool)
 
     >>> class FakeRequest:
-    ...     params = {}
+    ...     params = None
     >>> FakeRequest.params = dict(one='1', two='two', three='yes')
 
 On valid input, the validator can be used as a ``**keyword`` argument.
@@ -157,12 +157,17 @@ such form data.  Specifically, when a key shows up multiple times in the form
 data, a list is given to the validator.
 ::
 
-    # Of course we can't use a normal dictionary, but webob has a useful data
-    # type we can use.
-    >>> from webob.multidict import MultiDict
-    >>> form_data = MultiDict(one='1', many='3')
-    >>> form_data.add('many', '4')
-    >>> form_data.add('many', '5')
+    # We can't use a normal dictionary because we'll have multiple keys, but
+    # the validator only wants to call .items() on the object.
+    >>> class MultiDict:
+    ...     def __init__(self, *params): self.values = list(params)
+    ...     def items(self): return iter(self.values)
+    >>> form_data = MultiDict(
+    ...     ('one', '1'),
+    ...     ('many', '3'),
+    ...     ('many', '4'),
+    ...     ('many', '5'),
+    ...     )
 
 This is a validation function that ensures the value is a list.
 
@@ -191,11 +196,12 @@ And a validator to pull it all together.
 The list values are guaranteed to be in the same order they show up in the
 form data.
 
-    >>> from webob.multidict import MultiDict
-    >>> form_data = MultiDict(one='1', many='3')
-    >>> form_data.add('many', '5')
-    >>> form_data.add('many', '4')
-    >>> FakeRequest.params = form_data
+    >>> FakeRequest.params = MultiDict(
+    ...     ('one', '1'),
+    ...     ('many', '3'),
+    ...     ('many', '5'),
+    ...     ('many', '4'),
+    ...     )
     >>> values = validator(FakeRequest)
     >>> print(values['one'])
     1

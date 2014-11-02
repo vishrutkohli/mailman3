@@ -27,7 +27,7 @@ __all__ = [
 
 import unittest
 
-from falcon import InvalidParam, Request
+from falcon import HTTPInvalidParam, Request
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
 from mailman.rest.helpers import paginate
@@ -104,7 +104,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate
         def get_collection(self, request):
             return []
-        self.assertRaises(InvalidParam, get_collection,
+        self.assertRaises(HTTPInvalidParam, get_collection,
                           None, _FakeRequest('two', 1))
 
     def test_negative_count(self):
@@ -112,7 +112,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        self.assertRaises(InvalidParam, get_collection,
+        self.assertRaises(HTTPInvalidParam, get_collection,
                           None, _FakeRequest(-1, 1))
 
     def test_negative_page(self):
@@ -120,7 +120,7 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        self.assertRaises(InvalidParam, get_collection,
+        self.assertRaises(HTTPInvalidParam, get_collection,
                           None, _FakeRequest(1, -1))
 
     def test_negative_page_and_count(self):
@@ -128,5 +128,5 @@ class TestPaginateHelper(unittest.TestCase):
         @paginate
         def get_collection(self, request):
             return ['one', 'two', 'three', 'four', 'five']
-        self.assertRaises(InvalidParam, get_collection,
+        self.assertRaises(HTTPInvalidParam, get_collection,
                           None, _FakeRequest(-1, -1))
