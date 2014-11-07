@@ -45,7 +45,7 @@ gets modified to contain the etag under the ``http_etag`` key.
     >>> resource = dict(geddy='bass', alex='guitar', neil='drums')
     >>> json_data = etag(resource)
     >>> print(resource['http_etag'])
-    "43942176d8d5bb4414ccf35e2720ccd5251e66da"
+    "96e036d66248cab746b7d97047e08896fcfb2493"
 
 For convenience, the etag function also returns the JSON representation of the
 dictionary after tagging, since that's almost always what you want.
@@ -58,7 +58,7 @@ dictionary after tagging, since that's almost always what you want.
     >>> dump_msgdata(data)
     alex     : guitar
     geddy    : bass
-    http_etag: "43942176d8d5bb4414ccf35e2720ccd5251e66da"
+    http_etag: "96e036d66248cab746b7d97047e08896fcfb2493"
     neil     : drums
 
 

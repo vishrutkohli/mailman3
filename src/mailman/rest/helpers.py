@@ -46,6 +46,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from lazr.config import as_boolean
 from mailman.config import config
+from pprint import pformat
 
 
 
@@ -103,8 +104,10 @@ def etag(resource):
     :rtype string
     """
     assert 'http_etag' not in resource, 'Resource already etagged'
-    etag = hashlib.sha1(repr(resource)).hexdigest()
-
+    # Calculate the tag from a predictable (i.e. sorted) representation of the
+    # dictionary.  The actual details aren't so important.  pformat() is
+    # guaranteed to sort the keys.
+    etag = hashlib.sha1(pformat(resource)).hexdigest()
     resource['http_etag'] = '"{0}"'.format(etag)
     return json.dumps(resource, cls=ExtendedEncoder)
 
