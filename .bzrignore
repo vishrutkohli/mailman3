@@ -21,3 +21,4 @@ distribute-*.egg
 distribute-*.tar.gz
 .coverage
 htmlcov
+.tox

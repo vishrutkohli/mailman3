@@ -501,8 +501,9 @@ class TestConvertToURI(unittest.TestCase):
                 ))
             loader = getUtility(ITemplateLoader)
             text = loader.get(template_uri)
-            self.assertEqual(text, expected_text,
-                    'Old variables were not converted for %s' % newvar)
+            self.assertEqual(
+                text, expected_text,
+                'Old variables were not converted for %s' % newvar)
 
     def test_keep_default(self):
         # If the value was not changed from MM2.1's default, don't import it.

@@ -194,7 +194,7 @@ message sent, with all the recipients packed into the envelope recipients
     <BLANKLINE>
     This is a test.
 
-The ``X-RcptTo:`` header contains the set of recipients, in random order.
+The ``X-RcptTo:`` header contains the set of recipients, in sorted order.
 
     >>> len(messages[0]['x-rcptto'].split(','))
     100

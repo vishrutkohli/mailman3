@@ -94,8 +94,9 @@ def process(mlist, msg, msgdata):
                 if permalink is not None:
                     headers['Archived-At'] = permalink
     # XXX RFC 2369 also defines a List-Owner header which we are not currently
-    # supporting, but should.
-    for h, v in headers.items():
+    # supporting, but should.  We need to add these headers in a predictable
+    # order.
+    for h, v in sorted(headers.items()):
         # First we delete any pre-existing headers because the RFC permits
         # only one copy of each, and we want to be sure it's ours.
         del msg[h]
