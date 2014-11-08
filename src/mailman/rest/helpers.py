@@ -92,11 +92,12 @@ class ExtendedEncoder(json.JSONEncoder):
 def etag(resource):
     """Calculate the etag and return a JSON representation.
 
-    The input is a dictionary representing the resource.  This dictionary must
-    not contain an `http_etag` key.  This function calculates the etag by
-    using the sha1 hexdigest of the repr of the dictionary.  It then inserts
-    this value under the `http_etag` key, and returns the JSON representation
-    of the modified dictionary.
+    The input is a dictionary representing the resource.  This
+    dictionary must not contain an `http_etag` key.  This function
+    calculates the etag by using the sha1 hexdigest of the
+    pretty-printed (and thus key-sorted and predictable) representation
+    of the dictionary.  It then inserts this value under the `http_etag`
+    key, and returns the JSON representation of the modified dictionary.
 
     :param resource: The original resource representation.
     :type resource: dictionary

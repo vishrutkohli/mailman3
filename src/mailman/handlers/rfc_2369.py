@@ -54,7 +54,7 @@ def process(mlist, msg, msgdata):
         listid_h = formataddr((str(i18ndesc), list_id))
     else:
         # Without a description, we need to ensure the MUST brackets.
-        listid_h = '<{0}>'.format(list_id)
+        listid_h = '<{}>'.format(list_id)
     # No other agent should add a List-ID header except Mailman.
     del msg['list-id']
     msg['List-Id'] = listid_h
@@ -62,43 +62,50 @@ def process(mlist, msg, msgdata):
     # "X-List-Administrivia: yes" header.  For all others (i.e. those coming
     # from list posts), we add a bunch of other RFC 2369 headers.
     requestaddr = mlist.request_address
-    subfieldfmt = '<{0}>, <mailto:{1}>'
+    subfieldfmt = '<{}>, <mailto:{}>'
     listinfo = mlist.script_url('listinfo')
-    headers = {}
+    headers = []
     # XXX reduced_list_headers used to suppress List-Help, List-Subject, and
     # List-Unsubscribe from UserNotification.  That doesn't seem to make sense
     # any more, so always add those three headers (others will still be
     # suppressed).
-    headers.update({
-        'List-Help'       : '<mailto:{0}?subject=help>'.format(requestaddr),
-        'List-Unsubscribe': subfieldfmt.format(listinfo, mlist.leave_address),
-        'List-Subscribe'  : subfieldfmt.format(listinfo, mlist.join_address),
-        })
+    headers.extend((
+        ('List-Help', '<mailto:{}?subject=help>'.format(requestaddr)),
+        ('List-Unsubscribe',
+         subfieldfmt.format(listinfo, mlist.leave_address)),
+        ('List-Subscribe', subfieldfmt.format(listinfo, mlist.join_address)),
+        ))
     if not msgdata.get('reduced_list_headers'):
         # List-Post: is controlled by a separate attribute, which is somewhat
         # misnamed.  RFC 2369 requires a value of NO if posting is not
         # allowed, i.e. for an announce-only list.
-        list_post = ('<mailto:{0}>'.format(mlist.posting_address)
+        list_post = ('<mailto:{}>'.format(mlist.posting_address)
                      if mlist.allow_list_posts
                      else 'NO')
-        headers['List-Post'] = list_post
+        headers.append(('List-Post', list_post))
         # Add RFC 2369 and 5064 archiving headers, if archiving is enabled.
         if mlist.archive_policy is not ArchivePolicy.never:
             archiver_set = IListArchiverSet(mlist)
             for archiver in archiver_set.archivers:
                 if not archiver.is_enabled:
                     continue
-                headers['List-Archive'] = '<{0}>'.format(
+                archiver_url = '<{}>'.format(
                     archiver.system_archiver.list_url(mlist))
+                headers.append(('List-Archive', archiver_url))
                 permalink = archiver.system_archiver.permalink(mlist, msg)
                 if permalink is not None:
-                    headers['Archived-At'] = permalink
+                    headers.append(('Archived-At', permalink))
     # XXX RFC 2369 also defines a List-Owner header which we are not currently
     # supporting, but should.
-    for h, v in headers.items():
-        # First we delete any pre-existing headers because the RFC permits
-        # only one copy of each, and we want to be sure it's ours.
+    #
+    # Some headers will appear more than once in the new set, e.g. the
+    # List-Archive and Archived-At headers.  We want to delete any RFC 2369
+    # headers from the original message, but make sure to preserve all of the
+    # new headers we're adding.  Go through the list of new headers twice,
+    # first removing any old ones, then adding all the new ones.
+    for h, v in headers:
         del msg[h]
+    for h, v in sorted(headers):
         # Wrap these lines if they are too long.  78 character width probably
         # shouldn't be hardcoded, but is at least text-MUA friendly.  The
         # adding of 2 is for the colon-space separator.

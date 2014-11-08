@@ -161,6 +161,11 @@ class ConnectionCountingServer(QueueServer):
         log.info('[ConnectionCountingServer] accepted: %s', address)
         StatisticsChannel(self, connection, address)
 
+    def process_message(self, peer, mailfrom, rcpttos, data):
+        # Provide a guaranteed order to recpttos.
+        QueueServer.process_message(
+            self, peer, mailfrom, sorted(rcpttos), data)
+
     def reset(self):
         """See `lazr.smtp.server.Server`."""
         QueueServer.reset(self)

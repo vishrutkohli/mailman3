@@ -81,7 +81,7 @@ Every recipient got the same copy of the message.
     Message-ID: <first>
     X-Peer: ...
     X-MailFrom: test-bounces@example.com
-    X-RcptTo: cperson@example.com, bperson@example.com, aperson@example.com
+    X-RcptTo: aperson@example.com, bperson@example.com, cperson@example.com
     <BLANKLINE>
     First post!
 
@@ -222,7 +222,7 @@ VERP'd.
     1
 
     >>> show_headers(messages)
-    cperson@example.com, bperson@example.com, aperson@example.com
+    aperson@example.com, bperson@example.com, cperson@example.com
     test-bounces@example.com
 
     # Perform post-delivery bookkeeping.
@@ -242,7 +242,7 @@ The second message sent to the list is also not VERP'd.
     1
 
     >>> show_headers(messages)
-    cperson@example.com, bperson@example.com, aperson@example.com
+    aperson@example.com, bperson@example.com, cperson@example.com
     test-bounces@example.com
 
     # Perform post-delivery bookkeeping.
@@ -281,7 +281,7 @@ The next one is back to bulk delivery.
     1
 
     >>> show_headers(messages)
-    cperson@example.com, bperson@example.com, aperson@example.com
+    aperson@example.com, bperson@example.com, cperson@example.com
     test-bounces@example.com
 
     >>> config.pop('verp occasionally')
@@ -394,7 +394,7 @@ Neither the first message...
     1
 
     >>> show_headers(messages)
-    cperson@example.com, bperson@example.com, aperson@example.com
+    aperson@example.com, bperson@example.com, cperson@example.com
     test-bounces@example.com
 
 ...nor the second message is VERP'd.
@@ -409,5 +409,5 @@ Neither the first message...
     1
 
     >>> show_headers(messages)
-    cperson@example.com, bperson@example.com, aperson@example.com
+    aperson@example.com, bperson@example.com, cperson@example.com
     test-bounces@example.com

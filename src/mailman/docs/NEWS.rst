@@ -12,6 +12,15 @@ Here is a history of user visible changes to Mailman.
 ====================================
 (2014-XX-XX)
 
+Commands
+--------
+ * The `mailman conf` command no longer takes the `-t/--sort` option; the
+   output is always sorted.
+
+Configuration
+-------------
+ * The ``[database]migrations_path`` setting is removed.
+
 Database
 --------
  * The ORM layer, previously implemented with Storm, has been replaced by
@@ -19,8 +28,15 @@ Database
    Bompard.  Alembic is now used for all database schema migrations.
  * The new logger `mailman.database` logs any errors at the database layer.
 
-API
----
+Development
+-----------
+ * You no longer have to create a virtual environment separately when running
+   the test suite.  Just use `tox`.
+
+Interfaces
+----------
+ * The RFC 2369 headers added to outgoing messages are now added in sorted
+   order.
  * Several changes to the internal API:
    - `IListManager.mailing_lists` is guaranteed to be sorted in List-ID order.
    - `IDomains.mailing_lists` is guaranteed to be sorted in List-ID order.
@@ -28,9 +44,10 @@ API
      by `IDomain.mail_host` order.
    - `ITemporaryDatabase` interface and all implementations are removed.
 
-Configuration
--------------
- * The ``[database]migrations_path`` setting is removed.
+REST
+----
+ * The JSON representation `http_etag` key uses an algorithm that is
+   insensitive to Python's dictionary sort order.
 
 
 3.0 beta 4 -- "Time and Motion"
