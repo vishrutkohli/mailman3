@@ -308,13 +308,15 @@ def import_config_pck(mlist, config_dict):
         'digest_header': 'digest_header_uri',
         'digest_footer': 'digest_footer_uri',
         }
-    # The best we can do is convert only the most common ones.
-    convert_placeholders = {
-        '%(real_name)s': '$display_name',
-        '%(real_name)s@%(host_name)s': '$fqdn_listname',
-        '%(web_page_url)slistinfo%(cgiext)s/%(_internal_name)s':
-            '$listinfo_uri',
-    }
+    # The best we can do is convert only the most common ones.  These are
+    # order dependent; the longer substitution with the common prefix must
+    # show up earlier.
+    convert_placeholders = [
+        ('%(real_name)s@%(host_name)s', '$fqdn_listname'),
+        ('%(real_name)s', '$display_name'),
+        ('%(web_page_url)slistinfo%(cgiext)s/%(_internal_name)s',
+         '$listinfo_uri'),
+        ]
     # Collect defaults.
     defaults = {}
     for oldvar, newvar in convert_to_uri.items():
@@ -339,7 +341,7 @@ def import_config_pck(mlist, config_dict):
             continue
         text = config_dict[oldvar]
         text = text.decode('utf-8', 'replace')
-        for oldph, newph in convert_placeholders.items():
+        for oldph, newph in convert_placeholders:
             text = text.replace(oldph, newph)
         default_value, default_text  = defaults.get(newvar, (None, None))
         if not text and not (default_value or default_text):

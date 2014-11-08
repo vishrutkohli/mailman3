@@ -38,6 +38,7 @@ from cStringIO import StringIO
 from datetime import datetime, timedelta
 from enum import Enum
 from lazr.config import as_boolean
+from pprint import pformat
 from restish import http
 from restish.http import Response
 from restish.resource import MethodDecorator
@@ -89,11 +90,12 @@ class ExtendedEncoder(json.JSONEncoder):
 def etag(resource):
     """Calculate the etag and return a JSON representation.
 
-    The input is a dictionary representing the resource.  This dictionary must
-    not contain an `http_etag` key.  This function calculates the etag by
-    using the sha1 hexdigest of the repr of the dictionary.  It then inserts
-    this value under the `http_etag` key, and returns the JSON representation
-    of the modified dictionary.
+    The input is a dictionary representing the resource.  This
+    dictionary must not contain an `http_etag` key.  This function
+    calculates the etag by using the sha1 hexdigest of the
+    pretty-printed (and thus key-sorted and predictable) representation
+    of the dictionary.  It then inserts this value under the `http_etag`
+    key, and returns the JSON representation of the modified dictionary.
 
     :param resource: The original resource representation.
     :type resource: dictionary
@@ -101,8 +103,10 @@ def etag(resource):
     :rtype string
     """
     assert 'http_etag' not in resource, 'Resource already etagged'
-    etag = hashlib.sha1(repr(resource)).hexdigest()
-
+    # Calculate the tag from a predictable (i.e. sorted) representation of the
+    # dictionary.  The actual details aren't so important.  pformat() is
+    # guaranteed to sort the keys.
+    etag = hashlib.sha1(pformat(resource)).hexdigest()
     resource['http_etag'] = '"{0}"'.format(etag)
     return json.dumps(resource, cls=ExtendedEncoder)
 

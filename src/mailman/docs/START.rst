@@ -65,14 +65,29 @@ The `Development Setup Guide`_ is a recent step-by-step explanation of
 how to set up a complete Mailman 3 system including the Mailman 3 core
 and basic client API, Postorius, and HyperKitty.
 
-Building Mailman 3
-==================
+Testing Mailman 3
+=================
 
-To build Mailman for development purposes, you will create a virtual
-environment.  You need to have the `virtualenv`_ program installed.
+To run the Mailman test suite, just use the `tox`_ command.  `tox` creates a
+virtual environment (virtualenv) for you, installs all the dependencies into
+that virtualenv, and runs the test suite from that virtualenv.  By default it
+does not use the `--system-site-packages` so it downloads everything from the
+Cheeseshop.
+
+You do have access to the virtualenv, and you can use this to run individual
+tests, e.g.::
+
+    % .tox/py27/bin/python -m nose2 -vv -P user
+
+Use `.tox/py27/bin/python -m nose2 --help` for more options.
+
 
 Building for development
 ------------------------
+
+To build Mailman for development purposes, you can create a virtual
+environment outside of tox.  You need to have the `virtualenv`_ program
+installed.
 
 First, create a virtual environment.  By default ``virtualenv`` uses the
 ``python`` executable it finds first on your ``$PATH``.  Make sure this is
@@ -96,37 +111,7 @@ Now, activate the virtual environment and set it up for development::
     % python setup.py develop
 
 Sit back and have some Kombucha while you wait for everything to download and
-install.  If you have older versions of some of the packages, the installation
-may be interrupted with an error such as::
-
-    error: Installed distribution zope.interface 3.8.0 conflicts with requirement zope.interface>=4.1.0
-
-(It appears that this is a defect specific to the ``zope.interface``
-package; it's expected that it should upgrade in this situation.
-However, we cannot rule out similar problems with other packages.)
-
-This issue can be addressed in two ways.  If you are worried about backward
-compatibility with the installed version of the package for some reason, you
-can restart the process by creating a virtualenv without the
-``--system-site-packages`` option.  This may require installation of duplicates
-of many packages, as only the standard library and packages freshly installed
-in the virtualenv will be available to Python.
-
-The alternative is to keep the virtualenv installed with
-``--system-site-packages``, explicitly upgrade the package, and then
-restart the installation::
-
-    % pip install --upgrade zope.interface
-    % python setup.py develop
-
-Now you can run the test suite via::
-
-    % nose2 -v
-
-You should see no failures.  You can also run a subset of the full test suite
-by filter tests on the module or test name using the ``-P`` option::
-
-    % nose2 -v -P user
+install.
 
 Build the online docs by running::
 
@@ -249,3 +234,4 @@ A `five minute guide to Hyperkitty`_ is based on Toshio Kuratomi's README.
 .. _`Postorius documentation`: http://www.pythonhosted.org/postorius/
 .. _`HyperKitty documentation`: https://hyperkitty.readthedocs.org/en/latest/development.html
 .. _`Development Setup Guide`: https://fedorahosted.org/hyperkitty/wiki/DevelopmentSetupGuide
+.. _tox: https://testrun.org/tox/latest/

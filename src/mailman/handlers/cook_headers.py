@@ -136,7 +136,7 @@ def process(mlist, msg, msgdata):
         # Set Reply-To: header to point back to this list.  Add this last
         # because some folks think that some MUAs make it easier to delete
         # addresses from the right than from the left.
-        if mlist.reply_goes_to_list == ReplyToMunging.point_to_list:
+        if mlist.reply_goes_to_list is ReplyToMunging.point_to_list:
             i18ndesc = uheader(mlist, mlist.description, 'Reply-To')
             add((str(i18ndesc), mlist.posting_address))
         del msg['reply-to']

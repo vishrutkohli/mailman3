@@ -13,6 +13,12 @@ no way to stop a pipeline from processing the message once it's started.
     default-posting-pipeline
     >>> from mailman.core.pipelines import process
 
+For the purposes of these examples, we'll enable just one archiver.
+
+    >>> from mailman.interfaces.mailinglist import IListArchiverSet
+    >>> for archiver in IListArchiverSet(mlist).archivers:
+    ...     archiver.is_enabled = (archiver.name == 'mhonarc')
+
 
 Processing a message
 ====================
@@ -43,14 +49,14 @@ etc.
     X-Mailman-Version: ...
     Precedence: list
     List-Id: <test.example.com>
+    Archived-At: http://lists.example.com/.../4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
+    List-Archive: <http://lists.example.com/archives/test@example.com>
+    List-Help: <mailto:test-request@example.com?subject=help>
     List-Post: <mailto:test@example.com>
     List-Subscribe: <http://lists.example.com/listinfo/test@example.com>,
      <mailto:test-join@example.com>
-    Archived-At: http://lists.example.com/.../4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
     List-Unsubscribe: <http://lists.example.com/listinfo/test@example.com>,
      <mailto:test-leave@example.com>
-    List-Archive: <http://lists.example.com/archives/test@example.com>
-    List-Help: <mailto:test-request@example.com?subject=help>
     <BLANKLINE>
     First post!
     <BLANKLINE>
@@ -154,10 +160,3 @@ There's now one message in the digest mailbox, getting ready to be sent.
     <BLANKLINE>
     First post!
     <BLANKLINE>
-
-
-.. Clean up the digests
-   >>> digest.clear()
-   >>> digest.flush()
-   >>> sum(1 for msg in digest_mbox(mlist))
-   0
