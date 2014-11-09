@@ -162,11 +162,13 @@ TYPES = dict(
     default_member_action=member_action_mapping,
     default_nonmember_action=nonmember_action_mapping,
     digest_volume_frequency=DigestFrequency,
+    emergency=bool,
     encode_ascii_prefixes=bool,
     filter_action=filter_action_mapping,
     filter_extensions=list_members_to_unicode,
     filter_types=list_members_to_unicode,
     forward_unrecognized_bounces_to=UnrecognizedBounceDisposition,
+    gateway_to_mail=bool,
     include_rfc2369_headers=bool,
     moderator_password=unicode_to_string,
     newsgroup_moderation=NewsgroupModeration,
@@ -176,6 +178,7 @@ TYPES = dict(
     personalize=Personalization,
     preferred_language=check_language_code,
     reply_goes_to_list=ReplyToMunging,
+    topics_enabled=bool,
     )
 
 

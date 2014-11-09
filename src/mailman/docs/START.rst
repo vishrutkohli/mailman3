@@ -68,18 +68,39 @@ and basic client API, Postorius, and HyperKitty.
 Testing Mailman 3
 =================
 
-To run the Mailman test suite, just use the `tox`_ command.  `tox` creates a
-virtual environment (virtualenv) for you, installs all the dependencies into
-that virtualenv, and runs the test suite from that virtualenv.  By default it
-does not use the `--system-site-packages` so it downloads everything from the
-Cheeseshop.
+To run the Mailman test suite, just use the `tox`_ command::
+
+    $ tox
+
+`tox` creates a virtual environment (virtualenv) for you, installs all the
+dependencies into that virtualenv, and runs the test suite from that
+virtualenv.  By default it does not use the `--system-site-packages` so it
+downloads everything from the Cheeseshop.
 
 You do have access to the virtualenv, and you can use this to run individual
 tests, e.g.::
 
-    % .tox/py27/bin/python -m nose2 -vv -P user
+    $ .tox/py27/bin/python -m nose2 -vv -P user
 
 Use `.tox/py27/bin/python -m nose2 --help` for more options.
+
+If you want to run the full test suite against the PostgreSQL database, set
+the database up as described in :doc:`DATABASE`, then create a `postgres.cfg`
+file any where you want.  This `postgres.cfg` file will contain the
+``[database]`` section for PostgreSQL, e.g.::
+
+    [database]
+    class: mailman.database.postgresql.PostgreSQLDatabase
+    url: postgres://myuser:mypassword@mypghost/mailman
+
+Then run the test suite like so::
+
+    $ MAILMAN_EXTRA_TESTING_CFG=/path/to/postgres.cfg tox -e pg
+
+If you want to run an individual test against PostgreSQL, you would do it like
+so::
+
+    $ MAILMAN_EXTRA_TESTING_CFG=/path/to/postgres.cfg .tox/pg/bin/python -m nose2 -vv -P user
 
 
 Building for development

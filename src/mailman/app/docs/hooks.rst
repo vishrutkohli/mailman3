@@ -53,11 +53,14 @@ script that will produce no output to force the hooks to run.
     >>> from mailman.testing.layers import ConfigLayer
     >>> def call():
     ...     exe = os.path.join(os.path.dirname(sys.executable), 'mailman')
+    ...     env = dict(MAILMAN_CONFIG_FILE=config_path,
+    ...                PYTHONPATH=config_directory)
+    ...     test_cfg = os.environ.get('MAILMAN_EXTRA_TESTING_CFG')
+    ...     if test_cfg is not None:
+    ...         env['MAILMAN_EXTRA_TESTING_CFG'] = test_cfg
     ...     proc = subprocess.Popen(
     ...         [exe, 'lists', '--domain', 'ignore', '-q'],
-    ...         cwd=ConfigLayer.root_directory,
-    ...         env=dict(MAILMAN_CONFIG_FILE=config_path,
-    ...                  PYTHONPATH=config_directory),
+    ...         cwd=ConfigLayer.root_directory, env=env,
     ...         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ...     stdout, stderr = proc.communicate()
     ...     assert proc.returncode == 0, stderr

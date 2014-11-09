@@ -53,13 +53,12 @@ class TestConfiguration(unittest.TestCase):
             if isinstance(event, ConfigurationUpdatedEvent):
                 # Record both the event and the top overlay.
                 events.append(event.config.overlays[0].name)
+        # Do two pushes, and then pop one of them.
         with event_subscribers(on_event):
-            with configuration('test', _configname='my test'):
-                pass
-        # There should be two pushed configuration names on the list now, one
-        # for the push leaving 'my test' on the top of the stack, and one for
-        # the pop, leaving the ConfigLayer's 'test config' on top.
-        self.assertEqual(events, ['my test', 'test config'])
+            with configuration('test', _configname='first'):
+                with configuration('test', _configname='second'):
+                    pass
+                self.assertEqual(events, ['first', 'second', 'first'])
 
 
 
