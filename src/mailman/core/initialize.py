@@ -129,6 +129,14 @@ def initialize_1(config_path=None):
         # For the test suite, force this back to not using a config file.
         config_path = None
     mailman.config.config.load(config_path)
+    # Use this environment variable to define an extra configuration file for
+    # testing.  This is used by the tox.ini to run the full test suite under
+    # PostgreSQL.
+    extra_cfg_path = os.environ.get('MAILMAN_EXTRA_TESTING_CFG')
+    if extra_cfg_path is not None:
+        with open(extra_cfg_path) as fp:
+            extra_cfg = fp.read().decode('utf-8')
+        mailman.config.config.push('extra testing config', extra_cfg)
 
 
 def initialize_2(debug=False, propagate_logs=None, testing=False):

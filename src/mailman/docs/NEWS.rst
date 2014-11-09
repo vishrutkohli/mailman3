@@ -32,6 +32,9 @@ Development
 -----------
  * You no longer have to create a virtual environment separately when running
    the test suite.  Just use `tox`.
+ * You no longer have to edit `src/mailman/testing/testing.cfg` to run the
+   test suite against PostgreSQL.  See `src/mailman/docs/START.rst` for
+   details.
 
 Interfaces
 ----------

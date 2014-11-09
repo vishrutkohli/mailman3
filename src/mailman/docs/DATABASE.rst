@@ -2,10 +2,10 @@
 Setting up your database
 ========================
 
-Mailman uses the Storm_ ORM to provide persistence of data in a relational
-database.  By default, Mailman uses Python's built-in SQLite3_ database,
-however, Storm is compatible with PostgreSQL_ and MySQL, among possibly
-others.
+Mailman uses the SQLAlchemy_ ORM to provide persistence of data in a
+relational database.  By default, Mailman uses Python's built-in SQLite3_
+database, however, SQLAlchemy is compatible with PostgreSQL_ and MySQL, among
+possibly others.
 
 Currently, Mailman is known to work with either the default SQLite3 database,
 or PostgreSQL.  (Volunteers to port it to other databases are welcome!).  If
@@ -14,9 +14,9 @@ you want Mailman to use PostgreSQL, you'll need to set that up first, and then
 change a configuration variable in your ``/etc/mailman.cfg`` file.
 
 Two configuration variables control which database Mailman uses.  The first
-names the class implementing the database interface.  The second names the
-Storm URL for connecting to the database.  Both variables live in the
-``[database]`` section of the configuration file.
+names the class implementing the database interface.  The second names the URL
+for connecting to the database.  Both variables live in the ``[database]``
+section of the configuration file.
 
 
 SQLite3
@@ -50,11 +50,6 @@ You would then need to set both the `class` and `url` variables in
 
 That should be it.
 
-Note that if you want to run the full test suite against PostgreSQL, you
-should make these changes to the ``mailman/testing/testing.cfg`` file (yes,
-eventually we'll make this easier), start up PostgreSQL, enter the virtual
-environment, and run ``nose2 -vv`` as normal.
-
 If you have any problems, you may need to delete the database and re-create
 it::
 
@@ -64,7 +59,7 @@ it::
 My thanks to Stephen A. Goss for his contribution of PostgreSQL support.
 
 
-.. _Storm: http://storm.canonical.com
+.. _SQLAlchemy: http://www.sqlalchemy.org/
 .. _SQLite3: http://docs.python.org/library/sqlite3.html
 .. _PostgreSQL: http://www.postgresql.org/
 .. _MySQL: http://dev.mysql.com/
