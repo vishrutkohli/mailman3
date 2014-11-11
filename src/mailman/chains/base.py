@@ -46,16 +46,16 @@ class Link:
         self.function = function
 
     def __repr__(self):
-        message = '<Link "if {0.rule.name} then {0.action} '
+        message = '<Link "if {0.rule.name} then {0.action}"'
         if self.chain is None and self.function is not None:
-            message += '{0.function}()'
+            message += ' {0.function.__name__}()'
         elif self.chain is not None and self.function is None:
-            message += '{0.chain.name}'
+            message += ' {0.chain.name}'
         elif self.chain is None and self.function is None:
             pass
         else:
-            message += '{0.chain.name} {0.function}()'
-        message += '">'
+            message += ' {0.chain.name} {0.function.__name__}()'
+        message += '>'
         return message.format(self)
 
 
@@ -75,7 +75,7 @@ class TerminalChainBase:
         :param msg: The message.
         :param msgdata: The message metadata.
         """
-        raise NotImplementedError
+        raise NotImplementedError                   # pragma: no cover
 
     def get_links(self, mlist, msg, msgdata):
         """See `IChain`."""
