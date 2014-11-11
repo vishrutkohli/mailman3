@@ -31,6 +31,7 @@ import logging
 
 from falcon import API
 from falcon.responders import path_not_found
+from falcon.routing import create_http_method_map
 from mailman.config import config
 from mailman.database.transaction import transactional
 from mailman.rest.root import Root
@@ -131,7 +132,7 @@ class RootedAPI(API):
                 if len(path_segments) == 0:
                     # We're at the end of the path, so the root must be the
                     # responder.
-                    method_map = self._create_http_method_map(
+                    method_map = create_http_method_map(
                         resource, None, None, None)
                     responder = method_map[method]
                     return responder, {}, resource
