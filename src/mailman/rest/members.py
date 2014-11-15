@@ -30,7 +30,6 @@ __all__ = [
 
 from uuid import UUID
 from operator import attrgetter
-from restish import http, resource
 from zope.component import getUtility
 
 from mailman.app.membership import delete_member
@@ -43,14 +42,15 @@ from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    CollectionMixin, PATCH, etag, no_content, paginate, path_to)
+    CollectionMixin, NotFound, bad_request, child, conflict, created, etag,
+    no_content, not_found, okay, paginate, path_to)
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
 
 
 
-class _MemberBase(resource.Resource, CollectionMixin):
+class _MemberBase(CollectionMixin):
     """Shared base class for member representations."""
 
     def _resource_as_dict(self, member):
@@ -94,11 +94,10 @@ class MemberCollection(_MemberBase):
         """See `CollectionMixin`."""
         raise NotImplementedError
 
-    @resource.GET()
-    def container(self, request):
+    def on_get(self, request, response):
         """roster/[members|owners|moderators]"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        okay(response, etag(resource))
 
 
 
@@ -117,90 +116,93 @@ class AMember(_MemberBase):
             service = getUtility(ISubscriptionService)
             self._member = service.get_member(member_id)
 
-    @resource.GET()
-    def member(self, request):
+    def on_get(self, request, response):
         """Return a single member end-point."""
         if self._member is None:
-            return http.not_found()
-        return http.ok([], self._resource_as_json(self._member))
+            not_found(response)
+        else:
+            okay(response, self._resource_as_json(self._member))
 
-    @resource.child()
+    @child()
     def preferences(self, request, segments):
         """/members/<id>/preferences"""
         if len(segments) != 0:
-            return http.bad_request()
+            return NotFound(), []
         if self._member is None:
-            return http.not_found()
+            return NotFound(), []
         child = Preferences(
             self._member.preferences,
             'members/{0}'.format(self._member.member_id.int))
         return child, []
 
-    @resource.child()
+    @child()
     def all(self, request, segments):
         """/members/<id>/all/preferences"""
         if len(segments) == 0:
-            return http.not_found()
+            return NotFound(), []
         if self._member is None:
-            return http.not_found()
+            return NotFound(), []
         child = ReadOnlyPreferences(
             self._member,
             'members/{0}/all'.format(self._member.member_id.int))
         return child, []
 
-    @resource.DELETE()
-    def delete(self, request):
+    def on_delete(self, request, response):
         """Delete the member (i.e. unsubscribe)."""
         # Leaving a list is a bit different than deleting a moderator or
         # owner.  Handle the former case first.  For now too, we will not send
         # an admin or user notification.
         if self._member is None:
-            return http.not_found()
+            not_found(response)
+            return
         mlist = getUtility(IListManager).get_by_list_id(self._member.list_id)
         if self._member.role is MemberRole.member:
             try:
                 delete_member(mlist, self._member.address.email, False, False)
             except NotAMemberError:
-                return http.not_found()
+                not_found(response)
+                return
         else:
             self._member.unsubscribe()
-        return no_content()
+        no_content(response)
 
-    @PATCH()
-    def patch_membership(self, request):
+    def on_patch(self, request, response):
         """Patch the membership.
 
         This is how subscription changes are done.
         """
         if self._member is None:
-            return http.not_found()
+            not_found(response)
+            return
         try:
             values = Validator(
                 address=unicode,
                 delivery_mode=enum_validator(DeliveryMode),
                 _optional=('address', 'delivery_mode'))(request)
         except ValueError as error:
-            return http.bad_request([], str(error))
+            bad_request(response, str(error))
+            return
         if 'address' in values:
             email = values['address']
             address = getUtility(IUserManager).get_address(email)
             if address is None:
-                return http.bad_request([], b'Address not registered')
+                bad_request(response, b'Address not registered')
+                return
             try:
                 self._member.address = address
             except (MembershipError, UnverifiedAddressError) as error:
-                return http.bad_request([], str(error))
+                bad_request(response, str(error))
+                return
         if 'delivery_mode' in values:
             self._member.preferences.delivery_mode = values['delivery_mode']
-        return no_content()
+        no_content(response)
 
 
 
 class AllMembers(_MemberBase):
     """The members."""
 
-    @resource.POST()
-    def create(self, request):
+    def on_post(self, request, response):
         """Create a new member."""
         service = getUtility(ISubscriptionService)
         try:
@@ -213,25 +215,24 @@ class AllMembers(_MemberBase):
                 _optional=('delivery_mode', 'display_name', 'role'))
             member = service.join(**validator(request))
         except AlreadySubscribedError:
-            return http.conflict([], b'Member already subscribed')
+            conflict(response, b'Member already subscribed')
         except NoSuchListError:
-            return http.bad_request([], b'No such list')
+            bad_request(response, b'No such list')
         except InvalidEmailAddressError:
-            return http.bad_request([], b'Invalid email address')
+            bad_request(response, b'Invalid email address')
         except ValueError as error:
-            return http.bad_request([], str(error))
-        # The member_id are UUIDs.  We need to use the integer equivalent in
-        # the URL.
-        member_id = member.member_id.int
-        location = path_to('members/{0}'.format(member_id))
-        # Include no extra headers or body.
-        return http.created(location, [], None)
+            bad_request(response, str(error))
+        else:
+            # The member_id are UUIDs.  We need to use the integer equivalent
+            # in the URL.
+            member_id = member.member_id.int
+            location = path_to('members/{0}'.format(member_id))
+            created(response, location)
 
-    @resource.GET()
-    def container(self, request):
+    def on_get(self, request, response):
         """/members"""
         resource = self._make_collection(request)
-        return http.ok([], etag(resource))
+        okay(response, etag(resource))
 
 
 
@@ -251,8 +252,7 @@ class _FoundMembers(MemberCollection):
 class FindMembers(_MemberBase):
     """/members/find"""
 
-    @resource.POST()
-    def find(self, request):
+    def on_post(self, request, response):
         """Find a member"""
         service = getUtility(ISubscriptionService)
         validator = Validator(
@@ -260,10 +260,10 @@ class FindMembers(_MemberBase):
             subscriber=unicode,
             role=enum_validator(MemberRole),
             _optional=('list_id', 'subscriber', 'role'))
-        members = service.find_members(**validator(request))
-        # We can't just return the _FoundMembers instance, because
-        # CollectionMixins have only a GET method, which is incompatible with
-        # this POSTed resource.  IOW, without doing this here, restish would
-        # throw a 405 Method Not Allowed.
-        resource = _FoundMembers(members)._make_collection(request)
-        return http.ok([], etag(resource))
+        try:
+            members = service.find_members(**validator(request))
+        except ValueError as error:
+            bad_request(response, str(error))
+        else:
+            resource = _FoundMembers(members)._make_collection(request)
+            okay(response, etag(resource))

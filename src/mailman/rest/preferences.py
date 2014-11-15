@@ -27,11 +27,9 @@ __all__ = [
 
 
 from lazr.config import as_boolean
-from restish import http, resource
-
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.rest.helpers import (
-    GetterSetter, PATCH, etag, no_content, path_to)
+    GetterSetter, bad_request, etag, no_content, not_found, okay, path_to)
 from mailman.rest.validator import (
     Validator, enum_validator, language_validator)
 
@@ -48,15 +46,14 @@ PREFERENCES = (
 
 
 
-class ReadOnlyPreferences(resource.Resource):
+class ReadOnlyPreferences:
     """.../<object>/preferences"""
 
     def __init__(self, parent, base_url):
         self._parent = parent
         self._base_url = base_url
 
-    @resource.GET()
-    def preferences(self, segments):
+    def on_get(self, request, response):
         resource = dict()
         for attr in PREFERENCES:
             # Handle this one specially.
@@ -72,16 +69,17 @@ class ReadOnlyPreferences(resource.Resource):
         # Add the self link.
         resource['self_link'] = path_to(
             '{0}/preferences'.format(self._base_url))
-        return http.ok([], etag(resource))
+        okay(response, etag(resource))
 
 
 
 class Preferences(ReadOnlyPreferences):
     """Preferences which can be changed."""
 
-    def patch_put(self, request, is_optional):
+    def patch_put(self, request, response, is_optional):
         if self._parent is None:
-            return http.not_found()
+            not_found(response)
+            return
         kws = dict(
             acknowledge_posts=GetterSetter(as_boolean),
             hide_address = GetterSetter(as_boolean),
@@ -97,23 +95,21 @@ class Preferences(ReadOnlyPreferences):
         try:
             Validator(**kws).update(self._parent, request)
         except ValueError as error:
-            return http.bad_request([], str(error))
-        return no_content()
+            bad_request(response, str(error))
+        else:
+            no_content(response)
 
-    @PATCH()
-    def patch_preferences(self, request):
+    def on_patch(self, request, response):
         """Patch the preferences."""
-        return self.patch_put(request, is_optional=True)
+        self.patch_put(request, response, is_optional=True)
 
-    @resource.PUT()
-    def put_preferences(self, request):
+    def on_put(self, request, response):
         """Change all preferences."""
-        return self.patch_put(request, is_optional=False)
+        self.patch_put(request, response, is_optional=False)
 
-    @resource.DELETE()
-    def delete_preferences(self, request):
+    def on_delete(self, request, response):
         """Delete all preferences."""
         for attr in PREFERENCES:
             if hasattr(self._parent, attr):
                 setattr(self._parent, attr, None)
-        return no_content()
+        no_content(response)

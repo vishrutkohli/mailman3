@@ -69,14 +69,12 @@ class TestMembership(unittest.TestCase):
                      '/member/nobody@example.com',
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
-        self.assertEqual(cm.exception.msg, '404 Not Found')
 
     def test_try_to_leave_list_with_bogus_address(self):
         # Try to leave a mailing list using an invalid membership address.
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members/1', method='DELETE')
         self.assertEqual(cm.exception.code, 404)
-        self.assertEqual(cm.exception.msg, '404 Not Found')
 
     def test_try_to_leave_a_list_twice(self):
         with transaction():
@@ -91,7 +89,6 @@ class TestMembership(unittest.TestCase):
         with self.assertRaises(HTTPError) as cm:
             call_api(url, method='DELETE')
         self.assertEqual(cm.exception.code, 404)
-        self.assertEqual(cm.exception.msg, '404 Not Found')
 
     def test_try_to_join_a_list_twice(self):
         with transaction():

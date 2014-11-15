@@ -46,6 +46,13 @@ class TestAddresses(unittest.TestCase):
         with transaction():
             self._mlist = create_list('test@example.com')
 
+    def test_no_addresses(self):
+        # At first, there are no addresses.
+        url = 'http://localhost:9001/3.0/addresses'
+        json, response = call_api(url)
+        self.assertEqual(json['start'], 0)
+        self.assertEqual(json['total_size'], 0)
+
     def test_membership_of_missing_address(self):
         # Try to get the memberships of a missing address.
         with self.assertRaises(HTTPError) as cm:
@@ -111,7 +118,7 @@ class TestAddresses(unittest.TestCase):
         self.assertEqual(cm.exception.code, 400)
 
     def test_address_added_to_user(self):
-        # Address is added to a user record.
+        # An address is added to a user record.
         user_manager = getUtility(IUserManager)
         with transaction():
             anne = user_manager.create_user('anne@example.com')
@@ -183,6 +190,13 @@ class TestAddresses(unittest.TestCase):
                 {})
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason, 'Missing parameters: email')
+
+    def test_get_addresses_of_missing_user(self):
+        # There is no user associated with the given address.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/addresses')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_add_address_to_missing_user(self):
         # The user that the address is being added to must exist.

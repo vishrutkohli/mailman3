@@ -49,6 +49,8 @@ Interfaces
 
 REST
 ----
+ * The Falcon Framework has replaced restish as the REST layer.  This is an
+   internal change only.
  * The JSON representation `http_etag` key uses an algorithm that is
    insensitive to Python's dictionary sort order.
 

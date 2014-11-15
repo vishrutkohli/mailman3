@@ -21,30 +21,32 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
+    'BadRequest',
+    'ChildError',
     'GetterSetter',
-    'PATCH',
+    'NotFound',
+    'bad_request',
+    'child',
+    'conflict',
+    'created',
     'etag',
+    'forbidden',
     'no_content',
+    'not_found',
+    'okay',
     'path_to',
-    'restish_matcher',
     ]
 
 
-import cgi
 import json
+import falcon
 import hashlib
 
-from cStringIO import StringIO
 from datetime import datetime, timedelta
 from enum import Enum
 from lazr.config import as_boolean
-from pprint import pformat
-from restish import http
-from restish.http import Response
-from restish.resource import MethodDecorator
-from webob.multidict import MultiDict
-
 from mailman.config import config
+from pprint import pformat
 
 
 
@@ -123,22 +125,15 @@ def paginate(method):
     arguments.
     """
     def wrapper(self, request, *args, **kwargs):
-        try:
-            count = int(request.GET['count'])
-            page = int(request.GET['page'])
-            if count < 0 or page < 0:
-                return http.bad_request([], b'Invalid parameters')
-        # Wrong parameter types or no GET attribute in request object.
-        except (AttributeError, ValueError, TypeError):
-            return http.bad_request([], b'Invalid parameters')
-        # No count/page params.
-        except KeyError:
-            count = page = None
+        # Allow falcon's HTTPBadRequest exceptions to percolate up.  They'll
+        # get turned into HTTP 400 errors.
+        count = request.get_param_as_int('count', min=0)
+        page = request.get_param_as_int('page', min=1)
         result = method(self, request, *args, **kwargs)
         if count is None and page is None:
             return result
-        list_start = int((page - 1) * count)
-        list_end = int(page * count)
+        list_start = (page - 1) * count
+        list_end = page * count
         return result[list_start:list_end]
     return wrapper
 
@@ -168,14 +163,14 @@ class CollectionMixin:
 
         This must be implemented by subclasses.
 
-        :param request: A restish request.
+        :param request: An http request.
         :return: The collection
         :rtype: list
         """
         raise NotImplementedError
 
     def _make_collection(self, request):
-        """Provide the collection to restish."""
+        """Provide the collection to the REST layer."""
         collection = self._get_collection(request)
         if len(collection) == 0:
             return dict(start=0, total_size=0)
@@ -193,59 +188,6 @@ class CollectionMixin:
 
 
 
-# XXX 2010-02-24 barry Seems like contrary to the documentation, matchers
-# cannot be plain functions, because matchers must have a .score attribute.
-# OTOH, I think they support regexps, so that might be a better way to go.
-def restish_matcher(function):
-    """Decorator for restish matchers."""
-    function.score = ()
-    return function
-
-
-# restish doesn't support HTTP response code 204.
-def no_content():
-    """204 No Content."""
-    return Response('204 No Content', [], None)
-
-
-# These two classes implement an ugly, dirty hack to work around the fact that
-# neither WebOb nor really the stdlib cgi module support non-standard HTTP
-# verbs such as PATCH.  Note that restish handles it just fine in the sense
-# that the right method gets called, but without the following kludge, the
-# body of the request will never get decoded, so the method won't see any
-# data.
-#
-# Stuffing the MultiDict on request.PATCH is pretty ugly, but it mirrors
-# WebOb's use of request.POST and request.PUT for those standard verbs.
-# Besides, WebOb refuses to allow us to set request.POST.  This does make
-# validators.py a bit more complicated. :(
-
-class PATCHWrapper:
-    """Hack to decode the request body for PATCH."""
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self, resource, request):
-        # We can't use request.body_file because that's a socket that's
-        # already had its data read off of.  IOW, if we use that directly,
-        # we'll block here.
-        field_storage = cgi.FieldStorage(
-            fp=StringIO(request.body),
-            # Yes, lie about the method so cgi will do the right thing.
-            environ=dict(REQUEST_METHOD='POST'),
-            keep_blank_values=True)
-        request.PATCH = MultiDict.from_fieldstorage(field_storage)
-        return self.func(resource, request)
-
-
-class PATCH(MethodDecorator):
-    method = 'PATCH'
-
-    def __call__(self, func):
-        really_wrapped_func = PATCHWrapper(func)
-        return super(PATCH, self).__call__(really_wrapped_func)
-
-
 class GetterSetter:
     """Get and set attributes on an object.
 
@@ -304,3 +246,79 @@ class GetterSetter:
         if self.decoder is None:
             return value
         return self.decoder(value)
+
+
+
+# Falcon REST framework add-ons.
+
+def child(matcher=None):
+    def decorator(func):
+        if matcher is None:
+            func.__matcher__ = func.__name__
+        else:
+            func.__matcher__ = matcher
+        return func
+    return decorator
+
+
+class ChildError:
+    def __init__(self, status):
+        self._status = status
+
+    def _oops(self, request, response):
+        raise falcon.HTTPError(self._status, None)
+
+    on_get = _oops
+    on_post = _oops
+    on_put = _oops
+    on_patch = _oops
+    on_delete = _oops
+
+
+class BadRequest(ChildError):
+    def __init__(self):
+        super(BadRequest, self).__init__(falcon.HTTP_400)
+
+
+class NotFound(ChildError):
+    def __init__(self):
+        super(NotFound, self).__init__(falcon.HTTP_404)
+
+
+def okay(response, body=None):
+    response.status = falcon.HTTP_200
+    if body is not None:
+        response.body = body
+
+
+def no_content(response):
+    response.status = falcon.HTTP_204
+
+
+def not_found(response, body=b'404 Not Found'):
+    response.status = falcon.HTTP_404
+    if body is not None:
+        response.body = body
+
+
+def bad_request(response, body='400 Bad Request'):
+    response.status = falcon.HTTP_400
+    if body is not None:
+        response.body = body
+
+
+def created(response, location):
+    response.status = falcon.HTTP_201
+    response.location = location
+
+
+def conflict(response, body=b'409 Conflict'):
+    response.status = falcon.HTTP_409
+    if body is not None:
+        response.body = body
+
+
+def forbidden(response, body=b'403 Forbidden'):
+    response.status = falcon.HTTP_403
+    if body is not None:
+        response.body = body

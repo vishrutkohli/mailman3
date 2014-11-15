@@ -25,11 +25,7 @@ __all__ = [
     ]
 
 
-import os
-
-from restish import http, resource
-
-from mailman.config import config
+from mailman.rest.helpers import not_found
 from mailman.utilities.i18n import TemplateNotFoundError, find
 
 
@@ -41,7 +37,7 @@ EXTENSIONS = {
 
 
 
-class TemplateFinder(resource.Resource):
+class TemplateFinder:
     """Template finder resource."""
 
     def __init__(self, mlist, template, language, content_type):
@@ -50,19 +46,20 @@ class TemplateFinder(resource.Resource):
         self.language = language
         self.content_type = content_type
 
-    @resource.GET()
-    def find_template(self, request):
+    def on_get(self, request, response):
         # XXX We currently only support .txt and .html files.
         extension = EXTENSIONS.get(self.content_type)
         if extension is None:
-            return http.not_found()
+            not_found(response)
+            return
         template = self.template + extension
         fp = None
         try:
             try:
                 path, fp = find(template, self.mlist, self.language)
             except TemplateNotFoundError:
-                return http.not_found()
+                not_found(response)
+                return
             else:
                 return fp.read()
         finally:

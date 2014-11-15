@@ -25,19 +25,20 @@ __all__ = [
     ]
 
 
+import falcon
+
 from base64 import b64decode
-from restish import guard, http, resource
 from zope.component import getUtility
 
 from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.system import system
 from mailman.interfaces.listmanager import IListManager
-from mailman.interfaces.styles import IStyleManager
 from mailman.rest.addresses import AllAddresses, AnAddress
 from mailman.rest.domains import ADomain, AllDomains
-from mailman.rest.helpers import etag, path_to
-from mailman.rest.lists import AList, AllLists
+from mailman.rest.helpers import (
+    BadRequest, NotFound, child, etag, okay, path_to)
+from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
 from mailman.rest.templates import TemplateFinder
@@ -45,20 +46,7 @@ from mailman.rest.users import AUser, AllUsers
 
 
 
-def webservice_auth_checker(request, obj):
-    auth = request.environ.get('HTTP_AUTHORIZATION', '')
-    if auth.startswith('Basic '):
-        credentials = b64decode(auth[6:])
-        username, password = credentials.split(':', 1)
-        if (username != config.webservice.admin_user or
-            password != config.webservice.admin_pass):
-            # Not authorized.
-            raise guard.GuardError(b'User is not authorized for the REST API')
-    else:
-        raise guard.GuardError(b'The REST API requires authentication')
-
-
-class Root(resource.Resource):
+class Root:
     """The RESTful root resource.
 
     At the root of the tree are the API version numbers.  Everything else
@@ -67,33 +55,58 @@ class Root(resource.Resource):
     always be the case though.
     """
 
-    @resource.child(config.webservice.api_version)
-    @guard.guard(webservice_auth_checker)
+    @child(config.webservice.api_version)
     def api_version(self, request, segments):
+        # We have to do this here instead of in a @falcon.before() handler
+        # because those handlers are not compatible with our custom traversal
+        # logic.  Specifically, falcon's before/after handlers will call the
+        # responder, but the method we're wrapping isn't a responder, it's a
+        # child traversal method.  There's no way to cause the thing that
+        # calls the before hook to follow through with the child traversal in
+        # the case where no error is raised.
+        if request.auth is None:
+            raise falcon.HTTPUnauthorized(
+                b'401 Unauthorized',
+                b'The REST API requires authentication')
+        if request.auth.startswith('Basic '):
+            credentials = b64decode(request.auth[6:])
+            username, password = credentials.split(':', 1)
+            if (username != config.webservice.admin_user or
+                password != config.webservice.admin_pass):
+                # Not authorized.
+                raise falcon.HTTPUnauthorized(
+                    b'401 Unauthorized',
+                    b'User is not authorized for the REST API')
         return TopLevel()
 
 
-class TopLevel(resource.Resource):
+class System:
+    def on_get(self, request, response):
+        """/<api>/system"""
+        resource = dict(
+            mailman_version=system.mailman_version,
+            python_version=system.python_version,
+            self_link=path_to('system'),
+            )
+        okay(response, etag(resource))
+
+
+class TopLevel:
     """Top level collections and entries."""
 
-    @resource.child()
+    @child()
     def system(self, request, segments):
         """/<api>/system"""
         if len(segments) == 0:
-            resource = dict(
-                mailman_version=system.mailman_version,
-                python_version=system.python_version,
-                self_link=path_to('system'),
-                )
+            return System()
         elif len(segments) > 1:
-            return http.bad_request()
+            return BadRequest(), []
         elif segments[0] == 'preferences':
             return ReadOnlyPreferences(system_preferences, 'system'), []
         else:
-            return http.bad_request()
-        return http.ok([], etag(resource))
+            return NotFound(), []
 
-    @resource.child()
+    @child()
     def addresses(self, request, segments):
         """/<api>/addresses
            /<api>/addresses/<email>
@@ -104,7 +117,7 @@ class TopLevel(resource.Resource):
             email = segments.pop(0)
             return AnAddress(email), segments
 
-    @resource.child()
+    @child()
     def domains(self, request, segments):
         """/<api>/domains
            /<api>/domains/<domain>
@@ -115,7 +128,7 @@ class TopLevel(resource.Resource):
             domain = segments.pop(0)
             return ADomain(domain), segments
 
-    @resource.child()
+    @child()
     def lists(self, request, segments):
         """/<api>/lists
            /<api>/lists/<list>
@@ -124,18 +137,14 @@ class TopLevel(resource.Resource):
         if len(segments) == 0:
             return AllLists()
         elif len(segments) == 1 and segments[0] == 'styles':
-            manager = getUtility(IStyleManager)
-            style_names = sorted(style.name for style in manager.styles)
-            resource = dict(style_names=style_names,
-                            default=config.styles.default)
-            return http.ok([], etag(resource))
+            return Styles(), []
         else:
             # list-id is preferred, but for backward compatibility,
             # fqdn_listname is also accepted.
             list_identifier = segments.pop(0)
             return AList(list_identifier), segments
 
-    @resource.child()
+    @child()
     def members(self, request, segments):
         """/<api>/members"""
         if len(segments) == 0:
@@ -148,7 +157,7 @@ class TopLevel(resource.Resource):
         else:
             return AMember(segment), segments
 
-    @resource.child()
+    @child()
     def users(self, request, segments):
         """/<api>/users"""
         if len(segments) == 0:
@@ -157,7 +166,7 @@ class TopLevel(resource.Resource):
             user_id = segments.pop(0)
             return AUser(user_id), segments
 
-    @resource.child()
+    @child()
     def templates(self, request, segments):
         """/<api>/templates/<fqdn_listname>/<template>/[<language>]
 
@@ -169,10 +178,10 @@ class TopLevel(resource.Resource):
             fqdn_listname, template = segments
             language = 'en'
         else:
-            return http.bad_request()
+            return BadRequest(), []
         mlist = getUtility(IListManager).get(fqdn_listname)
         if mlist is None:
-            return http.not_found()
+            return NotFound(), []
         # XXX dig out content-type from request
         content_type = None
         return TemplateFinder(

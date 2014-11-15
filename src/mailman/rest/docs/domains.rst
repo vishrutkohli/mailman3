@@ -110,13 +110,6 @@ The information for a single domain is available by following one of the
     self_link: http://localhost:9001/3.0/domains/lists.example.net
     url_host: example.net
 
-But we get a 404 for a non-existent domain.
-
-    >>> dump_json('http://localhost:9001/3.0/domains/does-not-exist')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
 You can also list all the mailing lists for a given domain.  At first, the
 example.com domain does not contain any mailing lists.
 ::

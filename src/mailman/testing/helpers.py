@@ -313,8 +313,9 @@ def call_api(url, data=None, method=None, username=None, password=None):
     :param password: The HTTP Basic Auth password.  None means use the value
         from the configuration.
     :type username: str
-    :return: The response object and the JSON decoded content, if there is
-        any.  If not, the second tuple item will be None.
+    :return: A 2-tuple containing the JSON decoded content (if there is any,
+        else None) and the response object.
+    :rtype: 2-tuple of (dict, response)
     :raises HTTPError: when a non-2xx return code is received.
     """
     headers = {}

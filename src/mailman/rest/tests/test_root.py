@@ -21,23 +21,40 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'TestSystem',
+    'TestRoot',
     ]
 
 
-import unittest
 import os
+import json
+import unittest
 
-from urllib2 import HTTPError
-
+from base64 import b64encode
+from httplib2 import Http
 from mailman.config import config
+from mailman.core.system import system
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
+from urllib2 import HTTPError
 
 
 
-class TestSystem(unittest.TestCase):
+class TestRoot(unittest.TestCase):
     layer = RESTLayer
+
+    def test_root_system(self):
+        # You can get the system preferences via the root path.
+        url = 'http://localhost:9001/3.0/system'
+        json, response = call_api(url)
+        self.assertEqual(json['mailman_version'], system.mailman_version)
+        self.assertEqual(json['python_version'], system.python_version)
+        self.assertEqual(json['self_link'], url)
+
+    def test_path_under_root_does_not_exist(self):
+        # Accessing a non-existent path under root returns a 404.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/does-not-exist')
+        self.assertEqual(cm.exception.code, 404)
 
     def test_system_url_too_long(self):
         # /system/foo/bar is not allowed.
@@ -49,7 +66,7 @@ class TestSystem(unittest.TestCase):
         # /system/foo where `foo` is not `preferences`.
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/system/foo')
-        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.code, 404)
 
     def test_system_preferences_are_read_only(self):
         # /system/preferences are read-only.
@@ -76,3 +93,31 @@ class TestSystem(unittest.TestCase):
         # directory in var/queue.
         queue_directory = os.path.join(config.QUEUE_DIR, 'rest')
         self.assertFalse(os.path.isdir(queue_directory))
+
+    def test_no_basic_auth(self):
+        # If Basic Auth credentials are missing, it is a 401 error.
+        url = 'http://localhost:9001/3.0/system'
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencode',
+            }
+        response, raw_content = Http().request(url, 'GET', None, headers)
+        self.assertEqual(response.status, 401)
+        content = json.loads(raw_content)
+        self.assertEqual(content['title'], '401 Unauthorized')
+        self.assertEqual(content['description'],
+                         'The REST API requires authentication')
+
+    def test_unauthorized(self):
+        # Bad Basic Auth credentials results in a 401 error.
+        auth = b64encode('baduser:badpass')
+        url = 'http://localhost:9001/3.0/system'
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencode',
+            'Authorization': 'Basic ' + auth,
+            }
+        response, raw_content = Http().request(url, 'GET', None, headers)
+        self.assertEqual(response.status, 401)
+        content = json.loads(raw_content)
+        self.assertEqual(content['title'], '401 Unauthorized')
+        self.assertEqual(content['description'],
+                         'User is not authorized for the REST API')
