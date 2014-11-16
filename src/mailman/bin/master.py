@@ -375,7 +375,6 @@ class Loop:
         if coverage_env is not None:
             env = dict(COVERAGE_PROCESS_START=coverage_env)
             args.append(env)
-        print('ARGS:', args, file=sys.stderr)
         os.execle(*args)
         # We should never get here.
         raise RuntimeError('os.execle() failed')
