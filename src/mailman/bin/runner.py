@@ -42,6 +42,12 @@ from mailman.version import MAILMAN_VERSION_FULL
 log = None
 
 
+# Enable coverage if run under the appropriate test suite.
+if os.environ.get('COVERAGE_PROCESS_START') is not None:
+    import coverage
+    coverage.process_startup()
+
+
 
 class ROptionAction(argparse.Action):
     """Callback for -r/--runner option."""

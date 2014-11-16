@@ -23,6 +23,7 @@ __metaclass__ = type
 __all__ = [
     'AUser',
     'AllUsers',
+    'Login',
     ]
 
 

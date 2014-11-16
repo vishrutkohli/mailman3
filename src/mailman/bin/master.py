@@ -369,9 +369,16 @@ class Loop:
             args.extend(['-C', self._config_file])
         log = logging.getLogger('mailman.runner')
         log.debug('starting: %s', args)
-        os.execl(*args)
+        # For the testing framework, if this environment variable is set, pass
+        # it on to the subprocess.
+        coverage_env = os.environ.get('COVERAGE_PROCESS_START')
+        if coverage_env is not None:
+            env = dict(COVERAGE_PROCESS_START=coverage_env)
+            args.append(env)
+        print('ARGS:', args, file=sys.stderr)
+        os.execle(*args)
         # We should never get here.
-        raise RuntimeError('os.execl() failed')
+        raise RuntimeError('os.execle() failed')
 
     def start_runners(self, runner_names=None):
         """Start all the configured runners.
