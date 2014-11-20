@@ -372,9 +372,10 @@ class Loop:
         # For the testing framework, if this environment variable is set, pass
         # it on to the subprocess.
         coverage_env = os.environ.get('COVERAGE_PROCESS_START')
+        env = dict()
         if coverage_env is not None:
-            env = dict(COVERAGE_PROCESS_START=coverage_env)
-            args.append(env)
+            env['COVERAGE_PROCESS_START'] = coverage_env
+        args.append(env)
         os.execle(*args)
         # We should never get here.
         raise RuntimeError('os.execle() failed')

@@ -69,7 +69,7 @@ class Administrivia:
         # First check the Subject text.
         lines_to_check = []
         subject = str(msg.get('subject', ''))
-        if subject <> '':
+        if subject != '':
             lines_to_check.append(subject)
         # Search only the first text/plain subpart of the message.  There's
         # really no good way to find email commands in any other content type.

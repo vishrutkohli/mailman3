@@ -146,7 +146,7 @@ def process(mlist, msg, msgdata):
             reset_payload(msg, firstalt)
     # If we removed some parts, make note of this
     changedp = 0
-    if numparts <> len([subpart for subpart in msg.walk()]):
+    if numparts != len([subpart for subpart in msg.walk()]):
         changedp = 1
     # Now perhaps convert all text/html to text/plain
     if mlist.convert_html_to_plaintext and config.HTML_TO_PLAIN_TEXT_COMMAND:
@@ -256,8 +256,8 @@ def to_plaintext(msg):
         finally:
             try:
                 os.unlink(filename)
-            except OSError, e:
-                if e.errno <> errno.ENOENT:
+            except OSError as e:
+                if e.errno != errno.ENOENT:
                     raise
         # Now replace the payload of the subpart and twiddle the Content-Type:
         del subpart['content-transfer-encoding']

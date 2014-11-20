@@ -97,7 +97,7 @@ class Switchboard:
         self._lower = None
         self._upper = None
         # BAW: test performance and end-cases of this algorithm
-        if numslices <> 1:
+        if numslices != 1:
             self._lower = ((shamax + 1) * slice) / numslices
             self._upper = (((shamax + 1) * (slice + 1)) / numslices) - 1
         if recover:
@@ -201,7 +201,7 @@ class Switchboard:
             # By ignoring anything that doesn't end in .pck, we ignore
             # tempfiles and avoid a race condition.
             filebase, ext = os.path.splitext(f)
-            if ext <> extension:
+            if ext != extension:
                 continue
             when, digest = filebase.split('+', 1)
             # Throw out any files which don't match our bitrange.  BAW: test

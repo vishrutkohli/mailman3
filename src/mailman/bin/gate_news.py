@@ -80,7 +80,7 @@ def open_newsgroup(mlist):
                                 readermode=True,
                                 user=config.NNTP_USERNAME,
                                 password=config.NNTP_PASSWORD)
-        except (socket.error, nntplib.NNTPError, IOError), e:
+        except (socket.error, nntplib.NNTPError, IOError) as e:
             log.error('error opening connection to nntp_host: %s\n%s',
                       mlist.nntp_host, e)
             raise
@@ -137,7 +137,7 @@ def poll_newsgroup(mlist, conn, first, last, glock):
                 p = Parser(Message.Message)
                 try:
                     msg = p.parsestr(NL.join(lines))
-                except email.Errors.MessageError, e:
+                except email.Errors.MessageError as e:
                     log.error('email package exception for %s:%d\n%s',
                               mlist.linked_newsgroup, num, e)
                     raise _ContinueLoop
@@ -152,7 +152,7 @@ def poll_newsgroup(mlist, conn, first, last, glock):
                             listname=mlist.internal_name(),
                             fromusenet=True)
                 log.info('posted to list %s: %7d', listname, num)
-        except nntplib.NNTPError, e:
+        except nntplib.NNTPError as e:
             log.exception('NNTP error for list %s: %7d', listname, num)
         except _ContinueLoop:
             continue

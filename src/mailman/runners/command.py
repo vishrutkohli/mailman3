@@ -158,7 +158,7 @@ class CommandRunner(Runner):
         # the command message.
         precedence = msg.get('precedence', '').lower()
         ack = msg.get('x-ack', '').lower()
-        if ack <> 'yes' and precedence in ('bulk', 'junk', 'list'):
+        if ack != 'yes' and precedence in ('bulk', 'junk', 'list'):
             log.info('%s Precedence: %s message discarded by: %s',
                      message_id, precedence, mlist.request_address)
             return False

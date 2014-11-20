@@ -68,7 +68,7 @@ def main():
                 # We are unable to predict what exception may occur in digest
                 # processing and we don't want to lose the other digests, so
                 # we catch everything.
-                except Exception, errmsg:
+                except Exception as errmsg:
                     print >> sys.stderr, \
                       'List: %s: problem processing %s:\n%s' % \
                         (listname,
