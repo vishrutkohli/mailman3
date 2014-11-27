@@ -55,7 +55,7 @@ class OwnerRecipients:
         # To prevent -owner messages from going into a black hole, if there
         # are no administrators available, the message goes to the site owner.
         if len(recipients) == 0:
-            msgdata['recipients'] = set((config.mailman.site_owner,))
+            msgdata['recipients'] = set((unicode(config.mailman.site_owner),))
         else:
             msgdata['recipients'] = recipients
         # Don't decorate these messages with the header/footers.  Eventually

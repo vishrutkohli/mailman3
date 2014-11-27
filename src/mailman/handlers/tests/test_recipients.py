@@ -198,3 +198,20 @@ To: test-owner@example.com
         msgdata = {}
         self._process(self._mlist, self._msg, msgdata)
         self.assertEqual(msgdata['recipients'], set(('noreply@example.com',)))
+
+    def test_site_admin_unicode(self):
+        # Since the conf file is read as a bytestring, the site_owner is also a
+        # bytestring and must be converted to unicode when used as a fallback.
+        self._cris.unsubscribe()
+        self._dave.unsubscribe()
+        self.assertEqual(self._mlist.administrators.member_count, 0)
+        msgdata = {}
+        strconf = b"""
+        [mailman]
+        site_owner: siteadmin@example.com
+        """
+        config.push("test_site_admin_unicode", strconf)
+        self._process(self._mlist, self._msg, msgdata)
+        config.pop("test_site_admin_unicode")
+        self.assertEqual(len(msgdata['recipients']), 1)
+        self.assertTrue(isinstance(list(msgdata['recipients'])[0], unicode))

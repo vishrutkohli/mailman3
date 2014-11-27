@@ -260,7 +260,7 @@ class RFC1153Digester(Digester):
         # Add the payload.  If the decoded payload is empty, this may be a
         # multipart message.  In that case, just stringify it.
         payload = msg.get_payload(decode=True)
-        payload = (payload if payload else msg.as_string().split('\n\n', 1)[1])
+        payload = (payload if payload else msg.as_string().split(b'\n\n', 1)[1])
         try:
             charset = msg.get_content_charset('us-ascii')
             payload = unicode(payload, charset, 'replace')
