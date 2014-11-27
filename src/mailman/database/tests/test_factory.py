@@ -51,9 +51,9 @@ class TestSchemaManager(unittest.TestCase):
         Model.metadata.drop_all(config.db.engine)
         md = MetaData()
         md.reflect(bind=config.db.engine)
-        for tablename in ('alembic_version', 'version'):
-            if tablename in md.tables:
-                md.tables[tablename].drop(config.db.engine)
+        # Drop leftover tables (alembic & storm schema versions)
+        for table in md.tables.values():
+            table.drop(config.db.engine)
         self.schema_mgr = SchemaManager(config.db)
 
     def tearDown(self):
@@ -114,15 +114,20 @@ class TestSchemaManager(unittest.TestCase):
             self.assertFalse(alembic_command.stamp.called)
             self.assertFalse(alembic_command.upgrade.called)
 
-    @patch('alembic.command')
-    def test_initial(self, alembic_command):
+    @patch('alembic.command.upgrade')
+    def test_initial(self, alembic_command_upgrade):
         # No existing database.
         self.assertFalse(self._table_exists('mailinglist'))
         self.assertFalse(self._table_exists('alembic_version'))
-        self.schema_mgr.setup_database()
-        self.assertFalse(alembic_command.upgrade.called)
+        head_rev = self.schema_mgr.setup_database()
+        self.assertFalse(alembic_command_upgrade.called)
         self.assertTrue(self._table_exists('mailinglist'))
-        self.assertTrue(self._table_exists('alembic_version'))
+        md = MetaData()
+        md.reflect(bind=config.db.engine)
+        self.assertTrue('alembic_version' in md.tables.keys())
+        current_rev = config.db.engine.execute(
+            md.tables["alembic_version"].select()).scalar()
+        self.assertEqual(current_rev, head_rev)
 
     @patch('alembic.command.stamp')
     def test_storm(self, alembic_command_stamp):
