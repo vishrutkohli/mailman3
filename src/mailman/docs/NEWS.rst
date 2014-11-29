@@ -12,6 +12,11 @@ Here is a history of user visible changes to Mailman.
 ====================================
 (2014-XX-XX)
 
+Bugs
+----
+ * Fixed Unicode errors in the digest runner and when sending messages to the
+   site owner as a fallback.  Given by Aurélien Bompard.  (LP: #1130957).
+
 Commands
 --------
  * The `mailman conf` command no longer takes the `-t/--sort` option; the
