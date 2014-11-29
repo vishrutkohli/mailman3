@@ -16,6 +16,9 @@ Bugs
 ----
  * Fixed Unicode errors in the digest runner and when sending messages to the
    site owner as a fallback.  Given by Aurélien Bompard.  (LP: #1130957).
+ * Fix Unicode errors when a message being added to the digest has non-ascii
+   characters in its payload, but no Content-Type header defining a charset.
+   Given by Aurélien Bompard.  (LP: #1170347)
 
 Commands
 --------
