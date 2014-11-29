@@ -119,12 +119,16 @@ class TestSchemaManager(unittest.TestCase):
         # No existing database.
         self.assertFalse(self._table_exists('mailinglist'))
         self.assertFalse(self._table_exists('alembic_version'))
+        # For the initial setup of the database, the upgrade command will not
+        # be called.  The tables will be created and then the schema stamped
+        # at Alembic's latest revision.
         head_rev = self.schema_mgr.setup_database()
         self.assertFalse(alembic_command_upgrade.called)
         self.assertTrue(self._table_exists('mailinglist'))
+        self.assertTrue(self._table_exists('alembic_version'))
+        # The current Alembic revision is the same as the initial revision.
         md = MetaData()
         md.reflect(bind=config.db.engine)
-        self.assertIn('alembic_version', md.tables)
         current_rev = config.db.engine.execute(
             md.tables['alembic_version'].select()).scalar()
         self.assertEqual(current_rev, head_rev)
