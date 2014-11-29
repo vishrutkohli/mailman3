@@ -117,7 +117,6 @@ class TestSchemaManager(unittest.TestCase):
     @patch('alembic.command.upgrade')
     def test_initial(self, alembic_command_upgrade):
         # No existing database.
-        #import pdb; pdb.set_trace()
         self.assertFalse(self._table_exists('mailinglist'))
         self.assertFalse(self._table_exists('alembic_version'))
         head_rev = self.schema_mgr.setup_database()
