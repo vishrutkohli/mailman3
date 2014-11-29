@@ -47,13 +47,13 @@ class TestSchemaManager(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
-        # Drop the existing database.
+        # Drop the existing model tables.
         Model.metadata.drop_all(config.db.engine)
+        # Drop leftover tables (e.g. Alembic & Storm schema versions).
         md = MetaData()
         md.reflect(bind=config.db.engine)
-        for tablename in ('alembic_version', 'version'):
-            if tablename in md.tables:
-                md.tables[tablename].drop(config.db.engine)
+        for table in md.sorted_tables:
+            table.drop(config.db.engine)
         self.schema_mgr = SchemaManager(config.db)
 
     def tearDown(self):
@@ -114,15 +114,24 @@ class TestSchemaManager(unittest.TestCase):
             self.assertFalse(alembic_command.stamp.called)
             self.assertFalse(alembic_command.upgrade.called)
 
-    @patch('alembic.command')
-    def test_initial(self, alembic_command):
+    @patch('alembic.command.upgrade')
+    def test_initial(self, alembic_command_upgrade):
         # No existing database.
         self.assertFalse(self._table_exists('mailinglist'))
         self.assertFalse(self._table_exists('alembic_version'))
-        self.schema_mgr.setup_database()
-        self.assertFalse(alembic_command.upgrade.called)
+        # For the initial setup of the database, the upgrade command will not
+        # be called.  The tables will be created and then the schema stamped
+        # at Alembic's latest revision.
+        head_rev = self.schema_mgr.setup_database()
+        self.assertFalse(alembic_command_upgrade.called)
         self.assertTrue(self._table_exists('mailinglist'))
         self.assertTrue(self._table_exists('alembic_version'))
+        # The current Alembic revision is the same as the initial revision.
+        md = MetaData()
+        md.reflect(bind=config.db.engine)
+        current_rev = config.db.engine.execute(
+            md.tables['alembic_version'].select()).scalar()
+        self.assertEqual(current_rev, head_rev)
 
     @patch('alembic.command.stamp')
     def test_storm(self, alembic_command_stamp):

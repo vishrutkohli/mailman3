@@ -148,7 +148,7 @@ class Digester:
             for value in keepers[header]:
                 msg[header] = value
         # Add some useful extra stuff.
-        msg['Message'] = unicode(count)
+        msg['Message'] = count.decode('utf-8')
 
 
 
@@ -260,13 +260,18 @@ class RFC1153Digester(Digester):
         # Add the payload.  If the decoded payload is empty, this may be a
         # multipart message.  In that case, just stringify it.
         payload = msg.get_payload(decode=True)
-        payload = (payload if payload else msg.as_string().split('\n\n', 1)[1])
+        if not payload:
+            # Split using bytes so as not to turn the payload into unicode
+            # strings due to unicode_literals above.
+            payload = msg.as_string().split(b'\n\n', 1)[1]
         try:
+            # Do the decoding inside the try/except so that if the charset
+            # conversion fails, we'll just drop back to ascii.
             charset = msg.get_content_charset('us-ascii')
-            payload = unicode(payload, charset, 'replace')
+            payload = payload.decode(charset, 'replace')
         except (LookupError, TypeError):
             # Unknown or empty charset.
-            payload = unicode(payload, 'us-ascii', 'replace')
+            payload = payload.decode('us-ascii', 'replace')
         print(payload, file=self._text)
         if not payload.endswith('\n'):
             print(file=self._text)
