@@ -73,7 +73,10 @@ class Approved:
             stripped = False
             for part in typed_subpart_iterator(msg, 'text', 'plain'):
                 break
-            payload = part.get_payload(decode=True)
+            if part is None:
+                payload = None
+            else:
+                payload = part.get_payload(decode=True)
             if payload is not None:
                 charset = part.get_content_charset('us-ascii')
                 payload = payload.decode(charset, 'replace')
