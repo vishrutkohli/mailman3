@@ -75,7 +75,8 @@ def process(mlist, msg, msgdata):
     # message, we want to save some of the information in the msgdata
     # dictionary for later.  Specifically, the sender header will get waxed,
     # but we need it for the Acknowledge module later.
-    msgdata['original_sender'] = msg.sender
+    if hasattr(msg, "sender"):
+        msgdata['original_sender'] = msg.sender
     # VirginRunner sets _fasttrack for internally crafted messages.
     fasttrack = msgdata.get('_fasttrack')
     if not msgdata.get('isdigest') and not fasttrack:

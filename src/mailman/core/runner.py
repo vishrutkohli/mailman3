@@ -239,7 +239,7 @@ class Runner:
         if mlist is None:
             language_manager = getUtility(ILanguageManager)
             language = language_manager[config.mailman.default_language]
-        elif msg.sender:
+        elif hasattr(msg, "sender") and msg.sender:
             member = mlist.members.get_member(msg.sender)
             language = (member.preferred_language
                         if member is not None
