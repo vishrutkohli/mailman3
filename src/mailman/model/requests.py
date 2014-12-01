@@ -24,18 +24,19 @@ __all__ = [
     ]
 
 
-from cPickle import dumps, loads
-from datetime import timedelta
-from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Unicode
-from sqlalchemy.orm import relationship
-from zope.component import getUtility
-from zope.interface import implementer
+import six
 
+from datetime import timedelta
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.database.types import Enum
 from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.requests import IListRequests, RequestType
+from six.moves.cPickle import dumps, loads
+from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Unicode
+from sqlalchemy.orm import relationship
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -50,8 +51,8 @@ class DataPendable(dict):
         # such a way that it will be properly reconstituted when unpended.
         clean_mapping = {}
         for key, value in mapping.items():
-            assert isinstance(key, basestring)
-            if not isinstance(value, unicode):
+            assert isinstance(key, six.string_types)
+            if not isinstance(value, six.text_type):
                 key = '_pck_' + key
                 value = dumps(value).decode('raw-unicode-escape')
             clean_mapping[key] = value

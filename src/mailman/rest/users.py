@@ -27,6 +27,8 @@ __all__ = [
     ]
 
 
+import six
+
 from passlib.utils import generate_password as generate
 from uuid import UUID
 from zope.component import getUtility
@@ -58,7 +60,7 @@ class PasswordEncrypterGetterSetter(GetterSetter):
 
 
 ATTRIBUTES = dict(
-    display_name=GetterSetter(unicode),
+    display_name=GetterSetter(six.text_type),
     cleartext_password=PasswordEncrypterGetterSetter(),
     )
 
@@ -105,9 +107,9 @@ class AllUsers(_UserBase):
     def on_post(self, request, response):
         """Create a new user."""
         try:
-            validator = Validator(email=unicode,
-                                  display_name=unicode,
-                                  password=unicode,
+            validator = Validator(email=six.text_type,
+                                  display_name=six.text_type,
+                                  password=six.text_type,
                                   _optional=('display_name', 'password'))
             arguments = validator(request)
         except ValueError as error:
@@ -253,7 +255,7 @@ class Login:
         # We do not want to encrypt the plaintext password given in the POST
         # data.  That would hash the password, but we need to have the
         # plaintext in order to pass into passlib.
-        validator = Validator(cleartext_password=GetterSetter(unicode))
+        validator = Validator(cleartext_password=GetterSetter(six.text_type))
         try:
             values = validator(request)
         except ValueError as error:

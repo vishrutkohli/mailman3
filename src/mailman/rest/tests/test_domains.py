@@ -27,14 +27,13 @@ __all__ = [
 
 import unittest
 
-from urllib2 import HTTPError
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
 from mailman.interfaces.listmanager import IListManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
+from six.moves.urllib_error import HTTPError
+from zope.component import getUtility
 
 
 

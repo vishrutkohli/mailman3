@@ -37,11 +37,8 @@ import os
 import time
 import email
 import pickle
-import cPickle
 import hashlib
 import logging
-
-from zope.interface import implementer
 
 from mailman.config import config
 from mailman.email.message import Message
@@ -49,10 +46,13 @@ from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.switchboard import ISwitchboard
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
+from six.moves import cPickle
+from zope.interface import implementer
 
 
-# 20 bytes of all bits set, maximum hashlib.sha.digest() value.
-shamax = 0xffffffffffffffffffffffffffffffffffffffffL
+# 20 bytes of all bits set, maximum hashlib.sha.digest() value.  We do it this
+# way for Python 2/3 compatibility.
+shamax = int('0xffffffffffffffffffffffffffffffffffffffff', 16)
 # Small increment to add to time in case two entries have the same time.  This
 # prevents skipping one of two entries with the same time until the next pass.
 DELTA = .0001
@@ -92,7 +92,7 @@ class Switchboard:
         self.queue_directory = queue_directory
         # If configured to, create the directory if it doesn't yet exist.
         if config.create_paths:
-            makedirs(self.queue_directory, 0770)
+            makedirs(self.queue_directory, 0o770)
         # Fast track for no slices
         self._lower = None
         self._upper = None
@@ -123,7 +123,7 @@ class Switchboard:
             msgsave = cPickle.dumps(_msg, protocol)
         # listname is unicode but the input to the hash function must be an
         # 8-bit string (eventually, a bytes object).
-        hashfood = msgsave + listname.encode('utf-8') + repr(now)
+        hashfood = msgsave + listname + repr(now)
         # Encode the current time into the file name for FIFO sorting.  The
         # file name consists of two parts separated by a '+': the received
         # time for this message (i.e. when it first showed up on this system)
@@ -207,13 +207,13 @@ class Switchboard:
             # Throw out any files which don't match our bitrange.  BAW: test
             # performance and end-cases of this algorithm.  MAS: both
             # comparisons need to be <= to get complete range.
-            if lower is None or (lower <= long(digest, 16) <= upper):
+            if lower is None or (lower <= int(digest, 16) <= upper):
                 key = float(when)
                 while key in times:
                     key += DELTA
                 times[key] = filebase
         # FIFO sort
-        return [times[key] for key in sorted(times)]
+        return [times[k] for k in sorted(times)]
 
     def recover_backup_files(self):
         """See `ISwitchboard`."""
@@ -228,7 +228,8 @@ class Switchboard:
             dst = os.path.join(self.queue_directory, filebase + '.pck')
             with open(src, 'rb+') as fp:
                 try:
-                    msg = cPickle.load(fp)
+                    # Throw away the message object.
+                    cPickle.load(fp)
                     data_pos = fp.tell()
                     data = cPickle.load(fp)
                 except Exception as error:

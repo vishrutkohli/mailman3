@@ -27,6 +27,8 @@ __all__ = [
     ]
 
 
+import six
+
 from operator import attrgetter
 from zope.component import getUtility
 
@@ -186,8 +188,8 @@ class UserAddresses(_AddressBase):
             not_found(response)
             return
         user_manager = getUtility(IUserManager)
-        validator = Validator(email=unicode,
-                              display_name=unicode,
+        validator = Validator(email=six.text_type,
+                              display_name=six.text_type,
                               _optional=('display_name',))
         try:
             address = user_manager.create_address(**validator(request))

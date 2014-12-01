@@ -31,15 +31,14 @@ import re
 import logging
 
 from email.mime.text import MIMEText
-from urllib2 import URLError
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.email.message import Message
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.utilities.string import expand
+from six.moves.urllib_error import URLError
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.error')

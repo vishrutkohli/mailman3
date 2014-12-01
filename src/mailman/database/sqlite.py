@@ -28,7 +28,7 @@ __all__ = [
 import os
 
 from mailman.database.base import SABaseDatabase
-from urlparse import urlparse
+from six.moves.urllib_parse import urlparse
 
 
 

@@ -27,16 +27,15 @@ __all__ = [
 import os
 import errno
 import base64
+import pickle
 import hashlib
-import cPickle as pickle
-
-from zope.interface import implementer
 
 from mailman.config import config
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.messages import IMessageStore
 from mailman.model.message import Message
 from mailman.utilities.filesystem import makedirs
+from zope.interface import implementer
 
 
 # It could be very bad if you have already stored files and you change this

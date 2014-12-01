@@ -27,14 +27,14 @@ __all__ = [
 
 
 import os
+import six
 import mock
-import cPickle
 import unittest
 
 from datetime import timedelta, datetime
 from enum import Enum
 from pkg_resources import resource_filename
-from sqlalchemy.exc import IntegrityError
+from six.moves.cPickle import load
 from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
@@ -78,7 +78,7 @@ class TestBasicImport(unittest.TestCase):
         self._mlist = create_list('blank@example.com')
         pickle_file = resource_filename('mailman.testing', 'config.pck')
         with open(pickle_file) as fp:
-            self._pckdict = cPickle.load(fp)
+            self._pckdict = load(fp)
 
     def _import(self):
         import_config_pck(self._mlist, self._pckdict)
@@ -188,7 +188,7 @@ class TestBasicImport(unittest.TestCase):
         # moderator_password must not be unicode
         self._pckdict[b'mod_password'] = b'TESTVALUE'
         self._import()
-        self.assertFalse(isinstance(self._mlist.moderator_password, unicode))
+        self.assertNotIsInstance(self._mlist.moderator_password, six.text_type)
         self.assertEqual(self._mlist.moderator_password, b'TESTVALUE')
 
     def test_newsgroup_moderation(self):
@@ -263,9 +263,10 @@ class TestBasicImport(unittest.TestCase):
         # Suppress warning messages in test output.
         with mock.patch('sys.stderr'):
             self._import()
-        self.assertEqual(self._mlist.info,
-                         unicode(self._pckdict[b'info'], 'ascii', 'replace'),
-                         "We don't fall back to replacing non-ascii chars")
+        self.assertEqual(
+            self._mlist.info,
+            self._pckdict[b'info'].decode('ascii', 'replace'),
+            "We don't fall back to replacing non-ascii chars")
 
     def test_preferred_language(self):
         self._pckdict[b'preferred_language'] = b'ja'

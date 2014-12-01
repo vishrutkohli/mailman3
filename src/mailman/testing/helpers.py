@@ -59,8 +59,8 @@ from contextlib import contextmanager
 from email import message_from_string
 from httplib2 import Http
 from lazr.config import as_timedelta
-from urllib import urlencode
-from urllib2 import HTTPError
+from six.moves.urllib_error import HTTPError
+from six.moves.urllib_parse import urlencode
 from zope import event
 from zope.component import getUtility
 
@@ -342,7 +342,7 @@ def call_api(url, data=None, method=None, username=None, password=None):
     if len(content) == 0:
         return None, response
     # XXX Workaround http://bugs.python.org/issue10038
-    content = unicode(content)
+    content = content.decode('utf-8')
     return json.loads(content), response
 
 
@@ -506,9 +506,8 @@ def specialized_message_from_string(unicode_text):
     """
     # This mimic what Switchboard.dequeue() does when parsing a message from
     # text into a Message instance.
-    text = unicode_text.encode('ascii')
-    original_size = len(text)
-    message = message_from_string(text, Message)
+    original_size = len(unicode_text)
+    message = message_from_string(unicode_text, Message)
     message.original_size = original_size
     return message
 

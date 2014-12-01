@@ -31,9 +31,6 @@ import logging
 
 from email.utils import formataddr
 from lazr.config import as_boolean
-from urllib2 import URLError
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification, UserNotification
@@ -41,6 +38,8 @@ from mailman.interfaces.member import DeliveryMode
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.utilities.i18n import make
 from mailman.utilities.string import expand, wrap
+from six.moves.urllib_error import URLError
+from zope.component import getUtility
 
 
 log = logging.getLogger('mailman.error')

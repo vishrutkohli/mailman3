@@ -26,15 +26,16 @@ __all__ = [
     ]
 
 
+import six
 import unittest
 
-from zope.component import getUtility
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus, MemberRole
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import specialized_message_from_string as mfs
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -218,4 +219,4 @@ site_owner: siteadmin@example.com
         finally:
             config.pop('test_site_admin_unicode')
         self.assertEqual(len(msgdata['recipients']), 1)
-        self.assertIsInstance(list(msgdata['recipients'])[0], unicode)
+        self.assertIsInstance(list(msgdata['recipients'])[0], six.text_type)

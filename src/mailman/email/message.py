@@ -56,15 +56,15 @@ class Message(email.message.Message):
     def __getitem__(self, key):
         # Ensure that header values are unicodes.
         value = email.message.Message.__getitem__(self, key)
-        if isinstance(value, str):
-            return unicode(value, 'ascii')
+        if isinstance(value, bytes):
+            return value.decode('ascii')
         return value
 
     def get(self, name, failobj=None):
         # Ensure that header values are unicodes.
         value = email.message.Message.get(self, name, failobj)
-        if isinstance(value, str):
-            return unicode(value, 'ascii')
+        if isinstance(value, bytes):
+            return value.decode('ascii')
         return value
 
     def get_all(self, name, failobj=None):
@@ -73,7 +73,7 @@ class Message(email.message.Message):
         all_values = email.message.Message.get_all(self, name, missing)
         if all_values is missing:
             return failobj
-        return [(unicode(value, 'ascii') if isinstance(value, str) else value)
+        return [(value.decode('ascii') if isinstance(value, bytes) else value)
                 for value in all_values]
 
     # BAW: For debugging w/ bin/dumpdb.  Apparently pprint uses repr.

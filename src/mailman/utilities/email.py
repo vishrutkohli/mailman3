@@ -68,7 +68,7 @@ def add_message_hash(msg):
         message_id = message_id[1:-1]
     else:
         message_id = message_id.strip()
-    digest = sha1(message_id).digest()
+    digest = sha1(message_id.encode('utf-8')).digest()
     message_id_hash = b32encode(digest)
     del msg['x-message-id-hash']
     msg['X-Message-ID-Hash'] = message_id_hash

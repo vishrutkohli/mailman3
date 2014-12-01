@@ -32,7 +32,7 @@ from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
-from urllib2 import HTTPError
+from six.moves.urllib_error import HTTPError
 from zope.component import getUtility
 
 

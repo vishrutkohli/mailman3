@@ -35,7 +35,7 @@ from mailman.config import config
 from mailman.core.system import system
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
-from urllib2 import HTTPError
+from six.moves.urllib_error import HTTPError
 
 
 

@@ -304,7 +304,7 @@ Testing
         # and make some simple checks that the message is what we expected.
         conn_mock.quit.assert_called_once_with()
 
-    @mock.patch('nntplib.NNTP', side_effect=nntplib.error_temp)
+    @mock.patch('nntplib.NNTP', side_effect=nntplib.NNTPTemporaryError)
     def test_connect_with_nntplib_failure(self, class_mock):
         self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
         mark = LogFileMark('mailman.error')
@@ -341,7 +341,7 @@ Testing
         self.assertEqual(messages[0].msgdata['listname'], 'test@example.com')
         self.assertEqual(messages[0].msg['subject'], 'A newsgroup posting')
 
-    @mock.patch('nntplib.NNTP', side_effect=nntplib.error_temp)
+    @mock.patch('nntplib.NNTP', side_effect=nntplib.NNTPTemporaryError)
     def test_connection_never_gets_quit_after_failures(self, class_mock):
         # The NNTP connection doesn't get closed after a unsuccessful
         # connection, since there's nothing to close.
@@ -361,7 +361,7 @@ Testing
         # The NNTP connection does get closed after a unsuccessful post.
         # Add a side-effect to the instance mock's .post() method.
         conn_mock = class_mock()
-        conn_mock.post.side_effect = nntplib.error_temp
+        conn_mock.post.side_effect = nntplib.NNTPTemporaryError
         self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
         self._runner.run()
         # The connection object's post() method was called once with a

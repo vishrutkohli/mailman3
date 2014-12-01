@@ -30,11 +30,12 @@ __all__ = [
 import os
 import sys
 
-from ConfigParser import SafeConfigParser
 from flufl.lock import Lock
 from lazr.config import ConfigSchema, as_boolean
-from pkg_resources import resource_stream, resource_string
+from pkg_resources import resource_filename, resource_string
+from six.moves.configparser import ConfigParser, RawConfigParser
 from string import Template
+from unittest.mock import patch
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
@@ -65,6 +66,11 @@ MAILMAN_CFG_TEMPLATE = """\
 # [devmode]
 # enabled: yes
 # recipient: your.address@your.domain"""
+
+class _NonStrictRawConfigParser(RawConfigParser):
+    def __init__(self, *args, **kws):
+        kws['strict'] = False
+        super().__init__(*args, **kws)
 
 
 
@@ -99,30 +105,27 @@ class Configuration:
 
     def load(self, filename=None):
         """Load the configuration from the schema and config files."""
-        schema_file = config_file = None
-        try:
-            schema_file = resource_stream('mailman.config', 'schema.cfg')
-            schema = ConfigSchema('schema.cfg', schema_file)
-            # If a configuration file was given, load it now too.  First, load
-            # the absolute minimum default configuration, then if a
-            # configuration filename was given by the user, push it.
-            config_file = resource_stream('mailman.config', 'mailman.cfg')
-            self._config = schema.loadFile(config_file, 'mailman.cfg')
-            if filename is not None:
-                self.filename = filename
-                with open(filename) as user_config:
-                    self._config.push(filename, user_config.read())
-        finally:
-            if schema_file:
-                schema_file.close()
-            if config_file:
-                config_file.close()
-        self._post_process()
+        schema_file = resource_filename('mailman.config', 'schema.cfg')
+        schema = ConfigSchema(schema_file)
+        # If a configuration file was given, load it now too.  First, load
+        # the absolute minimum default configuration, then if a
+        # configuration filename was given by the user, push it.
+        config_file = resource_filename('mailman.config', 'mailman.cfg')
+        self._config = schema.load(config_file)
+        if filename is not None:
+            self.filename = filename
+            with open(filename) as user_config:
+                self.push(filename, user_config.read())
 
     def push(self, config_name, config_string):
         """Push a new configuration onto the stack."""
         self._clear()
-        self._config.push(config_name, config_string)
+        # In Python 3, the RawConfigParser() must be created with
+        # strict=False, otherwise we'll get a DuplicateSectionError.
+        # See https://bugs.launchpad.net/lazr.config/+bug/1397779
+        with patch('lazr.config._config.RawConfigParser',
+                   _NonStrictRawConfigParser):
+            self._config.push(config_name, config_string)
         self._post_process()
 
     def pop(self, config_name):
@@ -305,7 +308,7 @@ def external_configuration(path):
     """
     # Is the context coming from a file system or Python path?
     cfg_path = expand_path(path)
-    parser = SafeConfigParser()
+    parser = ConfigParser()
     files = parser.read(cfg_path)
     if files != [cfg_path]:
         raise MissingConfigurationFileError(path)

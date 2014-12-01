@@ -31,9 +31,9 @@ __all__ = [
 # -owner.
 
 import re
+import six
 import logging
 
-from StringIO import StringIO
 from email.errors import HeaderParseError
 from email.header import decode_header, make_header
 from email.iterators import typed_subpart_iterator
@@ -76,7 +76,7 @@ class CommandFinder:
         # Extract the subject header and do RFC 2047 decoding.
         raw_subject = msg.get('subject', '')
         try:
-            subject = unicode(make_header(decode_header(raw_subject)))
+            subject = make_header(decode_header(raw_subject)).decode('utf-8')
             # Mail commands must be ASCII.
             self.command_lines.append(subject.encode('us-ascii'))
         except (HeaderParseError, UnicodeError, LookupError):
@@ -84,7 +84,7 @@ class CommandFinder:
             # subject is a unicode object, convert it to ASCII ignoring all
             # bogus characters.  Otherwise, there's nothing in the subject
             # that we can use.
-            if isinstance(raw_subject, unicode):
+            if isinstance(raw_subject, six.text_type):
                 safe_subject = raw_subject.encode('us-ascii', 'ignore')
                 self.command_lines.append(safe_subject)
         # Find the first text/plain part of the message.
@@ -100,7 +100,7 @@ class CommandFinder:
             return
         body = part.get_payload(decode=True)
         # text/plain parts better have string payloads.
-        assert isinstance(body, basestring), 'Non-string decoded payload'
+        assert isinstance(body, six.string_types), 'Non-string decoded payload'
         lines = body.splitlines()
         # Use no more lines than specified
         max_lines = int(config.mailman.email_commands_max_lines)
@@ -118,7 +118,7 @@ class CommandFinder:
             # Ensure that all the parts are unicodes.  Since we only accept
             # ASCII commands and arguments, ignore anything else.
             parts = [(part
-                      if isinstance(part, unicode)
+                      if isinstance(part, six.text_type)
                       else part.decode('ascii', 'ignore'))
                      for part in parts]
             yield parts
@@ -130,20 +130,20 @@ class Results:
     """The email command results."""
 
     def __init__(self, charset='us-ascii'):
-        self._output = StringIO()
+        self._output = six.StringIO()
         self.charset = charset
         print(_("""\
 The results of your email command are provided below.
 """), file=self._output)
 
     def write(self, text):
-        if not isinstance(text, unicode):
+        if isinstance(text, bytes):
             text = text.decode(self.charset, 'ignore')
         self._output.write(text)
 
     def __unicode__(self):
         value = self._output.getvalue()
-        assert isinstance(value, unicode), 'Not a unicode: %r' % value
+        assert isinstance(value, six.text_type), 'Not a unicode: %r' % value
         return value
 
 
@@ -231,7 +231,7 @@ class CommandRunner(Runner):
         # Find a charset for the response body.  Try the original message's
         # charset first, then ascii, then latin-1 and finally falling back to
         # utf-8.
-        reply_body = unicode(results)
+        reply_body = results.decode('utf-8')
         for charset in (results.charset, 'us-ascii', 'latin-1'):
             try:
                 reply_body.encode(charset)

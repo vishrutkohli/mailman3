@@ -69,8 +69,9 @@ Another helper unpacks ``POST`` and ``PUT`` request variables, validating and
 converting their values.
 ::
 
+    >>> import six
     >>> from mailman.rest.validator import Validator
-    >>> validator = Validator(one=int, two=unicode, three=bool)
+    >>> validator = Validator(one=int, two=six.text_type, three=bool)
 
     >>> class FakeRequest:
     ...     params = None
@@ -119,7 +120,7 @@ Extra keys are also not allowed.
 However, if optional keys are missing, it's okay.
 ::
 
-    >>> validator = Validator(one=int, two=unicode, three=bool,
+    >>> validator = Validator(one=int, two=six.text_type, three=bool,
     ...                       four=int, five=int,
     ...                       _optional=('four', 'five'))
 

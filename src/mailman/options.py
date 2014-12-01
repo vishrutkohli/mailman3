@@ -42,7 +42,7 @@ from mailman.version import MAILMAN_VERSION
 
 def check_unicode(option, opt, value):
     """Check that the value is a unicode string."""
-    if isinstance(value, unicode):
+    if not isinstance(value, bytes):
         return value
     try:
         return value.decode(sys.getdefaultencoding())

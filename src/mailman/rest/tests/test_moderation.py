@@ -26,8 +26,6 @@ __all__ = [
 
 import unittest
 
-from urllib2 import HTTPError
-
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message, hold_subscription
 from mailman.config import config
@@ -36,6 +34,7 @@ from mailman.interfaces.member import DeliveryMode
 from mailman.testing.helpers import (
     call_api, specialized_message_from_string as mfs)
 from mailman.testing.layers import RESTLayer
+from six.moves.urllib_error import HTTPError
 
 
 

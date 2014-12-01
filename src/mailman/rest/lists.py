@@ -30,6 +30,8 @@ __all__ = [
     ]
 
 
+import six
+
 from lazr.config import as_boolean
 from operator import attrgetter
 from zope.component import getUtility
@@ -204,8 +206,8 @@ class AllLists(_ListBase):
     def on_post(self, request, response):
         """Create a new mailing list."""
         try:
-            validator = Validator(fqdn_listname=unicode,
-                                  style_name=unicode,
+            validator = Validator(fqdn_listname=six.text_type,
+                                  style_name=six.text_type,
                                   _optional=('style_name',))
             mlist = create_list(**validator(request))
         except ListAlreadyExistsError:

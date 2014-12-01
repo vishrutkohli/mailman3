@@ -201,7 +201,7 @@ def prefix_subject(mlist, msg, msgdata):
     # range.  It is safe to use unicode string when manupilating header
     # contents with re module.  It would be best to return unicode in
     # ch_oneline() but here is temporary solution.
-    subject = unicode(subject, cset)
+    subject = subject.decode(cset)
     # If the subject_prefix contains '%d', it is replaced with the
     # mailing list sequential number.  Sequential number format allows
     # '%d' or '%05d' like pattern.
@@ -270,7 +270,7 @@ def ch_oneline(headerstr):
         else:
             cset = 'utf-8'
         h = make_header(d)
-        ustr = unicode(h)
+        ustr = h.decode('utf-8')
         oneline = ''.join(ustr.splitlines())
         return oneline.encode(cset, 'replace'), cset
     except (LookupError, UnicodeError, ValueError, HeaderParseError):

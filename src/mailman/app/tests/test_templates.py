@@ -26,18 +26,18 @@ __all__ = [
 
 
 import os
+import six
 import shutil
-import urllib2
 import tempfile
 import unittest
-
-from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.testing.layers import ConfigLayer
+from six.moves.urllib_error import URLError
+from zope.component import getUtility
 
 
 
@@ -98,32 +98,32 @@ class TestTemplateLoader(unittest.TestCase):
         self.assertEqual(content, 'Test content')
 
     def test_uri_not_found(self):
-        with self.assertRaises(urllib2.URLError) as cm:
+        with self.assertRaises(URLError) as cm:
             self._loader.get('mailman:///missing.txt')
         self.assertEqual(cm.exception.reason, 'No such file')
 
     def test_shorter_url_error(self):
-        with self.assertRaises(urllib2.URLError) as cm:
+        with self.assertRaises(URLError) as cm:
             self._loader.get('mailman:///')
         self.assertEqual(cm.exception.reason, 'No template specified')
 
     def test_short_url_error(self):
-        with self.assertRaises(urllib2.URLError) as cm:
+        with self.assertRaises(URLError) as cm:
             self._loader.get('mailman://')
         self.assertEqual(cm.exception.reason, 'No template specified')
 
     def test_bad_language(self):
-        with self.assertRaises(urllib2.URLError) as cm:
+        with self.assertRaises(URLError) as cm:
             self._loader.get('mailman:///xx/demo.txt')
         self.assertEqual(cm.exception.reason, 'Bad language or list name')
 
     def test_bad_mailing_list(self):
-        with self.assertRaises(urllib2.URLError) as cm:
+        with self.assertRaises(URLError) as cm:
             self._loader.get('mailman:///missing@example.com/demo.txt')
         self.assertEqual(cm.exception.reason, 'Bad language or list name')
 
     def test_too_many_path_components(self):
-        with self.assertRaises(urllib2.URLError) as cm:
+        with self.assertRaises(URLError) as cm:
             self._loader.get('mailman:///missing@example.com/en/foo/demo.txt')
         self.assertEqual(cm.exception.reason, 'No such file')
 
@@ -135,5 +135,5 @@ class TestTemplateLoader(unittest.TestCase):
         with open(os.path.join(path, 'demo.txt'), 'w') as fp:
             print(test_text, end='', file=fp)
         content = self._loader.get('mailman:///it/demo.txt')
-        self.assertTrue(isinstance(content, unicode))
+        self.assertIsInstance(content, six.text_type)
         self.assertEqual(content, test_text.decode('utf-8'))

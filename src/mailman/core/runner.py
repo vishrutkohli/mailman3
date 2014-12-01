@@ -30,12 +30,7 @@ import signal
 import logging
 import traceback
 
-from cStringIO import StringIO
 from lazr.config import as_boolean, as_timedelta
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.logging import reopen
@@ -44,6 +39,10 @@ from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.runner import IRunner, RunnerCrashEvent
 from mailman.utilities.string import expand
+from six.moves import cStringIO as StringIO
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 dlog = logging.getLogger('mailman.debug')
@@ -218,11 +217,11 @@ class Runner:
         # them out of our sight.
         #
         # Find out which mailing list this message is destined for.
+        mlist = None
         missing = object()
         listname = msgdata.get('listname', missing)
-        mlist = (None
-                 if listname is missing
-                 else getUtility(IListManager).get(unicode(listname)))
+        if listname is missing:
+            mlist = getUtility(IListManager).get(listname.decode('utf-8'))
         if mlist is None:
             elog.error(
                 '%s runner "%s" shunting message for missing list: %s',

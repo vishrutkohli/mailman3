@@ -25,6 +25,8 @@ __all__ = [
     ]
 
 
+import six
+
 from lazr.config import as_boolean, as_timedelta
 from mailman.config import config
 from mailman.core.errors import (
@@ -61,7 +63,7 @@ class AcceptableAliases(GetterSetter):
         alias_set = IAcceptableAliasSet(mlist)
         alias_set.clear()
         for alias in value:
-            alias_set.add(unicode(alias))
+            alias_set.add(alias.decode('utf-8'))
 
 
 
@@ -71,13 +73,13 @@ class AcceptableAliases(GetterSetter):
 def pipeline_validator(pipeline_name):
     """Convert the pipeline name to a string, but only if it's known."""
     if pipeline_name in config.pipelines:
-        return unicode(pipeline_name)
+        return pipeline_name.decode('utf-8')
     raise ValueError('Unknown pipeline: {}'.format(pipeline_name))
 
 
 def list_of_unicode(values):
     """Turn a list of things into a list of unicodes."""
-    return [unicode(value) for value in values]
+    return [value.decode('utf-8') for value in values]
 
 
 
@@ -106,9 +108,9 @@ ATTRIBUTES = dict(
     autorespond_postings=GetterSetter(enum_validator(ResponseAction)),
     autorespond_requests=GetterSetter(enum_validator(ResponseAction)),
     autoresponse_grace_period=GetterSetter(as_timedelta),
-    autoresponse_owner_text=GetterSetter(unicode),
-    autoresponse_postings_text=GetterSetter(unicode),
-    autoresponse_request_text=GetterSetter(unicode),
+    autoresponse_owner_text=GetterSetter(six.text_type),
+    autoresponse_postings_text=GetterSetter(six.text_type),
+    autoresponse_request_text=GetterSetter(six.text_type),
     archive_policy=GetterSetter(enum_validator(ArchivePolicy)),
     bounces_address=GetterSetter(None),
     collapse_alternatives=GetterSetter(as_boolean),
@@ -116,7 +118,7 @@ ATTRIBUTES = dict(
     created_at=GetterSetter(None),
     default_member_action=GetterSetter(enum_validator(Action)),
     default_nonmember_action=GetterSetter(enum_validator(Action)),
-    description=GetterSetter(unicode),
+    description=GetterSetter(six.text_type),
     digest_last_sent_at=GetterSetter(None),
     digest_size_threshold=GetterSetter(float),
     filter_content=GetterSetter(as_boolean),
@@ -135,21 +137,21 @@ ATTRIBUTES = dict(
     post_id=GetterSetter(None),
     posting_address=GetterSetter(None),
     posting_pipeline=GetterSetter(pipeline_validator),
-    display_name=GetterSetter(unicode),
+    display_name=GetterSetter(six.text_type),
     reply_goes_to_list=GetterSetter(enum_validator(ReplyToMunging)),
-    reply_to_address=GetterSetter(unicode),
+    reply_to_address=GetterSetter(six.text_type),
     request_address=GetterSetter(None),
     scheme=GetterSetter(None),
     send_welcome_message=GetterSetter(as_boolean),
-    subject_prefix=GetterSetter(unicode),
+    subject_prefix=GetterSetter(six.text_type),
     volume=GetterSetter(None),
     web_host=GetterSetter(None),
-    welcome_message_uri=GetterSetter(unicode),
+    welcome_message_uri=GetterSetter(six.text_type),
     )
 
 
 VALIDATORS = ATTRIBUTES.copy()
-for attribute, gettersetter in VALIDATORS.items():
+for attribute, gettersetter in list(VALIDATORS.items()):
     if gettersetter.decoder is None:
         del VALIDATORS[attribute]
 

@@ -31,11 +31,11 @@ import socket
 import logging
 import nntplib
 
-from cStringIO import StringIO
-
 from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.nntp import NewsgroupModeration
+from six.moves import cStringIO as StringIO
+
 
 COMMA = ','
 COMMASPACE = ', '

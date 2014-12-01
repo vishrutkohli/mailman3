@@ -25,14 +25,12 @@ __all__ = [
     ]
 
 
-import cPickle
-
-from pprint import PrettyPrinter
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.interact import interact
+from pprint import PrettyPrinter
+from six.moves import cPickle
+from zope.interface import implementer
 
 
 m = []

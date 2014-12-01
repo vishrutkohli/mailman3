@@ -62,7 +62,7 @@ def subscriber_validator(subscriber):
     try:
         return UUID(int=int(subscriber))
     except ValueError:
-        return unicode(subscriber)
+        return subscriber.decode('utf-8')
 
 
 def language_validator(code):

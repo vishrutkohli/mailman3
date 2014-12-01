@@ -28,9 +28,6 @@ __all__ = [
 
 import unittest
 
-from urllib2 import HTTPError
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.database.transaction import transaction
@@ -41,6 +38,8 @@ from mailman.testing.helpers import (
 from mailman.runners.incoming import IncomingRunner
 from mailman.testing.layers import ConfigLayer, RESTLayer
 from mailman.utilities.datetime import now
+from six.moves.urllib_error import HTTPError
+from zope.component import getUtility
 
 
 

@@ -27,16 +27,6 @@ __all__ = [
 
 import os
 
-from sqlalchemy import (
-    Boolean, Column, DateTime, Float, ForeignKey, Integer, Interval,
-    LargeBinary, PickleType, Unicode)
-from sqlalchemy.event import listen
-from sqlalchemy.orm import relationship
-from urlparse import urljoin
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
@@ -65,6 +55,15 @@ from mailman.model.mime import ContentFilter
 from mailman.model.preferences import Preferences
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
+from six.moves.urllib_parse import urljoin
+from sqlalchemy import (
+    Boolean, Column, DateTime, Float, ForeignKey, Integer, Interval,
+    LargeBinary, PickleType, Unicode)
+from sqlalchemy.event import listen
+from sqlalchemy.orm import relationship
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 SPACE = ' '

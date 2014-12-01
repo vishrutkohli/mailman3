@@ -27,10 +27,9 @@ __all__ = [
 
 import logging
 
-from Queue import Empty, Queue
-
 from lazr.smtptest.controller import QueueController
 from lazr.smtptest.server import Channel, QueueServer
+from six.moves.queue import Empty, Queue
 from zope.interface import implementer
 
 from mailman.interfaces.mta import IMailTransportAgentLifecycle

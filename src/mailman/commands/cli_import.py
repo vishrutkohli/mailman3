@@ -26,16 +26,15 @@ __all__ = [
 
 
 import sys
-import cPickle
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.database.transaction import transactional
 from mailman.interfaces.command import ICLISubCommand
 from mailman.interfaces.listmanager import IListManager
 from mailman.utilities.importer import import_config_pck, Import21Error
+from six.moves import cPickle
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

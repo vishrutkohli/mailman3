@@ -124,7 +124,7 @@ set than the encoded header.
     >>> process(mlist, msg, {})
     >>> print(msg['subject'])
     [XTest] =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-    >>> unicode(msg['subject'])
+    >>> msg['subject'].decode('utf-8')
     u'[XTest] \u30e1\u30fc\u30eb\u30de\u30f3'
 
 
@@ -180,7 +180,7 @@ in the subject prefix, and the subject is encoded non-ASCII.
     >>> process(mlist, msg, {})
     >>> print(msg['subject'])
     [XTest 456] =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-    >>> unicode(msg['subject'])
+    >>> msg['subject'].decode('utf-8')
     u'[XTest 456] \u30e1\u30fc\u30eb\u30de\u30f3'
 
 Even more fun is when the internationalized ``Subject`` header already has a
@@ -194,10 +194,8 @@ prefix, possibly with a different posting number.
     >>> print(msg['subject'])
     [XTest 456] Re: =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
 
-..
- # XXX This requires Python email patch #1681333 to succeed.
- #    >>> unicode(msg['subject'])
- #    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> msg['subject'].decode('utf-8')
+    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
 
 As before, old style subject prefixes are re-ordered.
 
@@ -210,10 +208,8 @@ As before, old style subject prefixes are re-ordered.
     [XTest 456] Re:
       =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
 
-..
- # XXX This requires Python email patch #1681333 to succeed.
- #    >>> unicode(msg['subject'])
- #    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> msg['subject'].decode('utf-8')
+    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
 
 
 In this test case, we get an extra space between the prefix and the original

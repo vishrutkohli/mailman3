@@ -46,7 +46,7 @@ import datetime
 import tempfile
 
 from lazr.config import as_boolean
-from pkg_resources import resource_string
+from pkg_resources import resource_string as resource_bytes
 from textwrap import dedent
 from zope.component import getUtility
 
@@ -132,7 +132,8 @@ class ConfigLayer(MockAndMonkeyLayer):
         configuration: {1}
         """.format(cls.var_dir, postfix_cfg))
         # Read the testing config and push it.
-        test_config += resource_string('mailman.testing', 'testing.cfg')
+        more = resource_bytes('mailman.testing', 'testing.cfg')
+        test_config += more.decode('utf-8')
         config.create_paths = True
         config.push('test config', test_config)
         # Initialize everything else.

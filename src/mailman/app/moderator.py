@@ -31,12 +31,11 @@ __all__ = [
     ]
 
 
+import six
 import time
 import logging
 
 from email.utils import formataddr, formatdate, getaddresses, make_msgid
-from zope.component import getUtility
-
 from mailman.app.membership import add_member, delete_member
 from mailman.app.notifications import send_admin_subscription_notice
 from mailman.config import config
@@ -51,6 +50,7 @@ from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
 from mailman.utilities.datetime import now
 from mailman.utilities.i18n import make
+from zope.component import getUtility
 
 
 NL = '\n'
@@ -86,8 +86,8 @@ def hold_message(mlist, msg, msgdata=None, reason=None):
     # Message-ID header.
     message_id = msg.get('message-id')
     if message_id is None:
-        msg['Message-ID'] = message_id = unicode(make_msgid())
-    assert isinstance(message_id, unicode), (
+        msg['Message-ID'] = message_id = make_msgid().decode('utf-8')
+    assert isinstance(message_id, six.text_type), (
         'Message-ID is not a unicode: %s' % message_id)
     getUtility(IMessageStore).add(msg)
     # Prepare the message metadata with some extra information needed only by
