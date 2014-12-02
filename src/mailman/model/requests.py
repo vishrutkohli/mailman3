@@ -33,7 +33,7 @@ from mailman.database.types import Enum
 from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.requests import IListRequests, RequestType
 from six.moves.cPickle import dumps, loads
-from sqlalchemy import Column, ForeignKey, Integer, LargeBinary, Unicode
+from sqlalchemy import Column, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship
 from zope.component import getUtility
 from zope.interface import implementer
@@ -155,7 +155,7 @@ class _Request(Model):
     id = Column(Integer, primary_key=True)
     key = Column(Unicode)
     request_type = Column(Enum(RequestType))
-    data_hash = Column(LargeBinary)
+    data_hash = Column(Unicode)
 
     mailing_list_id = Column(Integer, ForeignKey('mailinglist.id'), index=True)
     mailing_list = relationship('MailingList')

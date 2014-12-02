@@ -64,8 +64,8 @@ class MessageStore:
             raise ValueError(
                 'Message ID already exists in message store: {0}'.format(
                     message_id))
-        shaobj = hashlib.sha1(message_id)
-        hash32 = base64.b32encode(shaobj.digest())
+        shaobj = hashlib.sha1(message_id.encode('utf-8'))
+        hash32 = base64.b32encode(shaobj.digest()).decode('utf-8')
         del message['X-Message-ID-Hash']
         message['X-Message-ID-Hash'] = hash32
         # Calculate the path on disk where we're going to store this message
@@ -90,7 +90,7 @@ class MessageStore:
         # them and try again.
         while True:
             try:
-                with open(path, 'w') as fp:
+                with open(path, 'wb') as fp:
                     # -1 says to use the highest protocol available.
                     pickle.dump(message, fp, -1)
                     break
@@ -102,7 +102,7 @@ class MessageStore:
 
     def _get_message(self, row):
         path = os.path.join(config.MESSAGES_DIR, row.path)
-        with open(path) as fp:
+        with open(path, 'rb') as fp:
             return pickle.load(fp)
 
     @dbconnection

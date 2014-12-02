@@ -31,8 +31,7 @@ import random
 import hashlib
 
 from lazr.config import as_timedelta
-from sqlalchemy import (
-    Column, DateTime, ForeignKey, Integer, LargeBinary, Unicode)
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship
 from zope.interface import implementer
 from zope.interface.verify import verifyObject
@@ -71,7 +70,7 @@ class Pended(Model):
     __tablename__ = 'pended'
 
     id = Column(Integer, primary_key=True)
-    token = Column(LargeBinary)
+    token = Column(Unicode)
     expiration_date = Column(DateTime)
     key_values = relationship('PendedKeyValue')
 
@@ -108,7 +107,7 @@ class Pendings:
             right_now = time.time()
             x = random.random() + right_now % 1.0 + time.clock() % 1.0
             # Use sha1 because it produces shorter strings.
-            token = hashlib.sha1(repr(x)).hexdigest()
+            token = hashlib.sha1(repr(x).encode('utf-8')).hexdigest()
             # In practice, we'll never get a duplicate, but we'll be anal
             # about checking anyway.
             if store.query(Pended).filter_by(token=token).count() == 0:
