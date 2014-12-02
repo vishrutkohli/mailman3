@@ -68,6 +68,8 @@ class MailArchive:
         message_id_hash = msg.get('x-message-id-hash')
         if message_id_hash is None:
             return None
+        if not isinstance(message_id_hash, unicode):
+            message_id_hash = message_id_hash.decode("ascii")
         return urljoin(self.base_url, message_id_hash)
 
     def archive_message(self, mlist, msg):

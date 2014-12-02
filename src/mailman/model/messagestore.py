@@ -58,6 +58,8 @@ class MessageStore:
             raise ValueError('Exactly one Message-ID header required')
         # Calculate and insert the X-Message-ID-Hash.
         message_id = message_ids[0]
+        if not isinstance(message_id, unicode):
+            message_id = message_id.decode("ascii")
         # Complain if the Message-ID already exists in the storage.
         existing = store.query(Message).filter(
             Message.message_id == message_id).first()

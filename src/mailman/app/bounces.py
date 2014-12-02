@@ -200,10 +200,13 @@ def send_probe(member, msg):
                 optionsurl=member.options_url,
                 owneraddr=mlist.owner_address,
                 )
+    message_id = msg['message-id']
+    if not isinstance(message_id, unicode):
+        message_id = message_id.decode("ascii")
     pendable = _ProbePendable(
         # We can only pend unicodes.
         member_id=member.member_id.hex,
-        message_id=msg['message-id'],
+        message_id=message_id,
         )
     token = getUtility(IPendings).add(pendable)
     mailbox, domain_parts = split_email(mlist.bounces_address)

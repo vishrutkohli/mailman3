@@ -73,6 +73,8 @@ class ImplicitDestination:
         recipients = set()
         for header in ('to', 'cc', 'resent-to', 'resent-cc'):
             for fullname, address in getaddresses(msg.get_all(header, [])):
+                if not isinstance(address, unicode):
+                    address = address.decode("ascii")
                 address = address.lower()
                 if address in aliases:
                     return False

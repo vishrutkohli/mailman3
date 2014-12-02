@@ -26,9 +26,10 @@ __all__ = [
 
 
 import unittest
+from email.parser import FeedParser
 
 from mailman.app.lifecycle import create_list
-from mailman.email.message import UserNotification
+from mailman.email.message import UserNotification, Message
 from mailman.testing.helpers import get_queue_messages
 from mailman.testing.layers import ConfigLayer
 
@@ -58,3 +59,35 @@ class TestMessage(unittest.TestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].msg.get_all('precedence'), 
                          ['omg wtf bbq'])
+
+
+
+class TestMessageSubclass(unittest.TestCase):
+
+    def test_i18n_filenames(self):
+        parser = FeedParser(_factory=Message)
+        parser.feed(b"""Message-ID: <blah@example.com>
+Content-Type: multipart/mixed; boundary="------------050607040206050605060208"
+
+This is a multi-part message in MIME format.
+--------------050607040206050605060208
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Test message containing an attachment with an accented filename
+
+--------------050607040206050605060208
+Content-Disposition: attachment;
+	filename*=UTF-8''d%C3%A9jeuner.txt
+
+Test content
+--------------050607040206050605060208--
+""")
+        msg = parser.close()
+        attachment = msg.get_payload()[1]
+        try:
+            filename = attachment.get_filename()
+        except TypeError, e:
+            raise
+            self.fail(e)
+        self.assertEqual(filename, u"d\xe9jeuner.txt")

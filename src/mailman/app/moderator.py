@@ -87,8 +87,8 @@ def hold_message(mlist, msg, msgdata=None, reason=None):
     message_id = msg.get('message-id')
     if message_id is None:
         msg['Message-ID'] = message_id = unicode(make_msgid())
-    assert isinstance(message_id, unicode), (
-        'Message-ID is not a unicode: %s' % message_id)
+    if not isinstance(message_id, unicode):
+        message_id = message_id.decode("ascii")
     getUtility(IMessageStore).add(msg)
     # Prepare the message metadata with some extra information needed only by
     # the moderation interface.

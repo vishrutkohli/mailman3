@@ -68,6 +68,8 @@ class Prototype:
         message_id_hash = msg.get('x-message-id-hash')
         if message_id_hash is None:
             return None
+        if not isinstance(message_id_hash, unicode):
+            message_id_hash = message_id_hash.decode("ascii")
         return urljoin(Prototype.list_url(mlist), message_id_hash)
 
     @staticmethod

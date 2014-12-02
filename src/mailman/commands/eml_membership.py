@@ -72,6 +72,8 @@ used.
             print(_('$self.name: No valid address found to subscribe'),
                   file=results)
             return ContinueProcessing.no
+        if not isinstance(address, unicode):
+            address = address.decode("ascii")
         # Have we already seen one join request from this user during the
         # processing of this email?
         joins = getattr(results, 'joins', set())
