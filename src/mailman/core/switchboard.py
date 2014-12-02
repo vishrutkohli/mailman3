@@ -114,21 +114,20 @@ class Switchboard:
         data.update(_kws)
         listname = data.get('listname', '--nolist--')
         # Get some data for the input to the sha hash.
-        now = time.time()
+        now = repr(time.time())
         if data.get('_plaintext'):
             protocol = 0
             msgsave = cPickle.dumps(str(_msg), protocol)
         else:
             protocol = pickle.HIGHEST_PROTOCOL
             msgsave = cPickle.dumps(_msg, protocol)
-        # listname is unicode but the input to the hash function must be an
-        # 8-bit string (eventually, a bytes object).
-        hashfood = msgsave + listname + repr(now)
+        # listname is a str but the input to the hash function must be a bytes.
+        hashfood = msgsave + listname.encode('utf-8') + now.encode('utf-8')
         # Encode the current time into the file name for FIFO sorting.  The
         # file name consists of two parts separated by a '+': the received
         # time for this message (i.e. when it first showed up on this system)
         # and the sha hex digest.
-        filebase = repr(now) + '+' + hashlib.sha1(hashfood).hexdigest()
+        filebase = now + '+' + hashlib.sha1(hashfood).hexdigest()
         filename = os.path.join(self.queue_directory, filebase + '.pck')
         tmpfile = filename + '.tmp'
         # Always add the metadata schema version number
@@ -142,7 +141,7 @@ class Switchboard:
         # object or not.
         data['_parsemsg'] = (protocol == 0)
         # Write to the pickle file the message object and metadata.
-        with open(tmpfile, 'w') as fp:
+        with open(tmpfile, 'wb') as fp:
             fp.write(msgsave)
             cPickle.dump(data, fp, protocol)
             fp.flush()
@@ -156,7 +155,7 @@ class Switchboard:
         filename = os.path.join(self.queue_directory, filebase + '.pck')
         backfile = os.path.join(self.queue_directory, filebase + '.bak')
         # Read the message object and metadata.
-        with open(filename) as fp:
+        with open(filename, 'rb') as fp:
             # Move the file to the backup file name for processing.  If this
             # process crashes uncleanly the .bak file will be used to
             # re-instate the .pck file in order to try again.

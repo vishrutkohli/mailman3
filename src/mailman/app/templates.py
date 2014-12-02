@@ -55,7 +55,7 @@ class MailmanHandler(BaseHandler):
         assert parsed.scheme == 'mailman'
         # The path can contain one, two, or three components.  Since no empty
         # path components are legal, filter them out.
-        parts = filter(None, parsed.path.split('/'))
+        parts = [p for p in parsed.path.split('/') if p is not None]
         if len(parts) == 0:
             raise URLError('No template specified')
         elif len(parts) == 1:
