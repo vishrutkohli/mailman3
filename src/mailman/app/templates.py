@@ -55,7 +55,7 @@ class MailmanHandler(BaseHandler):
         assert parsed.scheme == 'mailman'
         # The path can contain one, two, or three components.  Since no empty
         # path components are legal, filter them out.
-        parts = [p for p in parsed.path.split('/') if p is not None]
+        parts = [p for p in parsed.path.split('/') if p]
         if len(parts) == 0:
             raise URLError('No template specified')
         elif len(parts) == 1:
@@ -103,4 +103,4 @@ class TemplateLoader:
     def get(self, uri):
         """See `ITemplateLoader`."""
         with closing(urlopen(uri)) as fp:
-            return fp.read().decode('utf-8')
+            return fp.read()
