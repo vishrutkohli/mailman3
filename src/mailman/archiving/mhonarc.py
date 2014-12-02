@@ -28,13 +28,12 @@ __all__ = [
 import logging
 import subprocess
 
-from urlparse import urljoin
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import IArchiver
 from mailman.utilities.string import expand
+from six.moves.urllib_parse import urljoin
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.archiver')
