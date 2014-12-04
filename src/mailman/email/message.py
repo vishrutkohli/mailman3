@@ -126,7 +126,7 @@ class Message(email.message.Message):
         for sender in senders:
             if not sender:
                 continue
-            if not isinstance(sender, unicode):
+            if isinstance(sender, bytes):
                 sender = sender.decode("ascii")
             clean_senders.append(sender)
         return clean_senders

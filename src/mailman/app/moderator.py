@@ -86,8 +86,8 @@ def hold_message(mlist, msg, msgdata=None, reason=None):
     # Message-ID header.
     message_id = msg.get('message-id')
     if message_id is None:
-        msg['Message-ID'] = message_id = unicode(make_msgid())
-    if not isinstance(message_id, unicode):
+        msg['Message-ID'] = message_id = make_msgid().decode("ascii")
+    if isinstance(message_id, bytes):
         message_id = message_id.decode("ascii")
     getUtility(IMessageStore).add(msg)
     # Prepare the message metadata with some extra information needed only by

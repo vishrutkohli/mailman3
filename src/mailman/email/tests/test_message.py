@@ -87,7 +87,6 @@ Test content
         attachment = msg.get_payload()[1]
         try:
             filename = attachment.get_filename()
-        except TypeError, e:
-            raise
+        except TypeError as e:
             self.fail(e)
         self.assertEqual(filename, u"d\xe9jeuner.txt")

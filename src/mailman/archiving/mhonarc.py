@@ -73,7 +73,7 @@ class MHonArc:
         message_id_hash = msg.get('x-message-id-hash')
         if message_id_hash is None:
             return None
-        if not isinstance(message_id_hash, unicode):
+        if isinstance(message_id_hash, bytes):
             message_id_hash = message_id_hash.decode("ascii")
         return urljoin(self.list_url(mlist), message_id_hash)
 

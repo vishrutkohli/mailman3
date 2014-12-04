@@ -58,7 +58,7 @@ class BounceEvent(Model):
         self.email = email
         self.timestamp = now()
         msgid = msg['message-id']
-        if not isinstance(msgid, unicode):
+        if isinstance(msgid, bytes):
             msgid = msgid.decode("ascii")
         self.message_id = msgid
         self.context = (BounceContext.normal if context is None else context)

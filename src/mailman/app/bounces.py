@@ -201,7 +201,7 @@ def send_probe(member, msg):
                 owneraddr=mlist.owner_address,
                 )
     message_id = msg['message-id']
-    if not isinstance(message_id, unicode):
+    if isinstance(message_id, bytes):
         message_id = message_id.decode("ascii")
     pendable = _ProbePendable(
         # We can only pend unicodes.
