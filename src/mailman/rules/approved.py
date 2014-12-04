@@ -71,9 +71,10 @@ class Approved:
             # Find the first text/plain part in the message
             part = None
             stripped = False
+            payload = None
             for part in typed_subpart_iterator(msg, 'text', 'plain'):
+                payload = part.get_payload(decode=True)
                 break
-            payload = part.get_payload(decode=True)
             if payload is not None:
                 charset = part.get_content_charset('us-ascii')
                 payload = payload.decode(charset, 'replace')

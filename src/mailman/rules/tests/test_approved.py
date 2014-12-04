@@ -491,3 +491,35 @@ deprecated = roundup_plaintext
             self.assertFalse(result)
         self.assertEqual(self._mlist.moderator_password,
                          b'{plaintext}super secret')
+
+
+class TestApprovedNoTextPlainPart(unittest.TestCase):
+    """Test the approved handler with HTML-only messages."""
+
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('test@example.com')
+        self._rule = approved.Approved()
+
+    def test_no_text_plain_part(self):
+        # When the message body only contains HTML, the rule should not throw
+        # AttributeError: 'NoneType' object has no attribute 'get_payload'
+        # LP: #1158721
+        msg = mfs("""\
+From: anne@example.com
+To: test@example.com
+Subject: HTML only email
+Message-ID: <ant>
+MIME-Version: 1.0
+Content-Type: text/html; charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+
+<HTML>
+<BODY>
+<P>This message contains only HTML, no plain/text part</P>
+</BODY>
+</HTML>
+""")
+        result = self._rule.check(self._mlist, msg, {})
+        self.assertFalse(result)
