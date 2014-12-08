@@ -206,3 +206,139 @@ class TestAddresses(unittest.TestCase):
                     'email': 'anne.person@example.org',
                     })
         self.assertEqual(cm.exception.code, 404)
+
+    def test_address_with_user(self):
+        with transaction():
+            anne = getUtility(IUserManager).create_user('anne@example.com')
+        json, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com')
+        self.assertEqual(headers['status'], '200')
+        self.assertIn("user", json)
+        self.assertEqual(json["user"], "http://localhost:9001/3.0/users/1")
+
+    def test_address_without_user(self):
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+        json, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com')
+        self.assertEqual(headers['status'], '200')
+        self.assertNotIn("user", json)
+
+    def test_user_subresource_on_unlinked_address(self):
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_user_subresource(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com', 'Anne')
+        json, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user')
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(json["user_id"], 1)
+        self.assertEqual(json["display_name"], "Anne")
+        self.assertEqual(json["self_link"], "http://localhost:9001/3.0/users/1")
+
+    def test_user_subresource_post(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne.person@example.org', 'Anne')
+            anne_addr = user_manager.create_address('anne@example.com')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'user_id': anne.user_id.int,
+                })
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(anne_addr.user, anne)
+        self.assertEqual(sorted([a.email for a in anne.addresses]),
+                         ['anne.person@example.org', 'anne@example.com'])
+
+    def test_user_subresource_post_new_user(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne_addr = user_manager.create_address('anne@example.com')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'display_name': 'Anne',
+                })
+        self.assertEqual(headers['status'], '201')
+        anne = user_manager.get_user('anne@example.com')
+        self.assertTrue(anne is not None)
+        self.assertEqual(anne.display_name, 'Anne')
+        self.assertEqual([a.email for a in anne.addresses],
+                         ['anne@example.com'])
+        self.assertEqual(anne_addr.user, anne)
+        self.assertEqual(headers['location'],
+                         'http://localhost:9001/3.0/users/1')
+
+    def test_user_subresource_post_conflict(self):
+        with transaction():
+            anne = getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                    'email': 'anne.person@example.org',
+                })
+        self.assertEqual(cm.exception.code, 409)
+
+    def test_user_subresource_post_new_user_no_autocreate(self):
+        with transaction():
+            anne = getUtility(IUserManager).create_address('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            json, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                    'display_name': 'Anne',
+                    'autocreate': 0,
+                })
+            print("test_user_subresource_post_new_user_no_autocreate", headers, json)
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_user_subresource_unlink(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com')
+        response, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user',
+                method="DELETE")
+        self.assertEqual(headers["status"], '204')
+        anne_addr = user_manager.get_address('anne@example.com')
+        self.assertTrue(anne_addr.user is None, "The address is still linked")
+        self.assertTrue(user_manager.get_user('anne@example.com') is None)
+
+    def test_user_subresource_put(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne_1 = user_manager.create_user('anne@example.com', 'Anne 1')
+            anne_2 = user_manager.create_user(display_name='Anne 2')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'user_id': anne_2.user_id.int,
+                }, method="PUT")
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(anne_1.addresses, [])
+        self.assertEqual([a.email for a in anne_2.addresses],
+                         ['anne@example.com'])
+        self.assertEqual(anne_2,
+            user_manager.get_address('anne@example.com').user)
+
+    def test_user_subresource_put_create(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com', 'Anne')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'email': 'anne.person@example.org',
+                }, method="PUT")
+        self.assertEqual(headers['status'], '201')
+        self.assertEqual(anne.addresses, [])
+        anne_person = user_manager.get_user('anne.person@example.org')
+        self.assertTrue(anne_person is not None)
+        self.assertEqual(sorted([a.email for a in anne_person.addresses]),
+                         ["anne.person@example.org", "anne@example.com"])
+        anne_addr = user_manager.get_address('anne@example.com')
+        self.assertTrue(anne_addr is not None)
+        self.assertEqual(anne_addr.user, anne_person)
