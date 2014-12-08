@@ -27,6 +27,7 @@ __all__ = [
     ]
 
 
+from lazr.config import as_boolean
 from passlib.utils import generate_password as generate
 from uuid import UUID
 from zope.component import getUtility
@@ -39,7 +40,8 @@ from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.addresses import UserAddresses
 from mailman.rest.helpers import (
     BadRequest, CollectionMixin, GetterSetter, NotFound, bad_request, child,
-    created, etag, forbidden, no_content, not_found, okay, paginate, path_to)
+    conflict, created, etag, forbidden, no_content, not_found, okay, paginate,
+    path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
 
@@ -63,6 +65,35 @@ ATTRIBUTES = dict(
     )
 
 
+CREATION_FIELDS = dict(
+    email=unicode,
+    display_name=unicode,
+    password=unicode,
+    _optional=('display_name', 'password'),
+    )
+
+
+def create_user(arguments, response):
+    """Create a new user."""
+    # We can't pass the 'password' argument to the user creation method, so
+    # strip that out (if it exists), then create the user, adding the password
+    # after the fact if successful.
+    password = arguments.pop('password', None)
+    try:
+        user = getUtility(IUserManager).create_user(**arguments)
+    except ExistingAddressError as error:
+        bad_request(
+            response, b'Address already exists: {}'.format(error.address))
+        return None
+    if password is None:
+        # This will have to be reset since it cannot be retrieved.
+        password = generate(int(config.passwords.password_length))
+    user.password = config.password_context.encrypt(password)
+    location = path_to('users/{}'.format(user.user_id.int))
+    created(response, location)
+    return user
+
+
 
 class _UserBase(CollectionMixin):
     """Shared base class for user representations."""
@@ -77,7 +108,7 @@ class _UserBase(CollectionMixin):
         resource = dict(
             user_id=user_id,
             created_on=user.created_on,
-            self_link=path_to('users/{0}'.format(user_id)),
+            self_link=path_to('users/{}'.format(user_id)),
             )
         # Add the password attribute, only if the user has a password.  Same
         # with the real name.  These could be None or the empty string.
@@ -105,30 +136,12 @@ class AllUsers(_UserBase):
     def on_post(self, request, response):
         """Create a new user."""
         try:
-            validator = Validator(email=unicode,
-                                  display_name=unicode,
-                                  password=unicode,
-                                  _optional=('display_name', 'password'))
+            validator = Validator(**CREATION_FIELDS)
             arguments = validator(request)
         except ValueError as error:
             bad_request(response, str(error))
             return
-        # We can't pass the 'password' argument to the user creation method,
-        # so strip that out (if it exists), then create the user, adding the
-        # password after the fact if successful.
-        password = arguments.pop('password', None)
-        try:
-            user = getUtility(IUserManager).create_user(**arguments)
-        except ExistingAddressError as error:
-            bad_request(
-                response, b'Address already exists: {0}'.format(error.address))
-            return
-        if password is None:
-            # This will have to be reset since it cannot be retrieved.
-            password = generate(int(config.passwords.password_length))
-        user.password = config.password_context.encrypt(password)
-        location = path_to('users/{0}'.format(user.user_id.int))
-        created(response, location)
+        create_user(arguments, response)
 
 
 
@@ -239,6 +252,100 @@ class AUser(_UserBase):
         if self._user is None:
             return NotFound(), []
         return Login(self._user)
+
+
+
+class AddressUser(_UserBase):
+    """The user linked to an address."""
+
+    def __init__(self, address):
+        self._address = address
+        self._user = address.user
+
+    def on_get(self, request, response):
+        """Return a single user end-point."""
+        if self._user is None:
+            not_found(response)
+        else:
+            okay(response, self._resource_as_json(self._user))
+
+    def on_delete(self, request, response):
+        """Delete the named user, all her memberships, and addresses."""
+        if self._user is None:
+            not_found(response)
+            return
+        self._user.unlink(self._address)
+        no_content(response)
+
+    def on_post(self, request, response):
+        """Link a user to the address, and create it if needed."""
+        if self._user:
+            conflict(response)
+            return
+        # When creating a linked user by POSTing, the user either must already
+        # exist, or it can be automatically created, if the auto_create flag
+        # is given and true (if missing, it defaults to true).  However, in
+        # this case we do not accept 'email' as a POST field.
+        fields = CREATION_FIELDS.copy()
+        del fields['email']
+        fields['user_id'] = int
+        fields['auto_create'] = as_boolean
+        fields['_optional'] = fields['_optional'] + ('user_id', 'auto_create')
+        try:
+            validator = Validator(**fields)
+            arguments = validator(request)
+        except ValueError as error:
+            bad_request(response, str(error))
+            return
+        user_manager = getUtility(IUserManager)
+        if 'user_id' in arguments:
+            raw_uid = arguments['user_id']
+            user_id = UUID(int=raw_uid)
+            user = user_manager.get_user_by_id(user_id)
+            if user is None:
+                not_found(response, b'No user with ID {}'.format(raw_uid))
+                return
+            okay(response)
+        else:
+            auto_create = arguments.pop('auto_create', True)
+            if auto_create:
+                # This sets the 201 or 400 status.
+                user = create_user(arguments, response)
+                if user is None:
+                    return
+            else:
+                forbidden(response)
+                return
+        user.link(self._address)
+
+    def on_put(self, request, response):
+        """Set or replace the addresses's user."""
+        if self._user:
+            self._user.unlink(self._address)
+        # Process post data and check for an existing user.
+        fields = CREATION_FIELDS.copy()
+        fields['user_id'] = int
+        fields['_optional'] = fields['_optional'] + ('user_id', 'email')
+        try:
+            validator = Validator(**fields)
+            arguments = validator(request)
+        except ValueError as error:
+            bad_request(response, str(error))
+            return
+        user_manager = getUtility(IUserManager)
+        if 'user_id' in arguments:
+            raw_uid = arguments['user_id']
+            user_id = UUID(int=raw_uid)
+            user = user_manager.get_user_by_id(user_id)
+            if user is None:
+                not_found(response, b'No user with ID {}'.format(raw_uid))
+                return
+            okay(response)
+        else:
+            user = create_user(arguments, response)
+            if user is None:
+                return
+        user.link(self._address)
 
 
 

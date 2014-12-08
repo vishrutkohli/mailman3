@@ -62,6 +62,9 @@ class _AddressBase(CollectionMixin):
             representation['display_name'] = address.display_name
         if address.verified_on:
             representation['verified_on'] = address.verified_on
+        if address.user:
+            representation['user'] = path_to(
+                'users/{0}'.format(address.user.user_id.int))
         return representation
 
     def _get_collection(self, request):
@@ -156,6 +159,14 @@ class AnAddress(_AddressBase):
         child = _VerifyResource(self._address, 'unverify')
         return child, []
 
+    @child()
+    def user(self, request, segments):
+        """/addresses/<email>/user"""
+        if self._address is None:
+            return NotFound(), []
+        # Avoid circular imports.
+        from mailman.rest.users import AddressUser
+        return AddressUser(self._address)
 
 
 class UserAddresses(_AddressBase):

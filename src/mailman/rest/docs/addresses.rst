@@ -161,6 +161,7 @@ addresses live in the /addresses namespace.
         original_email: dave@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dave@example.com
+        user: http://localhost:9001/3.0/users/1
     http_etag: "..."
     start: 0
     total_size: 1
@@ -172,6 +173,7 @@ addresses live in the /addresses namespace.
     original_email: dave@example.com
     registered_on: 2005-08-01T07:49:23
     self_link: http://localhost:9001/3.0/addresses/dave@example.com
+    user: http://localhost:9001/3.0/users/1
 
 A user can be associated with multiple email addresses.  You can add new
 addresses to an existing user.
@@ -208,6 +210,7 @@ The user controls these new addresses.
         original_email: dave.person@example.org
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dave.person@example.org
+        user: http://localhost:9001/3.0/users/1
     entry 1:
         display_name: Dave Person
         email: dave@example.com
@@ -215,6 +218,7 @@ The user controls these new addresses.
         original_email: dave@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dave@example.com
+        user: http://localhost:9001/3.0/users/1
     entry 2:
         display_name: Davie P
         email: dp@example.org
@@ -222,6 +226,7 @@ The user controls these new addresses.
         original_email: dp@example.org
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dp@example.org
+        user: http://localhost:9001/3.0/users/1
     http_etag: "..."
     start: 0
     total_size: 3

@@ -63,6 +63,12 @@ REST
    internal change only.
  * The JSON representation `http_etag` key uses an algorithm that is
    insensitive to Python's dictionary sort order.
+ * The address resource now has an additional '/user' sub-resource which can
+   be used to GET the address's linked user if there is one.  This
+   sub-resource also supports POST to link an unlinked address (with an
+   optional 'auto_create' flag), and PUT to link the address to a different
+   user.  It also supports DELETE to unlink the address.  (LP: #1312884)
+   Given by Aurélien Bompard based on work by nicolask.
 
 
 3.0 beta 4 -- "Time and Motion"
