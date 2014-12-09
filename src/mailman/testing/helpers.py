@@ -72,6 +72,7 @@ from mailman.interfaces.member import MemberRole
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.usermanager import IUserManager
+from mailman.runners.digest import DigestRunner
 from mailman.utilities.mailbox import Mailbox
 
 
@@ -529,3 +530,24 @@ class LogFileMark:
         with open(self._filename) as fp:
             fp.seek(self._filepos)
             return fp.read()
+
+
+
+def make_digest_messages(mlist, msg=None):
+    if msg is None:
+        msg = specialized_message_from_string("""\
+From: anne@example.org
+To: {listname}
+Message-ID: <testing>
+
+message triggering a digest
+""".format(listname=mlist.fqdn_listname))
+    mbox_path = os.path.join(mlist.data_path, 'digest.mmdf')
+    config.handlers['to-digest'].process(mlist, msg, {})
+    config.switchboards['digest'].enqueue(
+        msg,
+        listname=mlist.fqdn_listname,
+        digest_path=mbox_path,
+        volume=1, digest_number=1)
+    runner = make_testable_runner(DigestRunner, 'digest')
+    runner.run()

@@ -27,7 +27,6 @@ __all__ = [
 
 import os
 import unittest
-from email.mime.multipart import MIMEMultipart
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
@@ -35,7 +34,8 @@ from mailman.core.runner import Runner
 from mailman.interfaces.runner import RunnerCrashEvent
 from mailman.testing.helpers import (
     configuration, event_subscribers, get_queue_messages, LogFileMark,
-    make_testable_runner, specialized_message_from_string as mfs)
+    make_testable_runner, specialized_message_from_string as mfs,
+    make_digest_messages)
 from mailman.testing.layers import ConfigLayer
 
 
@@ -95,14 +95,16 @@ Message-ID: <ant>
         self.assertEqual(len(shunted), 1)
         self.assertEqual(shunted[0].msg['message-id'], '<ant>')
 
-    def test_multipart_message(self):
+    def test_digest_messages(self):
+        # Digest messages can be MIMEMultipart (LP#1130696)
         runner = make_testable_runner(StoringRunner, 'in')
-        msg = MIMEMultipart()
-        msg["Message-ID"] = "<ant>"
-        config.switchboards['in'].enqueue(msg, listname='test@example.com')
+        make_digest_messages(self._mlist)
+        for bag in get_queue_messages("virgin"):
+            config.switchboards['in'].enqueue(bag.msg, listname='test@example.com')
+        error_log = LogFileMark('mailman.error')
         with event_subscribers(self._got_event):
             runner.run()
-        error_log = LogFileMark('mailman.error')
-        self.assertEqual(len(self._events), 0, error_log.read())
-        self.assertEqual(len(runner._disposed), 1)
-        self.assertEqual(runner._disposed[0][1]["Message-ID"], "<ant>")
+        errors = error_log.read()
+        self.assertEqual(len(self._events), 0, errors)
+        self.assertEqual(len(get_queue_messages("shunt")), 0, errors)
+        self.assertEqual(len(runner._disposed), 2)

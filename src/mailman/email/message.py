@@ -36,6 +36,7 @@ __all__ = [
 import email
 import email.message
 import email.utils
+import email.mime.multipart
 
 from email.header import Header
 
@@ -156,6 +157,11 @@ class Message(email.message.Message):
             return filename
         except (UnicodeError, LookupError, ValueError):
             return failobj
+
+
+
+class MultipartMessage(email.mime.multipart.MIMEMultipart, Message):
+    """Class for MIME digest messages"""
 
 
 

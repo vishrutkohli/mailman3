@@ -26,10 +26,10 @@ __all__ = [
 
 
 import unittest
-from email.mime.multipart import MIMEMultipart
 
 from mailman.app.lifecycle import create_list
 from mailman.handlers import cook_headers
+from mailman.testing.helpers import get_queue_messages, make_digest_messages
 from mailman.testing.layers import ConfigLayer
 
 
@@ -42,12 +42,13 @@ class TestCookHeaders(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('test@example.com')
 
-    def test_process_multipart(self):
-        # The digest runner creates MIMEMultipart message instances which have
-        # no sender property.
-        msg = MIMEMultipart()
-        msg["message-id"] = "<test>"
-        try:
-            cook_headers.process(self._mlist, msg, {})
-        except AttributeError as e:
-            self.fail(e)
+    def test_process_digest(self):
+        # Digest messages can be MIMEMultipart (LP#1130696)
+        make_digest_messages(self._mlist)
+        messages = [ bag.msg for bag in get_queue_messages("virgin") ]
+        self.assertEqual(len(messages), 2)
+        for msg in messages:
+            try:
+                cook_headers.process(self._mlist, msg, {})
+            except AttributeError as e:
+                self.fail(e)

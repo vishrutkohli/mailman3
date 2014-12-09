@@ -35,7 +35,7 @@ from mailman.email.message import Message
 from mailman.runners.digest import DigestRunner
 from mailman.testing.helpers import (
     LogFileMark, digest_mbox, get_queue_messages, make_testable_runner,
-    specialized_message_from_string as mfs)
+    specialized_message_from_string as mfs, make_digest_messages)
 from mailman.testing.layers import ConfigLayer
 
 
@@ -54,23 +54,9 @@ class TestDigest(unittest.TestCase):
         self._runner = make_testable_runner(DigestRunner, 'digest')
         self._process = config.handlers['to-digest'].process
 
-    def test_simple_message(self):
-        msg = mfs("""\
-From: anne@example.org
-To: test@example.com
-
-message triggering a digest
-""")
-        mbox_path = os.path.join(self._mlist.data_path, 'digest.mmdf')
-        self._process(self._mlist, msg, {})
-        self._digestq.enqueue(
-            msg,
-            listname=self._mlist.fqdn_listname,
-            digest_path=mbox_path,
-            volume=1, digest_number=1)
-        self._runner.run()
-        # There are two messages in the virgin queue: the digest as plain-text
-        # and as multipart.
+    def _check_virgin_queue(self):
+        # There should be two messages in the virgin queue: the digest as
+        # plain-text and as multipart.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 2)
         self.assertEqual(
@@ -79,6 +65,10 @@ message triggering a digest
         for item in messages:
             self.assertEqual(item.msg['subject'],
                              'Test Digest, Vol 1, Issue 1')
+
+    def test_simple_message(self):
+        make_digest_messages(self._mlist)
+        self._check_virgin_queue()
 
     def test_non_ascii_message(self):
         msg = Message()
@@ -88,25 +78,10 @@ message triggering a digest
         msg.attach(MIMEText('message with non-ascii chars: \xc3\xa9',
                             'plain', 'utf-8'))
         mbox = digest_mbox(self._mlist)
-        mbox_path = os.path.join(self._mlist.data_path, 'digest.mmdf')
         mbox.add(msg.as_string())
-        self._digestq.enqueue(
-            msg,
-            listname=self._mlist.fqdn_listname,
-            digest_path=mbox_path,
-            volume=1, digest_number=1)
         # Use any error logs as the error message if the test fails.
         error_log = LogFileMark('mailman.error')
-        self._runner.run()
+        make_digest_messages(self._mlist, msg)
         # The runner will send the file to the shunt queue on exception.
         self.assertEqual(len(self._shuntq.files), 0, error_log.read())
-        # There are two messages in the virgin queue: the digest as plain-text
-        # and as multipart.
-        messages = get_queue_messages('virgin')
-        self.assertEqual(len(messages), 2)
-        self.assertEqual(
-            sorted(item.msg.get_content_type() for item in messages),
-            ['multipart/mixed', 'text/plain'])
-        for item in messages:
-            self.assertEqual(item.msg['subject'],
-                             'Test Digest, Vol 1, Issue 1')
+        self._check_virgin_queue()
