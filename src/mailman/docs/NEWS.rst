@@ -21,6 +21,8 @@ Bugs
    Given by Aurélien Bompard.  (LP: #1170347)
  * Fixed messages without a `text/plain` part crashing the `Approved` rule.
    Given by Aurélien Bompard.  (LP: #1158721)
+ * Fixed getting non-ASCII filenames from RFC 2231 i18n'd messages.  Given by
+   Aurélien Bompard.  (LP: #1060951)
 
 Commands
 --------

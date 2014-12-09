@@ -83,7 +83,7 @@ queue.
     2
 
     >>> sorted(item.msg['message-id'] for item in items)
-    [u'<badgers>', u'<crow>']
+    ['<badgers>', '<crow>']
 
 
 Return to the original queue
