@@ -112,7 +112,7 @@ class Approved:
                 # may not work with rtf or whatever else is possible.
                 pattern = header + ':(\s|&nbsp;)*' + re.escape(password)
                 for part in typed_subpart_iterator(msg, 'text'):
-                    payload = part.get_payload(decode=True)
+                    payload = part.get_payload()
                     if payload is not None:
                         if re.search(pattern, payload):
                             reset_payload(part, re.sub(pattern, '', payload))

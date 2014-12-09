@@ -433,7 +433,7 @@ class TestPasswordHashMigration(unittest.TestCase):
         # hash is chosen after the original password is set.  As long as the
         # old password still validates, the migration happens automatically.
         self._mlist.moderator_password = config.password_context.encrypt(
-            b'super secret')
+            'super secret')
         self._rule = approved.Approved()
         self._msg = mfs("""\
 From: anne@example.com
@@ -450,7 +450,7 @@ A message body.
         # hashing algorithm.  When the old password is validated, it will be
         # automatically migrated to the new hash.
         self.assertEqual(self._mlist.moderator_password,
-                         b'{plaintext}super secret')
+                         '{plaintext}super secret')
         config_file = os.path.join(config.VAR_DIR, 'passlib.config')
         # XXX passlib seems to choose the default hashing scheme even if it is
         # deprecated.  The default scheme is either specified explicitly, or
@@ -466,14 +466,14 @@ deprecated = roundup_plaintext
             self._msg['Approved'] = 'super secret'
             result = self._rule.check(self._mlist, self._msg, {})
             self.assertTrue(result)
-        self.assertEqual(self._mlist.moderator_password, b'super secret')
+        self.assertEqual(self._mlist.moderator_password, 'super secret')
 
     def test_invalid_password_does_not_migrate(self):
         # Now that the moderator password is set, change the default password
         # hashing algorithm.  When the old password is invalid, it will not be
         # automatically migrated to the new hash.
         self.assertEqual(self._mlist.moderator_password,
-                         b'{plaintext}super secret')
+                         '{plaintext}super secret')
         config_file = os.path.join(config.VAR_DIR, 'passlib.config')
         # XXX passlib seems to choose the default hashing scheme even if it is
         # deprecated.  The default scheme is either specified explicitly, or
@@ -490,4 +490,4 @@ deprecated = roundup_plaintext
             result = self._rule.check(self._mlist, self._msg, {})
             self.assertFalse(result)
         self.assertEqual(self._mlist.moderator_password,
-                         b'{plaintext}super secret')
+                         '{plaintext}super secret')
