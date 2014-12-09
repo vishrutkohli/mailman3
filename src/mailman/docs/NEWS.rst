@@ -68,7 +68,7 @@ REST
    sub-resource also supports POST to link an unlinked address (with an
    optional 'auto_create' flag), and PUT to link the address to a different
    user.  It also supports DELETE to unlink the address.  (LP: #1312884)
-   Given by Aurélien Bompard based on work by nicolask.
+   Given by Aurélien Bompard based on work by Nicolas Karageuzian.
 
 
 3.0 beta 4 -- "Time and Motion"
