@@ -144,11 +144,124 @@ Now Cris's address is unverified.
     self_link: http://localhost:9001/3.0/addresses/cris@example.com
 
 
+The user
+========
+
+To link an address to a user, a POST request can be sent to the ``/user``
+sub-resource of the address.  If the user does not exist, it will be created.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user',
+    ...           {'display_name': 'Cris X. Person'})
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/users/1
+    server: ...
+    status: 201
+
+The user is now created and the address is linked to it:
+
+    >>> cris.user
+    <User "Cris X. Person" (1) at 0x...>
+    >>> cris_user = user_manager.get_user('cris@example.com')
+    >>> cris_user
+    <User "Cris X. Person" (1) at 0x...>
+    >>> cris.user == cris_user
+    True
+    >>> [a.email for a in cris_user.addresses]
+    [u'cris@example.com']
+
+A link to the user resource is now available as a sub-resource.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com')
+    display_name: Cris Person
+    email: cris@example.com
+    http_etag: "..."
+    original_email: cris@example.com
+    registered_on: 2005-08-01T07:49:23
+    self_link: http://localhost:9001/3.0/addresses/cris@example.com
+    user: http://localhost:9001/3.0/users/1
+
+To prevent automatic user creation from taking place, add the `auto_create`
+parameter to the POST request and set it to a false-equivalent value like 0:
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/anne@example.com/user',
+    ...           {'display_name': 'Anne User', 'auto_create': 0})
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 403: 403 Forbidden
+
+A request to the `/user` sub-resource will return the linked user's
+representation:
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user')
+    created_on: 2005-08-01T07:49:23
+    display_name: Cris X. Person
+    http_etag: "..."
+    password: ...
+    self_link: http://localhost:9001/3.0/users/1
+    user_id: 1
+
+The address and the user can be unlinked by sending a DELETE request on the
+`/user` resource.  The user itself is not deleted, only the link.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user',
+    ...           method='DELETE')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+    >>> transaction.abort()
+    >>> cris.user == None
+    True
+    >>> from uuid import UUID
+    >>> user_manager.get_user_by_id(UUID(int=1))
+    <User "Cris X. Person" (1) at 0x...>
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user')
+    Traceback (most recent call last):
+    ...
+    HTTPError: HTTP Error 404: 404 Not Found
+
+You can link an existing user to an address by passing the user's ID in the
+POST request.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user',
+    ...           {'user_id': 1})
+    content-length: 0
+    date: ...
+    server: ...
+    status: 200
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user')
+    created_on: ...
+    display_name: Cris X. Person
+    http_etag: ...
+    password: ...
+    self_link: http://localhost:9001/3.0/users/1
+    user_id: 1
+
+To link an address to a different user, you can either send a DELETE request
+followed by a POST request, or you can send a PUT request.
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user',
+    ...           {'display_name': 'Cris Q Person'}, method="PUT")
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/users/2
+    server: ...
+    status: 201
+    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user')
+    created_on: ...
+    display_name: Cris Q Person
+    http_etag: ...
+    password: ...
+    self_link: http://localhost:9001/3.0/users/2
+    user_id: 2
+
+
 User addresses
 ==============
 
 Users control addresses.  The canonical URLs for these user-controlled
-addresses live in the /addresses namespace.
+addresses live in the `/addresses` namespace.
 ::
 
     >>> dave = user_manager.create_user('dave@example.com', 'Dave Person')
@@ -161,7 +274,7 @@ addresses live in the /addresses namespace.
         original_email: dave@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dave@example.com
-        user: http://localhost:9001/3.0/users/1
+        user: http://localhost:9001/3.0/users/3
     http_etag: "..."
     start: 0
     total_size: 1
@@ -173,7 +286,7 @@ addresses live in the /addresses namespace.
     original_email: dave@example.com
     registered_on: 2005-08-01T07:49:23
     self_link: http://localhost:9001/3.0/addresses/dave@example.com
-    user: http://localhost:9001/3.0/users/1
+    user: http://localhost:9001/3.0/users/3
 
 A user can be associated with multiple email addresses.  You can add new
 addresses to an existing user.
@@ -210,7 +323,7 @@ The user controls these new addresses.
         original_email: dave.person@example.org
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dave.person@example.org
-        user: http://localhost:9001/3.0/users/1
+        user: http://localhost:9001/3.0/users/3
     entry 1:
         display_name: Dave Person
         email: dave@example.com
@@ -218,7 +331,7 @@ The user controls these new addresses.
         original_email: dave@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dave@example.com
-        user: http://localhost:9001/3.0/users/1
+        user: http://localhost:9001/3.0/users/3
     entry 2:
         display_name: Davie P
         email: dp@example.org
@@ -226,7 +339,7 @@ The user controls these new addresses.
         original_email: dp@example.org
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/dp@example.org
-        user: http://localhost:9001/3.0/users/1
+        user: http://localhost:9001/3.0/users/3
     http_etag: "..."
     start: 0
     total_size: 3
@@ -273,7 +386,7 @@ Elle can get her memberships for each of her email addresses.
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
-        user: http://localhost:9001/3.0/users/2
+        user: http://localhost:9001/3.0/users/4
     entry 1:
         address: http://localhost:9001/3.0/addresses/elle@example.com
         delivery_mode: regular
@@ -282,7 +395,7 @@ Elle can get her memberships for each of her email addresses.
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/2
-        user: http://localhost:9001/3.0/users/2
+        user: http://localhost:9001/3.0/users/4
     http_etag: "..."
     start: 0
     total_size: 2
@@ -312,7 +425,7 @@ does not show up in the list of memberships for his other address.
         list_id: ant.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/1
-        user: http://localhost:9001/3.0/users/2
+        user: http://localhost:9001/3.0/users/4
     entry 1:
         address: http://localhost:9001/3.0/addresses/elle@example.com
         delivery_mode: regular
@@ -321,7 +434,7 @@ does not show up in the list of memberships for his other address.
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/2
-        user: http://localhost:9001/3.0/users/2
+        user: http://localhost:9001/3.0/users/4
     http_etag: "..."
     start: 0
     total_size: 2
@@ -336,7 +449,7 @@ does not show up in the list of memberships for his other address.
         list_id: bee.example.com
         role: member
         self_link: http://localhost:9001/3.0/members/3
-        user: http://localhost:9001/3.0/users/2
+        user: http://localhost:9001/3.0/users/4
     http_etag: "..."
     start: 0
     total_size: 1
