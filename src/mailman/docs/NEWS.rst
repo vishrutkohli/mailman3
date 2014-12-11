@@ -23,6 +23,8 @@ Bugs
    Given by Aurélien Bompard.  (LP: #1158721)
  * Fixed getting non-ASCII filenames from RFC 2231 i18n'd messages.  Given by
    Aurélien Bompard.  (LP: #1060951)
+ * Fixed `AttributeError` on MIME digest messages.  Given by Aurélien Bompard.
+   (LP: #1130696)
 
 Commands
 --------

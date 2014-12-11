@@ -28,6 +28,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Message',
+    'MultipartDigestMessage',
     'OwnerNotification',
     'UserNotification',
     ]
@@ -38,6 +39,7 @@ import email.message
 import email.utils
 
 from email.header import Header
+from email.mime.multipart import MIMEMultipart
 
 from mailman.config import config
 
@@ -133,6 +135,11 @@ class Message(email.message.Message):
 
 
 
+class MultipartDigestMessage(MIMEMultipart, Message):
+    """Mix-in class for MIME digest messages."""
+
+
+
 class UserNotification(Message):
     """Class for internally crafted messages."""
 
@@ -159,7 +166,7 @@ class UserNotification(Message):
 
         :param mlist: The mailing list to send the message to.
         :type mlist: `IMailingList`
-        :param add_precedence: Flag indicating whether a `Precedence: bulk` 
+        :param add_precedence: Flag indicating whether a `Precedence: bulk`
             header should be added to the message or not.
         :type add_precedence: bool
 
