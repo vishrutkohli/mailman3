@@ -96,7 +96,8 @@ Something else.
         with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg, 'Cannot convert parameters: action')
+        self.assertEqual(cm.exception.msg,
+                         b'Cannot convert parameters: action')
 
     def test_bad_subscription_request_id(self):
         # Bad request when request_id is not an integer.
@@ -122,4 +123,5 @@ Something else.
         with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg, 'Cannot convert parameters: action')
+        self.assertEqual(cm.exception.msg,
+                         b'Cannot convert parameters: action')

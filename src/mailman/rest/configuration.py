@@ -63,7 +63,7 @@ class AcceptableAliases(GetterSetter):
         alias_set = IAcceptableAliasSet(mlist)
         alias_set.clear()
         for alias in value:
-            alias_set.add(alias.decode('utf-8'))
+            alias_set.add(alias)
 
 
 
@@ -73,13 +73,16 @@ class AcceptableAliases(GetterSetter):
 def pipeline_validator(pipeline_name):
     """Convert the pipeline name to a string, but only if it's known."""
     if pipeline_name in config.pipelines:
-        return pipeline_name.decode('utf-8')
+        return pipeline_name
     raise ValueError('Unknown pipeline: {}'.format(pipeline_name))
 
 
-def list_of_unicode(values):
+def list_of_str(values):
     """Turn a list of things into a list of unicodes."""
-    return [value.decode('utf-8') for value in values]
+    for value in values:
+        if not isinstance(value, str):
+            raise ValueError('Expected str, got {!r}'.format(value))
+    return values
 
 
 
@@ -98,7 +101,7 @@ def list_of_unicode(values):
 # (e.g. datetimes, timedeltas, enums).
 
 ATTRIBUTES = dict(
-    acceptable_aliases=AcceptableAliases(list_of_unicode),
+    acceptable_aliases=AcceptableAliases(list_of_str),
     admin_immed_notify=GetterSetter(as_boolean),
     admin_notify_mchanges=GetterSetter(as_boolean),
     administrivia=GetterSetter(as_boolean),
