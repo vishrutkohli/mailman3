@@ -144,7 +144,7 @@ class TestInjectText(unittest.TestCase):
 
     def setUp(self):
         self.mlist = create_list('test@example.com')
-        self.text = b"""\
+        self.text = """\
 From: bart@example.com
 To: test@example.com
 Subject: A test message
