@@ -68,7 +68,10 @@ def add_message_hash(msg):
         message_id = message_id[1:-1]
     else:
         message_id = message_id.strip()
+    # Because .digest() returns bytes, b32encode() will return bytes, however
+    # we need a string for the header value.  We know the b32encoded byte
+    # string must be ascii-only.
     digest = sha1(message_id.encode('utf-8')).digest()
     message_id_hash = b32encode(digest)
     del msg['x-message-id-hash']
-    msg['X-Message-ID-Hash'] = message_id_hash
+    msg['X-Message-ID-Hash'] = message_id_hash.decode('ascii')
