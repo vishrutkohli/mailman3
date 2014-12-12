@@ -85,7 +85,7 @@ class RootedAPI(API):
                 if matcher is _missing:
                     continue
                 result = None
-                if isinstance(matcher, basestring):
+                if isinstance(matcher, str):
                     # Is the matcher string a regular expression or plain
                     # string?  If it starts with a caret, it's a regexp.
                     if matcher.startswith('^'):

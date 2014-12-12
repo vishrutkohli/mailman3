@@ -69,7 +69,8 @@ class Root:
                 b'401 Unauthorized',
                 b'The REST API requires authentication')
         if request.auth.startswith('Basic '):
-            credentials = b64decode(request.auth[6:])
+            # b64decode() returns bytes, but we require a str.
+            credentials = b64decode(request.auth[6:]).decode('utf-8')
             username, password = credentials.split(':', 1)
             if (username != config.webservice.admin_user or
                 password != config.webservice.admin_pass):

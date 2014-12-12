@@ -333,7 +333,10 @@ def call_api(url, data=None, method=None, username=None, password=None):
     basic_auth = '{0}:{1}'.format(
         (config.webservice.admin_user if username is None else username),
         (config.webservice.admin_pass if password is None else password))
-    headers['Authorization'] = 'Basic ' + b64encode(basic_auth)
+    # b64encode() requires a bytes, but the header value must be str.  Do the
+    # necessary conversion dances.
+    token = b64encode(basic_auth.encode('utf-8')).decode('ascii')
+    headers['Authorization'] = 'Basic ' + token
     response, content = Http().request(url, method, data, headers)
     # If we did not get a 2xx status code, make this look like a urllib2
     # exception, for backward compatibility with existing doctests.
