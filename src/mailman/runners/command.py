@@ -141,7 +141,7 @@ The results of your email command are provided below.
             text = text.decode(self.charset, 'ignore')
         self._output.write(text)
 
-    def __unicode__(self):
+    def __str__(self):
         value = self._output.getvalue()
         assert isinstance(value, six.text_type), 'Not a unicode: %r' % value
         return value

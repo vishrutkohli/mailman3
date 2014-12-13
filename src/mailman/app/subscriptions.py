@@ -26,6 +26,8 @@ __all__ = [
     ]
 
 
+import six
+
 from operator import attrgetter
 from passlib.utils import generate_password as generate
 from sqlalchemy import and_, or_
@@ -108,7 +110,7 @@ class SubscriptionService:
         # the parameter can either be an email address or a user id.
         query = []
         if subscriber is not None:
-            if isinstance(subscriber, basestring):
+            if isinstance(subscriber, six.text_type):
                 # subscriber is an email address.
                 address = user_manager.get_address(subscriber)
                 user = user_manager.get_user(subscriber)

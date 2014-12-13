@@ -51,7 +51,7 @@ class TestHelp(unittest.TestCase):
                                     ('more', 'than', 'one'),
                                     results)
         self.assertEqual(status, ContinueProcessing.no)
-        self.assertEqual(results.decode('utf-8'), """\
+        self.assertEqual(str(results), """\
 The results of your email command are provided below.
 
 help: too many arguments: more than one
@@ -63,7 +63,7 @@ help: too many arguments: more than one
         status = self._help.process(self._mlist, Message(), {},
                                     ('doesnotexist',), results)
         self.assertEqual(status, ContinueProcessing.no)
-        self.assertEqual(results.decode('utf-8'), """\
+        self.assertEqual(str(results), """\
 The results of your email command are provided below.
 
 help: no such command: doesnotexist

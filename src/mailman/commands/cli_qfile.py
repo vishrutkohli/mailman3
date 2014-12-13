@@ -25,6 +25,8 @@ __all__ = [
     ]
 
 
+import six
+
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.interact import interact
@@ -69,7 +71,7 @@ class QFile:
         """See `ICLISubCommand`."""
         printer = PrettyPrinter(indent=4)
         assert len(args.qfile) == 1, 'Wrong number of positional arguments'
-        with open(args.qfile[0]) as fp:
+        with open(args.qfile[0], 'rb') as fp:
             while True:
                 try:
                     m.append(cPickle.load(fp))
@@ -80,7 +82,7 @@ class QFile:
             for i, obj in enumerate(m):
                 count = i + 1
                 print(_('<----- start object $count ----->'))
-                if isinstance(obj, basestring):
+                if isinstance(obj, six.string_types):
                     print(obj)
                 else:
                     printer.pprint(obj)

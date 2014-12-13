@@ -25,7 +25,7 @@ short description of each of them.
     >>> from mailman.email.message import Message
     >>> print(help.process(mlist, Message(), {}, (), results))
     ContinueProcessing.yes
-    >>> print(results.decode('utf-8'))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     confirm     - Confirm a subscription request.
@@ -44,7 +44,7 @@ With an argument, you can get more detailed help about a specific command.
     >>> results = Results()
     >>> print(help.process(mlist, Message(), {}, ('help',), results))
     ContinueProcessing.yes
-    >>> print(results.decode('utf-8'))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     help [command]
@@ -56,7 +56,7 @@ Some commands have even more detailed help.
     >>> results = Results()
     >>> print(help.process(mlist, Message(), {}, ('join',), results))
     ContinueProcessing.yes
-    >>> print(results.decode('utf-8'))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     join [digest=<no|mime|plain>]

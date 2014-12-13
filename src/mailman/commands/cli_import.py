@@ -77,7 +77,7 @@ class Import21:
         assert len(args.pickle_file) == 1, (
             'Unexpected positional arguments: %s' % args.pickle_file)
         filename = args.pickle_file[0]
-        with open(filename) as fp:
+        with open(filename, 'rb') as fp:
             while True:
                 try:
                     config_dict = cPickle.load(fp)

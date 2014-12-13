@@ -27,6 +27,7 @@ __all__ = [
 
 
 import os
+import six
 import sys
 import codecs
 import datetime
@@ -282,7 +283,7 @@ def import_config_pck(mlist, config_dict):
         ban_manager.ban(str_to_unicode(address))
     # Handle acceptable aliases.
     acceptable_aliases = config_dict.get('acceptable_aliases', '')
-    if isinstance(acceptable_aliases, basestring):
+    if isinstance(acceptable_aliases, six.string_types):
         acceptable_aliases = acceptable_aliases.splitlines()
     alias_set = IAcceptableAliasSet(mlist)
     for address in acceptable_aliases:
@@ -343,7 +344,8 @@ def import_config_pck(mlist, config_dict):
         if oldvar not in config_dict:
             continue
         text = config_dict[oldvar]
-        text = text.decode('utf-8', 'replace')
+        if isinstance(text, bytes):
+            text = text.decode('utf-8', 'replace')
         for oldph, newph in convert_placeholders:
             text = text.replace(oldph, newph)
         default_value, default_text  = defaults.get(newvar, (None, None))

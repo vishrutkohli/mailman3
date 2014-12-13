@@ -197,8 +197,6 @@ class Members:
                     continue
                 # Parse the line and ensure that the values are unicodes.
                 display_name, email = parseaddr(line)
-                display_name = display_name.decode(fp.encoding)
-                email = email.decode(fp.encoding)
                 # Give the user a default, user-friendly password.
                 password = generate(int(config.passwords.password_length))
                 try:

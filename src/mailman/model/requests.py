@@ -53,7 +53,6 @@ class DataPendable(dict):
         for key, value in mapping.items():
             assert isinstance(key, six.string_types)
             if not isinstance(value, six.text_type):
-                import pdb; pdb.set_trace()
                 key = '_pck_' + key
                 value = dumps(value).decode('raw-unicode-escape')
             clean_mapping[key] = value
@@ -115,7 +114,6 @@ class ListRequests:
 
     @dbconnection
     def get_request(self, store, request_id, request_type=None):
-        import pdb; pdb.set_trace()
         result = store.query(_Request).get(request_id)
         if result is None:
             return None
