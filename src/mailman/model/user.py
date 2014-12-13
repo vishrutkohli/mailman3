@@ -56,7 +56,7 @@ class User(Model):
 
     id = Column(Integer, primary_key=True)
     display_name = Column(Unicode)
-    _password = Column('password', LargeBinary)
+    _password = Column('password', Unicode)
     _user_id = Column(UUID, index=True)
     _created_on = Column(DateTime)
 

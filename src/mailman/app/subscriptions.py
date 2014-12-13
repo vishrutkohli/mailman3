@@ -148,7 +148,7 @@ class SubscriptionService:
         if mlist is None:
             raise NoSuchListError(list_id)
         # Is the subscriber an email address or user id?
-        if isinstance(subscriber, basestring):
+        if isinstance(subscriber, str):
             if display_name is None:
                 display_name, at, domain = subscriber.partition('@')
             # Because we want to keep the REST API simple, there is no

@@ -533,7 +533,7 @@ Subject: Ignore
 
     def test_no_sender(self):
         # The message won't be bounced if it has no discernible sender.
-        self._msg.sender = None
+        del self._msg['from']
         bounce_message(self._mlist, self._msg)
         items = get_queue_messages('virgin')
         # Nothing in the virgin queue means nothing's been bounced.
