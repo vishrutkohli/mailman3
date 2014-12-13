@@ -29,14 +29,13 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message
 from mailman.config import config
+from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.listmanager import (
-    IListManager, ListCreatedEvent, ListCreatingEvent, ListDeletedEvent,
-    ListDeletingEvent)
+    IListManager, ListAlreadyExistsError, ListCreatedEvent, ListCreatingEvent,
+    ListDeletedEvent, ListDeletingEvent)
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests
 from mailman.interfaces.subscriptions import ISubscriptionService
@@ -45,6 +44,7 @@ from mailman.model.mime import ContentFilter
 from mailman.testing.helpers import (
     event_subscribers, specialized_message_from_string)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -157,11 +157,23 @@ Message-ID: <argon>
 class TestListCreation(unittest.TestCase):
     layer = ConfigLayer
 
+    def setUp(self):
+        self._manager = getUtility(IListManager)
+
     def test_create_list_case_folding(self):
         # LP: #1117176 describes a problem where list names created in upper
         # case are not actually usable by the LMTP server.
-        manager = getUtility(IListManager)
-        manager.create('my-LIST@example.com')
-        self.assertIsNone(manager.get('my-LIST@example.com'))
-        mlist = manager.get('my-list@example.com')
+        self._manager.create('my-LIST@example.com')
+        self.assertIsNone(self._manager.get('my-LIST@example.com'))
+        mlist = self._manager.get('my-list@example.com')
         self.assertEqual(mlist.list_id, 'my-list.example.com')
+
+    def test_cannot_create_a_list_twice(self):
+        self._manager.create('ant@example.com')
+        self.assertRaises(ListAlreadyExistsError,
+                          self._manager.create, 'ant@example.com')
+
+    def test_list_name_must_be_fully_qualified(self):
+        with self.assertRaises(InvalidEmailAddressError) as cm:
+            self._manager.create('foo')
+        self.assertEqual(cm.exception.email, 'foo')

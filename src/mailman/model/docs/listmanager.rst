@@ -34,22 +34,6 @@ the mailing list to the system.
     >>> print(mlist.list_id)
     test.example.com
 
-If you try to create a mailing list with the same name as an existing list,
-you will get an exception.
-
-    >>> list_manager.create('test@example.com')
-    Traceback (most recent call last):
-    ...
-    ListAlreadyExistsError: test@example.com
-
-It is an error to create a mailing list that isn't a fully qualified list name
-(i.e. posting address).
-
-    >>> list_manager.create('foo')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: foo
-
 
 Deleting a mailing list
 =======================

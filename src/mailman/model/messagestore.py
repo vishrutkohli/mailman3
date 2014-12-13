@@ -114,11 +114,6 @@ class MessageStore:
 
     @dbconnection
     def get_message_by_hash(self, store, message_id_hash):
-        # It's possible the hash came from a message header, in which case it
-        # will be a Unicode.  However when coming from source code, it may be
-        # bytes object.  Coerce to the latter if necessary; it must be ASCII.
-        if not isinstance(message_id_hash, bytes):
-            message_id_hash = message_id_hash.encode('ascii')
         row = store.query(Message).filter_by(
             message_id_hash=message_id_hash).first()
         if row is None:

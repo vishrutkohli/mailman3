@@ -2,10 +2,10 @@
 List memberships
 ================
 
-Users represent people in Mailman.  Users control email addresses, and rosters
-are collections of members.  A member gives an email address a role, such as
-`member`, `administrator`, or `moderator`.  Even nonmembers are represented by
-a roster.
+Users represent people in Mailman, members represent subscriptions.  Users
+control email addresses, and rosters are collections of members.  A member
+ties a subscribed email address to a role, such as `member`, `administrator`,
+or `moderator`.  Even non-members are represented by a roster.
 
 Roster sets are collections of rosters and a mailing list has a single roster
 set that contains all its members, regardless of that member's role.
@@ -228,18 +228,6 @@ regardless of their role.
     fperson@example.com MemberRole.nonmember
 
 
-Double subscriptions
-====================
-
-It is an error to subscribe someone to a list with the same role twice.
-
-    >>> mlist.subscribe(address_1, MemberRole.owner)
-    Traceback (most recent call last):
-    ...
-    AlreadySubscribedError: aperson@example.com is already a MemberRole.owner
-    of mailing list ant@example.com
-
-
 Moderation actions
 ==================
 
@@ -276,7 +264,7 @@ Changing subscriptions
 When a user is subscribed to a mailing list via a specific address they
 control (as opposed to being subscribed with their preferred address), they
 can change their delivery address by setting the appropriate parameter.  Note
-though that the address their changing to must be verified.
+though that the address they're changing to must be verified.
 
     >>> bee = create_list('bee@example.com')
     >>> gwen = user_manager.create_user('gwen@example.com')
@@ -289,20 +277,6 @@ though that the address their changing to must be verified.
 Gwen gets a email address.
 
     >>> new_address = gwen.register('gperson@example.com')
-
-She wants to change her membership in the `test` mailing list to use her new
-address, but the address is not yet verified.
-
-    >>> gwen_member.address = new_address
-    Traceback (most recent call last):
-    ...
-    UnverifiedAddressError: gperson@example.com
-
-Her membership has not changed.
-
-    >>> for m in bee.members.members:
-    ...     print(m.member_id.int, m.mailing_list.list_id, m.address.email)
-    7 bee.example.com gwen@example.com
 
 Gwen verifies her email address, and updates her membership.
 
