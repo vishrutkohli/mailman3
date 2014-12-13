@@ -24,8 +24,8 @@ __all__ = [
     'User',
     ]
 
-from sqlalchemy import (
-    Column, DateTime, ForeignKey, Integer, LargeBinary, Unicode)
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
@@ -122,7 +122,7 @@ class User(Model):
 
     def unlink(self, address):
         """See `IUser`."""
-        if address.user is None:
+        if address.user is None or address.user is not self:
             raise AddressNotLinkedError(address)
         address.user = None
 

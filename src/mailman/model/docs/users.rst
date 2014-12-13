@@ -25,7 +25,7 @@ Users may have a real name and a password.
     >>> dump_list(user.display_name for user in user_manager.users)
     Zoe Person
     >>> dump_list(user.password for user in user_manager.users)
-    my password
+    b'my password'
 
 The password and real name can be changed at any time.
 
@@ -34,7 +34,7 @@ The password and real name can be changed at any time.
     >>> dump_list(user.display_name for user in user_manager.users)
     Zoe X. Person
     >>> dump_list(user.password for user in user_manager.users)
-    another password
+    b'another password'
 
 When the user's password is changed, an event is triggered.
 
@@ -53,25 +53,18 @@ The event holds a reference to the `IUser` that changed their password.
     >>> print(saved_event.user.display_name)
     Zoe X. Person
     >>> print(saved_event.user.password)
-    changed again
+    b'changed again'
 
 
 Basic user identification
 =========================
 
-Although rarely visible to users, every user has a unique ID in Mailman, which
-never changes.  This ID is generated randomly at the time the user is created,
-and is represented by a UUID.
+Although rarely visible to users, every user has a unique immutable ID.  This
+ID is generated randomly at the time the user is created, and is represented
+by a UUID.
 
     >>> print(user_1.user_id)
     00000000-0000-0000-0000-000000000001
-
-The user id cannot change.
-
-    >>> user_1.user_id = 'foo'
-    Traceback (most recent call last):
-    ...
-    AttributeError: can't set attribute
 
 User records also have a date on which they where created.
 
@@ -84,8 +77,8 @@ Users addresses
 ===============
 
 One of the pieces of information that a user links to is a set of email
-addresses they control, in the form of IAddress objects.  A user can control
-many addresses, but addresses may be controlled by only one user.
+addresses they control, in the form of ``IAddress`` objects.  A user can
+control many addresses, but addresses may be linked to only one user.
 
 The easiest way to link a user to an address is to just register the new
 address on a user object.
@@ -114,14 +107,6 @@ You can also create the address separately and then link it to the user.
     <BLANKLINE>
     Zoe Person
 
-But don't try to link an address to more than one user.
-
-    >>> another_user = user_manager.create_user()
-    >>> another_user.link(address_1)
-    Traceback (most recent call last):
-    ...
-    AddressAlreadyLinkedError: zperson@example.net
-
 You can also ask whether a given user controls a given address.
 
     >>> user_1.controls(address_1.email)
@@ -149,17 +134,6 @@ Addresses can also be unlinked from a user.
     >>> print(user_manager.get_user('aperson@example.net'))
     None
 
-But don't try to unlink the address from a user it's not linked to.
-
-    >>> user_1.unlink(address_1)
-    Traceback (most recent call last):
-    ...
-    AddressNotLinkedError: zperson@example.net
-    >>> another_user.unlink(address_1)
-    Traceback (most recent call last):
-    ...
-    AddressNotLinkedError: zperson@example.net
-
 
 Preferred address
 =================
@@ -183,20 +157,10 @@ preferred address.
     >>> print(user_2.preferred_address)
     None
 
-The preferred address must be explicitly registered, however only verified
-address may be registered as preferred.
-
-    >>> anne
-    <Address: Anne Person <anne@example.com> [not verified] at ...>
-    >>> user_2.preferred_address = anne
-    Traceback (most recent call last):
-    ...
-    UnverifiedAddressError: Anne Person <anne@example.com>
-
-Once the address has been verified though, it can be set as the preferred
-address, but only if the address is either controlled by the user or
-uncontrolled.  In the latter case, setting it as the preferred address makes
-it controlled by the user.
+Once the address has been verified, it can be set as the preferred address,
+but only if the address is either controlled by the user or uncontrolled.  In
+the latter case, setting it as the preferred address makes it controlled by
+the user.
 ::
 
     >>> from mailman.utilities.datetime import now
@@ -216,17 +180,6 @@ it controlled by the user.
     >>> user_2.preferred_address = aperson
     >>> user_2.controls(aperson.email)
     True
-
-    >>> zperson = user_manager.get_address('zperson@example.com')
-    >>> zperson.verified_on = now()
-    >>> user_2.controls(zperson.email)
-    False
-    >>> user_1.controls(zperson.email)
-    True
-    >>> user_2.preferred_address = zperson
-    Traceback (most recent call last):
-    ...
-    AddressAlreadyLinkedError: Zoe Person <zperson@example.com>
 
 A user can disavow their preferred address.
 
@@ -328,11 +281,11 @@ membership role.
     >>> from zope.interface.verify import verifyObject
     >>> verifyObject(IRoster, memberships)
     True
-    >>> members = sorted(memberships.members)
-    >>> len(members)
-    4
     >>> def sortkey(member):
     ...     return member.address.email, member.mailing_list, member.role.value
+    >>> members = sorted(memberships.members, key=sortkey)
+    >>> len(members)
+    4
     >>> for member in sorted(members, key=sortkey):
     ...     print(member.address.email, member.mailing_list.list_id,
     ...           member.role)

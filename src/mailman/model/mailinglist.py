@@ -481,7 +481,9 @@ class MailingList(Model):
                 Member._user == subscriber).first()
             if member:
                 raise AlreadySubscribedError(
-                    self.fqdn_listname, subscriber, role)
+                    self.fqdn_listname,
+                    subscriber.preferred_address.email,
+                    role)
         else:
             raise ValueError('subscriber must be an address or user')
         member = Member(role=role,

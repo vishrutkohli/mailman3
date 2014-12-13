@@ -46,7 +46,7 @@ A user can be assigned a password.
 
     >>> user.password = b'secret'
     >>> dump_list(user.password for user in user_manager.users)
-    secret
+    b'secret'
 
 You can also create a user with an address to start out with.
 

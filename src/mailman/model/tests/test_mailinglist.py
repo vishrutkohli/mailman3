@@ -21,8 +21,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 __metaclass__ = type
 __all__ = [
-    'TestListArchiver',
     'TestDisabledListArchiver',
+    'TestListArchiver',
+    'TestMailingList',
     ]
 
 
@@ -31,8 +32,47 @@ import unittest
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.mailinglist import IListArchiverSet
+from mailman.interfaces.member import (
+    AlreadySubscribedError, MemberRole, MissingPreferredAddressError)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import configuration
 from mailman.testing.layers import ConfigLayer
+from mailman.utilities.datetime import now
+from zope.component import getUtility
+
+
+
+class TestMailingList(unittest.TestCase):
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('ant@example.com')
+
+    def test_no_duplicate_subscriptions(self):
+        # A user is not allowed to subscribe more than once to the mailing
+        # list with the same role.
+        anne = getUtility(IUserManager).create_user('anne@example.com')
+        # Give the user a preferred address.
+        preferred = list(anne.addresses)[0]
+        preferred.verified_on = now()
+        anne.preferred_address = preferred
+        # Subscribe Anne to the mailing list as a regular member.
+        member = self._mlist.subscribe(anne)
+        self.assertEqual(member.address, preferred)
+        self.assertEqual(member.role, MemberRole.member)
+        # A second subscription with the same role will fail.
+        with self.assertRaises(AlreadySubscribedError) as cm:
+            self._mlist.subscribe(anne)
+        self.assertEqual(cm.exception.fqdn_listname, 'ant@example.com')
+        self.assertEqual(cm.exception.email, 'anne@example.com')
+        self.assertEqual(cm.exception.role, MemberRole.member)
+
+    def test_subscribing_user_must_have_preferred_address(self):
+        # A user object cannot be subscribed to a mailing list without a
+        # preferred address.
+        anne = getUtility(IUserManager).create_user('anne@example.com')
+        self.assertRaises(MissingPreferredAddressError,
+                          self._mlist.subscribe, anne)
 
 
 
