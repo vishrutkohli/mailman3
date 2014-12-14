@@ -33,12 +33,12 @@ token that can be used in urls and such.
     >>> len(token)
     40
 
-There's not much you can do with tokens except to `confirm` them, which
-basically means returning the ``IPendable`` structure (as a dictionary) from
-the database that matches the token.  If the token isn't in the database, None
-is returned.
+There's not much you can do with tokens except to *confirm* them, which
+basically means returning the `IPendable` structure (as a dictionary) from the
+database that matches the token.  If the token isn't in the database, None is
+returned.
 
-    >>> pendable = pendingdb.confirm(bytes('missing'))
+    >>> pendable = pendingdb.confirm(b'missing')
     >>> print(pendable)
     None
     >>> pendable = pendingdb.confirm(token)
