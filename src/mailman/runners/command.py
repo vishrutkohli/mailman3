@@ -76,7 +76,7 @@ class CommandFinder:
         # Extract the subject header and do RFC 2047 decoding.
         raw_subject = msg.get('subject', '')
         try:
-            subject = make_header(decode_header(raw_subject)).decode('utf-8')
+            subject = str(make_header(decode_header(raw_subject)))
             # Mail commands must be ASCII.
             self.command_lines.append(subject.encode('us-ascii'))
         except (HeaderParseError, UnicodeError, LookupError):
@@ -98,7 +98,7 @@ class CommandFinder:
         if part is None:
             # There was no text/plain part to be found.
             return
-        body = part.get_payload(decode=True)
+        body = part.get_payload()
         # text/plain parts better have string payloads.
         assert isinstance(body, six.string_types), 'Non-string decoded payload'
         lines = body.splitlines()
@@ -207,12 +207,12 @@ class CommandRunner(Runner):
                 if status == ContinueProcessing.no:
                     break
         # All done.  Strip blank lines and send the response.
-        lines = filter(None, (line.strip() for line in finder.command_lines))
+        lines = [line.strip() for line in finder.command_lines if line]
         if len(lines) > 0:
             print(_('\n- Unprocessed:'), file=results)
             for line in lines:
                 print(line, file=results)
-        lines = filter(None, (line.strip() for line in finder.ignored_lines))
+        lines = [line.strip() for line in finder.ignored_lines if line]
         if len(lines) > 0:
             print(_('\n- Ignored:'), file=results)
             for line in lines:
@@ -231,7 +231,7 @@ class CommandRunner(Runner):
         # Find a charset for the response body.  Try the original message's
         # charset first, then ascii, then latin-1 and finally falling back to
         # utf-8.
-        reply_body = results.decode('utf-8')
+        reply_body = str(results)
         for charset in (results.charset, 'us-ascii', 'latin-1'):
             try:
                 reply_body.encode(charset)

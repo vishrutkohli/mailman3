@@ -101,7 +101,7 @@ To: test@example.com
     def test_posting(self):
         # A message accepted for posting gets processed through the posting
         # pipeline.
-        msgdata = dict(listname='test@example.com')
+        msgdata = dict(listid='test.example.com')
         config.switchboards['pipeline'].enqueue(self._msg, msgdata)
         self._pipeline.run()
         self.assertEqual(len(self._markers), 1)
@@ -110,7 +110,7 @@ To: test@example.com
     def test_owner(self):
         # A message accepted for posting to a list's owners gets processed
         # through the owner pipeline.
-        msgdata = dict(listname='test@example.com',
+        msgdata = dict(listid='test.example.com',
                        to_owner=True)
         config.switchboards['pipeline'].enqueue(self._msg, msgdata)
         self._pipeline.run()

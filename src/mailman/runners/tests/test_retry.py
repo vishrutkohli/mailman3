@@ -54,7 +54,7 @@ To: test@example.com
 Message-Id: <first>
 
 """)
-        self._msgdata = dict(listname='test@example.com')
+        self._msgdata = dict(listid='test.example.com')
 
     def test_message_put_in_outgoing_queue(self):
         self._retryq.enqueue(self._msg, self._msgdata)

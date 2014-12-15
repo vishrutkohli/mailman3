@@ -219,9 +219,18 @@ class Runner:
         # Find out which mailing list this message is destined for.
         mlist = None
         missing = object()
-        listname = msgdata.get('listname', missing)
-        if listname is missing:
-            mlist = getUtility(IListManager).get(listname.decode('utf-8'))
+        # First try to dig out the target list by id.  If there's no list-id
+        # in the metadata, fall back to the fqdn list name for backward
+        # compatibility.
+        list_manager = getUtility(IListManager)
+        list_id = msgdata.get('listid', missing)
+        if list_id is missing:
+            listname = msgdata.get('listname', missing)
+            # XXX Deprecate.
+            if listname is not missing:
+                mlist = list_manager.get(listname)
+        else:
+            mlist = list_manager.get_by_list_id(list_id)
         if mlist is None:
             elog.error(
                 '%s runner "%s" shunting message for missing list: %s',

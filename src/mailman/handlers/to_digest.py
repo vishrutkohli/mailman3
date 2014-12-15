@@ -75,7 +75,7 @@ class ToDigest:
             os.rename(mailbox_path, mailbox_dest)
             config.switchboards['digest'].enqueue(
                 Message(),
-                listname=mlist.fqdn_listname,
+                listid=mlist.list_id,
                 digest_path=mailbox_dest,
                 volume=volume,
                 digest_number=digest_number)

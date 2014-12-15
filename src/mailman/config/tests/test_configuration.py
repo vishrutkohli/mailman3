@@ -28,7 +28,6 @@ __all__ = [
 
 
 import os
-import six
 import mock
 import tempfile
 import unittest
@@ -66,26 +65,13 @@ class TestConfiguration(unittest.TestCase):
 class TestExternal(unittest.TestCase):
     """Test external configuration file loading APIs."""
 
-    def test_load_external_by_filename_as_bytes(self):
+    def test_load_external_by_filename(self):
         filename = resource_filename('mailman.config', 'postfix.cfg')
         contents = load_external(filename)
-        self.assertIsInstance(contents, bytes)
-        self.assertEqual(contents[:9], b'[postfix]')
-
-    def test_load_external_by_path_as_bytes(self):
-        contents = load_external('python:mailman.config.postfix')
-        self.assertIsInstance(contents, bytes)
-        self.assertEqual(contents[:9], b'[postfix]')
-
-    def test_load_external_by_filename_as_string(self):
-        filename = resource_filename('mailman.config', 'postfix.cfg')
-        contents = load_external(filename, encoding='utf-8')
-        self.assertIsInstance(contents, six.text_type)
         self.assertEqual(contents[:9], '[postfix]')
 
-    def test_load_external_by_path_as_string(self):
-        contents = load_external('python:mailman.config.postfix', 'utf-8')
-        self.assertIsInstance(contents, six.text_type)
+    def test_load_external_by_path(self):
+        contents = load_external('python:mailman.config.postfix')
         self.assertEqual(contents[:9], '[postfix]')
 
     def test_external_configuration_by_filename(self):

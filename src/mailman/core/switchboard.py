@@ -112,7 +112,7 @@ class Switchboard:
         # of parallel runner processes.
         data = _metadata.copy()
         data.update(_kws)
-        listname = data.get('listname', '--nolist--')
+        list_id = data.get('listid', '--nolist--')
         # Get some data for the input to the sha hash.
         now = repr(time.time())
         if data.get('_plaintext'):
@@ -121,8 +121,9 @@ class Switchboard:
         else:
             protocol = pickle.HIGHEST_PROTOCOL
             msgsave = cPickle.dumps(_msg, protocol)
-        # listname is a str but the input to the hash function must be a bytes.
-        hashfood = msgsave + listname.encode('utf-8') + now.encode('utf-8')
+        # The list-id field is a string but the input to the hash function must
+        # be bytes.
+        hashfood = msgsave + list_id.encode('utf-8') + now.encode('utf-8')
         # Encode the current time into the file name for FIFO sorting.  The
         # file name consists of two parts separated by a '+': the received
         # time for this message (i.e. when it first showed up on this system)

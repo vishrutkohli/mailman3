@@ -257,7 +257,7 @@ Testing
     @mock.patch('nntplib.NNTP')
     def test_connect(self, class_mock):
         # Test connection to the NNTP server with default values.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         class_mock.assert_called_once_with(
             '', 119, user='', password='', readermode=True)
@@ -267,7 +267,7 @@ Testing
     @mock.patch('nntplib.NNTP')
     def test_connect_with_configuration(self, class_mock):
         # Test connection to the NNTP server with specific values.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         class_mock.assert_called_once_with(
             'nntp.example.com', 2112,
@@ -276,7 +276,7 @@ Testing
     @mock.patch('nntplib.NNTP')
     def test_post(self, class_mock):
         # Test that the message is posted to the NNTP server.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Get the mocked instance, which was used in the runner.
         conn_mock = class_mock()
@@ -295,7 +295,7 @@ Testing
     def test_connection_got_quit(self, class_mock):
         # The NNTP connection gets closed after a successful post.
         # Test that the message is posted to the NNTP server.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Get the mocked instance, which was used in the runner.
         conn_mock = class_mock()
@@ -306,7 +306,7 @@ Testing
 
     @mock.patch('nntplib.NNTP', side_effect=nntplib.NNTPTemporaryError)
     def test_connect_with_nntplib_failure(self, class_mock):
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         mark = LogFileMark('mailman.error')
         self._runner.run()
         log_message = mark.readline()[:-1]
@@ -315,7 +315,7 @@ Testing
 
     @mock.patch('nntplib.NNTP', side_effect=socket.error)
     def test_connect_with_socket_failure(self, class_mock):
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         mark = LogFileMark('mailman.error')
         self._runner.run()
         log_message = mark.readline()[:-1]
@@ -330,7 +330,7 @@ Testing
             # I.e. stop immediately, since the queue will not be empty.
             return True
         runner = make_testable_runner(nntp.NNTPRunner, 'nntp', predicate=once)
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         mark = LogFileMark('mailman.error')
         runner.run()
         log_message = mark.readline()[:-1]
@@ -345,7 +345,7 @@ Testing
     def test_connection_never_gets_quit_after_failures(self, class_mock):
         # The NNTP connection doesn't get closed after a unsuccessful
         # connection, since there's nothing to close.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Get the mocked instance, which was used in the runner.  Turn off the
         # exception raising side effect first though!
@@ -362,7 +362,7 @@ Testing
         # Add a side-effect to the instance mock's .post() method.
         conn_mock = class_mock()
         conn_mock.post.side_effect = nntplib.NNTPTemporaryError
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # The connection object's post() method was called once with a
         # file-like object containing the message's bytes.  Read those bytes

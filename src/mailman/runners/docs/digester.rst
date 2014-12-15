@@ -57,7 +57,7 @@ But the message metadata has a reference to the digest file.
     _parsemsg    : False
     digest_number: 1
     digest_path  : .../lists/test@example.com/digest.1.1.mmdf
-    listname     : test@example.com
+    listid       : test.example.com
     version      : 3
     volume       : 1
 
@@ -323,7 +323,7 @@ The marker message is sitting in the digest queue.
     _parsemsg    : False
     digest_number: 2
     digest_path  : .../lists/test@example.com/digest.1.2.mmdf
-    listname     : test@example.com
+    listid       : test.example.com
     version      : 3
     volume       : 1
 

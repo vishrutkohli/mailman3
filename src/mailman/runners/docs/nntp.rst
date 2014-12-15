@@ -37,7 +37,7 @@ are prohibited by NNTP servers such as INN.
 The message gets copied to the NNTP queue for preparation and posting.
 
     >>> filebase = config.switchboards['nntp'].enqueue(
-    ...     msg, listname='test@example.com')
+    ...     msg, listid='test.example.com')
     >>> from mailman.testing.helpers import make_testable_runner
     >>> from mailman.runners.nntp import NNTPRunner
     >>> runner = make_testable_runner(NNTPRunner, 'nntp')

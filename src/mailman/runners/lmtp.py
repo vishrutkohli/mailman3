@@ -206,18 +206,19 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
         for to in rcpttos:
             try:
                 to = parseaddr(to)[1].lower()
-                listname, subaddress, domain = split_recipient(to)
+                local, subaddress, domain = split_recipient(to)
                 slog.debug('%s to: %s, list: %s, sub: %s, dom: %s',
-                           message_id, to, listname, subaddress, domain)
-                listname += '@' + domain
+                           message_id, to, local, subaddress, domain)
+                listname = '{}@{}'.format(local, domain)
                 if listname not in listnames:
                     status.append(ERR_550)
                     continue
+                listid = '{}.{}'.format(local, domain)
                 # The recipient is a valid mailing list.  Find the subaddress
                 # if there is one, and set things up to enqueue to the proper
                 # queue.
                 queue = None
-                msgdata = dict(listname=listname,
+                msgdata = dict(listid=listid,
                                original_size=msg.original_size,
                                received_time=received_time)
                 canonical_subaddress = SUBADDRESS_NAMES.get(subaddress)

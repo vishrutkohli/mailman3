@@ -47,5 +47,4 @@ class ToOutgoing:
 
     def process(self, mlist, msg, msgdata):
         """See `IHandler`."""
-        config.switchboards['out'].enqueue(
-            msg, msgdata, listname=mlist.fqdn_listname)
+        config.switchboards['out'].enqueue(msg, msgdata, listid=mlist.list_id)

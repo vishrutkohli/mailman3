@@ -72,7 +72,7 @@ subscribe
         # Adding the subaddress to the metadata dictionary mimics what happens
         # when the above email message is first processed by the lmtp runner.
         # For convenience, we skip that step in this test.
-        self._commandq.enqueue(msg, dict(listname='test@example.com',
+        self._commandq.enqueue(msg, dict(listid='test.example.com',
                                          subaddress='join'))
         self._runner.run()
         # There will be two messages in the queue.  The first one is a reply
@@ -87,7 +87,7 @@ subscribe
         # one 'Confirmation email' line.
         confirmation_lines = []
         in_results = False
-        for line in body_line_iterator(messages[0].msg, decode=True):
+        for line in body_line_iterator(messages[0].msg):
             line = line.strip()
             if in_results:
                 if line.startswith('- Done'):
@@ -112,7 +112,7 @@ To: test-join@example.com
 Subject: join
 
 """)
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # There will be one message in the queue - a reply to Anne notifying
         # her of the status of her command email.  Because Anne is already
@@ -125,7 +125,7 @@ Subject: join
         # one 'Confirmation email' line.
         confirmation_lines = []
         in_results = False
-        for line in body_line_iterator(messages[0].msg, decode=True):
+        for line in body_line_iterator(messages[0].msg):
             line = line.strip()
             if in_results:
                 if line.startswith('- Done'):
@@ -181,7 +181,7 @@ To: test-request@example.com
 
 join
 """)
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         anne = self._confirm()
         self.assertEqual(anne.address.email, 'anne@example.org')
@@ -195,7 +195,7 @@ To: test-request@example.com
 
 join digest=no
 """)
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         anne = self._confirm()
         self.assertEqual(anne.address.email, 'anne@example.org')
@@ -209,7 +209,7 @@ To: test-request@example.com
 
 join digest=mime
 """)
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         anne = self._confirm()
         self.assertEqual(anne.address.email, 'anne@example.org')
@@ -223,7 +223,7 @@ To: test-request@example.com
 
 join digest=plain
 """)
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         anne = self._confirm()
         self.assertEqual(anne.address.email, 'anne@example.org')

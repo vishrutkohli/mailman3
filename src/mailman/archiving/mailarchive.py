@@ -73,5 +73,5 @@ class MailArchive:
         if mlist.archive_policy is ArchivePolicy.public:
             config.switchboards['out'].enqueue(
                 msg,
-                listname=mlist.fqdn_listname,
+                listid=mlist.list_id,
                 recipients=[self.recipient])

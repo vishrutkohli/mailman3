@@ -185,7 +185,7 @@ class UserNotification(Message):
 
         :param mlist: The mailing list to send the message to.
         :type mlist: `IMailingList`
-        :param add_precedence: Flag indicating whether a `Precedence: bulk` 
+        :param add_precedence: Flag indicating whether a `Precedence: bulk`
             header should be added to the message or not.
         :type add_precedence: bool
 
@@ -217,7 +217,7 @@ class UserNotification(Message):
             reduced_list_headers=True,
             )
         if mlist is not None:
-            enqueue_kws['listname'] = mlist.fqdn_listname
+            enqueue_kws['listid'] = mlist.list_id
         enqueue_kws.update(_kws)
         virginq.enqueue(self, **enqueue_kws)
 
@@ -246,7 +246,7 @@ class OwnerNotification(UserNotification):
         virginq = config.switchboards['virgin']
         # The message metadata better have a `recip' attribute
         virginq.enqueue(self,
-                        listname=mlist.fqdn_listname,
+                        listid=mlist.list_id,
                         recipients=self.recipients,
                         nodecorate=True,
                         reduced_list_headers=True,

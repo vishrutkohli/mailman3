@@ -65,7 +65,7 @@ message triggering a digest
         self._process(self._mlist, msg, {})
         self._digestq.enqueue(
             msg,
-            listname=self._mlist.fqdn_listname,
+            listid=self._mlist.list_id,
             digest_path=mbox_path,
             volume=1, digest_number=1)
         self._runner.run()
@@ -92,7 +92,7 @@ message triggering a digest
         mbox.add(msg.as_string())
         self._digestq.enqueue(
             msg,
-            listname=self._mlist.fqdn_listname,
+            listid=self._mlist.list_id,
             digest_path=mbox_path,
             volume=1, digest_number=1)
         # Use any error logs as the error message if the test fails.

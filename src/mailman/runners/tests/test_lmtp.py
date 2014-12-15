@@ -142,5 +142,5 @@ Message-ID: <alpha>
 """)
         messages = get_queue_messages('in')
         self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].msgdata['listname'],
-                         'my-list@example.com')
+        self.assertEqual(messages[0].msgdata['listid'],
+                         'my-list.example.com')

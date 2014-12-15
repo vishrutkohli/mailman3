@@ -76,7 +76,7 @@ To: test@example.com
 
     def test_posting(self):
         # A message posted to the list goes through the posting chain.
-        msgdata = dict(listname='test@example.com')
+        msgdata = dict(listid='test.example.com')
         config.switchboards['in'].enqueue(self._msg, msgdata)
         self._in.run()
         messages = get_queue_messages('out')
@@ -85,7 +85,7 @@ To: test@example.com
 
     def test_owner(self):
         # A message posted to the list goes through the posting chain.
-        msgdata = dict(listname='test@example.com',
+        msgdata = dict(listid='test.example.com',
                        to_owner=True)
         config.switchboards['in'].enqueue(self._msg, msgdata)
         self._in.run()

@@ -68,7 +68,7 @@ To: test@example.com
 Message-ID: <ant>
 
 """)
-        config.switchboards['in'].enqueue(msg, listname='test@example.com')
+        config.switchboards['in'].enqueue(msg, listid='test.example.com')
         with event_subscribers(self._got_event):
             runner.run()
         # We should now have exactly one event, which will contain the

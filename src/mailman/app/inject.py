@@ -66,7 +66,7 @@ def inject_message(mlist, msg, recipients=None, switchboard=None, **kws):
         msg['Date'] = formatdate(localtime=True)
     msg.original_size = len(msg.as_string())
     msgdata = dict(
-        listname=mlist.fqdn_listname,
+        listid=mlist.list_id,
         original_size=msg.original_size,
         )
     msgdata.update(kws)

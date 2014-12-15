@@ -57,7 +57,7 @@ destination mailing list name.  Simulate that here too.
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
     ...     tolist=True,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
 
 Running the outgoing runner processes the message, delivering it to the
 upstream SMTP.
@@ -105,7 +105,7 @@ just one.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -147,7 +147,7 @@ A handler can force VERP by setting the ``verp`` key in the message metadata.
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
     ...     verp=True,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -174,7 +174,7 @@ Again, we get three individual messages, with VERP'd ``Sender`` headers.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -215,7 +215,7 @@ VERP'd.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -235,7 +235,7 @@ The second message sent to the list is also not VERP'd.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -254,7 +254,7 @@ The third message though is VERP'd.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -274,7 +274,7 @@ The next one is back to bulk delivery.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -308,7 +308,7 @@ The first message is VERP'd.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -328,7 +328,7 @@ As is the second message.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -348,7 +348,7 @@ And the third message.
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -387,7 +387,7 @@ Neither the first message...
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)
@@ -402,7 +402,7 @@ Neither the first message...
 
     >>> ignore = outgoing_queue.enqueue(
     ...     msg, msgdata,
-    ...     listname=mlist.fqdn_listname)
+    ...     listid=mlist.list_id)
     >>> outgoing.run()
     >>> messages = list(smtpd.messages)
     >>> len(messages)

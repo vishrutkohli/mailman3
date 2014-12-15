@@ -69,7 +69,7 @@ To: test-bounces+anne=example.com@example.com
 Message-Id: <first>
 
 """)
-        self._msgdata = dict(listname='test@example.com')
+        self._msgdata = dict(listid='test.example.com')
         self._processor = getUtility(IBounceProcessor)
         config.push('site owner', """
         [mailman]
@@ -284,7 +284,7 @@ To: test-bounces+anne=example.com@example.com
 Message-Id: <first>
 
 """)
-        self._bounceq.enqueue(bounce, dict(listname='test@example.com'))
+        self._bounceq.enqueue(bounce, dict(listid='test.example.com'))
         self.assertEqual(len(self._bounceq.files), 1)
         self._runner.run()
         self.assertEqual(len(get_queue_messages('bounces')), 0)

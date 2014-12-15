@@ -68,7 +68,7 @@ To: test-confirm@example.com
 
 """)
         msg['Subject'] = subject
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -88,7 +88,7 @@ To: test-confirm@example.com
 
 """)
         msg['Subject'] = subject
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -144,7 +144,7 @@ Franziskanerstra=C3=9Fe
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -177,7 +177,7 @@ Franziskanerstra=C3=9Fe
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -208,7 +208,7 @@ From: Anne Person <anne@example.org>
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com',
+        self._commandq.enqueue(msg, dict(listid='test.example.com',
                                          subaddress='confirm'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
@@ -223,7 +223,7 @@ From: Anne Person <anne@example.org>
         # one 'Confirmation email' line.
         confirmation_lines = []
         in_results = False
-        for line in body_line_iterator(messages[0].msg, decode=True):
+        for line in body_line_iterator(messages[0].msg):
             line = line.strip()
             if in_results:
                 if line.startswith('- Done'):
@@ -253,7 +253,7 @@ From: Anne Person <anne@example.org>
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com',
+        self._commandq.enqueue(msg, dict(listid='test.example.com',
                                          subaddress='confirm'))
         self._runner.run()
         # Now there's a email command notification and a welcome message.  All

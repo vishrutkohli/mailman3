@@ -110,7 +110,7 @@ First post!
         # Ensure that the archive runner ends up archiving the message.
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname,
+            listid=self._mlist.list_id,
             received_time=now())
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -126,7 +126,7 @@ First post!
         self._msg['Date'] = now(strip_tzinfo=False).strftime(RFC822_DATE_FMT)
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname,
+            listid=self._mlist.list_id,
             received_time=now())
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -144,7 +144,7 @@ First post!
         self._msg['Date'] = now(strip_tzinfo=False).strftime(RFC822_DATE_FMT)
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname,
+            listid=self._mlist.list_id,
             received_time=now())
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -163,7 +163,7 @@ First post!
         # again), fast forward a few days.
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname,
+            listid=self._mlist.list_id,
             received_time=now(strip_tzinfo=False))
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -182,7 +182,7 @@ First post!
         # again as will happen in the runner), fast forward a few days.
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname)
+            listid=self._mlist.list_id)
         factory.fast_forward(days=4)
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -205,7 +205,7 @@ First post!
         # again as will happen in the runner), fast forward a few days.
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname)
+            listid=self._mlist.list_id)
         factory.fast_forward(days=4)
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -228,7 +228,7 @@ First post!
         # again as will happen in the runner), fast forward a few days.
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname)
+            listid=self._mlist.list_id)
         factory.fast_forward(days=4)
         self._runner.run()
         # There should now be a copy of the message in the file system.
@@ -249,6 +249,6 @@ First post!
         config.db.store.commit()
         self._archiveq.enqueue(
             self._msg, {},
-            listname=self._mlist.fqdn_listname)
+            listid=self._mlist.list_id)
         self._runner.run()
         self.assertEqual(os.listdir(config.MESSAGES_DIR), [])

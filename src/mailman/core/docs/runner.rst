@@ -55,7 +55,7 @@ on instance variables.
     ... A test message.
     ... """)
     >>> switchboard = config.switchboards['test']
-    >>> filebase = switchboard.enqueue(msg, listname=mlist.fqdn_listname,
+    >>> filebase = switchboard.enqueue(msg, list_id=mlist.list_id,
     ...                                foo='yes', bar='no')
     >>> runner.run()
     >>> print(runner.msg.as_string())

@@ -269,7 +269,7 @@ class Configuration:
 
 
 
-def load_external(path, encoding=None):
+def load_external(path):
     """Load the configuration file named by path.
 
     :param path: A string naming the location of the external configuration
@@ -278,22 +278,16 @@ def load_external(path, encoding=None):
         value must name a ``.cfg`` file located within Python's import path,
         however the trailing ``.cfg`` suffix is implied (don't provide it
         here).
-    :param encoding: The encoding to apply to the data read from path.  If
-        None, then bytes will be returned.
-    :return: A unicode string or bytes, depending on ``encoding``.
+    :return: The contents of the configuration file.
+    :rtype: str
     """
     # Is the context coming from a file system or Python path?
     if path.startswith('python:'):
         resource_path = path[7:]
         package, dot, resource = resource_path.rpartition('.')
-        raw = resource_bytes(package, resource + '.cfg')
-        config_string = raw.decode('utf-8')
-    else:
-        with open(path, 'r', encoding='utf-8') as fp:
-            config_string = fp.read()
-    if encoding is None:
-        return config_string
-    return config_string.decode(encoding)
+        return resource_bytes(package, resource + '.cfg').decode('utf-8')
+    with open(path, 'r', encoding='utf-8') as fp:
+        return fp.read()
 
 
 def external_configuration(path):

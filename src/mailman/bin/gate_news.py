@@ -149,7 +149,7 @@ def poll_newsgroup(mlist, conn, first, last, glock):
                 # Post the message to the locked list
                 inq = Switchboard(config.INQUEUE_DIR)
                 inq.enqueue(msg,
-                            listname=mlist.internal_name(),
+                            listid=mlist.list_id,
                             fromusenet=True)
                 log.info('posted to list %s: %7d', listname, num)
         except nntplib.NNTPError as e:

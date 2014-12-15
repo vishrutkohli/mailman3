@@ -65,5 +65,4 @@ class ToUsenet:
                       COMMASPACE.join(error))
             return
         # Put the message in the news runner's queue.
-        config.switchboards['nntp'].enqueue(
-            msg, msgdata, listname=mlist.fqdn_listname)
+        config.switchboards['nntp'].enqueue(msg, msgdata, listid=mlist.list_id)

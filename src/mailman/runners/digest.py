@@ -383,9 +383,9 @@ class DigestRunner(Runner):
         queue = config.switchboards['virgin']
         queue.enqueue(mime,
                       recipients=mime_recipients,
-                      listname=mlist.fqdn_listname,
+                      listid=mlist.list_id,
                       isdigest=True)
         queue.enqueue(rfc1153,
                       recipients=rfc1153_recipients,
-                      listname=mlist.fqdn_listname,
+                      listid=mlist.list_id,
                       isdigest=True)

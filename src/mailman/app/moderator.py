@@ -93,7 +93,7 @@ def hold_message(mlist, msg, msgdata=None, reason=None):
     # Prepare the message metadata with some extra information needed only by
     # the moderation interface.
     msgdata['_mod_message_id'] = message_id
-    msgdata['_mod_fqdn_listname'] = mlist.fqdn_listname
+    msgdata['_mod_listid'] = mlist.list_id
     msgdata['_mod_sender'] = msg.sender
     msgdata['_mod_subject'] = msg.get('subject', _('(no subject)'))
     msgdata['_mod_reason'] = reason
