@@ -26,6 +26,7 @@ __all__ = [
     ]
 
 
+import json
 import time
 import random
 import hashlib
@@ -113,27 +114,20 @@ class Pendings:
             if store.query(Pended).filter_by(token=token).count() == 0:
                 break
         else:
-            raise AssertionError('Could not find a valid pendings token')
+            raise RuntimeError('Could not find a valid pendings token')
         # Create the record, and then the individual key/value pairs.
         pending = Pended(
             token=token,
             expiration_date=now() + lifetime)
         for key, value in pendable.items():
+            # Both keys and values must be strings.
             if isinstance(key, bytes):
                 key = key.decode('utf-8')
             if isinstance(value, bytes):
-                value = value.decode('utf-8')
-            elif type(value) is int:
-                value = '__builtin__.int\1%s' % value
-            elif type(value) is float:
-                value = '__builtin__.float\1%s' % value
-            elif type(value) is bool:
-                value = '__builtin__.bool\1%s' % value
-            elif type(value) is list:
-                # We expect this to be a list of strings.
-                value = ('mailman.model.pending.unpack_list\1' +
-                         '\2'.join(value))
-            keyval = PendedKeyValue(key=key, value=value)
+                # Make sure we can turn this back into a bytes.
+                value  = dict(__encoding__='utf-8',
+                              value=value.decode('utf-8'))
+            keyval = PendedKeyValue(key=key, value=json.dumps(value))
             pending.key_values.append(keyval)
         store.add(pending)
         return token
@@ -154,11 +148,10 @@ class Pendings:
         entries = store.query(PendedKeyValue).filter(
             PendedKeyValue.pended_id == pending.id)
         for keyvalue in entries:
-            if keyvalue.value is not None and '\1' in keyvalue.value:
-                type_name, value = keyvalue.value.split('\1', 1)
-                pendable[keyvalue.key] = call_name(type_name, value)
-            else:
-                pendable[keyvalue.key] = keyvalue.value
+            value = json.loads(keyvalue.value)
+            if isinstance(value, dict) and '__encoding__' in value:
+                value = value['value'].encode(value['__encoding__'])
+            pendable[keyvalue.key] = value
             if expunge:
                 store.delete(keyvalue)
         if expunge:
@@ -177,8 +170,3 @@ class Pendings:
                 for keyvalue in q:
                     store.delete(keyvalue)
                 store.delete(pending)
-
-
-
-def unpack_list(value):
-    return value.split('\2')
