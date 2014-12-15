@@ -26,14 +26,14 @@ __all__ = [
     ]
 
 
-import six
 import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus, MemberRole
 from mailman.interfaces.usermanager import IUserManager
-from mailman.testing.helpers import specialized_message_from_string as mfs
+from mailman.testing.helpers import (
+    configuration, specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 from zope.component import getUtility
 
@@ -200,23 +200,14 @@ To: test-owner@example.com
         self._process(self._mlist, self._msg, msgdata)
         self.assertEqual(msgdata['recipients'], set(('noreply@example.com',)))
 
-    def test_site_admin_unicode(self):
-        # Since the config file is read as bytes, the site_owner is also a
-        # bytes and must be converted to unicode when used as a fallback.
+    @configuration('mailman', site_owner='siteadmin@example.com')
+    def test_no_owners_site_owner_fallback(self):
+        # The list has no owners or moderators, but there is a non-default
+        # site owner defined.  That owner gets the message.
         self._cris.unsubscribe()
         self._dave.unsubscribe()
         self.assertEqual(self._mlist.administrators.member_count, 0)
         msgdata = {}
-        # In order to properly mimic the testing environment, use
-        # config.push()/config.pop() directly instead of using the
-        # configuration() context manager.
-        config.push('test_site_admin_unicode', b"""\
-[mailman]
-site_owner: siteadmin@example.com
-""")
-        try:
-            self._process(self._mlist, self._msg, msgdata)
-        finally:
-            config.pop('test_site_admin_unicode')
-        self.assertEqual(len(msgdata['recipients']), 1)
-        self.assertIsInstance(list(msgdata['recipients'])[0], six.text_type)
+        self._process(self._mlist, self._msg, msgdata)
+        self.assertEqual(msgdata['recipients'],
+                         set(('siteadmin@example.com',)))

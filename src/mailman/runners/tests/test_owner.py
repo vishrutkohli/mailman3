@@ -89,7 +89,7 @@ class TestEmailToOwner(unittest.TestCase):
         # get a copy of the message.
         lmtp = get_lmtp_client(quiet=True)
         lmtp.lhlo('remote.example.org')
-        lmtp.sendmail('zuzu@example.org', ['test-owner@example.com'], """\
+        lmtp.sendmail('zuzu@example.org', ['test-owner@example.com'], b"""\
 From: Zuzu Person <zuzu@example.org>
 To: test-owner@example.com
 Message-ID: <ant>

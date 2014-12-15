@@ -91,7 +91,7 @@ SUBADDRESS_QUEUES = dict(
     )
 
 DASH    = '-'
-CRLF    = b'\r\n'
+CRLF    = '\r\n'
 ERR_451 = b'451 Requested action aborted: error in processing'
 ERR_501 = b'501 Message has defects'
 ERR_502 = b'502 Error: command HELO not implemented'
@@ -99,7 +99,7 @@ ERR_550 = b'550 Requested action not taken: mailbox unavailable'
 ERR_550_MID = b'550 No Message-ID header provided'
 
 # XXX Blech
-smtpd.__version__ = b'Python LMTP runner 1.0'
+smtpd.__version__ = 'Python LMTP runner 1.0'
 
 
 
@@ -146,6 +146,10 @@ class Channel(smtpd.SMTPChannel):
     def smtp_HELO(self, arg):
         """HELO is not a valid LMTP command."""
         self.push(ERR_502)
+
+    ## def push(self, arg):
+    ##     import pdb; pdb.set_trace()
+    ##     return super().push(arg)
 
 
 
@@ -243,7 +247,7 @@ class LMTPRunner(Runner, smtpd.SMTPServer):
                     config.switchboards[queue].enqueue(msg, msgdata)
                     slog.debug('%s subaddress: %s, queue: %s',
                                message_id, canonical_subaddress, queue)
-                    status.append(b'250 Ok')
+                    status.append('250 Ok')
             except Exception:
                 slog.exception('Queue detection: %s', msg['message-id'])
                 config.db.abort()

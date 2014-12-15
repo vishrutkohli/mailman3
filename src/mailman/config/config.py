@@ -32,7 +32,7 @@ import sys
 
 from flufl.lock import Lock
 from lazr.config import ConfigSchema, as_boolean
-from pkg_resources import resource_filename, resource_string
+from pkg_resources import resource_filename, resource_string as resource_bytes
 from six.moves.configparser import ConfigParser, RawConfigParser
 from string import Template
 from unittest.mock import patch
@@ -114,7 +114,7 @@ class Configuration:
         self._config = schema.load(config_file)
         if filename is not None:
             self.filename = filename
-            with open(filename) as user_config:
+            with open(filename, 'r', encoding='utf-8') as user_config:
                 self.push(filename, user_config.read())
 
     def push(self, config_name, config_string):
@@ -286,9 +286,10 @@ def load_external(path, encoding=None):
     if path.startswith('python:'):
         resource_path = path[7:]
         package, dot, resource = resource_path.rpartition('.')
-        config_string = resource_string(package, resource + '.cfg')
+        raw = resource_bytes(package, resource + '.cfg')
+        config_string = raw.decode('utf-8')
     else:
-        with open(path, 'rb') as fp:
+        with open(path, 'r', encoding='utf-8') as fp:
             config_string = fp.read()
     if encoding is None:
         return config_string

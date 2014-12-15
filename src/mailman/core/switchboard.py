@@ -134,7 +134,7 @@ class Switchboard:
         data['version'] = config.QFILE_SCHEMA_VERSION
         # Filter out volatile entries.  Use .keys() so that we can mutate the
         # dictionary during the iteration.
-        for k in data.keys():
+        for k in list(data):
             if k.startswith('_'):
                 del data[k]
         # We have to tell the dequeue() method whether to parse the message

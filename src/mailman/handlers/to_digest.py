@@ -55,7 +55,7 @@ class ToDigest:
         mailbox_path = os.path.join(mlist.data_path, 'digest.mmdf')
         # Lock the mailbox and append the message.
         with Mailbox(mailbox_path, create=True) as mbox:
-            mbox.add(msg.as_string())
+            mbox.add(msg)
         # Calculate the current size of the mailbox file.  This will not tell
         # us exactly how big the resulting MIME and rfc1153 digest will
         # actually be, but it's the most easily available metric to decide
