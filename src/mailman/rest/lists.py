@@ -213,9 +213,8 @@ class AllLists(_ListBase):
         except ListAlreadyExistsError:
             bad_request(response, b'Mailing list exists')
         except BadDomainSpecificationError as error:
-            bad_request(
-                response,
-                b'Domain does not exist: {0}'.format(error.domain))
+            reason = 'Domain does not exist: {}'.format(error.domain)
+            bad_request(response, reason.encode('utf-8'))
         except ValueError as error:
             bad_request(response, str(error))
         else:
@@ -275,7 +274,7 @@ class ArchiverGetterSetter(GetterSetter):
         # attribute will contain the (bytes) name of the archiver that is
         # getting a new status.  value will be the representation of the new
         # boolean status.
-        archiver = self._archiver_set.get(attribute.decode('utf-8'))
+        archiver = self._archiver_set.get(attribute)
         if archiver is None:
             raise ValueError('No such archiver: {}'.format(attribute))
         archiver.is_enabled = as_boolean(value)

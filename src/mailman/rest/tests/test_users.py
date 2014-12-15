@@ -119,7 +119,7 @@ class TestUsers(unittest.TestCase):
                      })
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason,
-                         'Address already exists: anne@example.com')
+                         b'Address already exists: anne@example.com')
 
     def test_addresses_of_missing_user_id(self):
         # Trying to get the /addresses of a missing user id results in error.

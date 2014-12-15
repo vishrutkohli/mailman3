@@ -122,8 +122,8 @@ class AllUsers(_UserBase):
         try:
             user = getUtility(IUserManager).create_user(**arguments)
         except ExistingAddressError as error:
-            bad_request(
-                response, b'Address already exists: {0}'.format(error.address))
+            reason = 'Address already exists: {}'.format(error.address)
+            bad_request(response, reason.encode('utf-8'))
             return
         if password is None:
             # This will have to be reset since it cannot be retrieved.

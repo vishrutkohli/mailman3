@@ -66,8 +66,8 @@ class Root:
         # the case where no error is raised.
         if request.auth is None:
             raise falcon.HTTPUnauthorized(
-                b'401 Unauthorized',
-                b'The REST API requires authentication')
+                '401 Unauthorized',
+                'The REST API requires authentication')
         if request.auth.startswith('Basic '):
             # b64decode() returns bytes, but we require a str.
             credentials = b64decode(request.auth[6:]).decode('utf-8')
@@ -76,8 +76,8 @@ class Root:
                 password != config.webservice.admin_pass):
                 # Not authorized.
                 raise falcon.HTTPUnauthorized(
-                    b'401 Unauthorized',
-                    b'User is not authorized for the REST API')
+                    '401 Unauthorized',
+                    'User is not authorized for the REST API')
         return TopLevel()
 
 
