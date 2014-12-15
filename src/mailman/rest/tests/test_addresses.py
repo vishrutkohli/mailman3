@@ -165,7 +165,7 @@ class TestAddresses(unittest.TestCase):
                      'email': 'anne@example.com',
                      })
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.reason, 'Address already exists')
+        self.assertEqual(cm.exception.reason, b'Address already exists')
 
     def test_invalid_address_bad_request(self):
         # Trying to add an invalid address string returns 400.
@@ -177,7 +177,7 @@ class TestAddresses(unittest.TestCase):
                      'email': 'invalid_address_string'
                      })
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.reason, 'Invalid email address')
+        self.assertEqual(cm.exception.reason, b'Invalid email address')
 
     def test_empty_address_bad_request(self):
         # The address is required.
@@ -188,7 +188,7 @@ class TestAddresses(unittest.TestCase):
                 'http://localhost:9001/3.0/users/anne@example.com/addresses',
                 {})
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.reason, 'Missing parameters: email')
+        self.assertEqual(cm.exception.reason, b'Missing parameters: email')
 
     def test_get_addresses_of_missing_user(self):
         # There is no user associated with the given address.
