@@ -245,7 +245,7 @@ def to_plaintext(msg):
         filename = tempfile.mktemp('.html')
         fp = open(filename, 'w')
         try:
-            fp.write(subpart.get_payload(decode=True))
+            fp.write(subpart.get_payload())
             fp.close()
             cmd = os.popen(config.HTML_TO_PLAIN_TEXT_COMMAND %
                            {'filename': filename})

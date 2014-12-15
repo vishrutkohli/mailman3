@@ -471,10 +471,11 @@ def reset_the_world():
     """
     # Reset the database between tests.
     config.db._reset()
-    # Remove any digest files.
+    # Remove any digest files and members.txt file (for the file-recips
+    # handler) in the lists' data directories.
     for dirpath, dirnames, filenames in os.walk(config.LIST_DATA_DIR):
         for filename in filenames:
-            if filename.endswith('.mmdf'):
+            if filename.endswith('.mmdf') or filename == 'members.txt':
                 os.remove(os.path.join(dirpath, filename))
     # Remove all residual queue files.
     for dirpath, dirnames, filenames in os.walk(config.QUEUE_DIR):

@@ -13,7 +13,7 @@ headers generally start with the `List-` prefix.
 ..
     This is a helper function for the following section.
     >>> def list_headers(msg, only=None):
-    ...     if isinstance(only, basestring):
+    ...     if isinstance(only, str):
     ...         only = (only.lower(),)
     ...     elif only is None:
     ...         only = set(header.lower() for header in msg.keys()

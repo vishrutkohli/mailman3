@@ -37,7 +37,7 @@ from mailman.interfaces.handler import IHandler
 
 OR = '|'
 CRNL = '\r\n'
-EMPTYBYTES = b''
+EMPTYSTRING = ''
 NLTAB = '\n\t'
 
 
@@ -104,7 +104,7 @@ def scanbody(msg, numlines=None):
     reader = list(email.iterators.body_line_iterator(msg))
     while numlines is None or lineno < numlines:
         try:
-            line = bytes(reader.pop(0))
+            line = reader.pop(0)
         except IndexError:
             break
         # Blank lines don't count
@@ -115,7 +115,7 @@ def scanbody(msg, numlines=None):
     # Concatenate those body text lines with newlines, and then create a new
     # message object from those lines.
     p = _ForgivingParser()
-    msg = p.parsestr(EMPTYBYTES.join(lines))
+    msg = p.parsestr(EMPTYSTRING.join(lines))
     return msg.get_all('subject', []) + msg.get_all('keywords', [])
 
 

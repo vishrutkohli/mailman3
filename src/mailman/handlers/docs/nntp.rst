@@ -63,5 +63,5 @@ messages are gated to.
 
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg: False
-    listname : test@example.com
+    listid   : test.example.com
     version  : 3

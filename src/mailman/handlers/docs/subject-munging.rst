@@ -35,7 +35,7 @@ subject munging, a mailing list must have a preferred language.
 The original subject header is stored in the message metadata.
 
     >>> msgdata['original_subject']
-    u''
+    ''
     >>> print(msg['subject'])
     [XTest] (no subject)
 

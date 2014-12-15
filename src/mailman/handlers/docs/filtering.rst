@@ -26,6 +26,8 @@ Filtering the outer content type
 A simple filtering setting will just search the content types of the messages
 parts, discarding all parts with a matching MIME type.  If the message's outer
 content type matches the filter, the entire message will be discarded.
+However, if we turn off content filtering altogether, then the handler
+short-circuits.
 ::
 
     >>> from mailman.interfaces.mime import FilterAction
@@ -42,14 +44,6 @@ content type matches the filter, the entire message will be discarded.
     ... """)
 
     >>> process = config.handlers['mime-delete'].process
-    >>> process(mlist, msg, {})
-    Traceback (most recent call last):
-    ...
-    DiscardMessage: The message's content type was explicitly disallowed
-
-However, if we turn off content filtering altogether, then the handler
-short-circuits.
-
     >>> mlist.filter_content = False
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
@@ -74,15 +68,15 @@ crafted internally by Mailman.
     MIME-Version: 1.0
     <BLANKLINE>
     xxxxx
-    >>> msgdata
-    {u'isdigest': True}
+    >>> dump_msgdata(msgdata)
+    isdigest: True
 
 
 Simple multipart filtering
 ==========================
 
-If one of the subparts in a multipart message matches the filter type, then
-just that subpart will be stripped.
+If one of the subparts in a ``multipart`` message matches the filter type,
+then just that subpart will be stripped.
 ::
 
     >>> msg = message_from_string("""\

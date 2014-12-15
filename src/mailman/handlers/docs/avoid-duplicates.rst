@@ -71,7 +71,7 @@ or ``Resent-CC``), then they will get a list copy.
     >>> msgdata = recips.copy()
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
-    [u'aperson@example.com', u'bperson@example.com']
+    ['aperson@example.com', 'bperson@example.com']
     >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     <BLANKLINE>
@@ -89,7 +89,7 @@ If they're mentioned on the ``CC`` line, they won't get a list copy.
     >>> msgdata = recips.copy()
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
-    [u'bperson@example.com']
+    ['bperson@example.com']
     >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     CC: aperson@example.com
@@ -109,7 +109,7 @@ to ``True`` (the default), then they still get a list copy.
     >>> msgdata = recips.copy()
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
-    [u'aperson@example.com', u'bperson@example.com']
+    ['aperson@example.com', 'bperson@example.com']
     >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     CC: bperson@example.com
@@ -128,7 +128,7 @@ Other headers checked for recipients include the ``To``...
     >>> msgdata = recips.copy()
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
-    [u'bperson@example.com']
+    ['bperson@example.com']
     >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     To: aperson@example.com
@@ -147,7 +147,7 @@ Other headers checked for recipients include the ``To``...
     >>> msgdata = recips.copy()
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
-    [u'bperson@example.com']
+    ['bperson@example.com']
     >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     Resent-To: aperson@example.com
@@ -166,7 +166,7 @@ Other headers checked for recipients include the ``To``...
     >>> msgdata = recips.copy()
     >>> handler.process(mlist, msg, msgdata)
     >>> sorted(msgdata['recipients'])
-    [u'bperson@example.com']
+    ['bperson@example.com']
     >>> print(msg.as_string())
     From: Claire Person <cperson@example.com>
     Resent-Cc: aperson@example.com
