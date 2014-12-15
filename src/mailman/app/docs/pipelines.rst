@@ -67,7 +67,7 @@ However there are currently no recipients for this message.
     >>> dump_msgdata(msgdata)
     original_sender : aperson@example.com
     original_subject: My first post
-    recipients      : set([])
+    recipients      : set()
     stripped_subject: My first post
 
 After pipeline processing, the message is now sitting in various other
@@ -97,7 +97,7 @@ processing queues.
     _parsemsg       : False
     original_sender : aperson@example.com
     original_subject: My first post
-    recipients      : set([])
+    recipients      : set()
     stripped_subject: My first post
     version         : 3
 
@@ -132,10 +132,10 @@ delivered to end recipients.
 
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg       : False
-    listname        : test@example.com
+    listid          : test.example.com
     original_sender : aperson@example.com
     original_subject: My first post
-    recipients      : set([])
+    recipients      : set()
     stripped_subject: My first post
     version         : 3
 

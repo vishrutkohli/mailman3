@@ -270,7 +270,7 @@ def ch_oneline(headerstr):
         else:
             cset = 'utf-8'
         h = make_header(d)
-        ustr = h.decode('utf-8')
+        ustr = str(h)
         oneline = ''.join(ustr.splitlines())
         return oneline.encode(cset, 'replace'), cset
     except (LookupError, UnicodeError, ValueError, HeaderParseError):
