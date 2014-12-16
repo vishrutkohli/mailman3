@@ -157,7 +157,7 @@ class HoldChain(TerminalChainBase):
         if original_subject is None:
             original_subject = _('(no subject)')
         else:
-            original_subject = oneline(original_subject, charset)
+            original_subject = oneline(original_subject, in_unicode=True)
         substitutions = dict(
             listname    = mlist.fqdn_listname,
             subject     = original_subject,

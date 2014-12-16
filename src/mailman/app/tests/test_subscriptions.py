@@ -32,6 +32,7 @@ from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.address import InvalidEmailAddressError
+from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
 from mailman.testing.layers import ConfigLayer
@@ -57,3 +58,14 @@ class TestJoin(unittest.TestCase):
         with self.assertRaises(InvalidEmailAddressError) as cm:
             self._service.join('test.example.com', 'bogus')
         self.assertEqual(cm.exception.email, 'bogus')
+
+    def test_missing_preferred_address(self):
+        # A user cannot join a mailing list if they have no preferred address.
+        anne = self._service.join(
+            'test.example.com', 'anne@example.com', 'Anne Person')
+        # Try to join Anne as a user with a different role.  Her user has no
+        # preferred address, so this will fail.
+        self.assertRaises(MissingPreferredAddressError,
+                          self._service.join,
+                          'test.example.com', anne.user.user_id,
+                          role=MemberRole.owner)

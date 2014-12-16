@@ -140,7 +140,6 @@ def send_admin_subscription_notice(mlist, address, display_name, language):
     """
     with _.using(mlist.preferred_language.code):
         subject = _('$mlist.display_name subscription notification')
-    display_name = display_name.encode(language.charset, 'replace')
     text = make('adminsubscribeack.txt',
                 mailing_list=mlist,
                 listname=mlist.display_name,

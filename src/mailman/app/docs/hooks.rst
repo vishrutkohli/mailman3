@@ -61,6 +61,7 @@ script that will produce no output to force the hooks to run.
     ...     proc = subprocess.Popen(
     ...         [exe, 'lists', '--domain', 'ignore', '-q'],
     ...         cwd=ConfigLayer.root_directory, env=env,
+    ...         universal_newlines=True,
     ...         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     ...     stdout, stderr = proc.communicate()
     ...     assert proc.returncode == 0, stderr

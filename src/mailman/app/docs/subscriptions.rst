@@ -67,13 +67,6 @@ New members can also be added by providing an existing user id instead of an
 email address.  However, the user must have a preferred email address.
 ::
 
-    >>> service.join('test.example.com', bart.user.user_id,
-    ...              role=MemberRole.owner)
-    Traceback (most recent call last):
-    ...
-    MissingPreferredAddressError: User must have a preferred address:
-        <User "Bart Person" (2) at ...>
-
     >>> from mailman.utilities.datetime import now
     >>> address = list(bart.user.addresses)[0]
     >>> address.verified_on = now()
