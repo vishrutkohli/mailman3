@@ -86,7 +86,7 @@ def hold_message(mlist, msg, msgdata=None, reason=None):
     # Message-ID header.
     message_id = msg.get('message-id')
     if message_id is None:
-        msg['Message-ID'] = message_id = make_msgid().decode('utf-8')
+        msg['Message-ID'] = message_id = make_msgid()
     assert isinstance(message_id, six.text_type), (
         'Message-ID is not a unicode: %s' % message_id)
     getUtility(IMessageStore).add(msg)

@@ -18,12 +18,12 @@ Hooks name an importable callable so it must be accessible on ``sys.path``.
     ... counter = 1
     ... def pre_hook():
     ...     global counter
-    ...     print 'pre-hook:', counter
+    ...     print('pre-hook:', counter)
     ...     counter += 1
     ...
     ... def post_hook():
     ...     global counter
-    ...     print 'post-hook:', counter
+    ...     print('post-hook:', counter)
     ...     counter += 1
     ... """, file=fp)
     >>> fp.close()

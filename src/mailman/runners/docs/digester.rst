@@ -538,12 +538,12 @@ and the other is the RFC 1153 digest.
 Only wperson and xperson get the MIME digests.
 
     >>> sorted(mime.msgdata['recipients'])
-    [u'wperson@example.com', u'xperson@example.com']
+    ['wperson@example.com', 'xperson@example.com']
 
 Only yperson and zperson get the RFC 1153 digests.
 
     >>> sorted(rfc1153.msgdata['recipients'])
-    [u'yperson@example.com', u'zperson@example.com']
+    ['yperson@example.com', 'zperson@example.com']
 
 Now uperson decides that they would like to start receiving digests too.
 ::
@@ -558,10 +558,10 @@ Now uperson decides that they would like to start receiving digests too.
 
     >>> mime, rfc1153 = mime_rfc1153(messages)
     >>> sorted(mime.msgdata['recipients'])
-    [u'uperson@example.com', u'wperson@example.com', u'xperson@example.com']
+    ['uperson@example.com', 'wperson@example.com', 'xperson@example.com']
 
     >>> sorted(rfc1153.msgdata['recipients'])
-    [u'yperson@example.com', u'zperson@example.com']
+    ['yperson@example.com', 'zperson@example.com']
 
 At this point, both uperson and wperson decide that they'd rather receive
 regular deliveries instead of digests.  uperson would like to get any last
@@ -581,10 +581,10 @@ as much and does not want to receive one last digest.
     >>> messages = get_queue_messages('virgin')
     >>> mime, rfc1153 = mime_rfc1153(messages)
     >>> sorted(mime.msgdata['recipients'])
-    [u'uperson@example.com', u'xperson@example.com']
+    ['uperson@example.com', 'xperson@example.com']
 
     >>> sorted(rfc1153.msgdata['recipients'])
-    [u'yperson@example.com', u'zperson@example.com']
+    ['yperson@example.com', 'zperson@example.com']
 
 Since uperson has received their last digest, they will not get any more of
 them.
@@ -599,7 +599,7 @@ them.
 
     >>> mime, rfc1153 = mime_rfc1153(messages)
     >>> sorted(mime.msgdata['recipients'])
-    [u'xperson@example.com']
+    ['xperson@example.com']
 
     >>> sorted(rfc1153.msgdata['recipients'])
-    [u'yperson@example.com', u'zperson@example.com']
+    ['yperson@example.com', 'zperson@example.com']

@@ -382,8 +382,9 @@ def import_config_pck(mlist, config_dict):
         with codecs.open(filepath, 'w', encoding='utf-8') as fp:
             fp.write(text)
     # Import rosters.
-    members = set(config_dict.get('members', {}).keys()
-                + config_dict.get('digest_members', {}).keys())
+    regulars_set = set(config_dict.get('members', {}))
+    digesters_set = set(config_dict.get('digest_members', {}))
+    members = regulars_set + digesters_set
     import_roster(mlist, config_dict, members, MemberRole.member)
     import_roster(mlist, config_dict, config_dict.get('owner', []),
                   MemberRole.owner)

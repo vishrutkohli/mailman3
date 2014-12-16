@@ -124,7 +124,7 @@ message is sent to the user in order to verify the registered address.
     <BLANKLINE>
     >>> dump_msgdata(items[0].msgdata)
     _parsemsg           : False
-    listname            : alpha@example.com
+    listid              : alpha.example.com
     nodecorate          : True
     recipients          : {'aperson@example.com'}
     reduced_list_headers: True

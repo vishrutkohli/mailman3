@@ -94,7 +94,7 @@ By default, the incoming queue is used.
 
     >>> dump_msgdata(items[0].msgdata)
     _parsemsg    : False
-    listname     : test@example.com
+    listid       : test.example.com
     original_size: 203
     version      : 3
 
@@ -122,7 +122,7 @@ But a different queue can be specified on the command line.
 
     >>> dump_msgdata(items[0].msgdata)
     _parsemsg    : False
-    listname     : test@example.com
+    listid       : test.example.com
     original_size: 203
     version      : 3
 
@@ -167,7 +167,7 @@ The message text can also be provided on standard input.
 
     >>> dump_msgdata(items[0].msgdata)
     _parsemsg    : False
-    listname     : test@example.com
+    listid       : test.example.com
     original_size: 211
     version      : 3
 
@@ -195,7 +195,7 @@ injected.
     _parsemsg    : False
     bar          : two
     foo          : one
-    listname     : test@example.com
+    listid       : test.example.com
     original_size: 203
     version      : 3
 

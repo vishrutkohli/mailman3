@@ -63,9 +63,9 @@ And now the response is in the ``virgin`` queue.
 
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg           : False
-    listname            : test@example.com
+    listid              : test.example.com
     nodecorate          : True
-    recipients          : set([u'aperson@example.com'])
+    recipients          : {'aperson@example.com'}
     reduced_list_headers: True
     version             : ...
 

@@ -47,7 +47,6 @@ Once we've figured out the file name of the shunted message, we can print it.
     >>> command.process(FakeArgs)
     [----- start pickle -----]
     <----- start object 1 ----->
-    From nobody ...
     From: aperson@example.com
     To: test@example.com
     Subject: Uh oh
