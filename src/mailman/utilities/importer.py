@@ -384,7 +384,7 @@ def import_config_pck(mlist, config_dict):
     # Import rosters.
     regulars_set = set(config_dict.get('members', {}))
     digesters_set = set(config_dict.get('digest_members', {}))
-    members = regulars_set + digesters_set
+    members = regulars_set.union(digesters_set)
     import_roster(mlist, config_dict, members, MemberRole.member)
     import_roster(mlist, config_dict, config_dict.get('owner', []),
                   MemberRole.owner)

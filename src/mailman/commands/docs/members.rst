@@ -236,7 +236,7 @@ taken from standard input.
     ...                 'fperson@example.com (Fred Person)',
     ...                 ):
     ...         print(address, file=fp)
-    >>> fp.seek(0)
+    >>> filepos = fp.seek(0)
     >>> import sys
     >>> sys.stdin = fp
 
