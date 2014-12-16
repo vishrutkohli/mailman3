@@ -64,7 +64,7 @@ Nothing.
         self.assertEqual(len(items), 1)
         self.assertMultiLineEqual(items[0].msg.as_string(),
                                   self.msg.as_string())
-        self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
+        self.assertEqual(items[0].msgdata['listid'], 'test.example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          len(self.msg.as_string()))
 
@@ -84,7 +84,7 @@ Nothing.
         self.assertEqual(len(items), 1)
         self.assertMultiLineEqual(items[0].msg.as_string(),
                                   self.msg.as_string())
-        self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
+        self.assertEqual(items[0].msgdata['listid'], 'test.example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          len(self.msg.as_string()))
 
@@ -171,7 +171,7 @@ Nothing.
         # Delete that header because it is not in the original text.
         del items[0].msg['x-message-id-hash']
         self.assertMultiLineEqual(items[0].msg.as_string(), self.text)
-        self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
+        self.assertEqual(items[0].msgdata['listid'], 'test.example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          # Add back the X-Message-ID-Header which was in the
                          # message contributing to the original_size, but
@@ -196,7 +196,7 @@ Nothing.
         # Remove the X-Message-ID-Hash header which isn't in the original text.
         del items[0].msg['x-message-id-hash']
         self.assertMultiLineEqual(items[0].msg.as_string(), self.text)
-        self.assertEqual(items[0].msgdata['listname'], 'test@example.com')
+        self.assertEqual(items[0].msgdata['listid'], 'test.example.com')
         self.assertEqual(items[0].msgdata['original_size'],
                          # Add back the X-Message-ID-Header which was in the
                          # message contributing to the original_size, but

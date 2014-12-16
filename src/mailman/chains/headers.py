@@ -122,7 +122,7 @@ class HeaderMatchChain(Chain):
         """See `IMutableChain`."""
         # Remove all dynamically created rules.  Use the keys so we can mutate
         # the dictionary inside the loop.
-        for rule_name in config.rules.keys():
+        for rule_name in list(config.rules):
             if rule_name.startswith('header-match-'):
                 del config.rules[rule_name]
         self._extended_links = []

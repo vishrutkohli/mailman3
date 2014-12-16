@@ -235,8 +235,8 @@ name of the file containing the message payload to filter.
     >>> try:
     ...     print("""\
     ... import sys
-    ... print 'Converted text/html to text/plain'
-    ... print 'Filename:', sys.argv[1]
+    ... print('Converted text/html to text/plain')
+    ... print('Filename:', sys.argv[1])
     ... """, file=fp)
     ... finally:
     ...     fp.close()

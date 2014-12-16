@@ -79,7 +79,7 @@ Message-ID: <ant>
         self.assertTrue(isinstance(event, RunnerCrashEvent))
         self.assertEqual(event.mailing_list, self._mlist)
         self.assertEqual(event.message['message-id'], '<ant>')
-        self.assertEqual(event.metadata['listname'], 'test@example.com')
+        self.assertEqual(event.metadata['listid'], 'test.example.com')
         self.assertTrue(isinstance(event.error, RuntimeError))
         self.assertEqual(str(event.error), 'borked')
         self.assertTrue(isinstance(event.runner, CrashingRunner))
