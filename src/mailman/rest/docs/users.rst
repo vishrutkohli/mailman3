@@ -277,27 +277,6 @@ Users can also be deleted via the API.
     server: ...
     status: 204
 
-Cris's resource cannot be retrieved either by email address...
-
-    >>> dump_json('http://localhost:9001/3.0/users/cris@example.com')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
-...or user id.
-
-    >>> dump_json('http://localhost:9001/3.0/users/3')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
-Cris's address records no longer exist either.
-
-    >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
 
 User addresses
 ==============
@@ -416,12 +395,3 @@ This time, Elly successfully logs into Mailman.
     date: ...
     server: ...
     status: 204
-
-But this time, she is unsuccessful.
-
-    >>> dump_json('http://localhost:9001/3.0/users/5/login', {
-    ...           'cleartext_password': 'not-the-password',
-    ...           }, method='POST')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 403: 403 Forbidden

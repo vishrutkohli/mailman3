@@ -134,7 +134,7 @@ def handle_message(mlist, id, action,
         # Start by getting the message from the message store.
         msg = message_store.get_message_by_id(message_id)
         # Delete moderation-specific entries from the message metadata.
-        for key in msgdata.keys():
+        for key in list(msgdata):
             if key.startswith('_mod_'):
                 del msgdata[key]
         # Add some metadata to indicate this message has now been approved.

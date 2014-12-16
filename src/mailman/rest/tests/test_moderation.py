@@ -125,3 +125,16 @@ Something else.
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.msg,
                          b'Cannot convert parameters: action')
+
+    def test_discard(self):
+        # Discarding a message removes it from the moderation queue.
+        with transaction():
+            held_id = hold_message(self._mlist, self._msg)
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{}'.format(
+            held_id)
+        content, response = call_api(url, dict(action='discard'))
+        self.assertEqual(response.status, 204)
+        # Now it's gone.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url, dict(action='discard'))
+        self.assertEqual(cm.exception.code, 404)

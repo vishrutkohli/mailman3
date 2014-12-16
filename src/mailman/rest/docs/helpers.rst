@@ -45,7 +45,7 @@ gets modified to contain the etag under the ``http_etag`` key.
     >>> resource = dict(geddy='bass', alex='guitar', neil='drums')
     >>> json_data = etag(resource)
     >>> print(resource['http_etag'])
-    "96e036d66248cab746b7d97047e08896fcfb2493"
+    "6929ecfbda2282980a4818fb75f82e812077f77a"
 
 For convenience, the etag function also returns the JSON representation of the
 dictionary after tagging, since that's almost always what you want.
@@ -58,7 +58,7 @@ dictionary after tagging, since that's almost always what you want.
     >>> dump_msgdata(data)
     alex     : guitar
     geddy    : bass
-    http_etag: "96e036d66248cab746b7d97047e08896fcfb2493"
+    http_etag: "6929ecfbda2282980a4818fb75f82e812077f77a"
     neil     : drums
 
 
@@ -82,7 +82,7 @@ On valid input, the validator can be used as a ``**keyword`` argument.
     >>> def print_request(one, two, three):
     ...     print(repr(one), repr(two), repr(three))
     >>> print_request(**validator(FakeRequest))
-    1 u'two' True
+    1 'two' True
 
 On invalid input, an exception is raised.
 
@@ -129,15 +129,15 @@ However, if optional keys are missing, it's okay.
     >>> def print_request(one, two, three, four=None, five=None):
     ...     print(repr(one), repr(two), repr(three), repr(four), repr(five))
     >>> print_request(**validator(FakeRequest))
-    1 u'two' True 4 5
+    1 'two' True 4 5
 
     >>> del FakeRequest.params['four']
     >>> print_request(**validator(FakeRequest))
-    1 u'two' True None 5
+    1 'two' True None 5
 
     >>> del FakeRequest.params['five']
     >>> print_request(**validator(FakeRequest))
-    1 u'two' True None None
+    1 'two' True None None
 
 But if the optional values are present, they must of course also be valid.
 

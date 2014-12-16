@@ -28,6 +28,7 @@ __all__ = [
 import os
 import argparse
 
+from functools import cmp_to_key
 from zope.interface.verify import verifyObject
 
 from mailman.core.i18n import _
@@ -77,9 +78,14 @@ def main():
             return -1
         elif other.name == 'help':
             return 1
+        elif command.name < other.name:
+            return -1
+        elif command.name == other.name:
+            return 0
         else:
-            return cmp(command.name, other.name)
-    subcommands.sort(cmp=sort_function)
+            assert command.name > other.name
+            return 1
+    subcommands.sort(key=cmp_to_key(sort_function))
     for command in subcommands:
         command_parser = subparser.add_parser(
             command.name, help=_(command.__doc__))

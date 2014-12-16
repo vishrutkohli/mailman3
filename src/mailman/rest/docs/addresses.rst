@@ -64,13 +64,6 @@ But his address record can be accessed with the case-preserved version too.
     registered_on: 2005-08-01T07:49:23
     self_link: http://localhost:9001/3.0/addresses/bart.person@example.com
 
-A non-existent email address can't be retrieved.
-
-    >>> dump_json('http://localhost:9001/3.0/addresses/nobody@example.com')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
 When an address has a real name associated with it, this is also available in
 the REST API.
 

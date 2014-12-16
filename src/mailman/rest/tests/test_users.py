@@ -107,6 +107,48 @@ class TestUsers(unittest.TestCase):
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
 
+    def test_delete_user_twice(self):
+        # You cannot DELETE a user twice, either by address or user id.
+        with transaction():
+            anne = getUtility(IUserManager).create_user(
+                'anne@example.com', 'Anne Person')
+            user_id = anne.user_id
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com',
+            method='DELETE')
+        self.assertEqual(response.status, 204)
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/anne@example.com',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/{}'.format(user_id),
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_get_after_delete(self):
+        # You cannot GET a user record after deleting them.
+        with transaction():
+            anne = getUtility(IUserManager).create_user(
+                'anne@example.com', 'Anne Person')
+            user_id = anne.user_id
+        # You can still GET the user record.
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com')
+        self.assertEqual(response.status, 200)
+        # Delete the user.
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com',
+            method='DELETE')
+        self.assertEqual(response.status, 204)
+        # The user record can no longer be retrieved.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/anne@example.com')
+        self.assertEqual(cm.exception.code, 404)
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/{}'.format(user_id))
+        self.assertEqual(cm.exception.code, 404)
+
     def test_existing_user_error(self):
         # Creating a user twice results in an error.
         call_api('http://localhost:9001/3.0/users', {
@@ -249,6 +291,21 @@ class TestLogin(unittest.TestCase):
             self.anne = user_manager.create_user(
                 'anne@example.com', 'Anne Person')
             self.anne.password = config.password_context.encrypt('abc123')
+
+    def test_login_with_cleartext_password(self):
+        # A user can log in with the correct clear text password.
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com/login', {
+                'cleartext_password': 'abc123',
+                }, method='POST')
+        self.assertEqual(response.status, 204)
+        # But the user cannot log in with an incorrect password.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/login', {
+                    'cleartext_password': 'not-the-password',
+                    }, method='POST')
+        self.assertEqual(cm.exception.code, 403)
 
     def test_wrong_parameter(self):
         # A bad request because it is mistyped the required attribute.

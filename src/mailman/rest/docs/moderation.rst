@@ -141,13 +141,6 @@ The held message can be discarded.
     server: ...
     status: 204
 
-After which, the message is gone from the moderation queue.
-
-    >>> dump_json(url(request_id))
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
 Messages can also be accepted via the REST API.  Let's hold a new message for
 moderation.
 ::

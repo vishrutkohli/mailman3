@@ -64,7 +64,7 @@ class TestDomains(unittest.TestCase):
         content, response = call_api(
             'http://localhost:9001/3.0/domains/example.com', method='DELETE')
         self.assertEqual(response.status, 204)
-        self.assertEqual(getUtility(IListManager).get('ant@example.com'), None)
+        self.assertIsNone(getUtility(IListManager).get('ant@example.com'))
 
     def test_missing_domain(self):
         # You get a 404 if you try to access a nonexisting domain.
@@ -78,4 +78,15 @@ class TestDomains(unittest.TestCase):
         with self.assertRaises(HTTPError) as cm:
             call_api(
                 'http://localhost:9001/3.0/domains/does-not-exist.com/lists')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_double_delete(self):
+        # You cannot delete a domain twice.
+        content, response = call_api(
+            'http://localhost:9001/3.0/domains/example.com',
+            method='DELETE')
+        self.assertEqual(response.status, 204)
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/example.com',
+                     method='DELETE')
         self.assertEqual(cm.exception.code, 404)

@@ -52,6 +52,12 @@ class TestAddresses(unittest.TestCase):
         self.assertEqual(json['start'], 0)
         self.assertEqual(json['total_size'], 0)
 
+    def test_missing_address(self):
+        # An address that isn't registered yet cannot be retrieved.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/addresses/nobody@example.com')
+        self.assertEqual(cm.exception.code, 404)
+
     def test_membership_of_missing_address(self):
         # Try to get the memberships of a missing address.
         with self.assertRaises(HTTPError) as cm:
