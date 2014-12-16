@@ -32,6 +32,7 @@ import mock
 import tempfile
 import unittest
 
+from contextlib import ExitStack
 from mailman.config.config import (
     Configuration, external_configuration, load_external)
 from mailman.interfaces.configuration import (
@@ -108,8 +109,12 @@ layout: nonesuch
         # Use a fake sys.exit() function that records that it was called, and
         # that prevents further processing.
         config = Configuration()
-        # Suppress warning messages in the test output.
-        with self.assertRaises(SystemExit) as cm, mock.patch('sys.stderr'):
+        # Suppress warning messages in the test output.  Also, make sure that
+        # the config.load() call doesn't break global state.
+        with ExitStack() as resources:
+            resources.enter_context(mock.patch('sys.stderr'))
+            resources.enter_context(mock.patch.object(config, '_clear'))
+            cm = resources.enter_context(self.assertRaises(SystemExit))
             config.load(filename)
         self.assertEqual(cm.exception.args, (1,))
 
@@ -125,7 +130,11 @@ layout: nonesuch
 log_dir: $nopath/log_dir
 """, file=fp)
         config = Configuration()
-        # Suppress warning messages in the test output.
-        with self.assertRaises(SystemExit) as cm, mock.patch('sys.stderr'):
+        # Suppress warning messages in the test output.  Also, make sure that
+        # the config.load() call doesn't break global state.
+        with ExitStack() as resources:
+            resources.enter_context(mock.patch('sys.stderr'))
+            resources.enter_context(mock.patch.object(config, '_clear'))
+            cm = resources.enter_context(self.assertRaises(SystemExit))
             config.load(filename)
         self.assertEqual(cm.exception.args, (1,))

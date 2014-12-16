@@ -116,3 +116,9 @@ class NosePlugin(Plugin):
         # Suppress the extra "Doctest: ..." line.
         test.shortDescription = lambda: None
         event.extraTests.append(test)
+
+    ## def startTest(self, event):
+    ##     import sys; print('vvvvv', event.test, file=sys.stderr)
+
+    ## def stopTest(self, event):
+    ##     import sys; print('^^^^^', event.test, file=sys.stderr)
