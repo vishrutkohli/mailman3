@@ -180,7 +180,7 @@ class TestBasicImport(unittest.TestCase):
 
     def test_moderator_password(self):
         # mod_password -> moderator_password
-        self._mlist.moderator_password = str('TESTDATA')
+        self._mlist.moderator_password = b'TESTDATA'
         self._import()
         self.assertEqual(self._mlist.moderator_password, None)
 
@@ -611,6 +611,8 @@ class TestRosterImport(unittest.TestCase):
         self._usermanager = getUtility(IUserManager)
         language_manager = getUtility(ILanguageManager)
         for code in self._pckdict['language'].values():
+            if isinstance(code, bytes):
+                code = code.decode('utf-8')
             if code not in language_manager.codes:
                 language_manager.add(code, 'utf-8', code)
 
@@ -643,8 +645,10 @@ class TestRosterImport(unittest.TestCase):
             addr = '%s@example.com' % name
             member = self._mlist.members.get_member(addr)
             self.assertIsNotNone(member, 'Address %s was not imported' % addr)
-            self.assertEqual(member.preferred_language.code,
-                             self._pckdict['language'][addr])
+            code = self._pckdict['language'][addr]
+            if isinstance(code, bytes):
+                code = code.decode('utf-8')
+            self.assertEqual(member.preferred_language.code, code)
 
     def test_new_language(self):
         self._pckdict['language']['anne@example.com'] = b'xx_XX'
@@ -700,7 +704,7 @@ class TestRosterImport(unittest.TestCase):
             user = self._usermanager.get_user(addr)
             self.assertIsNotNone(user, 'Address %s was not imported' % addr)
             self.assertEqual(
-                user.password, b'{plaintext}%spass' % name,
+                user.password, '{plaintext}%spass' % name,
                 'Password for %s was not imported' % addr)
 
     def test_same_user(self):

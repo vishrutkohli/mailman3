@@ -27,7 +27,6 @@ __all__ = [
 
 
 import os
-import six
 import sys
 import codecs
 import datetime
@@ -72,8 +71,10 @@ def bytes_to_str(value):
     return value.decode('ascii', 'replace')
 
 
-def unicode_to_string(value):
-    return None if value is None else str(value)
+def str_to_bytes(value):
+    if value is None or isinstance(value, bytes):
+        return value
+    return value.encode('utf-8')
 
 
 def seconds_to_delta(value):
@@ -171,7 +172,7 @@ TYPES = dict(
     forward_unrecognized_bounces_to=UnrecognizedBounceDisposition,
     gateway_to_mail=bool,
     include_rfc2369_headers=bool,
-    moderator_password=unicode_to_string,
+    moderator_password=str_to_bytes,
     newsgroup_moderation=NewsgroupModeration,
     nntp_prefix_subject_too=bool,
     pass_extensions=list_members_to_unicode,
@@ -246,7 +247,7 @@ def import_config_pck(mlist, config_dict):
         # If the mailing list has a preferred language that isn't registered
         # in the configuration file, hasattr() will swallow the KeyError this
         # raises and return False.  Treat that attribute specially.
-        if hasattr(mlist, key) or key == 'preferred_language':
+        if key == 'preferred_language' or hasattr(mlist, key):
             if isinstance(value, bytes):
                 value = bytes_to_str(value)
             # Some types require conversion.
@@ -285,9 +286,9 @@ def import_config_pck(mlist, config_dict):
         ban_manager.ban(bytes_to_str(address))
     # Handle acceptable aliases.
     acceptable_aliases = config_dict.get('acceptable_aliases', '')
-    if isinstance(acceptable_aliases, six.string_types):
-        if isinstance(acceptable_aliases, bytes):
-            acceptable_aliases = acceptable_aliases.decode('utf-8')
+    if isinstance(acceptable_aliases, bytes):
+        acceptable_aliases = acceptable_aliases.decode('utf-8')
+    if isinstance(acceptable_aliases, str):
         acceptable_aliases = acceptable_aliases.splitlines()
     alias_set = IAcceptableAliasSet(mlist)
     for address in acceptable_aliases:
