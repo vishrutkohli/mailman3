@@ -82,7 +82,7 @@ class NNTPRunner(Runner):
                                 user=config.nntp.user,
                                 password=config.nntp.password)
             conn.post(fp)
-        except nntplib.error_temp:
+        except nntplib.NNTPTemporaryError:
             log.exception('{0} NNTP error for {1}'.format(
                 msg.get('message-id', 'n/a'), mlist.fqdn_listname))
         except socket.error:

@@ -310,8 +310,9 @@ Testing
         mark = LogFileMark('mailman.error')
         self._runner.run()
         log_message = mark.readline()[:-1]
-        self.assertTrue(log_message.endswith(
-            'NNTP error for test@example.com'))
+        self.assertTrue(
+            log_message.endswith('NNTP error for test@example.com'),
+            log_message)
 
     @mock.patch('nntplib.NNTP', side_effect=socket.error)
     def test_connect_with_socket_failure(self, class_mock):
@@ -338,7 +339,7 @@ Testing
             'NNTP unexpected exception for test@example.com'))
         messages = get_queue_messages('nntp')
         self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].msgdata['listname'], 'test@example.com')
+        self.assertEqual(messages[0].msgdata['listid'], 'test.example.com')
         self.assertEqual(messages[0].msg['subject'], 'A newsgroup posting')
 
     @mock.patch('nntplib.NNTP', side_effect=nntplib.NNTPTemporaryError)
