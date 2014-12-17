@@ -30,7 +30,6 @@ import smtplib
 import unittest
 
 from datetime import datetime
-
 from mailman.config import config
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
@@ -117,6 +116,36 @@ Message-ID: <ant>
         # directory in var/queue.
         queue_directory = os.path.join(config.QUEUE_DIR, 'lmtp')
         self.assertFalse(os.path.isdir(queue_directory))
+
+    def test_nonexistent_mailing_list(self):
+        # Trying to post to a nonexistent mailing list is an error.
+        with self.assertRaises(smtplib.SMTPDataError) as cm:
+            self._lmtp.sendmail('anne@example.com',
+                                ['notalist@example.com'], """\
+From: anne.person@example.com
+To: notalist@example.com
+Subject: An interesting message
+Message-ID: <aardvark>
+
+""")
+        self.assertEqual(cm.exception.smtp_code, 550)
+        self.assertEqual(cm.exception.smtp_error,
+                         b'Requested action not taken: mailbox unavailable')
+
+    def test_missing_subaddress(self):
+        # Trying to send a message to a bogus subaddress is an error.
+        with self.assertRaises(smtplib.SMTPDataError) as cm:
+            self._lmtp.sendmail('anne@example.com',
+                                ['test-bogus@example.com'], """\
+From: anne.person@example.com
+To: test-bogus@example.com
+Subject: An interesting message
+Message-ID: <aardvark>
+
+""")
+        self.assertEqual(cm.exception.smtp_code, 550)
+        self.assertEqual(cm.exception.smtp_error,
+                         b'Requested action not taken: mailbox unavailable')
 
 
 
