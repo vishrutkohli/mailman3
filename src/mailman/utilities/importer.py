@@ -59,7 +59,7 @@ class Import21Error(MailmanError):
 
 
 
-def str_to_unicode(value):
+def bytes_to_str(value):
     # Convert a string to unicode when the encoding is not declared.
     if not isinstance(value, bytes):
         return value
@@ -85,7 +85,7 @@ def days_to_delta(value):
 
 
 def list_members_to_unicode(value):
-    return [str_to_unicode(item) for item in value]
+    return [bytes_to_str(item) for item in value]
 
 
 
@@ -133,7 +133,7 @@ def nonmember_action_mapping(value):
 def check_language_code(code):
     if code is None:
         return None
-    code = str_to_unicode(code)
+    code = bytes_to_str(code)
     if code not in getUtility(ILanguageManager):
         msg = """Missing language: {0}
 You must add a section describing this language to your mailman.cfg file.
@@ -214,8 +214,10 @@ DATETIME_COLUMNS = [
     ]
 
 EXCLUDES = set((
+    'delivery_status',
     'digest_members',
     'members',
+    'user_options',
     ))
 
 
@@ -245,8 +247,8 @@ def import_config_pck(mlist, config_dict):
         # in the configuration file, hasattr() will swallow the KeyError this
         # raises and return False.  Treat that attribute specially.
         if hasattr(mlist, key) or key == 'preferred_language':
-            if isinstance(value, str):
-                value = str_to_unicode(value)
+            if isinstance(value, bytes):
+                value = bytes_to_str(value)
             # Some types require conversion.
             converter = TYPES.get(key)
             try:
@@ -280,17 +282,19 @@ def import_config_pck(mlist, config_dict):
     # Handle ban list.
     ban_manager = IBanManager(mlist)
     for address in config_dict.get('ban_list', []):
-        ban_manager.ban(str_to_unicode(address))
+        ban_manager.ban(bytes_to_str(address))
     # Handle acceptable aliases.
     acceptable_aliases = config_dict.get('acceptable_aliases', '')
     if isinstance(acceptable_aliases, six.string_types):
+        if isinstance(acceptable_aliases, bytes):
+            acceptable_aliases = acceptable_aliases.decode('utf-8')
         acceptable_aliases = acceptable_aliases.splitlines()
     alias_set = IAcceptableAliasSet(mlist)
     for address in acceptable_aliases:
         address = address.strip()
         if len(address) == 0:
             continue
-        address = str_to_unicode(address)
+        address = bytes_to_str(address)
         try:
             alias_set.add(address)
         except ValueError:
@@ -410,7 +414,7 @@ def import_roster(mlist, config_dict, members, role):
     for email in members:
         # For owners and members, the emails can have a mixed case, so
         # lowercase them all.
-        email = str_to_unicode(email).lower()
+        email = bytes_to_str(email).lower()
         if roster.get_member(email) is not None:
             print('{} is already imported with role {}'.format(email, role),
                   file=sys.stderr)
@@ -424,7 +428,7 @@ def import_roster(mlist, config_dict, members, role):
                 merged_members.update(config_dict.get('members', {}))
                 merged_members.update(config_dict.get('digest_members', {}))
                 if merged_members.get(email, 0) != 0:
-                    original_email = str_to_unicode(merged_members[email])
+                    original_email = bytes_to_str(merged_members[email])
                 else:
                     original_email = email
                 address = usermanager.create_address(original_email)
@@ -452,9 +456,9 @@ def import_roster(mlist, config_dict, members, role):
         # overwritten.
         if email in config_dict.get('usernames', {}):
             address.display_name = \
-                str_to_unicode(config_dict['usernames'][email])
+                bytes_to_str(config_dict['usernames'][email])
             user.display_name    = \
-                str_to_unicode(config_dict['usernames'][email])
+                bytes_to_str(config_dict['usernames'][email])
         if email in config_dict.get('passwords', {}):
             user.password = config.password_context.encrypt(
                 config_dict['passwords'][email])

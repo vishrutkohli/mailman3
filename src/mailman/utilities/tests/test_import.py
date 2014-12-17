@@ -77,7 +77,7 @@ class TestBasicImport(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('blank@example.com')
         pickle_file = resource_filename('mailman.testing', 'config.pck')
-        with open(pickle_file) as fp:
+        with open(pickle_file, 'rb') as fp:
             self._pckdict = load(fp)
 
     def _import(self):
@@ -186,7 +186,7 @@ class TestBasicImport(unittest.TestCase):
 
     def test_moderator_password_str(self):
         # moderator_password must not be unicode
-        self._pckdict[b'mod_password'] = b'TESTVALUE'
+        self._pckdict['mod_password'] = b'TESTVALUE'
         self._import()
         self.assertNotIsInstance(self._mlist.moderator_password, six.text_type)
         self.assertEqual(self._mlist.moderator_password, b'TESTVALUE')
@@ -227,7 +227,7 @@ class TestBasicImport(unittest.TestCase):
                    'alias2@exemple.com',
                    'non-ascii-\xe8@example.com',
                    ]
-        self._pckdict[b'acceptable_aliases'] = list_to_string(aliases)
+        self._pckdict['acceptable_aliases'] = list_to_string(aliases)
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
         self.assertEqual(sorted(alias_set.aliases), aliases)
@@ -236,7 +236,7 @@ class TestBasicImport(unittest.TestCase):
         # Values without an '@' sign used to be matched against the local
         # part, now we need to add the '^' sign to indicate it's a regexp.
         aliases = ['invalid-value']
-        self._pckdict[b'acceptable_aliases'] = list_to_string(aliases)
+        self._pckdict['acceptable_aliases'] = list_to_string(aliases)
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
         self.assertEqual(sorted(alias_set.aliases),
@@ -246,30 +246,31 @@ class TestBasicImport(unittest.TestCase):
         # In some versions of the pickle, this can be a list, not a string
         # (seen in the wild).
         aliases = [b'alias1@example.com', b'alias2@exemple.com' ]
-        self._pckdict[b'acceptable_aliases'] = aliases
+        self._pckdict['acceptable_aliases'] = aliases
         self._import()
         alias_set = IAcceptableAliasSet(self._mlist)
-        self.assertEqual(sorted(alias_set.aliases), aliases)
+        self.assertEqual(sorted(alias_set.aliases),
+                         sorted(a.decode('utf-8') for a in aliases))
 
     def test_info_non_ascii(self):
         # info can contain non-ascii characters.
         info = 'O idioma aceito \xe9 somente Portugu\xeas do Brasil'
-        self._pckdict[b'info'] = info.encode('utf-8')
+        self._pckdict['info'] = info.encode('utf-8')
         self._import()
         self.assertEqual(self._mlist.info, info,
                          'Encoding to UTF-8 is not handled')
         # Test fallback to ascii with replace.
-        self._pckdict[b'info'] = info.encode('iso-8859-1')
+        self._pckdict['info'] = info.encode('iso-8859-1')
         # Suppress warning messages in test output.
         with mock.patch('sys.stderr'):
             self._import()
         self.assertEqual(
             self._mlist.info,
-            self._pckdict[b'info'].decode('ascii', 'replace'),
+            self._pckdict['info'].decode('ascii', 'replace'),
             "We don't fall back to replacing non-ascii chars")
 
     def test_preferred_language(self):
-        self._pckdict[b'preferred_language'] = b'ja'
+        self._pckdict['preferred_language'] = b'ja'
         english = getUtility(ILanguageManager).get('en')
         japanese = getUtility(ILanguageManager).get('ja')
         self.assertEqual(self._mlist.preferred_language, english)
@@ -284,7 +285,7 @@ class TestBasicImport(unittest.TestCase):
         self.assertEqual(self._mlist.preferred_language, english)
 
     def test_new_language(self):
-        self._pckdict[b'preferred_language'] = b'xx_XX'
+        self._pckdict['preferred_language'] = b'xx_XX'
         try:
             self._import()
         except Import21Error as error:
@@ -410,35 +411,35 @@ class TestMemberActionImport(unittest.TestCase):
         # Suppress warning messages in the test output.
         with mock.patch('sys.stderr'):
             import_config_pck(self._mlist, self._pckdict)
-        for key, value in expected.iteritems():
+        for key, value in expected.items():
             self.assertEqual(getattr(self._mlist, key), value)
 
     def test_member_hold(self):
-        self._pckdict[b'member_moderation_action'] = 0
+        self._pckdict['member_moderation_action'] = 0
         self._do_test(dict(default_member_action=Action.hold))
 
     def test_member_reject(self):
-        self._pckdict[b'member_moderation_action'] = 1
+        self._pckdict['member_moderation_action'] = 1
         self._do_test(dict(default_member_action=Action.reject))
 
     def test_member_discard(self):
-        self._pckdict[b'member_moderation_action'] = 2
+        self._pckdict['member_moderation_action'] = 2
         self._do_test(dict(default_member_action=Action.discard))
 
     def test_nonmember_accept(self):
-        self._pckdict[b'generic_nonmember_action'] = 0
+        self._pckdict['generic_nonmember_action'] = 0
         self._do_test(dict(default_nonmember_action=Action.accept))
 
     def test_nonmember_hold(self):
-        self._pckdict[b'generic_nonmember_action'] = 1
+        self._pckdict['generic_nonmember_action'] = 1
         self._do_test(dict(default_nonmember_action=Action.hold))
 
     def test_nonmember_reject(self):
-        self._pckdict[b'generic_nonmember_action'] = 2
+        self._pckdict['generic_nonmember_action'] = 2
         self._do_test(dict(default_nonmember_action=Action.reject))
 
     def test_nonmember_discard(self):
-        self._pckdict[b'generic_nonmember_action'] = 3
+        self._pckdict['generic_nonmember_action'] = 3
         self._do_test(dict(default_nonmember_action=Action.discard))
 
 
@@ -525,9 +526,9 @@ class TestConvertToURI(unittest.TestCase):
         # if it changed from the default so don't import.  We may do more harm
         # than good and it's easy to change if needed.
         test_value = b'TEST-VALUE'
-        for oldvar, newvar in self._conf_mapping.iteritems():
+        for oldvar, newvar in self._conf_mapping.items():
             self._mlist.mail_host = 'example.com'
-            self._pckdict[b'mail_host'] = b'test.example.com'
+            self._pckdict['mail_host'] = b'test.example.com'
             self._pckdict[str(oldvar)] = test_value
             old_value = getattr(self._mlist, newvar)
             # Suppress warning messages in the test output.
@@ -542,7 +543,7 @@ class TestConvertToURI(unittest.TestCase):
         for oldvar in self._conf_mapping:
             self._pckdict[str(oldvar)] = b'Ol\xe1!'
         import_config_pck(self._mlist, self._pckdict)
-        for oldvar, newvar in self._conf_mapping.iteritems():
+        for oldvar, newvar in self._conf_mapping.items():
             newattr = getattr(self._mlist, newvar)
             text = decorate(self._mlist, newattr)
             expected = u'Ol\ufffd!'
@@ -558,7 +559,7 @@ class TestConvertToURI(unittest.TestCase):
         makedirs(os.path.dirname(footer_path))
         with open(footer_path, 'wb') as fp:
             fp.write(footer)
-        self._pckdict[b'msg_footer'] = b'NEW-VALUE'
+        self._pckdict['msg_footer'] = b'NEW-VALUE'
         import_config_pck(self._mlist, self._pckdict)
         text = decorate(self._mlist, self._mlist.footer_uri)
         self.assertEqual(text, 'NEW-VALUE')
@@ -646,7 +647,7 @@ class TestRosterImport(unittest.TestCase):
                              self._pckdict['language'][addr])
 
     def test_new_language(self):
-        self._pckdict[b'language']['anne@example.com'] = b'xx_XX'
+        self._pckdict['language']['anne@example.com'] = b'xx_XX'
         try:
             import_config_pck(self._mlist, self._pckdict)
         except Import21Error as error:
@@ -766,7 +767,7 @@ class TestPreferencesImport(unittest.TestCase):
         self.assertIsNotNone(user, 'User was not imported')
         member = self._mlist.members.get_member('anne@example.com')
         self.assertIsNotNone(member, 'Address was not subscribed')
-        for exp_name, exp_val in expected.iteritems():
+        for exp_name, exp_val in expected.items():
             try:
                 currentval = getattr(member, exp_name)
             except AttributeError:
@@ -832,8 +833,10 @@ class TestPreferencesImport(unittest.TestCase):
 
     def test_multiple_options(self):
         # DontReceiveDuplicates & DisableMime & SuppressPasswordReminder
-        self._pckdict[b'digest_members'] = self._pckdict[b'members'].copy()
-        self._pckdict[b'members'] = dict()
+        # Keys might be Python 2 str/bytes or unicode.
+        members = self._pckdict['members']
+        self._pckdict['digest_members'] = members.copy()
+        self._pckdict['members'] = dict()
         self._do_test(296, dict(
                 receive_list_copy=False,
                 delivery_mode=DeliveryMode.plaintext_digests,
