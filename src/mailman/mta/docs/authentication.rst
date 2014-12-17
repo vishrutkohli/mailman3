@@ -60,7 +60,7 @@ But if the user name and password does not match, the connection will fail.
     >>> response = bulk.deliver(
     ...     mlist, msg, dict(recipients=['bperson@example.com']))
     >>> dump_msgdata(response)
-    bperson@example.com: (571, 'Bad authentication')
+    bperson@example.com: (571, b'Bad authentication')
 
     >>> config.pop('auth')
 

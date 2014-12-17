@@ -67,7 +67,7 @@ Subject: This has no Message-ID header
         # reasons)
         self.assertEqual(cm.exception.smtp_code, 550)
         self.assertEqual(cm.exception.smtp_error,
-                         'No Message-ID header provided')
+                         b'No Message-ID header provided')
 
     def test_message_id_hash_is_added(self):
         self._lmtp.sendmail('anne@example.com', ['test@example.com'], """\

@@ -92,11 +92,11 @@ SUBADDRESS_QUEUES = dict(
 
 DASH    = '-'
 CRLF    = '\r\n'
-ERR_451 = b'451 Requested action aborted: error in processing'
-ERR_501 = b'501 Message has defects'
-ERR_502 = b'502 Error: command HELO not implemented'
-ERR_550 = b'550 Requested action not taken: mailbox unavailable'
-ERR_550_MID = b'550 No Message-ID header provided'
+ERR_451 = '451 Requested action aborted: error in processing'
+ERR_501 = '501 Message has defects'
+ERR_502 = '502 Error: command HELO not implemented'
+ERR_550 = '550 Requested action not taken: mailbox unavailable'
+ERR_550_MID = '550 No Message-ID header provided'
 
 # XXX Blech
 smtpd.__version__ = 'Python LMTP runner 1.0'
