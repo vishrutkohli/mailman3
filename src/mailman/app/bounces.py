@@ -71,8 +71,8 @@ def bounce_message(mlist, msg, error=None):
     :type error: Exception
     """
     # Bounce a message back to the sender, with an error message if provided
-    # in the exception argument.
-    if msg.sender is None:
+    # in the exception argument.  .sender might be None or the empty string.
+    if not msg.sender:
         # We can't bounce the message if we don't know who it's supposed to go
         # to.
         return
