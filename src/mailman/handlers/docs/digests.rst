@@ -82,11 +82,13 @@ actually crafted by the handler.
     >>> mlist.digest_size_threshold = 1
     >>> mlist.volume = 2
     >>> mlist.next_digest_number = 10
+    >>> digest_path = os.path.join(mlist.data_path, 'digest.mmdf')
     >>> size = 0
     >>> for msg in message_factory:
     ...     process(mlist, msg, {})
-    ...     size += len(str(msg))
-    ...     if size >= mlist.digest_size_threshold * 1024:
+    ...     # When the digest reaches the proper size, it is renamed.  So we
+    ...     # can break out of this list when the file disappears.
+    ...     if not os.path.exists(digest_path):
     ...         break
 
     >>> sum(1 for msg in digest_mbox(mlist))
