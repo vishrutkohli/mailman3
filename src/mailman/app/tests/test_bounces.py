@@ -334,7 +334,7 @@ $owneraddr
         send_probe(self._member, self._msg)
         message = get_queue_messages('virgin')[0].msg
         self.assertEqual(
-            message['Subject'],
+            message['subject'].encode(),
             '=?utf-8?q?ailing-may_ist-lay_Test_obe-pray_essage-may?=')
 
     def test_probe_notice_with_member_nonenglish(self):
