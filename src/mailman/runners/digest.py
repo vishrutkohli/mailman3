@@ -259,17 +259,16 @@ class RFC1153Digester(Digester):
         # multipart message.  In that case, just stringify it.
         payload = msg.get_payload(decode=True)
         if not payload:
-            # Split using bytes so as not to turn the payload into unicode
-            # strings due to unicode_literals above.
-            payload = msg.as_string().split(b'\n\n', 1)[1]
-        try:
-            # Do the decoding inside the try/except so that if the charset
-            # conversion fails, we'll just drop back to ascii.
-            charset = msg.get_content_charset('us-ascii')
-            payload = payload.decode(charset, 'replace')
-        except (LookupError, TypeError):
-            # Unknown or empty charset.
-            payload = payload.decode('us-ascii', 'replace')
+            payload = msg.as_string().split('\n\n', 1)[1]
+        if isinstance(payload, bytes):
+            try:
+                # Do the decoding inside the try/except so that if the charset
+                # conversion fails, we'll just drop back to ascii.
+                charset = msg.get_content_charset('us-ascii')
+                payload = payload.decode(charset, 'replace')
+            except (LookupError, TypeError):
+                # Unknown or empty charset.
+                payload = payload.decode('us-ascii', 'replace')
         print(payload, file=self._text)
         if not payload.endswith('\n'):
             print(file=self._text)
