@@ -132,8 +132,8 @@ class TestTemplateLoader(unittest.TestCase):
         test_text = b'\xe4\xb8\xad'
         path = os.path.join(self.var_dir, 'templates', 'site', 'it')
         os.makedirs(path)
-        with open(os.path.join(path, 'demo.txt'), 'w') as fp:
-            print(test_text, end='', file=fp)
+        with open(os.path.join(path, 'demo.txt'), 'wb') as fp:
+            fp.write(test_text)
         content = self._loader.get('mailman:///it/demo.txt')
         self.assertIsInstance(content, six.text_type)
         self.assertEqual(content, test_text.decode('utf-8'))
