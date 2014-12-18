@@ -81,7 +81,7 @@ class MHonArc:
         command = expand(self.command, substitutions)
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            shell=True)
+            universal_newlines=True, shell=True)
         stdout, stderr = proc.communicate(msg.as_string())
         if proc.returncode != 0:
             log.error('%s: mhonarc subprocess had non-zero exit code: %s' %
