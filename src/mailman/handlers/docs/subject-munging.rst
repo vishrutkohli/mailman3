@@ -122,10 +122,10 @@ set than the encoded header.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest] =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-    >>> msg['subject'].decode('utf-8')
-    u'[XTest] \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest] メールマン
 
 
 Prefix numbers
@@ -178,10 +178,10 @@ in the subject prefix, and the subject is encoded non-ASCII.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest 456] =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-    >>> msg['subject'].decode('utf-8')
-    u'[XTest 456] \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest 456] メールマン
 
 Even more fun is when the internationalized ``Subject`` header already has a
 prefix, possibly with a different posting number.
@@ -191,11 +191,10 @@ prefix, possibly with a different posting number.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest 456] Re: =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-
-    >>> msg['subject'].decode('utf-8')
-    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest 456]  Re: メールマン
 
 As before, old style subject prefixes are re-ordered.
 
@@ -204,12 +203,11 @@ As before, old style subject prefixes are re-ordered.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest 456] Re:
       =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-
-    >>> msg['subject'].decode('utf-8')
-    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest 456]  Re: メールマン
 
 
 In this test case, we get an extra space between the prefix and the original
