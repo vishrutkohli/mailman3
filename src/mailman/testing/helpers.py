@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'LogFileMark',
+    'PrettyEmailPolicy',
     'TestableMaster',
     'call_api',
     'chdir',
@@ -61,9 +62,11 @@ from httplib2 import Http
 from lazr.config import as_timedelta
 from six.moves.urllib_error import HTTPError
 from six.moves.urllib_parse import urlencode
+from unittest.mock import patch
 from zope import event
 from zope.component import getUtility
 
+from email.policy import Compat32
 from mailman.bin.master import Loop as Master
 from mailman.config import config
 from mailman.database.transaction import transaction
@@ -532,3 +535,25 @@ class LogFileMark:
         with open(self._filename) as fp:
             fp.seek(self._filepos)
             return fp.read()
+
+
+
+def _pretty(self, *args, **kws):
+    return str(self)
+
+
+class PrettyEmailPolicy(Compat32):
+    """Horrible hack to make mailman/runners/docs/digester.rst work.
+
+    Back in Python 2 days, the i18n'd headers printed in digester.rst used the
+    full unicode string version, instead of the RFC 2047 encoded headers.
+    It's more correct to use the RFC 2047 headers, but it's also uglier in a
+    doctest, so to port the doctest to Python 3, we use this email policy hack
+    to get the headers printed as (unicode) strings instead of RFC 2047
+    encoded headers.
+    """
+    # This will hurt your eyeballs.  It relies on the specific implementation
+    # of Compat32 and it *will* break if that class is refactored.
+    @patch('email.header.Header.encode', _pretty)
+    def _fold(self, name, value, sanitize):
+        return super()._fold(name, value, sanitize)
