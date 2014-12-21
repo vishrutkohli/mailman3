@@ -44,9 +44,9 @@ A user can be assigned a real name.
 
 A user can be assigned a password.
 
-    >>> user.password = b'secret'
+    >>> user.password = 'secret'
     >>> dump_list(user.password for user in user_manager.users)
-    b'secret'
+    secret
 
 You can also create a user with an address to start out with.
 
