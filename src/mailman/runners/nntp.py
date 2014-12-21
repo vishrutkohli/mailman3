@@ -111,9 +111,9 @@ def prepare_message(mlist, msg, msgdata):
         del msg['approved']
         msg['Approved'] = mlist.posting_address
     # Should we restore the original, non-prefixed subject for gatewayed
-    # messages? TK: We use stripped_subject (prefix stripped) which was
-    # crafted in CookHeaders.py to ensure prefix was stripped from the subject
-    # came from mailing list user.
+    # messages? TK: We use stripped_subject (prefix stripped) which was crafted
+    # in the subject-prefix handler to ensure prefix was stripped from the
+    # subject came from mailing list user.
     stripped_subject = msgdata.get('stripped_subject',
                                    msgdata.get('original_subject'))
     if not mlist.nntp_prefix_subject_too and stripped_subject is not None:

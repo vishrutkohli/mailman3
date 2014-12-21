@@ -45,9 +45,9 @@ etc.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     Archived-At: http://lists.example.com/.../4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
     List-Archive: <http://lists.example.com/archives/test@example.com>
@@ -84,9 +84,9 @@ processing queues.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     ...
     <BLANKLINE>
@@ -121,9 +121,9 @@ delivered to end recipients.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     ...
     <BLANKLINE>
@@ -152,9 +152,9 @@ There's now one message in the digest mailbox, getting ready to be sent.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     ...
     <BLANKLINE>

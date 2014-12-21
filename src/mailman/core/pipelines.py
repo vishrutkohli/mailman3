@@ -120,6 +120,7 @@ class PostingPipeline(BasePipeline):
         'cleanse',
         'cleanse-dkim',
         'cook-headers',
+        'subject-prefix',
         'rfc-2369',
         'to-archive',
         'to-digest',
