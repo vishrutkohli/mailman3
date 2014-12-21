@@ -20,21 +20,21 @@ User data
 Users may have a real name and a password.
 
     >>> user_1 = user_manager.create_user()
-    >>> user_1.password = b'my password'
+    >>> user_1.password = 'my password'
     >>> user_1.display_name = 'Zoe Person'
     >>> dump_list(user.display_name for user in user_manager.users)
     Zoe Person
     >>> dump_list(user.password for user in user_manager.users)
-    b'my password'
+    my password
 
 The password and real name can be changed at any time.
 
     >>> user_1.display_name = 'Zoe X. Person'
-    >>> user_1.password = b'another password'
+    >>> user_1.password = 'another password'
     >>> dump_list(user.display_name for user in user_manager.users)
     Zoe X. Person
     >>> dump_list(user.password for user in user_manager.users)
-    b'another password'
+    another password
 
 When the user's password is changed, an event is triggered.
 
@@ -44,7 +44,7 @@ When the user's password is changed, an event is triggered.
     ...     saved_event = event
     >>> from mailman.testing.helpers import event_subscribers
     >>> with event_subscribers(save_event):
-    ...     user_1.password = b'changed again'
+    ...     user_1.password = 'changed again'
     >>> print(saved_event)
     <PasswordChangeEvent Zoe X. Person>
 
@@ -53,7 +53,7 @@ The event holds a reference to the `IUser` that changed their password.
     >>> print(saved_event.user.display_name)
     Zoe X. Person
     >>> print(saved_event.user.password)
-    b'changed again'
+    changed again
 
 
 Basic user identification
