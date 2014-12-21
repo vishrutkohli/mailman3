@@ -145,6 +145,9 @@ def initialize(propagate=None):
             continue
         if sub_name == 'locks':
             log = logging.getLogger('flufl.lock')
+            # Explicitly prevent flufl.lock from propagating its log messages
+            # to its root logger, i.e. the console.
+            log.propagate = False
         if sub_name == 'database':
             # Set both the SQLAlchemy and Alembic logs to the mailman.database
             # log configuration, essentially ignoring the alembic.cfg settings.
