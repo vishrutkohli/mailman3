@@ -28,6 +28,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'Message',
+    'MultipartDigestMessage',
     'OwnerNotification',
     'UserNotification',
     ]
@@ -38,6 +39,7 @@ import email.message
 import email.utils
 
 from email.header import Header
+from email.mime.multipart import MIMEMultipart
 
 from mailman.config import config
 
@@ -52,29 +54,6 @@ class Message(email.message.Message):
         # We need a version number so that we can optimize __setstate__().
         self.__version__ = VERSION
         email.message.Message.__init__(self)
-
-    def __getitem__(self, key):
-        # Ensure that header values are unicodes.
-        value = email.message.Message.__getitem__(self, key)
-        if isinstance(value, bytes):
-            return value.decode('ascii')
-        return value
-
-    def get(self, name, failobj=None):
-        # Ensure that header values are unicodes.
-        value = email.message.Message.get(self, name, failobj)
-        if isinstance(value, bytes):
-            return value.decode('ascii')
-        return value
-
-    def get_all(self, name, failobj=None):
-        # Ensure all header values are unicodes.
-        missing = object()
-        all_values = email.message.Message.get_all(self, name, missing)
-        if all_values is missing:
-            return failobj
-        return [(value.decode('ascii') if isinstance(value, bytes) else value)
-                for value in all_values]
 
     # BAW: For debugging w/ bin/dumpdb.  Apparently pprint uses repr.
     def __repr__(self):
@@ -144,18 +123,20 @@ class Message(email.message.Message):
                 field_values = self.get_all(header, [])
                 senders.extend(address.lower() for (display_name, address)
                                in email.utils.getaddresses(field_values))
-        # Filter out None and the empty string.
-        return [sender for sender in senders if sender]
+        # Filter out None and the empty string, and convert to unicode.
+        clean_senders = []
+        for sender in senders:
+            if not sender:
+                continue
+            if isinstance(sender, bytes):
+                sender = sender.decode('ascii')
+            clean_senders.append(sender)
+        return clean_senders
 
-    def get_filename(self, failobj=None):
-        """Some MUA have bugs in RFC2231 filename encoding and cause
-        Mailman to stop delivery in Scrubber.py (called from ToDigest.py).
-        """
-        try:
-            filename = email.message.Message.get_filename(self, failobj)
-            return filename
-        except (UnicodeError, LookupError, ValueError):
-            return failobj
+
+
+class MultipartDigestMessage(MIMEMultipart, Message):
+    """Mix-in class for MIME digest messages."""
 
 
 

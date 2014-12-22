@@ -22,7 +22,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'LogFileMark',
-    'PrettyEmailPolicy',
     'TestableMaster',
     'call_api',
     'chdir',
@@ -32,6 +31,7 @@ __all__ = [
     'get_lmtp_client',
     'get_nntp_server',
     'get_queue_messages',
+    'make_digest_messages',
     'make_testable_runner',
     'reset_the_world',
     'specialized_message_from_string',
@@ -62,11 +62,9 @@ from httplib2 import Http
 from lazr.config import as_timedelta
 from six.moves.urllib_error import HTTPError
 from six.moves.urllib_parse import urlencode
-from unittest.mock import patch
 from zope import event
 from zope.component import getUtility
 
-from email.policy import Compat32
 from mailman.bin.master import Loop as Master
 from mailman.config import config
 from mailman.database.transaction import transaction
@@ -75,6 +73,7 @@ from mailman.interfaces.member import MemberRole
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.usermanager import IUserManager
+from mailman.runners.digest import DigestRunner
 from mailman.utilities.mailbox import Mailbox
 
 
@@ -538,22 +537,21 @@ class LogFileMark:
 
 
 
-def _pretty(self, *args, **kws):
-    return str(self)
+def make_digest_messages(mlist, msg=None):
+    if msg is None:
+        msg = specialized_message_from_string("""\
+From: anne@example.org
+To: {listname}
+Message-ID: <testing>
 
-
-class PrettyEmailPolicy(Compat32):
-    """Horrible hack to make mailman/runners/docs/digester.rst work.
-
-    Back in Python 2 days, the i18n'd headers printed in digester.rst used the
-    full unicode string version, instead of the RFC 2047 encoded headers.
-    It's more correct to use the RFC 2047 headers, but it's also uglier in a
-    doctest, so to port the doctest to Python 3, we use this email policy hack
-    to get the headers printed as (unicode) strings instead of RFC 2047
-    encoded headers.
-    """
-    # This will hurt your eyeballs.  It relies on the specific implementation
-    # of Compat32 and it *will* break if that class is refactored.
-    @patch('email.header.Header.encode', _pretty)
-    def _fold(self, name, value, sanitize):
-        return super()._fold(name, value, sanitize)
+message triggering a digest
+""".format(listname=mlist.fqdn_listname))
+    mbox_path = os.path.join(mlist.data_path, 'digest.mmdf')
+    config.handlers['to-digest'].process(mlist, msg, {})
+    config.switchboards['digest'].enqueue(
+        msg,
+        listname=mlist.fqdn_listname,
+        digest_path=mbox_path,
+        volume=1, digest_number=1)
+    runner = make_testable_runner(DigestRunner, 'digest')
+    runner.run()

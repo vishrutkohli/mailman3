@@ -30,14 +30,13 @@ import logging
 
 from copy import deepcopy
 from email.header import Header
-from email.message import Message
 from email.mime.message import MIMEMessage
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate, getaddresses, make_msgid
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.runner import Runner
+from mailman.email.message import Message, MultipartDigestMessage
 from mailman.handlers.decorate import decorate
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.utilities.i18n import make
@@ -170,7 +169,7 @@ class MIMEDigester(Digester):
         self._keepers = set(config.digests.mime_digest_keep_headers.split())
 
     def _make_message(self):
-        return MIMEMultipart('mixed')
+        return MultipartDigestMessage('mixed')
 
     def add_toc(self, count):
         """Add the table of contents."""

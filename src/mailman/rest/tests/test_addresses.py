@@ -211,3 +211,177 @@ class TestAddresses(unittest.TestCase):
                     'email': 'anne.person@example.org',
                     })
         self.assertEqual(cm.exception.code, 404)
+
+    def test_address_with_user(self):
+        # An address which is already linked to a user has a 'user' key in the
+        # JSON representation.
+        with transaction():
+            getUtility(IUserManager).create_user('anne@example.com')
+        json, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com')
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(json['user'], 'http://localhost:9001/3.0/users/1')
+
+    def test_address_without_user(self):
+        # The 'user' key is missing from the JSON representation of an address
+        # with no linked user.
+        with transaction():
+            getUtility(IUserManager).create_address('anne@example.com')
+        json, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com')
+        self.assertEqual(headers['status'], '200')
+        self.assertNotIn('user', json)
+
+    def test_user_subresource_on_unlinked_address(self):
+        # Trying to access the 'user' subresource on an address that is not
+        # linked to a user will return a 404 error.
+        with transaction():
+            getUtility(IUserManager).create_address('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_user_subresource(self):
+        # For an address which is linked to a user, accessing the user
+        # subresource of the address path returns the user JSON representation.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            user_manager.create_user('anne@example.com', 'Anne')
+        json, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user')
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(json['user_id'], 1)
+        self.assertEqual(json['display_name'], 'Anne')
+        user_resource = json['self_link']
+        self.assertEqual(user_resource, 'http://localhost:9001/3.0/users/1')
+        # The self_link points to the correct user.
+        json, headers = call_api(user_resource)
+        self.assertEqual(json['user_id'], 1)
+        self.assertEqual(json['display_name'], 'Anne')
+        self.assertEqual(json['self_link'], user_resource)
+
+    def test_user_subresource_post(self):
+        # If the address is not yet linked to a user, POSTing a user id to the
+        # 'user' subresource links the address to the given user.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne.person@example.org', 'Anne')
+            anne_addr = user_manager.create_address('anne@example.com')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'user_id': anne.user_id.int,
+                })
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(anne_addr.user, anne)
+        self.assertEqual(sorted([a.email for a in anne.addresses]),
+                         ['anne.person@example.org', 'anne@example.com'])
+
+    def test_user_subresource_post_new_user(self):
+        # If the address is not yet linked to a user, POSTing to the 'user'
+        # subresources creates a new user object and links it to the address.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne_addr = user_manager.create_address('anne@example.com')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'display_name': 'Anne',
+                })
+        self.assertEqual(headers['status'], '201')
+        anne = user_manager.get_user('anne@example.com')
+        self.assertIsNotNone(anne)
+        self.assertEqual(anne.display_name, 'Anne')
+        self.assertEqual([a.email for a in anne.addresses],
+                         ['anne@example.com'])
+        self.assertEqual(anne_addr.user, anne)
+        self.assertEqual(headers['location'],
+                         'http://localhost:9001/3.0/users/1')
+
+    def test_user_subresource_post_conflict(self):
+        # If the address is already linked to a user, trying to link it to
+        # another user produces a 409 Conflict error.
+        with transaction():
+            getUtility(IUserManager).create_user('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                    'email': 'anne.person@example.org',
+                })
+        self.assertEqual(cm.exception.code, 409)
+
+    def test_user_subresource_post_new_user_no_auto_create(self):
+        # By default, POSTing to the 'user' resource of an unlinked address
+        # will automatically create the user.  By setting a boolean
+        # 'auto_create' flag to false, you can prevent this.
+        with transaction():
+            getUtility(IUserManager).create_address('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            json, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                    'display_name': 'Anne',
+                    'auto_create': 0,
+                })
+        self.assertEqual(cm.exception.code, 403)
+
+    def test_user_subresource_unlink(self):
+        # By DELETEing the usr subresource, you can unlink a user from an
+        # address.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            user_manager.create_user('anne@example.com')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user',
+            method='DELETE')
+        self.assertEqual(headers['status'], '204')
+        anne_addr = user_manager.get_address('anne@example.com')
+        self.assertIsNone(anne_addr.user, 'The address is still linked')
+        self.assertIsNone(user_manager.get_user('anne@example.com'))
+
+    def test_user_subresource_unlink_unlinked(self):
+        # If you try to unlink an unlinked address, you get a 404 error.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            user_manager.create_address('anne@example.com')
+        with self.assertRaises(HTTPError) as cm:
+            response, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com/user',
+                method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_user_subresource_put(self):
+        # By PUTing to the 'user' resource, you can change the user that an
+        # address is linked to.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com', 'Anne')
+            bart = user_manager.create_user(display_name='Bart')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'user_id': bart.user_id.int,
+                }, method='PUT')
+        self.assertEqual(headers['status'], '200')
+        self.assertEqual(anne.addresses, [])
+        self.assertEqual([address.email for address in bart.addresses],
+                         ['anne@example.com'])
+        self.assertEqual(bart,
+                         user_manager.get_address('anne@example.com').user)
+
+    def test_user_subresource_put_create(self):
+        # PUTing to the 'user' resource creates the user, just like with POST.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            anne = user_manager.create_user('anne@example.com', 'Anne')
+        response, headers = call_api(
+            'http://localhost:9001/3.0/addresses/anne@example.com/user', {
+                'email': 'anne.person@example.org',
+                }, method='PUT')
+        self.assertEqual(headers['status'], '201')
+        self.assertEqual(anne.addresses, [])
+        anne_person = user_manager.get_user('anne.person@example.org')
+        self.assertIsNotNone(anne_person)
+        self.assertEqual(
+            sorted([address.email for address in anne_person.addresses]),
+            ['anne.person@example.org', 'anne@example.com'])
+        anne_addr = user_manager.get_address('anne@example.com')
+        self.assertIsNotNone(anne_addr)
+        self.assertEqual(anne_addr.user, anne_person)

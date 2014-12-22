@@ -16,9 +16,15 @@ Bugs
 ----
  * Fixed Unicode errors in the digest runner and when sending messages to the
    site owner as a fallback.  Given by Aurélien Bompard.  (LP: #1130957).
- * Fix Unicode errors when a message being added to the digest has non-ascii
+ * Fixed Unicode errors when a message being added to the digest has non-ascii
    characters in its payload, but no Content-Type header defining a charset.
    Given by Aurélien Bompard.  (LP: #1170347)
+ * Fixed messages without a `text/plain` part crashing the `Approved` rule.
+   Given by Aurélien Bompard.  (LP: #1158721)
+ * Fixed getting non-ASCII filenames from RFC 2231 i18n'd messages.  Given by
+   Aurélien Bompard.  (LP: #1060951)
+ * Fixed `AttributeError` on MIME digest messages.  Given by Aurélien Bompard.
+   (LP: #1130696)
 
 Commands
 --------
@@ -38,6 +44,7 @@ Database
 
 Development
 -----------
+ * Python 3.4 is now the minimum requirement.
  * You no longer have to create a virtual environment separately when running
    the test suite.  Just use `tox`.
  * You no longer have to edit `src/mailman/testing/testing.cfg` to run the
@@ -61,6 +68,12 @@ REST
    internal change only.
  * The JSON representation `http_etag` key uses an algorithm that is
    insensitive to Python's dictionary sort order.
+ * The address resource now has an additional '/user' sub-resource which can
+   be used to GET the address's linked user if there is one.  This
+   sub-resource also supports POST to link an unlinked address (with an
+   optional 'auto_create' flag), and PUT to link the address to a different
+   user.  It also supports DELETE to unlink the address.  (LP: #1312884)
+   Given by Aurélien Bompard based on work by Nicolas Karageuzian.
 
 
 3.0 beta 4 -- "Time and Motion"

@@ -308,18 +308,21 @@ order by original (i.e. case-preserved) email address.
         registered_on: 2005-08-01T07:49:23
         self_link:
             http://localhost:9001/3.0/addresses/fred.q.person@example.com
+        user: http://localhost:9001/3.0/users/6
     entry 1:
         email: fperson@example.com
         http_etag: "..."
         original_email: fperson@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/fperson@example.com
+        user: http://localhost:9001/3.0/users/6
     entry 2:
         email: fred.person@example.com
         http_etag: "..."
         original_email: fred.person@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/fred.person@example.com
+        user: http://localhost:9001/3.0/users/6
     entry 3:
         display_name: Fred Person
         email: fred@example.com
@@ -327,6 +330,7 @@ order by original (i.e. case-preserved) email address.
         original_email: fred@example.com
         registered_on: 2005-08-01T07:49:23
         self_link: http://localhost:9001/3.0/addresses/fred@example.com
+        user: http://localhost:9001/3.0/users/6
     http_etag: "..."
     start: 0
     total_size: 4

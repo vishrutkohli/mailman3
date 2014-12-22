@@ -31,9 +31,11 @@ from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.runner import RunnerCrashEvent
+from mailman.runners.virgin import VirginRunner
 from mailman.testing.helpers import (
-    configuration, event_subscribers, get_queue_messages,
-    make_testable_runner, specialized_message_from_string as mfs)
+    LogFileMark, configuration, event_subscribers, get_queue_messages,
+    make_digest_messages, make_testable_runner,
+    specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 
 
@@ -87,3 +89,37 @@ Message-ID: <ant>
         shunted = get_queue_messages('shunt')
         self.assertEqual(len(shunted), 1)
         self.assertEqual(shunted[0].msg['message-id'], '<ant>')
+
+    def test_digest_messages(self):
+        # In LP: #1130697, the digest runner creates MIME digests using the
+        # stdlib MIMEMutlipart class, however this class does not have the
+        # extended attributes we require (e.g. .sender).  The fix is to use a
+        # subclass of MIMEMultipart and our own Message subclass; this adds
+        # back the required attributes.  (LP: #1130696)
+        #
+        # Start by creating the raw ingredients for the digests.  This also
+        # runs the digest runner, thus producing the digest messages into the
+        # virgin queue.
+        make_digest_messages(self._mlist)
+        # Run the virgin queue processor, which runs the cook-headers and
+        # to-outgoing handlers.  This should produce no error.
+        error_log = LogFileMark('mailman.error')
+        runner = make_testable_runner(VirginRunner, 'virgin')
+        runner.run()
+        error_text = error_log.read()
+        self.assertEqual(len(error_text), 0, error_text)
+        self.assertEqual(len(get_queue_messages('shunt')), 0)
+        messages = get_queue_messages('out')
+        self.assertEqual(len(messages), 2)
+        # Which one is the MIME digest?
+        mime_digest = None
+        for bag in messages:
+            if bag.msg.get_content_type() == 'multipart/mixed':
+                assert mime_digest is None, 'Found two MIME digests'
+                mime_digest = bag.msg
+        # The cook-headers handler ran.
+        self.assertIn('x-mailman-version', mime_digest)
+        self.assertEqual(mime_digest['precedence'], 'list')
+        # The list's -request address is the original sender.
+        self.assertEqual(bag.msgdata['original_sender'],
+                         'test-request@example.com')
