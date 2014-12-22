@@ -3,7 +3,9 @@ Developing Mailman
 ==================
 
 The following documentation is generated from the internal developer
-documentation.  This documentation is also used by the test suite.
+documentation.  This documentation is also used by the test suite.  Another
+good source of architectural information is available in the chapter written
+by Barry Warsaw for the `Architecture of Open Source Applications`_.
 
 For now, this will have to suffice as an overview of the Mailman system.
 
@@ -154,3 +156,4 @@ extensive set of command line commands, and email commands.
 
 
 .. _`Python pickles`: http://docs.python.org/2/library/pickle.html
+.. _`Architecture of Open Source Applications`: http://www.aosabook.org/en/mailman.html

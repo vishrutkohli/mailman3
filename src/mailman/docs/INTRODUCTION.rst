@@ -82,7 +82,7 @@ lists and archives, etc., are available at:
 Requirements
 ============
 
-Mailman 3.0 requires `Python 2.7`_.
+Mailman 3 requires `Python 3.4`_ or newer.
 
 
 .. _`GNU Mailman`: http://www.list.org
@@ -90,4 +90,4 @@ Mailman 3.0 requires `Python 2.7`_.
 .. _`Getting Started`: START.html
 .. _Python: http://www.python.org
 .. _FAQ: http://wiki.list.org/display/DOC/Frequently+Asked+Questions
-.. _`Python 2.7`: http://www.python.org/download/releases/2.7.3/
+.. _`Python 3.4`: https://www.python.org/downloads/release/python-342/
