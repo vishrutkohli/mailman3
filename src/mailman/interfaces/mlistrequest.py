@@ -17,9 +17,6 @@
 
 """Interface for a web request accessing a mailing list."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'IMailingListRequest',
     ]

@@ -15,22 +15,18 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Module stuff."""
+"""The 'confirm' email command."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Confirm',
     ]
 
 
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.command import ContinueProcessing, IEmailCommand
 from mailman.interfaces.registrar import IRegistrar
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

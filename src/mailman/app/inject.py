@@ -17,9 +17,6 @@
 
 """Inject a message into a queue."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'inject_message',
     'inject_text',
@@ -28,7 +25,6 @@ __all__ = [
 
 from email import message_from_string
 from email.utils import formatdate, make_msgid
-
 from mailman.config import config
 from mailman.email.message import Message
 from mailman.utilities.email import add_message_hash

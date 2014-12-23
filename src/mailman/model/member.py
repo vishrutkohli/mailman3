@@ -17,18 +17,10 @@
 
 """Model for members."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Member',
     ]
 
-from sqlalchemy import Column, ForeignKey, Integer, Unicode
-from sqlalchemy.orm import relationship
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
 
 from mailman.core.constants import system_preferences
 from mailman.database.model import Model
@@ -42,6 +34,11 @@ from mailman.interfaces.member import (
 from mailman.interfaces.user import IUser, UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.uid import UniqueIDFactory
+from sqlalchemy import Column, ForeignKey, Integer, Unicode
+from sqlalchemy.orm import relationship
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 uid_factory = UniqueIDFactory(context='members')

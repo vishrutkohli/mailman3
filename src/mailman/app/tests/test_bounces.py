@@ -17,9 +17,6 @@
 
 """Testing app.bounces functions."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestBounceMessage',
     'TestMaybeForward',
@@ -36,8 +33,6 @@ import shutil
 import tempfile
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.bounces import (
     ProbeVERP, StandardVERP, bounce_message, maybe_forward, send_probe)
 from mailman.app.lifecycle import create_list
@@ -49,10 +44,9 @@ from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.pending import IPendings
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
-    specialized_message_from_string as mfs)
+    LogFileMark, get_queue_messages, specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

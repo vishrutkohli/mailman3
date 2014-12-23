@@ -17,18 +17,14 @@
 
 """Membership interface for REST."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ISubscriptionService',
     ]
 
 
-from zope.interface import Interface
-
 from mailman.interfaces.errors import MailmanError
 from mailman.interfaces.member import DeliveryMode, MemberRole
+from zope.interface import Interface
 
 
 

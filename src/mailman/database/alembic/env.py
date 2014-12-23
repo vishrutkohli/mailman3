@@ -17,9 +17,6 @@
 
 """Alembic migration environment."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'run_migrations_offline',
     'run_migrations_online',
@@ -28,11 +25,10 @@ __all__ = [
 
 from alembic import context
 from contextlib import closing
-from sqlalchemy import create_engine
-
 from mailman.config import config
 from mailman.database.model import Model
 from mailman.utilities.string import expand
+from sqlalchemy import create_engine
 
 
 

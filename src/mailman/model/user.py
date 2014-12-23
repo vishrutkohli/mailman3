@@ -17,18 +17,10 @@
 
 """Model for users."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'User',
     ]
 
-
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
-from sqlalchemy.orm import relationship, backref
-from zope.event import notify
-from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
@@ -42,6 +34,10 @@ from mailman.model.preferences import Preferences
 from mailman.model.roster import Memberships
 from mailman.utilities.datetime import factory as date_factory
 from mailman.utilities.uid import UniqueIDFactory
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
+from sqlalchemy.orm import relationship, backref
+from zope.event import notify
+from zope.interface import implementer
 
 
 uid_factory = UniqueIDFactory(context='users')

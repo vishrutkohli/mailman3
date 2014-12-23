@@ -17,18 +17,14 @@
 
 """The email command 'echo'."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Echo',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.command import ContinueProcessing, IEmailCommand
+from zope.interface import implementer
 
 
 SPACE = ' '

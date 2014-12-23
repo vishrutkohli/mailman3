@@ -23,9 +23,6 @@ safe pickle deserialization, even if the email package adds additional Message
 attributes.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Message',
     'MultipartDigestMessage',
@@ -40,7 +37,6 @@ import email.utils
 
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
-
 from mailman.config import config
 
 

@@ -17,20 +17,16 @@
 
 """Generate Mailman alias files for your MTA."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Aliases',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.modules import call_name
+from zope.interface import implementer
 
 
 

@@ -17,9 +17,6 @@
 
 """Application level list creation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'create_list',
     'remove_list',
@@ -31,8 +28,6 @@ import errno
 import shutil
 import logging
 
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.domain import (
@@ -42,6 +37,7 @@ from mailman.interfaces.member import MemberRole
 from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.modules import call_name
+from zope.component import getUtility
 
 
 log = logging.getLogger('mailman.error')

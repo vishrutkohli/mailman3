@@ -17,17 +17,12 @@
 
 """Test the `confirm` command."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestConfirm',
     ]
 
 
 import unittest
-
-from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.commands.eml_confirm import Confirm
@@ -37,6 +32,7 @@ from mailman.interfaces.registrar import IRegistrar
 from mailman.runners.command import Results
 from mailman.testing.helpers import get_queue_messages, reset_the_world
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

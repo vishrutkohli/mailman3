@@ -17,9 +17,6 @@
 
 """Test the MTA file generating utility."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestAliases',
     'TestPostfix',
@@ -31,13 +28,12 @@ import shutil
 import tempfile
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.mta import IMailTransportAgentAliases
 from mailman.mta.postfix import LMTP
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 NL = '\n'

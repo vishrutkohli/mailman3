@@ -17,24 +17,21 @@
 
 """Test bounce model objects."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestBounceEvents',
     ]
 
 
 import unittest
 
 from datetime import datetime
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
 from mailman.interfaces.bounce import BounceContext, IBounceProcessor
 from mailman.testing.helpers import (
     specialized_message_from_string as message_from_string)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

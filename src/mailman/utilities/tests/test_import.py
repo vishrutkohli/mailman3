@@ -17,12 +17,14 @@
 
 """Tests for config.pck imports."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestArchiveImport',
     'TestBasicImport',
+    'TestConvertToURI',
+    'TestFilterActionImport',
+    'TestMemberActionImport',
+    'TestPreferencesImport',
+    'TestRosterImport',
     ]
 
 
@@ -33,10 +35,6 @@ import unittest
 
 from datetime import timedelta, datetime
 from enum import Enum
-from pkg_resources import resource_filename
-from six.moves.cPickle import load
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.handlers.decorate import decorate
@@ -55,6 +53,9 @@ from mailman.testing.layers import ConfigLayer
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.importer import import_config_pck, Import21Error
 from mailman.utilities.string import expand
+from pkg_resources import resource_filename
+from six.moves.cPickle import load
+from zope.component import getUtility
 
 
 

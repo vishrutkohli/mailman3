@@ -17,9 +17,6 @@
 
 """Transactional support."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'dbconnection',
     'transaction',
@@ -28,7 +25,6 @@ __all__ = [
 
 
 from contextlib import contextmanager
-
 from mailman.config import config
 
 

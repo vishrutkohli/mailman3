@@ -17,19 +17,14 @@
 
 """A wrapper around passlib."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'handle_ConfigurationUpdatedEvent',
     ]
 
 
-
-from passlib.context import CryptContext
-
 from mailman.config.config import load_external
 from mailman.interfaces.configuration import ConfigurationUpdatedEvent
+from passlib.context import CryptContext
 
 
 

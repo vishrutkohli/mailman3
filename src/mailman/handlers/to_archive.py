@@ -17,20 +17,16 @@
 
 """Add the message to the archives."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ToArchive',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
 
 
 

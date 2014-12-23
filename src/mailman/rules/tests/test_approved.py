@@ -17,9 +17,6 @@
 
 """Test the `approved` handler."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestApproved',
     'TestApprovedNonASCII',
@@ -36,8 +33,7 @@ from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.rules import approved
 from mailman.testing.helpers import (
-    configuration,
-    specialized_message_from_string as mfs)
+    configuration, specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 
 

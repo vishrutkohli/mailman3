@@ -17,9 +17,6 @@
 
 """Configuration system interface."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ConfigurationUpdatedEvent',
     'IConfiguration',
@@ -27,9 +24,8 @@ __all__ = [
     ]
 
 
-from zope.interface import Interface
-
 from mailman.core.errors import MailmanError
+from zope.interface import Interface
 
 
 

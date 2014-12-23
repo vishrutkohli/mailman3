@@ -17,9 +17,6 @@
 
 """Interface describing the basics of a user."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'IUser',
     'PasswordChangeEvent',
@@ -27,9 +24,8 @@ __all__ = [
     ]
 
 
-from zope.interface import Interface, Attribute
-
 from mailman.interfaces.address import AddressError
+from zope.interface import Interface, Attribute
 
 
 

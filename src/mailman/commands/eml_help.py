@@ -17,20 +17,16 @@
 
 """The email command 'help'."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Help',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ContinueProcessing, IEmailCommand
 from mailman.utilities.string import wrap
+from zope.interface import implementer
 
 
 SPACE = ' '

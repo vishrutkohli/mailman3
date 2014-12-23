@@ -17,17 +17,12 @@
 
 """Moderation tests."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestModeration',
     ]
 
 
 import unittest
-
-from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import handle_message, hold_message
@@ -41,6 +36,7 @@ from mailman.testing.helpers import (
     get_queue_messages, make_testable_runner, specialized_message_from_string)
 from mailman.testing.layers import SMTPLayer
 from mailman.utilities.datetime import now
+from zope.component import getUtility
 
 
 

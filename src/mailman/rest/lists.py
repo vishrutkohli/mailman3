@@ -17,9 +17,6 @@
 
 """REST for mailing lists."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AList',
     'AllLists',
@@ -33,9 +30,6 @@ __all__ = [
 import six
 
 from lazr.config import as_boolean
-from operator import attrgetter
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.config import config
 from mailman.interfaces.domain import BadDomainSpecificationError
@@ -52,6 +46,8 @@ from mailman.rest.helpers import (
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator
+from operator import attrgetter
+from zope.component import getUtility
 
 
 

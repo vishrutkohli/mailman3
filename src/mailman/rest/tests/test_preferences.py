@@ -17,9 +17,6 @@
 
 """Test various preference functionality."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPreferences',
     ]
@@ -36,6 +33,7 @@ from six.moves.urllib_error import HTTPError
 from zope.component import getUtility
 
 
+
 class TestPreferences(unittest.TestCase):
     """Test various preference functionality."""
 

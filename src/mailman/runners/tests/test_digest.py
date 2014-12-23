@@ -17,9 +17,6 @@
 
 """Test the digest runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestDigest',
     'TestI18nDigest',

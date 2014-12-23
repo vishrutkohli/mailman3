@@ -17,9 +17,6 @@
 
 """REST for members."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AMember',
     'AllMembers',
@@ -29,10 +26,6 @@ __all__ = [
 
 
 import six
-
-from uuid import UUID
-from operator import attrgetter
-from zope.component import getUtility
 
 from mailman.app.membership import delete_member
 from mailman.interfaces.address import InvalidEmailAddressError
@@ -49,6 +42,9 @@ from mailman.rest.helpers import (
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
+from operator import attrgetter
+from uuid import UUID
+from zope.component import getUtility
 
 
 

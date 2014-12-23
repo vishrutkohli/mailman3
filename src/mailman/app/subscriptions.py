@@ -15,18 +15,13 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Module stuff."""
+"""Handle subscriptions."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'SubscriptionService',
     'handle_ListDeletingEvent',
     ]
 
-
-import six
 
 from operator import attrgetter
 from passlib.utils import generate_password as generate
@@ -110,7 +105,7 @@ class SubscriptionService:
         # the parameter can either be an email address or a user id.
         query = []
         if subscriber is not None:
-            if isinstance(subscriber, six.text_type):
+            if isinstance(subscriber, str):
                 # subscriber is an email address.
                 address = user_manager.get_address(subscriber)
                 user = user_manager.get_user(subscriber)

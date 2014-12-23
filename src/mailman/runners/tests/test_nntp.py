@@ -17,9 +17,6 @@
 
 """Test the NNTP runner and related utilities."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPrepareMessage',
     'TestNNTPRunner',
@@ -36,10 +33,7 @@ from mailman.config import config
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.runners import nntp
 from mailman.testing.helpers import (
-    LogFileMark,
-    configuration,
-    get_queue_messages,
-    make_testable_runner,
+    LogFileMark, configuration, get_queue_messages, make_testable_runner,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 

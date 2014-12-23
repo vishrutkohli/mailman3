@@ -17,9 +17,6 @@
 
 """Extract topics from the original mail message."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Tagger',
     ]
@@ -29,10 +26,9 @@ import re
 import email.iterators
 import email.parser
 
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
 
 
 OR = '|'

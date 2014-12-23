@@ -17,16 +17,10 @@
 
 """A mailing list manager."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ListManager',
     ]
 
-
-from zope.event import notify
-from zope.interface import implementer
 
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.address import InvalidEmailAddressError
@@ -36,6 +30,8 @@ from mailman.interfaces.listmanager import (
 from mailman.model.mailinglist import MailingList
 from mailman.model.mime import ContentFilter
 from mailman.utilities.datetime import now
+from zope.event import notify
+from zope.interface import implementer
 
 
 

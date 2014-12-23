@@ -20,16 +20,10 @@
 This only happens if the sender has set their AcknowledgePosts attribute.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Acknowledge',
     ]
 
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
@@ -37,6 +31,8 @@ from mailman.interfaces.handler import IHandler
 from mailman.interfaces.languages import ILanguageManager
 from mailman.utilities.i18n import make
 from mailman.utilities.string import oneline
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

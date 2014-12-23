@@ -17,9 +17,6 @@
 
 """Test the pipeline runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPipelineRunner',
     ]
@@ -27,17 +24,15 @@ __all__ = [
 
 import unittest
 
-from zope.interface import implementer
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.pipeline import IPipeline
 from mailman.runners.pipeline import PipelineRunner
 from mailman.testing.helpers import (
-    make_testable_runner,
-    specialized_message_from_string as mfs)
+    make_testable_runner, specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from zope.interface import implementer
 
 
 

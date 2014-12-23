@@ -17,9 +17,6 @@
 
 """Configuration file loading and management."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Configuration',
     'external_configuration',
@@ -29,9 +26,16 @@ __all__ = [
 
 import os
 import sys
+import mailman.templates
 
 from flufl.lock import Lock
 from lazr.config import ConfigSchema, as_boolean
+from mailman import version
+from mailman.interfaces.configuration import (
+    ConfigurationUpdatedEvent, IConfiguration, MissingConfigurationFileError)
+from mailman.interfaces.languages import ILanguageManager
+from mailman.utilities.filesystem import makedirs
+from mailman.utilities.modules import call_name, expand_path
 from pkg_resources import resource_filename, resource_string as resource_bytes
 from six.moves.configparser import ConfigParser, RawConfigParser
 from string import Template
@@ -39,15 +43,6 @@ from unittest.mock import patch
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
-
-import mailman.templates
-
-from mailman import version
-from mailman.interfaces.configuration import (
-    ConfigurationUpdatedEvent, IConfiguration, MissingConfigurationFileError)
-from mailman.interfaces.languages import ILanguageManager
-from mailman.utilities.filesystem import makedirs
-from mailman.utilities.modules import call_name, expand_path
 
 
 SPACE = ' '

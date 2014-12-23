@@ -17,9 +17,6 @@
 
 """Tests for the subscription service."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestJoin'
     ]
@@ -28,14 +25,13 @@ __all__ = [
 import uuid
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

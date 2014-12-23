@@ -17,20 +17,16 @@
 
 """Language manager."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'LanguageManager',
     ]
 
 
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.languages import ILanguageManager
 from mailman.languages.language import Language
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

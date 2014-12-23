@@ -17,18 +17,14 @@
 
 """The Mailman version."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Version',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.interfaces.command import ICLISubCommand
 from mailman.version import MAILMAN_VERSION_FULL
+from zope.interface import implementer
 
 
 

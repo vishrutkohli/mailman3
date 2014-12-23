@@ -17,19 +17,15 @@
 
 """The news moderation rule."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ModeratedNewsgroup',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.rules import IRule
+from zope.interface import implementer
 
 
 

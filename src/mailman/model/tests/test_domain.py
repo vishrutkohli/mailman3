@@ -17,9 +17,6 @@
 
 """Test domains."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestDomainLifecycleEvents',
     'TestDomainManager',
@@ -28,8 +25,6 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.domain import (
     DomainCreatedEvent, DomainCreatingEvent, DomainDeletedEvent,
@@ -37,6 +32,7 @@ from mailman.interfaces.domain import (
 from mailman.interfaces.listmanager import IListManager
 from mailman.testing.helpers import event_subscribers
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

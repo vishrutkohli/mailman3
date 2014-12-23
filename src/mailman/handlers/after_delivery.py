@@ -17,19 +17,15 @@
 
 """Perform some bookkeeping after a successful post."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AfterDelivery',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
 from mailman.utilities.datetime import now
+from zope.interface import implementer
 
 
 

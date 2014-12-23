@@ -17,9 +17,6 @@
 
 """Test mailing list joins."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestJoin',
     'TestJoinWithDigests',
@@ -29,8 +26,6 @@ __all__ = [
 import unittest
 
 from email.iterators import body_line_iterator
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.member import DeliveryMode
@@ -42,6 +37,7 @@ from mailman.testing.helpers import (
     get_queue_messages, make_testable_runner, reset_the_world,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

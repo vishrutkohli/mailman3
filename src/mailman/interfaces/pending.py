@@ -22,9 +22,6 @@ maps these events to a unique hash that can be used as a token for end user
 confirmation.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'IPendable',
     'IPended',

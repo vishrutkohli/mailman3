@@ -17,9 +17,6 @@
 
 """Test the message API."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestMessage',
     'TestMessageSubclass',
@@ -27,8 +24,8 @@ __all__ = [
 
 
 import unittest
-from email.parser import FeedParser
 
+from email.parser import FeedParser
 from mailman.app.lifecycle import create_list
 from mailman.email.message import Message, UserNotification
 from mailman.testing.helpers import get_queue_messages
@@ -88,6 +85,6 @@ Test content
         attachment = msg.get_payload(1)
         try:
             filename = attachment.get_filename()
-        except TypeError as e:
-            self.fail(e)
+        except TypeError as error:
+            self.fail(error)
         self.assertEqual(filename, u'd\xe9jeuner.txt')

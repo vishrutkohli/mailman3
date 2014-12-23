@@ -17,21 +17,17 @@
 
 """Application support for chain processing."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'initialize',
     'process',
     ]
 
 
-from zope.interface.verify import verifyObject
-
 from mailman.chains.base import Chain, TerminalChainBase
 from mailman.config import config
 from mailman.interfaces.chain import LinkAction, IChain
 from mailman.utilities.modules import find_components
+from zope.interface.verify import verifyObject
 
 
 

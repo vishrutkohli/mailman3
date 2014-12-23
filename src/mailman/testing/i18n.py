@@ -17,9 +17,6 @@
 
 """Internationalization for the tests."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestingStrategy',
     'initialize',
@@ -29,9 +26,8 @@ __all__ = [
 from contextlib import closing
 from flufl.i18n import registry
 from gettext import GNUTranslations, NullTranslations
-from pkg_resources import resource_stream
-
 from mailman.core.i18n import initialize as core_initialize
+from pkg_resources import resource_stream
 
 
 

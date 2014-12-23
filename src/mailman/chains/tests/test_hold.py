@@ -17,9 +17,6 @@
 
 """Additional tests for the hold chain."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestAutorespond',
     ]
@@ -27,14 +24,13 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.chains.hold import autorespond_to_sender
 from mailman.interfaces.autorespond import IAutoResponseSet, Response
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import configuration, get_queue_messages
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

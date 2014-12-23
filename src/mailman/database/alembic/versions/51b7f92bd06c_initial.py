@@ -29,9 +29,6 @@ Revises: None
 Create Date: 2014-10-10 09:53:35.624472
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'downgrade',
     'upgrade',

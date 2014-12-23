@@ -17,10 +17,11 @@
 
 """Test the outgoing runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestOnce',
+    'TestSocketError',
+    'TestSomeRecipientsFailed',
+    'TestVERPSettings',
     ]
 
 
@@ -32,8 +33,6 @@ import unittest
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from lazr.config import as_timedelta
-from zope.component import getUtility
-
 from mailman.app.bounces import send_probe
 from mailman.app.lifecycle import create_list
 from mailman.config import config
@@ -45,12 +44,11 @@ from mailman.interfaces.pending import IPendings
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.outgoing import OutgoingRunner
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
-    make_testable_runner,
+    LogFileMark, get_queue_messages, make_testable_runner,
     specialized_message_from_string as message_from_string)
 from mailman.testing.layers import ConfigLayer, SMTPLayer
 from mailman.utilities.datetime import factory, now
+from zope.component import getUtility
 
 
 

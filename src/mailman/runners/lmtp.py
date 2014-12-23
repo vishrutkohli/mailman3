@@ -34,9 +34,6 @@ so that the peer mail server can provide better diagnostics.
     http://www.faqs.org/rfcs/rfc2033.html
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'LMTPRunner',
     ]
@@ -48,8 +45,6 @@ import logging
 import asyncore
 
 from email.utils import parseaddr
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.database.transaction import transactional
@@ -57,6 +52,7 @@ from mailman.email.message import Message
 from mailman.interfaces.listmanager import IListManager
 from mailman.utilities.datetime import now
 from mailman.utilities.email import add_message_hash
+from zope.component import getUtility
 
 
 elog = logging.getLogger('mailman.error')

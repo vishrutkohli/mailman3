@@ -17,9 +17,6 @@
 
 """i18n template search and interpolation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TemplateNotFoundError',
     'find',
@@ -34,13 +31,12 @@ import sys
 import errno
 
 from itertools import product
-from pkg_resources import resource_filename
-
 from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.errors import MailmanException
 from mailman.core.i18n import _
 from mailman.utilities.string import expand, wrap as wrap_text
+from pkg_resources import resource_filename
 
 
 

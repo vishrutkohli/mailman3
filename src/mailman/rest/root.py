@@ -17,9 +17,6 @@
 
 """The root of the REST API."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Root',
     ]
@@ -28,8 +25,6 @@ __all__ = [
 import falcon
 
 from base64 import b64decode
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.system import system
@@ -43,6 +38,7 @@ from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
 from mailman.rest.templates import TemplateFinder
 from mailman.rest.users import AUser, AllUsers
+from zope.component import getUtility
 
 
 

@@ -17,9 +17,6 @@
 
 """Personalized delivery."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'PersonalizedDelivery',
     'PersonalizedMixin',
@@ -28,11 +25,10 @@ __all__ = [
 
 from email.header import Header
 from email.utils import formataddr
-from zope.component import getUtility
-
 from mailman.interfaces.mailinglist import Personalization
 from mailman.interfaces.usermanager import IUserManager
 from mailman.mta.verp import VERPDelivery
+from zope.component import getUtility
 
 
 

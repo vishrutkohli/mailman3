@@ -17,15 +17,10 @@
 
 """Global events."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'initialize',
     ]
 
-
-from zope import event
 
 from mailman.app import (
     domain, membership, moderator, registrar, subscriptions)
@@ -33,6 +28,7 @@ from mailman.core import i18n, switchboard
 from mailman.languages import manager as language_manager
 from mailman.styles import manager as style_manager
 from mailman.utilities import passwords
+from zope import event
 
 
 

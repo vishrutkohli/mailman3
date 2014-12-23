@@ -17,9 +17,6 @@
 
 """Application level bounce handling."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ProbeVERP',
     'StandardVERP',
@@ -36,10 +33,6 @@ import logging
 from email.mime.message import MIMEMessage
 from email.mime.text import MIMEText
 from email.utils import parseaddr
-from string import Template
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification, UserNotification
@@ -50,6 +43,10 @@ from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.utilities.email import split_email
 from mailman.utilities.i18n import make
 from mailman.utilities.string import oneline
+from string import Template
+from zope.component import getUtility
+from zope.interface import implementer
+
 
 log = logging.getLogger('mailman.config')
 elog = logging.getLogger('mailman.error')

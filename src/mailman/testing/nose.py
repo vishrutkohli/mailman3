@@ -17,9 +17,6 @@
 
 """nose2 test infrastructure."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'NosePlugin',
     ]
@@ -34,6 +31,7 @@ import importlib
 from mailman.testing.documentation import setup, teardown
 from mailman.testing.layers import ConfigLayer, MockAndMonkeyLayer, SMTPLayer
 from nose2.events import Plugin
+
 
 DOT = '.'
 FLAGS = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE | doctest.REPORT_NDIFF

@@ -23,15 +23,10 @@ on the `recipients' attribute of the message.  This attribute is used by the
 SendmailDeliver and BulkDeliver modules.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MemberRecipients',
     ]
 
-
-from zope.interface import implementer
 
 from mailman.config import config
 from mailman.core import errors
@@ -39,6 +34,7 @@ from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.member import DeliveryStatus
 from mailman.utilities.string import wrap
+from zope.interface import implementer
 
 
 

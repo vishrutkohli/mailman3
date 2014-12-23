@@ -17,9 +17,6 @@
 
 """Cook a message's headers."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'CookHeaders',
     ]
@@ -29,18 +26,16 @@ import re
 
 from email.header import Header
 from email.utils import parseaddr, formataddr, getaddresses
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
 from mailman.version import VERSION
+from zope.interface import implementer
 
 
 COMMASPACE = ', '
 MAXLINELEN = 78
-
-nonascii = re.compile('[^\s!-~]')
+NONASCII = re.compile('[^\s!-~]')
 
 
 
@@ -53,12 +48,12 @@ def uheader(mlist, s, header_name=None, continuation_ws='\t', maxlinelen=None):
     specified.
     """
     charset = mlist.preferred_language.charset
-    if nonascii.search(s):
+    if NONASCII.search(s):
         # use list charset but ...
         if charset == 'us-ascii':
             charset = 'iso-8859-1'
     else:
-        # there is no nonascii so ...
+        # there is no non-ascii so ...
         charset = 'us-ascii'
     return Header(s, charset, maxlinelen, header_name, continuation_ws)
 

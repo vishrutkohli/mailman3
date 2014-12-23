@@ -17,9 +17,6 @@
 
 """The terminal 'accept' chain."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AcceptChain',
     ]
@@ -27,12 +24,11 @@ __all__ = [
 
 import logging
 
-from zope.event import notify
-
 from mailman.chains.base import TerminalChainBase
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.chain import AcceptEvent
+from zope.event import notify
 
 
 log = logging.getLogger('mailman.vette')

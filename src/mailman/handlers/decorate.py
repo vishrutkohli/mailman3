@@ -17,9 +17,6 @@
 
 """Decorate a message by sticking the header and footer around it."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Decorate',
     'decorate',

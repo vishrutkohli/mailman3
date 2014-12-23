@@ -17,9 +17,6 @@
 
 """Various test helpers."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'LogFileMark',
     'TestableMaster',
@@ -60,11 +57,6 @@ from contextlib import contextmanager
 from email import message_from_string
 from httplib2 import Http
 from lazr.config import as_timedelta
-from six.moves.urllib_error import HTTPError
-from six.moves.urllib_parse import urlencode
-from zope import event
-from zope.component import getUtility
-
 from mailman.bin.master import Loop as Master
 from mailman.config import config
 from mailman.database.transaction import transaction
@@ -75,6 +67,10 @@ from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.digest import DigestRunner
 from mailman.utilities.mailbox import Mailbox
+from six.moves.urllib_error import HTTPError
+from six.moves.urllib_parse import urlencode
+from zope import event
+from zope.component import getUtility
 
 
 NL = '\n'

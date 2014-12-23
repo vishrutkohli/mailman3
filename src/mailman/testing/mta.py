@@ -17,9 +17,6 @@
 
 """Fake MTA for testing purposes."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'FakeMTA',
     ]
@@ -29,10 +26,9 @@ import logging
 
 from lazr.smtptest.controller import QueueController
 from lazr.smtptest.server import Channel, QueueServer
+from mailman.interfaces.mta import IMailTransportAgentLifecycle
 from six.moves.queue import Empty, Queue
 from zope.interface import implementer
-
-from mailman.interfaces.mta import IMailTransportAgentLifecycle
 
 
 log = logging.getLogger('lazr.smtptest')

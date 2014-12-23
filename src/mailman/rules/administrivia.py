@@ -17,20 +17,16 @@
 
 """The administrivia rule."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Administrivia',
     ]
 
 
 from email.iterators import typed_subpart_iterator
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.rules import IRule
+from zope.interface import implementer
 
 
 # The list of email commands we search for in the Subject header and payload.

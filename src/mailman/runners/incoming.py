@@ -26,21 +26,17 @@ prepared for delivery.  Rejections, discards, and holds are processed
 immediately.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'IncomingRunner',
     ]
 
-
-from zope.component import getUtility
 
 from mailman.core.chains import process
 from mailman.core.runner import Runner
 from mailman.database.transaction import transaction
 from mailman.interfaces.address import ExistingAddressError
 from mailman.interfaces.usermanager import IUserManager
+from zope.component import getUtility
 
 
 

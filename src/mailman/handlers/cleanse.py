@@ -17,9 +17,6 @@
 
 """Cleanse certain headers from all messages."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Cleanse',
     ]
@@ -28,11 +25,10 @@ __all__ = [
 import logging
 
 from email.utils import formataddr
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.handlers.cook_headers import uheader
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.post')

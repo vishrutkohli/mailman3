@@ -17,9 +17,6 @@
 
 """Getting information out of a qfile."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'QFile',
     ]
@@ -35,6 +32,7 @@ from six.moves import cPickle
 from zope.interface import implementer
 
 
+# This is deliberately called 'm' for use with --interactive.
 m = []
 
 

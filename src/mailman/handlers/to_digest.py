@@ -17,17 +17,12 @@
 
 """Add the message to the list's current digest."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ToDigest',
     ]
 
 
 import os
-
-from zope.interface import implementer
 
 from mailman.config import config
 from mailman.core.i18n import _
@@ -36,6 +31,7 @@ from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.handler import IHandler
 from mailman.utilities.datetime import now as right_now
 from mailman.utilities.mailbox import Mailbox
+from zope.interface import implementer
 
 
 

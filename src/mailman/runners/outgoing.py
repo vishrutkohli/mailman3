@@ -17,14 +17,16 @@
 
 """Outgoing runner."""
 
+__all__ = [
+    'OutgoingRunner',
+    ]
+
+
 import socket
 import logging
 
 from datetime import datetime
 from lazr.config import as_boolean, as_timedelta
-from uuid import UUID
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.bounce import BounceContext, IBounceProcessor
@@ -34,6 +36,8 @@ from mailman.interfaces.pending import IPendings
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.utilities.datetime import now
 from mailman.utilities.modules import find_name
+from uuid import UUID
+from zope.component import getUtility
 
 
 # This controls how often _do_periodic() will try to deal with deferred

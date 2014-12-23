@@ -17,9 +17,6 @@
 
 """Implementations of the IPendable and IPending interfaces."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Pended',
     'Pendings',
@@ -32,18 +29,16 @@ import random
 import hashlib
 
 from lazr.config import as_timedelta
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
-from sqlalchemy.orm import relationship
-from zope.interface import implementer
-from zope.interface.verify import verifyObject
-
 from mailman.config import config
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.pending import (
     IPendable, IPended, IPendedKeyValue, IPendings)
 from mailman.utilities.datetime import now
-from mailman.utilities.modules import call_name
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
+from sqlalchemy.orm import relationship
+from zope.interface import implementer
+from zope.interface.verify import verifyObject
 
 
 

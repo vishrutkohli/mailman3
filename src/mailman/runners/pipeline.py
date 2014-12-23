@@ -22,6 +22,11 @@ through the 'preparation pipeline'.  This pipeline adds, deletes and modifies
 headers, calculates message recipients, and more.
 """
 
+__all__ = [
+    'PipelineRunner',
+    ]
+
+
 from mailman.core.pipelines import process
 from mailman.core.runner import Runner
 

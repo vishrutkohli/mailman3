@@ -17,9 +17,6 @@
 
 """The 'unshunt' command."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Unshunt',
     ]
@@ -27,11 +24,10 @@ __all__ = [
 
 import sys
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
+from zope.interface import implementer
 
 
 
@@ -62,7 +58,7 @@ class Unshunt:
                 which_queue = msgdata.get('whichq', 'in')
                 if not args.discard:
                     config.switchboards[which_queue].enqueue(msg, msgdata)
-            except Exception as error:
+            except Exception:
                 print(_('Cannot unshunt message $filebase, skipping:\n$error'),
                       file=sys.stderr)
             else:

@@ -15,11 +15,8 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Module stuff."""
+"""Start/stop/reopen/restart commands."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Reopen',
     'Restart',
@@ -34,12 +31,11 @@ import errno
 import signal
 import logging
 
-from zope.interface import implementer
-
 from mailman.bin.master import WatcherState, master_state
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
+from zope.interface import implementer
 
 
 qlog = logging.getLogger('mailman.runner')

@@ -17,9 +17,6 @@
 
 """-request robot command runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'CommandRunner',
     'Results',
@@ -37,15 +34,14 @@ import logging
 from email.errors import HeaderParseError
 from email.header import decode_header, make_header
 from email.iterators import typed_subpart_iterator
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.runner import Runner
 from mailman.email.message import UserNotification
 from mailman.interfaces.command import ContinueProcessing, IEmailResults
 from mailman.interfaces.languages import ILanguageManager
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 NL = '\n'

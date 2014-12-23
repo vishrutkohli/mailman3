@@ -17,9 +17,6 @@
 
 """Implementation of the IUserRegistrar interface."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Registrar',
     'handle_ConfirmationNeededEvent',
@@ -27,10 +24,6 @@ __all__ = [
 
 
 import logging
-
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
@@ -42,6 +35,9 @@ from mailman.interfaces.registrar import ConfirmationNeededEvent, IRegistrar
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import now
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.error')

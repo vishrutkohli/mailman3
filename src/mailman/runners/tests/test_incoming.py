@@ -17,9 +17,6 @@
 
 """Test the incoming queue runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestIncoming',
     ]
@@ -32,8 +29,7 @@ from mailman.chains.base import TerminalChainBase
 from mailman.config import config
 from mailman.runners.incoming import IncomingRunner
 from mailman.testing.helpers import (
-    get_queue_messages,
-    make_testable_runner,
+    get_queue_messages, make_testable_runner,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 

@@ -17,9 +17,6 @@
 
 """The 'mailman' command dispatcher."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'main',
     ]
@@ -29,13 +26,12 @@ import os
 import argparse
 
 from functools import cmp_to_key
-from zope.interface.verify import verifyObject
-
 from mailman.core.i18n import _
 from mailman.core.initialize import initialize
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.modules import find_components
 from mailman.version import MAILMAN_VERSION_FULL
+from zope.interface.verify import verifyObject
 
 
 

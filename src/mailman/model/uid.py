@@ -17,20 +17,16 @@
 
 """Unique IDs."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'UID',
     ]
 
 
 
-from sqlalchemy import Column, Integer
-
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.database.types import UUID
+from sqlalchemy import Column, Integer
 
 
 

@@ -17,21 +17,15 @@
 
 """REST for users."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AUser',
+    'AddressUser',
     'AllUsers',
     'Login',
     ]
 
 
 from lazr.config import as_boolean
-from passlib.utils import generate_password as generate
-from uuid import UUID
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.errors import (
     ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
@@ -44,8 +38,12 @@ from mailman.rest.helpers import (
     path_to)
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import PatchValidator, Validator
+from passlib.utils import generate_password as generate
+from uuid import UUID
+from zope.component import getUtility
 
 
+
 # Attributes of a user which can be changed via the REST API.
 class PasswordEncrypterGetterSetter(GetterSetter):
     def __init__(self):
@@ -73,6 +71,7 @@ CREATION_FIELDS = dict(
     )
 
 
+
 def create_user(arguments, response):
     """Create a new user."""
     # We can't pass the 'password' argument to the user creation method, so

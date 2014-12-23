@@ -17,9 +17,6 @@
 
 """Test the owner chain."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestOwnerChain',
     ]
@@ -32,8 +29,7 @@ from mailman.chains.owner import BuiltInOwnerChain
 from mailman.core.chains import process
 from mailman.interfaces.chain import AcceptOwnerEvent
 from mailman.testing.helpers import (
-    event_subscribers,
-    get_queue_messages,
+    event_subscribers, get_queue_messages,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 

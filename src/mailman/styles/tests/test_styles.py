@@ -17,9 +17,6 @@
 
 """Test styles."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestStyle',
     ]
@@ -27,13 +24,12 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-from zope.interface import implementer
-from zope.interface.exceptions import DoesNotImplement
-
 from mailman.interfaces.styles import (
     DuplicateStyleError, IStyle, IStyleManager)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
+from zope.interface import implementer
+from zope.interface.exceptions import DoesNotImplement
 
 
 

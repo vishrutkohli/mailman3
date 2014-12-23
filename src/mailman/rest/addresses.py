@@ -17,9 +17,6 @@
 
 """REST for addresses."""
 
-from __future__ import absolute_import, print_function,unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AllAddresses',
     'AnAddress',
@@ -28,9 +25,6 @@ __all__ = [
 
 
 import six
-
-from operator import attrgetter
-from zope.component import getUtility
 
 from mailman.interfaces.address import (
     ExistingAddressError, InvalidEmailAddressError)
@@ -42,6 +36,8 @@ from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import Validator
 from mailman.utilities.datetime import now
+from operator import attrgetter
+from zope.component import getUtility
 
 
 

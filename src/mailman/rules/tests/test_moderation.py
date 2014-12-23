@@ -17,9 +17,6 @@
 
 """Test the `member-moderation` and `nonmember-moderation` rules."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestModeration',
     ]

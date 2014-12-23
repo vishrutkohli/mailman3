@@ -21,9 +21,6 @@ The request database handles events that must be approved by the list
 moderators, such as subscription requests and held messages.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'IListRequests',
     'RequestType',

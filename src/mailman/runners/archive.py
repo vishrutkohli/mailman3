@@ -17,9 +17,6 @@
 
 """Archive runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ArchiveRunner',
     ]
@@ -31,7 +28,6 @@ import logging
 from email.utils import parsedate_tz, mktime_tz
 from datetime import datetime
 from lazr.config import as_timedelta
-
 from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.archiver import ClobberDate

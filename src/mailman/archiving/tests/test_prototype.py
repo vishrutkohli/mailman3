@@ -17,9 +17,6 @@
 
 """Test the prototype archiver."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPrototypeArchiver',
     ]
@@ -33,7 +30,6 @@ import threading
 
 from email import message_from_file
 from flufl.lock import Lock
-
 from mailman.app.lifecycle import create_list
 from mailman.archiving.prototype import Prototype
 from mailman.config import config

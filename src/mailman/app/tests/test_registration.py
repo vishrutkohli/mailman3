@@ -1,4 +1,4 @@
-# Copyright (C) 2012 by the Free Software Foundation, Inc.
+# Copyright (C) 2012-2014 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -17,9 +17,6 @@
 
 """Test email address registration."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestEmailValidation',
     'TestRegistration',
@@ -28,14 +25,13 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.pending import IPendings
 from mailman.interfaces.registrar import ConfirmationNeededEvent, IRegistrar
 from mailman.testing.helpers import event_subscribers
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

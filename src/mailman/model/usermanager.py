@@ -17,15 +17,10 @@
 
 """A user manager."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'UserManager',
     ]
 
-
-from zope.interface import implementer
 
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.address import ExistingAddressError
@@ -34,6 +29,7 @@ from mailman.model.address import Address
 from mailman.model.member import Member
 from mailman.model.preferences import Preferences
 from mailman.model.user import User
+from zope.interface import implementer
 
 
 

@@ -20,14 +20,10 @@
 # XXX 2012-03-23 BAW: Layers really really suck.  For example, the
 # test_owners_get_email() test requires that both the SMTPLayer and LMTPLayer
 # be set up, but there's apparently no way to do that and make zope.testing
-# happy.  This causes no tests failures, but it does cause errors at the end
-# of the full test run.  For now, I'll ignore that, but I do want to
-# eventually get rid of the zope.test* dependencies and use something like
-# testresources or some such.
+# happy.  This causes no test failures, but it does cause errors at the end of
+# the full test run.  For now, I'll ignore that, but I do want to eventually
+# get rid of the layers and use something like testresources or some such.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ConfigLayer',
     'LMTPLayer',
@@ -46,10 +42,6 @@ import datetime
 import tempfile
 
 from lazr.config import as_boolean
-from pkg_resources import resource_string as resource_bytes
-from textwrap import dedent
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core import initialize
 from mailman.core.initialize import INHIBIT_CONFIG_FILE
@@ -60,6 +52,9 @@ from mailman.testing.helpers import (
     TestableMaster, get_lmtp_client, reset_the_world, wait_for_webservice)
 from mailman.testing.mta import ConnectionCountingController
 from mailman.utilities.string import expand
+from pkg_resources import resource_string as resource_bytes
+from textwrap import dedent
+from zope.component import getUtility
 
 
 TEST_TIMEOUT = datetime.timedelta(seconds=5)

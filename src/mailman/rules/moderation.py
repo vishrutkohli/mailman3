@@ -17,23 +17,19 @@
 
 """Membership related rules."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MemberModeration',
     'NonmemberModeration',
     ]
 
 
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.action import Action
 from mailman.interfaces.member import MemberRole
 from mailman.interfaces.rules import IRule
 from mailman.interfaces.usermanager import IUserManager
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

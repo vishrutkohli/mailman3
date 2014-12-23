@@ -17,25 +17,21 @@
 
 """Model for addresses."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Address',
     ]
 
 
 from email.utils import formataddr
+from mailman.database.model import Model
+from mailman.interfaces.address import (
+    AddressVerificationEvent, IAddress, IEmailValidator)
+from mailman.utilities.datetime import now
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
-
-from mailman.database.model import Model
-from mailman.interfaces.address import (
-    AddressVerificationEvent, IAddress, IEmailValidator)
-from mailman.utilities.datetime import now
 
 
 

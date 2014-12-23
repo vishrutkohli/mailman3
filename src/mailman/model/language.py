@@ -17,19 +17,15 @@
 
 """Model for languages."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Language',
     ]
 
 
-from sqlalchemy import Column, Integer, Unicode
-from zope.interface import implementer
-
 from mailman.database.model import Model
 from mailman.interfaces.languages import ILanguage
+from sqlalchemy import Column, Integer, Unicode
+from zope.interface import implementer
 
 
 

@@ -17,22 +17,18 @@
 
 """One last digest."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'OneLastDigest',
     ]
 
 
-from sqlalchemy import Column, Integer, ForeignKey
-from sqlalchemy.orm import relationship
-from zope.interface import implementer
-
 from mailman.database.model import Model
 from mailman.database.types import Enum
 from mailman.interfaces.digests import IOneLastDigest
 from mailman.interfaces.member import DeliveryMode
+from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy.orm import relationship
+from zope.interface import implementer
 
 
 

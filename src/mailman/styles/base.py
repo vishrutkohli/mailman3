@@ -23,9 +23,6 @@ methods in your compositional derived class.
 """
 
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Announcement',
     'BasicOperation',
@@ -38,7 +35,6 @@ __all__ = [
 
 
 from datetime import timedelta
-
 from mailman.core.i18n import _
 from mailman.interfaces.action import Action, FilterAction
 from mailman.interfaces.archiver import ArchivePolicy
