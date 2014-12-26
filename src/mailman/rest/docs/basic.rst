@@ -29,23 +29,23 @@ succeeds.
     ...     'Content-Type': 'application/x-www-form-urlencode',
     ...     'Authorization': 'Basic cmVzdGFkbWluOnJlc3RwYXNz',
     ...     }
-    >>> url = 'http://localhost:9001/3.0/system'
+    >>> url = 'http://localhost:9001/3.0/system/versions'
     >>> response, content = Http().request(url, 'GET', None, headers)
     >>> print(response.status)
     200
 
 
-Basic information
-=================
+Version information
+===================
 
-System information can be retrieved from the server, in the form of a JSON
-encoded response.
+System version information can be retrieved from the server, in the form of a
+JSON encoded response.
 
-    >>> dump_json('http://localhost:9001/3.0/system')
+    >>> dump_json('http://localhost:9001/3.0/system/versions')
     http_etag: "..."
     mailman_version: GNU Mailman 3.0... (...)
     python_version: ...
-    self_link: http://localhost:9001/3.0/system
+    self_link: http://localhost:9001/3.0/system/versions
 
 
 .. _REST: http://en.wikipedia.org/wiki/REST

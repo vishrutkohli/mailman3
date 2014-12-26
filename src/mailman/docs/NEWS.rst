@@ -74,6 +74,8 @@ REST
    optional 'auto_create' flag), and PUT to link the address to a different
    user.  It also supports DELETE to unlink the address.  (LP: #1312884)
    Given by Aurélien Bompard based on work by Nicolas Karageuzian.
+ * The ``/3.0/system`` path is deprecated; use ``/3.0/system/versions`` to get
+   the system version information.
 
 
 3.0 beta 4 -- "Time and Motion"
