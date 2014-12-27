@@ -39,7 +39,7 @@ from mailman.interfaces.mailinglist import IListArchiverSet
 from mailman.interfaces.member import MemberRole
 from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.subscriptions import ISubscriptionService
-from mailman.rest.configuration import ListConfiguration
+from mailman.rest.listconf import ListConfiguration
 from mailman.rest.helpers import (
     CollectionMixin, GetterSetter, NotFound, bad_request, child, created,
     etag, no_content, not_found, okay, paginate, path_to)

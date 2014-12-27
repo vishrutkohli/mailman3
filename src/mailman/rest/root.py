@@ -32,7 +32,7 @@ from mailman.interfaces.listmanager import IListManager
 from mailman.rest.addresses import AllAddresses, AnAddress
 from mailman.rest.domains import ADomain, AllDomains
 from mailman.rest.helpers import (
-    BadRequest, NotFound, child, etag, okay, path_to)
+    BadRequest, NotFound, child, etag, not_found, okay, path_to)
 from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
@@ -88,6 +88,27 @@ class Versions:
         okay(response, etag(resource))
 
 
+class SystemConfiguration:
+    def __init__(self, section=None):
+        self._section = section
+
+    def on_get(self, request, response):
+        if self._section is None:
+            resource = dict(
+                sections=sorted(section.name for section in config))
+            okay(response, etag(resource))
+            return
+        missing = object()
+        section = getattr(config, self._section, missing)
+        if section is missing:
+            not_found(response)
+            return
+        # Sections don't have .keys(), .values(), or .items() but we can
+        # iterate over them.
+        resource = {key: section[key] for key in section}
+        okay(response, etag(resource))
+
+
 class TopLevel:
     """Top level collections and entries."""
 
@@ -97,12 +118,18 @@ class TopLevel:
         if len(segments) == 0:
             # This provides backward compatibility; see /system/versions.
             return Versions()
-        elif len(segments) > 1:
-            return BadRequest(), []
         elif segments[0] == 'preferences':
+            if len(segments) > 1:
+                return BadRequest(), []
             return ReadOnlyPreferences(system_preferences, 'system'), []
         elif segments[0] == 'versions':
+            if len(segments) > 1:
+                return BadRequest(), []
             return Versions(), []
+        elif segments[0] == 'configuration':
+            if len(segments) <= 2:
+                return SystemConfiguration(*segments[1:]), []
+            return BadRequest(), []
         else:
             return NotFound(), []
 

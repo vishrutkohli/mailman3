@@ -14,7 +14,7 @@ The RESTful server can be used to access basic version information.
     http_etag: "..."
     mailman_version: GNU Mailman 3.0... (...)
     python_version: ...
-    self_link: http://localhost:9001/3.0/system
+    self_link: http://localhost:9001/3.0/system/versions
 
 
 Clean up
