@@ -10,7 +10,7 @@ Here is a history of user visible changes to Mailman.
 
 3.0 beta 5 -- "Carve Away The Stone"
 ====================================
-(2014-XX-XX)
+(2014-12-29)
 
 Bugs
 ----
