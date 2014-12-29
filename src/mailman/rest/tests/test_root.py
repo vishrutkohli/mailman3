@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'TestRoot',
+    'TestSystemConfiguration',
     ]
 
 
@@ -42,9 +43,19 @@ from urllib2 import HTTPError
 class TestRoot(unittest.TestCase):
     layer = RESTLayer
 
-    def test_root_system(self):
-        # You can get the system preferences via the root path.
+    def test_root_system_backward_compatibility(self):
+        # The deprecated path for getting system version information points
+        # you to the new URL.
         url = 'http://localhost:9001/3.0/system'
+        new = '{}/versions'.format(url)
+        json, response = call_api(url)
+        self.assertEqual(json['mailman_version'], system.mailman_version)
+        self.assertEqual(json['python_version'], system.python_version)
+        self.assertEqual(json['self_link'], new)
+
+    def test_system_versions(self):
+        # System version information is available via REST.
+        url = 'http://localhost:9001/3.0/system/versions'
         json, response = call_api(url)
         self.assertEqual(json['mailman_version'], system.mailman_version)
         self.assertEqual(json['python_version'], system.python_version)
@@ -121,3 +132,8 @@ class TestRoot(unittest.TestCase):
         self.assertEqual(content['title'], '401 Unauthorized')
         self.assertEqual(content['description'],
                          'User is not authorized for the REST API')
+
+
+
+class TestSystemConfiguration(unittest.TestCase):
+    layer = RESTLayer

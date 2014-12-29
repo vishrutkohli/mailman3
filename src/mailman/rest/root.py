@@ -80,13 +80,13 @@ class Root:
         return TopLevel()
 
 
-class System:
+class Versions:
     def on_get(self, request, response):
-        """/<api>/system"""
+        """/<api>/system/versions"""
         resource = dict(
             mailman_version=system.mailman_version,
             python_version=system.python_version,
-            self_link=path_to('system'),
+            self_link=path_to('system/versions'),
             )
         okay(response, etag(resource))
 
@@ -98,11 +98,14 @@ class TopLevel:
     def system(self, request, segments):
         """/<api>/system"""
         if len(segments) == 0:
-            return System()
+            # This provides backward compatibility; see /system/versions.
+            return Versions()
         elif len(segments) > 1:
             return BadRequest(), []
         elif segments[0] == 'preferences':
             return ReadOnlyPreferences(system_preferences, 'system'), []
+        elif segments[0] == 'versions':
+            return Versions(), []
         else:
             return NotFound(), []
 
