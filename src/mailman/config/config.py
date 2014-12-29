@@ -97,6 +97,9 @@ class Configuration:
         """Delegate to the configuration object."""
         return getattr(self._config, name)
 
+    def __iter__(self):
+        return iter(self._config)
+
     def load(self, filename=None):
         """Load the configuration from the schema and config files."""
         schema_file = config_file = None

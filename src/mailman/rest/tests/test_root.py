@@ -22,7 +22,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 __metaclass__ = type
 __all__ = [
     'TestRoot',
-    'TestSystemConfiguration',
     ]
 
 
@@ -66,12 +65,6 @@ class TestRoot(unittest.TestCase):
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/does-not-exist')
         self.assertEqual(cm.exception.code, 404)
-
-    def test_system_url_too_long(self):
-        # /system/foo/bar is not allowed.
-        with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/system/foo/bar')
-        self.assertEqual(cm.exception.code, 400)
 
     def test_system_url_not_preferences(self):
         # /system/foo where `foo` is not `preferences`.
@@ -132,8 +125,3 @@ class TestRoot(unittest.TestCase):
         self.assertEqual(content['title'], '401 Unauthorized')
         self.assertEqual(content['description'],
                          'User is not authorized for the REST API')
-
-
-
-class TestSystemConfiguration(unittest.TestCase):
-    layer = RESTLayer

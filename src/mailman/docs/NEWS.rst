@@ -75,6 +75,13 @@ REST
    Given by Aurélien Bompard based on work by Nicolas Karageuzian.
  * The ``/3.0/system`` path is deprecated; use ``/3.0/system/versions`` to get
    the system version information.
+ * You can access the system configuration via the resource path
+   ``/3.0/system/configuration/<section>``.  This returns a dictionary with
+   the keys being the section's variables and the values being their value
+   from ``mailman.cfg`` as verbatim strings.  You can get a list of all
+   section names via ``/3.0/system/configuration`` which returns a dictionary
+   containing the ``http_etag`` and the section names as a sorted list under
+   the ``sections`` key.  The system configuration resource is read-only.
 
 
 3.0 beta 4 -- "Time and Motion"
