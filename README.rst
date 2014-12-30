@@ -62,7 +62,6 @@ These documents are generated from the doctest suite.
     src/mailman/styles/docs/*
     src/mailman/archiving/docs/*
     src/mailman/mta/docs/*
-    src/mailman/database/docs/*
     src/mailman/bin/docs/*
     src/mailman/commands/docs/*
     src/mailman/docs/NEWS
