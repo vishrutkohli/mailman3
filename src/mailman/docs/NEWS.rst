@@ -56,6 +56,7 @@ Interfaces
  * The RFC 2369 headers added to outgoing messages are now added in sorted
    order.
  * Several changes to the internal API:
+
    - `IListManager.mailing_lists` is guaranteed to be sorted in List-ID order.
    - `IDomains.mailing_lists` is guaranteed to be sorted in List-ID order.
    - Iteration over domains via the `IDomainManager` is guaranteed to be sorted
