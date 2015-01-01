@@ -76,7 +76,7 @@ def search_for_configuration_file():
     if os.path.exists(config_path):
         return config_path
     # ~/.mailman.cfg
-    config_path = os.path.join(os.getenv('HOME'), '.mailman.cfg')
+    config_path = os.path.join(os.getenv('HOME', '~'), '.mailman.cfg')
     if os.path.exists(config_path):
         return os.path.abspath(config_path)
     # /etc/mailman.cfg
