@@ -120,8 +120,8 @@ class Start:
         # subprocesses to calculate their path to the $VAR_DIR.  Before we
         # chdir() though, calculate the absolute path to the configuration
         # file.
-        config_path = (os.path.abspath(args.config)
-                       if args.config else None)
+        config_path = (config.filename if args.config is None
+                       else os.path.abspath(args.config))
         os.environ['MAILMAN_VAR_DIR'] = config.VAR_DIR
         os.chdir(config.VAR_DIR)
         # Exec the master watcher.
@@ -131,8 +131,9 @@ class Start:
             ]
         if args.force:
             execl_args.append('--force')
-        if config_path:
-            execl_args.extend(['-C', config_path])
+        # Always pass the config file path to the master projects, so there's
+        # no confusion about which cfg is being used.
+        execl_args.extend(['-C', config_path])
         qlog.debug('starting: %s', execl_args)
         os.execl(*execl_args)
         # We should never get here.
