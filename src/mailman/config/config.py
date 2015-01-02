@@ -110,7 +110,9 @@ class Configuration:
         # configuration filename was given by the user, push it.
         config_file = resource_filename('mailman.config', 'mailman.cfg')
         self._config = schema.load(config_file)
-        if filename is not None:
+        if filename is None:
+            self._post_process()
+        else:
             self.filename = filename
             with open(filename, 'r', encoding='utf-8') as user_config:
                 self.push(filename, user_config.read())

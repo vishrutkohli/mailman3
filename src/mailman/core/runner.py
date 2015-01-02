@@ -221,18 +221,19 @@ class Runner:
         # compatibility.
         list_manager = getUtility(IListManager)
         list_id = msgdata.get('listid', missing)
+        fqdn_listname = None
         if list_id is missing:
-            listname = msgdata.get('listname', missing)
+            fqdn_listname = msgdata.get('listname', missing)
             # XXX Deprecate.
-            if listname is not missing:
-                mlist = list_manager.get(listname)
+            if fqdn_listname is not missing:
+                mlist = list_manager.get(fqdn_listname)
         else:
             mlist = list_manager.get_by_list_id(list_id)
         if mlist is None:
+            identifier = (list_id if list_id is not None else fqdn_listname)
             elog.error(
                 '%s runner "%s" shunting message for missing list: %s',
-                msg['message-id'], self.name,
-                ('n/a' if listname is missing else listname))
+                msg['message-id'], self.name, identifier)
             config.switchboards['shunt'].enqueue(msg, msgdata)
             return
         # Now process this message.  We also want to set up the language
