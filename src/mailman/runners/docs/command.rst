@@ -27,7 +27,7 @@ the sender.  The command can be in the ``Subject`` header.
     ... """)
 
     >>> from mailman.app.inject import inject_message
-    >>> inject_message(mlist, msg, switchboard='command')
+    >>> filebase = inject_message(mlist, msg, switchboard='command')
     >>> from mailman.runners.command import CommandRunner
     >>> from mailman.testing.helpers import make_testable_runner
     >>> command = make_testable_runner(CommandRunner)
@@ -85,7 +85,7 @@ message is plain text.
     ... echo foo bar
     ... """)
 
-    >>> inject_message(mlist, msg, switchboard='command')
+    >>> filebase = inject_message(mlist, msg, switchboard='command')
     >>> command.run()
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
@@ -133,7 +133,8 @@ address, and the other is the results of his email command.
     ...
     ... """)
 
-    >>> inject_message(mlist, msg, switchboard='command', subaddress='join')
+    >>> filebase = inject_message(
+    ...     mlist, msg, switchboard='command', subaddress='join')
     >>> command.run()
     >>> messages = get_queue_messages('virgin', sort_on='subject')
     >>> len(messages)
@@ -165,7 +166,8 @@ Similarly, to leave a mailing list, the user need only email the ``-leave`` or
     ...
     ... """)
 
-    >>> inject_message(mlist, msg, switchboard='command', subaddress='leave')
+    >>> filebase = inject_message(
+    ...     mlist, msg, switchboard='command', subaddress='leave')
     >>> command.run()
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
@@ -200,7 +202,8 @@ The ``-confirm`` address is also available as an implicit command.
     ...
     ... """)
 
-    >>> inject_message(mlist, msg, switchboard='command', subaddress='confirm')
+    >>> filebase = inject_message(
+    ...     mlist, msg, switchboard='command', subaddress='confirm')
     >>> command.run()
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
@@ -244,7 +247,7 @@ looked at by the command queue.
     ... echo baz qux
     ... """)
 
-    >>> inject_message(mlist, msg, switchboard='command')
+    >>> filebase = inject_message(mlist, msg, switchboard='command')
     >>> command.run()
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
@@ -276,7 +279,7 @@ The ``stop`` command is an alias for ``end``.
     ... echo baz qux
     ... """)
 
-    >>> inject_message(mlist, msg, switchboard='command')
+    >>> filebase = inject_message(mlist, msg, switchboard='command')
     >>> command.run()
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)

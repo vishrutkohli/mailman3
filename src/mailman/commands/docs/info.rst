@@ -62,20 +62,21 @@ definition.
     Python ...
     ...
     File system paths:
-        ARCHIVE_DIR              = /var/lib/mailman/archives
-        BIN_DIR                  = /sbin
-        DATA_DIR                 = /var/lib/mailman/data
-        ETC_DIR                  = /etc
-        EXT_DIR                  = /etc/mailman.d
-        LIST_DATA_DIR            = /var/lib/mailman/lists
-        LOCK_DIR                 = /var/lock/mailman
-        LOCK_FILE                = /var/lock/mailman/master.lck
-        LOG_DIR                  = /var/log/mailman
-        MESSAGES_DIR             = /var/lib/mailman/messages
-        PID_FILE                 = /var/run/mailman/master.pid
-        QUEUE_DIR                = /var/spool/mailman
-        TEMPLATE_DIR             = .../mailman/templates
-        VAR_DIR                  = /var/lib/mailman
+        ARCHIVE_DIR     = /var/lib/mailman/archives
+        BIN_DIR         = /sbin
+        CFG_FILE        = .../test.cfg
+        DATA_DIR        = /var/lib/mailman/data
+        ETC_DIR         = /etc
+        EXT_DIR         = /etc/mailman.d
+        LIST_DATA_DIR   = /var/lib/mailman/lists
+        LOCK_DIR        = /var/lock/mailman
+        LOCK_FILE       = /var/lock/mailman/master.lck
+        LOG_DIR         = /var/log/mailman
+        MESSAGES_DIR    = /var/lib/mailman/messages
+        PID_FILE        = /var/run/mailman/master.pid
+        QUEUE_DIR       = /var/spool/mailman
+        TEMPLATE_DIR    = .../mailman/templates
+        VAR_DIR         = /var/lib/mailman
 
 
 .. _`Filesystem Hierarchy Standard`: http://www.pathname.com/fhs/

@@ -166,6 +166,7 @@ class Configuration:
         # path is relative.
         var_dir = os.environ.get('MAILMAN_VAR_DIR', category.var_dir)
         substitutions = dict(
+            cwd                     = os.getcwd(),
             argv                    = bin_dir,
             # Directories.
             bin_dir                 = category.bin_dir,

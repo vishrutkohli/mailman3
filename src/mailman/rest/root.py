@@ -36,6 +36,7 @@ from mailman.rest.helpers import (
 from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
+from mailman.rest.queues import AQueue, AQueueFile, AllQueues
 from mailman.rest.templates import TemplateFinder
 from mailman.rest.users import AUser, AllUsers
 from zope.component import getUtility
@@ -213,3 +214,15 @@ class TopLevel:
         content_type = None
         return TemplateFinder(
             fqdn_listname, template, language, content_type)
+
+    @child()
+    def queues(self, request, segments):
+        """/<api>/queues[/<name>[/file]]"""
+        if len(segments) == 0:
+            return AllQueues()
+        elif len(segments) == 1:
+            return AQueue(segments[0]), []
+        elif len(segments) == 2:
+            return AQueueFile(segments[0], segments[1]), []
+        else:
+            return BadRequest(), []

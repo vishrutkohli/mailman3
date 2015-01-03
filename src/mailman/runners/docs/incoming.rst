@@ -54,7 +54,7 @@ Inject the message into the incoming queue, similar to the way the upstream
 mail server normally would.
 
     >>> from mailman.app.inject import inject_message
-    >>> inject_message(mlist, msg)
+    >>> filebase = inject_message(mlist, msg)
 
 The incoming runner runs until it is empty.
 
@@ -103,7 +103,7 @@ that it will be accepted and forward to the pipeline queue.
 
 Inject the message into the incoming queue and run until the queue is empty.
 
-    >>> inject_message(mlist, msg)
+    >>> filebase = inject_message(mlist, msg)
     >>> incoming.run()
 
 There are no messages left in the incoming queue.
@@ -156,7 +156,7 @@ pipeline queue.
 
     >>> from mailman.testing.helpers import event_subscribers
     >>> with event_subscribers(on_chain):
-    ...     inject_message(mlist, msg)
+    ...     filebase = inject_message(mlist, msg)
     ...     incoming.run()
     <mailman.interfaces.chain.HoldEvent ...>
     <mailman.chains.hold.HoldChain ...>
@@ -191,7 +191,7 @@ new chain and set it as the mailing list's start chain.
 
     >>> msg.replace_header('message-id', '<second>')
     >>> with event_subscribers(on_chain):
-    ...     inject_message(mlist, msg)
+    ...     filebase = inject_message(mlist, msg)
     ...     incoming.run()
     <mailman.interfaces.chain.DiscardEvent ...>
     <mailman.chains.discard.DiscardChain ...>
@@ -220,7 +220,7 @@ just create a new chain that does.
 
     >>> msg.replace_header('message-id', '<third>')
     >>> with event_subscribers(on_chain):
-    ...     inject_message(mlist, msg)
+    ...     filebase = inject_message(mlist, msg)
     ...     incoming.run()
     <mailman.interfaces.chain.RejectEvent ...>
     <mailman.chains.reject.RejectChain ...>

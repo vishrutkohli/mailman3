@@ -116,14 +116,14 @@ layout: nonesuch
         self.assertEqual(cm.exception.args, (1,))
 
     def test_path_expansion_infloop(self):
-        # A path expansion never completes because it references a
-        # non-existent substitution variable.
+        # A path expansion never completes because it references a non-existent
+        # substitution variable.
         fd, filename = tempfile.mkstemp()
         self.addCleanup(os.remove, filename)
         os.close(fd)
         with open(filename, 'w') as fp:
             print("""\
-[paths.dev]
+[paths.here]
 log_dir: $nopath/log_dir
 """, file=fp)
         config = Configuration()

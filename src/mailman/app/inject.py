@@ -49,6 +49,8 @@ def inject_message(mlist, msg, recipients=None, switchboard=None, **kws):
     :type switchboard: string
     :param kws: Additional values for the message metadata.
     :type kws: dictionary
+    :return: filebase of enqueued message
+    :rtype: string
     """
     if switchboard is None:
         switchboard = 'in'
@@ -68,7 +70,7 @@ def inject_message(mlist, msg, recipients=None, switchboard=None, **kws):
     msgdata.update(kws)
     if recipients is not None:
         msgdata['recipients'] = recipients
-    config.switchboards[switchboard].enqueue(msg, **msgdata)
+    return config.switchboards[switchboard].enqueue(msg, **msgdata)
 
 
 
@@ -91,6 +93,8 @@ def inject_text(mlist, text, recipients=None, switchboard=None, **kws):
     :type switchboard: string
     :param kws: Additional values for the message metadata.
     :type kws: dictionary
+    :return: filebase of enqueued message
+    :rtype: string
     """
     message = message_from_string(text, Message)
-    inject_message(mlist, message, recipients, switchboard, **kws)
+    return inject_message(mlist, message, recipients, switchboard, **kws)
