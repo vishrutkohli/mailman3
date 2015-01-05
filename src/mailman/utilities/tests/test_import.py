@@ -29,7 +29,6 @@ __all__ = [
 
 
 import os
-import six
 import mock
 import unittest
 
@@ -53,8 +52,8 @@ from mailman.testing.layers import ConfigLayer
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.importer import import_config_pck, Import21Error
 from mailman.utilities.string import expand
+from pickle import load
 from pkg_resources import resource_filename
-from six.moves.cPickle import load
 from zope.component import getUtility
 
 
@@ -189,7 +188,7 @@ class TestBasicImport(unittest.TestCase):
         # moderator_password must not be unicode
         self._pckdict['mod_password'] = b'TESTVALUE'
         self._import()
-        self.assertNotIsInstance(self._mlist.moderator_password, six.text_type)
+        self.assertNotIsInstance(self._mlist.moderator_password, str)
         self.assertEqual(self._mlist.moderator_password, b'TESTVALUE')
 
     def test_newsgroup_moderation(self):

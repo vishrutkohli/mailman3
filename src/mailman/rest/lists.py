@@ -27,8 +27,6 @@ __all__ = [
     ]
 
 
-import six
-
 from lazr.config import as_boolean
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.config import config
@@ -202,8 +200,8 @@ class AllLists(_ListBase):
     def on_post(self, request, response):
         """Create a new mailing list."""
         try:
-            validator = Validator(fqdn_listname=six.text_type,
-                                  style_name=six.text_type,
+            validator = Validator(fqdn_listname=str,
+                                  style_name=str,
                                   _optional=('style_name',))
             mlist = create_list(**validator(request))
         except ListAlreadyExistsError:

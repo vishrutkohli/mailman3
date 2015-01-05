@@ -22,13 +22,12 @@ __all__ = [
     ]
 
 
-import six
+import pickle
 
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.interact import interact
 from pprint import PrettyPrinter
-from six.moves import cPickle
 from zope.interface import implementer
 
 
@@ -72,7 +71,7 @@ class QFile:
         with open(args.qfile[0], 'rb') as fp:
             while True:
                 try:
-                    m.append(cPickle.load(fp))
+                    m.append(pickle.load(fp))
                 except EOFError:
                     break
         if args.doprint:
@@ -80,7 +79,7 @@ class QFile:
             for i, obj in enumerate(m):
                 count = i + 1
                 print(_('<----- start object $count ----->'))
-                if isinstance(obj, six.string_types):
+                if isinstance(obj, (bytes, str)):
                     print(obj)
                 else:
                     printer.pprint(obj)

@@ -29,7 +29,7 @@ from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
 from mailman.model.mailinglist import MailingList
-from six.moves.urllib_parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 from sqlalchemy import Column, Integer, Unicode
 from zope.event import notify
 from zope.interface import implementer

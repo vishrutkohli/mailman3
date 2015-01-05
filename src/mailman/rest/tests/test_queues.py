@@ -29,7 +29,7 @@ from mailman.config import config
 from mailman.database.transaction import transaction
 from mailman.testing.helpers import call_api, get_queue_messages
 from mailman.testing.layers import RESTLayer
-from six.moves.urllib_error import HTTPError
+from urllib.error import HTTPError
 
 
 TEXT = """\

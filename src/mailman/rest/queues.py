@@ -24,8 +24,6 @@ __all__ = [
     ]
 
 
-import six
-
 from mailman.config import config
 from mailman.app.inject import inject_text
 from mailman.interfaces.listmanager import IListManager
@@ -75,8 +73,8 @@ class AQueue(_QueuesBase):
     def on_post(self, request, response):
         """Inject a message into the queue."""
         try:
-            validator = Validator(list_id=six.text_type,
-                                  text=six.text_type)
+            validator = Validator(list_id=str,
+                                  text=str)
             values = validator(request)
         except ValueError as error:
             bad_request(response, str(error))

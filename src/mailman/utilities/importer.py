@@ -45,7 +45,7 @@ from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.i18n import search
-from six.moves.urllib_error import URLError
+from urllib.error import URLError
 from zope.component import getUtility
 
 

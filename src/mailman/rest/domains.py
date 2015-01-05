@@ -23,8 +23,6 @@ __all__ = [
     ]
 
 
-import six
-
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, IDomainManager)
 from mailman.rest.helpers import (
@@ -98,10 +96,10 @@ class AllDomains(_DomainBase):
         """Create a new domain."""
         domain_manager = getUtility(IDomainManager)
         try:
-            validator = Validator(mail_host=six.text_type,
-                                  description=six.text_type,
-                                  base_url=six.text_type,
-                                  contact_address=six.text_type,
+            validator = Validator(mail_host=str,
+                                  description=str,
+                                  base_url=str,
+                                  contact_address=str,
                                   _optional=('description', 'base_url',
                                              'contact_address'))
             domain = domain_manager.add(**validator(request))

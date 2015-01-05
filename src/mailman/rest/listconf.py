@@ -22,8 +22,6 @@ __all__ = [
     ]
 
 
-import six
-
 from lazr.config import as_boolean, as_timedelta
 from mailman.config import config
 from mailman.core.errors import (
@@ -108,9 +106,9 @@ ATTRIBUTES = dict(
     autorespond_postings=GetterSetter(enum_validator(ResponseAction)),
     autorespond_requests=GetterSetter(enum_validator(ResponseAction)),
     autoresponse_grace_period=GetterSetter(as_timedelta),
-    autoresponse_owner_text=GetterSetter(six.text_type),
-    autoresponse_postings_text=GetterSetter(six.text_type),
-    autoresponse_request_text=GetterSetter(six.text_type),
+    autoresponse_owner_text=GetterSetter(str),
+    autoresponse_postings_text=GetterSetter(str),
+    autoresponse_request_text=GetterSetter(str),
     archive_policy=GetterSetter(enum_validator(ArchivePolicy)),
     bounces_address=GetterSetter(None),
     collapse_alternatives=GetterSetter(as_boolean),
@@ -118,7 +116,7 @@ ATTRIBUTES = dict(
     created_at=GetterSetter(None),
     default_member_action=GetterSetter(enum_validator(Action)),
     default_nonmember_action=GetterSetter(enum_validator(Action)),
-    description=GetterSetter(six.text_type),
+    description=GetterSetter(str),
     digest_last_sent_at=GetterSetter(None),
     digest_size_threshold=GetterSetter(float),
     filter_content=GetterSetter(as_boolean),
@@ -137,16 +135,16 @@ ATTRIBUTES = dict(
     post_id=GetterSetter(None),
     posting_address=GetterSetter(None),
     posting_pipeline=GetterSetter(pipeline_validator),
-    display_name=GetterSetter(six.text_type),
+    display_name=GetterSetter(str),
     reply_goes_to_list=GetterSetter(enum_validator(ReplyToMunging)),
-    reply_to_address=GetterSetter(six.text_type),
+    reply_to_address=GetterSetter(str),
     request_address=GetterSetter(None),
     scheme=GetterSetter(None),
     send_welcome_message=GetterSetter(as_boolean),
-    subject_prefix=GetterSetter(six.text_type),
+    subject_prefix=GetterSetter(str),
     volume=GetterSetter(None),
     web_host=GetterSetter(None),
-    welcome_message_uri=GetterSetter(six.text_type),
+    welcome_message_uri=GetterSetter(str),
     )
 
 

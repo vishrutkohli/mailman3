@@ -25,7 +25,7 @@ __all__ = [
 from mailman.config import config
 from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import ArchivePolicy, IArchiver
-from six.moves.urllib_parse import quote, urljoin
+from urllib.parse import quote, urljoin
 from zope.interface import implementer
 
 

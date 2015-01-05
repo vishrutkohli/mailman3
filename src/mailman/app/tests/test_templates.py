@@ -23,7 +23,6 @@ __all__ = [
 
 
 import os
-import six
 import shutil
 import tempfile
 import unittest
@@ -33,7 +32,7 @@ from mailman.config import config
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.testing.layers import ConfigLayer
-from six.moves.urllib_error import URLError
+from urllib.error import URLError
 from zope.component import getUtility
 
 
@@ -132,5 +131,5 @@ class TestTemplateLoader(unittest.TestCase):
         with open(os.path.join(path, 'demo.txt'), 'wb') as fp:
             fp.write(test_text)
         content = self._loader.get('mailman:///it/demo.txt')
-        self.assertIsInstance(content, six.text_type)
+        self.assertIsInstance(content, str)
         self.assertEqual(content, test_text.decode('utf-8'))

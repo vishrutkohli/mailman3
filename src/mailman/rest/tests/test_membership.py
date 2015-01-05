@@ -35,7 +35,7 @@ from mailman.testing.helpers import (
 from mailman.runners.incoming import IncomingRunner
 from mailman.testing.layers import ConfigLayer, RESTLayer
 from mailman.utilities.datetime import now
-from six.moves.urllib_error import HTTPError
+from urllib.error import HTTPError
 from zope.component import getUtility
 
 

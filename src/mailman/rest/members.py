@@ -25,8 +25,6 @@ __all__ = [
     ]
 
 
-import six
-
 from mailman.app.membership import delete_member
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.listmanager import IListManager, NoSuchListError
@@ -174,7 +172,7 @@ class AMember(_MemberBase):
             return
         try:
             values = Validator(
-                address=six.text_type,
+                address=str,
                 delivery_mode=enum_validator(DeliveryMode),
                 _optional=('address', 'delivery_mode'))(request)
         except ValueError as error:
@@ -205,9 +203,9 @@ class AllMembers(_MemberBase):
         service = getUtility(ISubscriptionService)
         try:
             validator = Validator(
-                list_id=six.text_type,
+                list_id=str,
                 subscriber=subscriber_validator,
-                display_name=six.text_type,
+                display_name=str,
                 delivery_mode=enum_validator(DeliveryMode),
                 role=enum_validator(MemberRole),
                 _optional=('delivery_mode', 'display_name', 'role'))
@@ -254,8 +252,8 @@ class FindMembers(_MemberBase):
         """Find a member"""
         service = getUtility(ISubscriptionService)
         validator = Validator(
-            list_id=six.text_type,
-            subscriber=six.text_type,
+            list_id=str,
+            subscriber=str,
             role=enum_validator(MemberRole),
             _optional=('list_id', 'subscriber', 'role'))
         try:

@@ -26,7 +26,6 @@ __all__ = [
 
 
 import os
-import six
 import sys
 import errno
 
@@ -200,8 +199,7 @@ def make(template_file, mlist=None, language=None, wrap=True,
         template = _(fp.read()[:-1])
     finally:
         fp.close()
-    assert isinstance(template, six.text_type), (
-        'Translated template is not unicode')
+    assert isinstance(template, str), 'Translated template is not a string'
     text = expand(template, kw)
     if wrap:
         return wrap_text(text)

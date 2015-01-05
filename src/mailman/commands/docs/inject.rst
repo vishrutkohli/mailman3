@@ -133,9 +133,8 @@ Standard input
 The message text can also be provided on standard input.
 ::
 
-    >>> from six import StringIO
+    >>> from io import StringIO
 
-    # Remember: we've got unicode literals turned on.
     >>> standard_in = StringIO(str("""\
     ... From: bperson@example.com
     ... To: test@example.com

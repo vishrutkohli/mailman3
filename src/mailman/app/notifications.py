@@ -35,7 +35,7 @@ from mailman.interfaces.member import DeliveryMode
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.utilities.i18n import make
 from mailman.utilities.string import expand, wrap
-from six.moves.urllib_error import URLError
+from urllib.error import URLError
 from zope.component import getUtility
 
 

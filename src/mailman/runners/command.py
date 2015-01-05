@@ -28,12 +28,12 @@ __all__ = [
 # -owner.
 
 import re
-import six
 import logging
 
 from email.errors import HeaderParseError
 from email.header import decode_header, make_header
 from email.iterators import typed_subpart_iterator
+from io import StringIO
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.runner import Runner
@@ -80,7 +80,7 @@ class CommandFinder:
             # subject is a unicode object, convert it to ASCII ignoring all
             # bogus characters.  Otherwise, there's nothing in the subject
             # that we can use.
-            if isinstance(raw_subject, six.text_type):
+            if isinstance(raw_subject, str):
                 safe_subject = raw_subject.encode('us-ascii', 'ignore')
                 self.command_lines.append(safe_subject)
         # Find the first text/plain part of the message.
@@ -96,7 +96,7 @@ class CommandFinder:
             return
         body = part.get_payload()
         # text/plain parts better have string payloads.
-        assert isinstance(body, six.string_types), 'Non-string decoded payload'
+        assert isinstance(body, (bytes, str)), 'Non-string decoded payload'
         lines = body.splitlines()
         # Use no more lines than specified
         max_lines = int(config.mailman.email_commands_max_lines)
@@ -114,7 +114,7 @@ class CommandFinder:
             # Ensure that all the parts are unicodes.  Since we only accept
             # ASCII commands and arguments, ignore anything else.
             parts = [(part
-                      if isinstance(part, six.text_type)
+                      if isinstance(part, str)
                       else part.decode('ascii', 'ignore'))
                      for part in parts]
             yield parts
@@ -126,7 +126,7 @@ class Results:
     """The email command results."""
 
     def __init__(self, charset='us-ascii'):
-        self._output = six.StringIO()
+        self._output = StringIO()
         self.charset = charset
         print(_("""\
 The results of your email command are provided below.
@@ -139,7 +139,7 @@ The results of your email command are provided below.
 
     def __str__(self):
         value = self._output.getvalue()
-        assert isinstance(value, six.text_type), 'Not a unicode: %r' % value
+        assert isinstance(value, str), 'Not a string: %r' % value
         return value
 
 

@@ -28,6 +28,7 @@ import os
 import sys
 import mailman.templates
 
+from configparser import ConfigParser, RawConfigParser
 from flufl.lock import Lock
 from lazr.config import ConfigSchema, as_boolean
 from mailman import version
@@ -37,7 +38,6 @@ from mailman.interfaces.languages import ILanguageManager
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.modules import call_name, expand_path
 from pkg_resources import resource_filename, resource_string as resource_bytes
-from six.moves.configparser import ConfigParser, RawConfigParser
 from string import Template
 from unittest.mock import patch
 from zope.component import getUtility

@@ -30,7 +30,7 @@ from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 from mailman.utilities.datetime import now
-from six.moves.urllib_error import HTTPError
+from urllib.error import HTTPError
 from zope.component import getUtility
 
 

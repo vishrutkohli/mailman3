@@ -27,11 +27,10 @@ from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.utilities.i18n import TemplateNotFoundError, find
-from six.moves.urllib_error import URLError
-from six.moves.urllib_parse import urlparse
-from six.moves.urllib_request import (
-    BaseHandler, build_opener, install_opener, urlopen)
-from six.moves.urllib_response import addinfourl
+from urllib.error import URLError
+from urllib.parse import urlparse
+from urllib.request import BaseHandler, build_opener, install_opener, urlopen
+from urllib.response import addinfourl
 from zope.component import getUtility
 from zope.interface import implementer
 

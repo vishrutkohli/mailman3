@@ -33,7 +33,7 @@ from mailman.email.message import Message
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.utilities.string import expand
-from six.moves.urllib_error import URLError
+from urllib.error import URLError
 from zope.component import getUtility
 from zope.interface import implementer
 

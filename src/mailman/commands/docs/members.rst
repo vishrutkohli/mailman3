@@ -229,7 +229,7 @@ You can also specify ``-`` as the filename, in which case the addresses are
 taken from standard input.
 ::
 
-    >>> from six import StringIO
+    >>> from io import StringIO
     >>> fp = StringIO()
     >>> for address in ('dperson@example.com',
     ...                 'Elly Person <eperson@example.com>',

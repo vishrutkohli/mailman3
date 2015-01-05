@@ -29,7 +29,7 @@ from mailman.config import config
 from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import IArchiver
 from mailman.utilities.string import expand
-from six.moves.urllib_parse import urljoin
+from urllib.parse import urljoin
 from zope.interface import implementer
 
 

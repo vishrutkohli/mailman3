@@ -52,12 +52,12 @@ from mailman.model.mime import ContentFilter
 from mailman.model.preferences import Preferences
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
-from six.moves.urllib_parse import urljoin
 from sqlalchemy import (
     Boolean, Column, DateTime, Float, ForeignKey, Integer, Interval,
     LargeBinary, PickleType, Unicode)
 from sqlalchemy.event import listen
 from sqlalchemy.orm import relationship
+from urllib.parse import urljoin
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer

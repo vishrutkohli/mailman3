@@ -43,7 +43,6 @@ from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.switchboard import ISwitchboard
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
-from six.moves import cPickle
 from zope.interface import implementer
 
 
@@ -114,10 +113,10 @@ class Switchboard:
         now = repr(time.time())
         if data.get('_plaintext'):
             protocol = 0
-            msgsave = cPickle.dumps(str(_msg), protocol)
+            msgsave = pickle.dumps(str(_msg), protocol)
         else:
             protocol = pickle.HIGHEST_PROTOCOL
-            msgsave = cPickle.dumps(_msg, protocol)
+            msgsave = pickle.dumps(_msg, protocol)
         # The list-id field is a string but the input to the hash function must
         # be bytes.
         hashfood = msgsave + list_id.encode('utf-8') + now.encode('utf-8')
@@ -141,7 +140,7 @@ class Switchboard:
         # Write to the pickle file the message object and metadata.
         with open(tmpfile, 'wb') as fp:
             fp.write(msgsave)
-            cPickle.dump(data, fp, protocol)
+            pickle.dump(data, fp, protocol)
             fp.flush()
             os.fsync(fp.fileno())
         os.rename(tmpfile, filename)
@@ -158,8 +157,8 @@ class Switchboard:
             # process crashes uncleanly the .bak file will be used to
             # re-instate the .pck file in order to try again.
             os.rename(filename, backfile)
-            msg = cPickle.load(fp)
-            data = cPickle.load(fp)
+            msg = pickle.load(fp)
+            data = pickle.load(fp)
         if data.get('_parsemsg'):
             # Calculate the original size of the text now so that we won't
             # have to generate the message later when we do size restriction
@@ -226,9 +225,9 @@ class Switchboard:
             with open(src, 'rb+') as fp:
                 try:
                     # Throw away the message object.
-                    cPickle.load(fp)
+                    pickle.load(fp)
                     data_pos = fp.tell()
-                    data = cPickle.load(fp)
+                    data = pickle.load(fp)
                 except Exception as error:
                     # If unpickling throws any exception, just log and
                     # preserve this entry
@@ -242,7 +241,7 @@ class Switchboard:
                         protocol = 0
                     else:
                         protocol = 1
-                    cPickle.dump(data, fp, protocol)
+                    pickle.dump(data, fp, protocol)
                     fp.truncate()
                     fp.flush()
                     os.fsync(fp.fileno())

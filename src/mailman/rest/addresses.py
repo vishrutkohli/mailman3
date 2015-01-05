@@ -24,8 +24,6 @@ __all__ = [
     ]
 
 
-import six
-
 from mailman.interfaces.address import (
     ExistingAddressError, InvalidEmailAddressError)
 from mailman.interfaces.usermanager import IUserManager
@@ -196,8 +194,8 @@ class UserAddresses(_AddressBase):
             not_found(response)
             return
         user_manager = getUtility(IUserManager)
-        validator = Validator(email=six.text_type,
-                              display_name=six.text_type,
+        validator = Validator(email=str,
+                              display_name=str,
                               _optional=('display_name',))
         try:
             address = user_manager.create_address(**validator(request))

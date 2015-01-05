@@ -67,8 +67,8 @@ from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.digest import DigestRunner
 from mailman.utilities.mailbox import Mailbox
-from six.moves.urllib_error import HTTPError
-from six.moves.urllib_parse import urlencode
+from urllib.error import HTTPError
+from urllib.parse import urlencode
 from zope import event
 from zope.component import getUtility
 

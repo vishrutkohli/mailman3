@@ -23,13 +23,13 @@ __all__ = [
 
 
 import sys
+import pickle
 
 from mailman.core.i18n import _
 from mailman.database.transaction import transactional
 from mailman.interfaces.command import ICLISubCommand
 from mailman.interfaces.listmanager import IListManager
 from mailman.utilities.importer import import_config_pck, Import21Error
-from six.moves import cPickle
 from zope.component import getUtility
 from zope.interface import implementer
 
@@ -77,10 +77,10 @@ class Import21:
         with open(filename, 'rb') as fp:
             while True:
                 try:
-                    config_dict = cPickle.load(fp)
+                    config_dict = pickle.load(fp)
                 except EOFError:
                     break
-                except cPickle.UnpicklingError:
+                except pickle.UnpicklingError:
                     self.parser.error(
                         _('Not a Mailman 2.1 configuration file: $filename'))
                     return

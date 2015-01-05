@@ -28,9 +28,9 @@ import mock
 import tempfile
 import unittest
 
+from io import StringIO
 from mailman.commands.cli_conf import Conf
 from mailman.testing.layers import ConfigLayer
-from six import StringIO
 
 
 

@@ -31,7 +31,7 @@ from flufl.lock import Lock, TimeOutError
 from mailbox import Maildir
 from mailman.config import config
 from mailman.interfaces.archiver import IArchiver
-from six.moves.urllib_parse import urljoin
+from urllib.parse import urljoin
 from zope.interface import implementer
 
 

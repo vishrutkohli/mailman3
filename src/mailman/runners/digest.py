@@ -30,6 +30,7 @@ from email.header import Header
 from email.mime.message import MIMEMessage
 from email.mime.text import MIMEText
 from email.utils import formatdate, getaddresses, make_msgid
+from io import StringIO
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.runner import Runner
@@ -39,8 +40,7 @@ from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.utilities.i18n import make
 from mailman.utilities.mailbox import Mailbox
 from mailman.utilities.string import oneline, wrap
-from six.moves import cStringIO as StringIO
-from six.moves.urllib_error import URLError
+from urllib.error import URLError
 
 
 log = logging.getLogger('mailman.error')
