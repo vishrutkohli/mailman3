@@ -365,8 +365,9 @@ class Loop:
         # config.PYTHON, which is the absolute path to the Python interpreter,
         # must be given as argv[0] due to Python's library search algorithm.
         args = [sys.executable, sys.executable, exe, rswitch]
-        if self._config_file is not None:
-            args.extend(['-C', self._config_file])
+        config_file = (config.filename if self._config_file is None
+                       else self._config_file)
+        args.extend(['-C', config_file])
         log = logging.getLogger('mailman.runner')
         log.debug('starting: %s', args)
         # For the testing framework, if this environment variable is set, pass
