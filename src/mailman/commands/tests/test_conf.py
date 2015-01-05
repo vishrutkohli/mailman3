@@ -17,9 +17,6 @@
 
 """Test the conf subcommand."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestConf',
     ]
@@ -31,9 +28,9 @@ import mock
 import tempfile
 import unittest
 
-from StringIO import StringIO
 from mailman.commands.cli_conf import Conf
 from mailman.testing.layers import ConfigLayer
+from six import StringIO
 
 
 

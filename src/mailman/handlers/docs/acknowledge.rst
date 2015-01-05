@@ -113,9 +113,9 @@ The receipt will include the original message's subject in the response body,
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg           : False
-    listname            : test@example.com
+    listid              : test.example.com
     nodecorate          : True
-    recipients          : set([u'aperson@example.com'])
+    recipients          : {'aperson@example.com'}
     reduced_list_headers: True
     ...
     >>> print(messages[0].msg.as_string())
@@ -150,9 +150,9 @@ If there is no subject, then the receipt will use a generic message.
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg           : False
-    listname            : test@example.com
+    listid              : test.example.com
     nodecorate          : True
-    recipients          : set([u'aperson@example.com'])
+    recipients          : {'aperson@example.com'}
     reduced_list_headers: True
     ...
     >>> print(messages[0].msg.as_string())

@@ -17,9 +17,6 @@
 
 """REST API for Message moderation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'HeldMessage',
     'HeldMessages',
@@ -88,7 +85,7 @@ class _HeldMessageBase(_ModerationBase):
         # resource.  Others we can drop.  Since we're mutating the dictionary,
         # we need to make a copy of the keys.  When you port this to Python 3,
         # you'll need to list()-ify the .keys() dictionary view.
-        for key in resource.keys():
+        for key in list(resource):
             if key in ('_mod_subject', '_mod_hold_date', '_mod_reason',
                        '_mod_sender', '_mod_message_id'):
                 resource[key[5:]] = resource.pop(key)

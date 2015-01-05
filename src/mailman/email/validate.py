@@ -17,9 +17,6 @@
 
 """Email address validation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Validator',
     ]
@@ -27,11 +24,10 @@ __all__ = [
 
 import re
 
-from zope.interface import implementer
-
 from mailman.interfaces.address import (
     IEmailValidator, InvalidEmailAddressError)
 from mailman.utilities.email import split_email
+from zope.interface import implementer
 
 
 # What other characters should be disallowed?

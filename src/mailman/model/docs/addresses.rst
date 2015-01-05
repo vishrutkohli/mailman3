@@ -205,23 +205,9 @@ case-preserved version are available on attributes of the `IAddress` object.
     FPERSON@example.com
 
 Because addresses are case-insensitive for all other purposes, you cannot
-create an address that differs only in case.
-
-    >>> user_manager.create_address('fperson@example.com')
-    Traceback (most recent call last):
-    ...
-    ExistingAddressError: FPERSON@example.com
-    >>> user_manager.create_address('fperson@EXAMPLE.COM')
-    Traceback (most recent call last):
-    ...
-    ExistingAddressError: FPERSON@example.com
-    >>> user_manager.create_address('FPERSON@example.com')
-    Traceback (most recent call last):
-    ...
-    ExistingAddressError: FPERSON@example.com
-
-You can get the address using either the lower cased version or case-preserved
-version.  In fact, searching for an address is case insensitive.
+create an address that differs only in case.  You can get the address using
+either the lower cased version or case-preserved version.  In fact, searching
+for an address is case insensitive.
 
     >>> print(user_manager.get_address('fperson@example.com').email)
     fperson@example.com

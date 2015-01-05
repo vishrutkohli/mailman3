@@ -17,9 +17,6 @@
 
 """Ban manager."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'BanManager',
     ]
@@ -27,12 +24,11 @@ __all__ = [
 
 import re
 
-from sqlalchemy import Column, Integer, Unicode
-from zope.interface import implementer
-
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.bans import IBan, IBanManager
+from sqlalchemy import Column, Integer, Unicode
+from zope.interface import implementer
 
 
 

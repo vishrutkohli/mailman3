@@ -17,9 +17,6 @@
 
 """REST for members."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AMember',
     'AllMembers',
@@ -28,9 +25,7 @@ __all__ = [
     ]
 
 
-from uuid import UUID
-from operator import attrgetter
-from zope.component import getUtility
+import six
 
 from mailman.app.membership import delete_member
 from mailman.interfaces.address import InvalidEmailAddressError
@@ -47,6 +42,9 @@ from mailman.rest.helpers import (
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
+from operator import attrgetter
+from uuid import UUID
+from zope.component import getUtility
 
 
 
@@ -176,7 +174,7 @@ class AMember(_MemberBase):
             return
         try:
             values = Validator(
-                address=unicode,
+                address=six.text_type,
                 delivery_mode=enum_validator(DeliveryMode),
                 _optional=('address', 'delivery_mode'))(request)
         except ValueError as error:
@@ -207,9 +205,9 @@ class AllMembers(_MemberBase):
         service = getUtility(ISubscriptionService)
         try:
             validator = Validator(
-                list_id=unicode,
+                list_id=six.text_type,
                 subscriber=subscriber_validator,
-                display_name=unicode,
+                display_name=six.text_type,
                 delivery_mode=enum_validator(DeliveryMode),
                 role=enum_validator(MemberRole),
                 _optional=('delivery_mode', 'display_name', 'role'))
@@ -256,8 +254,8 @@ class FindMembers(_MemberBase):
         """Find a member"""
         service = getUtility(ISubscriptionService)
         validator = Validator(
-            list_id=unicode,
-            subscriber=unicode,
+            list_id=six.text_type,
+            subscriber=six.text_type,
             role=enum_validator(MemberRole),
             _optional=('list_id', 'subscriber', 'role'))
         try:

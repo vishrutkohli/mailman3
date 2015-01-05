@@ -17,9 +17,6 @@
 
 """Basic WSGI Application object for REST server."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'make_application',
     'make_server',
@@ -85,7 +82,7 @@ class RootedAPI(API):
                 if matcher is _missing:
                     continue
                 result = None
-                if isinstance(matcher, basestring):
+                if isinstance(matcher, str):
                     # Is the matcher string a regular expression or plain
                     # string?  If it starts with a caret, it's a regexp.
                     if matcher.startswith('^'):

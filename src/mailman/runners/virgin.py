@@ -23,6 +23,11 @@ to go through some minimal processing before they can be sent out to the
 recipient.
 """
 
+__all__ = [
+    'VirginRunner',
+    ]
+
+
 from mailman.core.pipelines import process
 from mailman.core.runner import Runner
 

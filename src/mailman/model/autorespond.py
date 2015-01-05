@@ -17,18 +17,11 @@
 
 """Module stuff."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AutoResponseRecord',
     'AutoResponseSet',
     ]
 
-
-from sqlalchemy import Column, Date, ForeignKey, Integer, desc
-from sqlalchemy.orm import relationship
-from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
@@ -36,6 +29,9 @@ from mailman.database.types import Enum
 from mailman.interfaces.autorespond import (
     IAutoResponseRecord, IAutoResponseSet, Response)
 from mailman.utilities.datetime import today
+from sqlalchemy import Column, Date, ForeignKey, Integer, desc
+from sqlalchemy.orm import relationship
+from zope.interface import implementer
 
 
 

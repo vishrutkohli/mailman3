@@ -17,16 +17,12 @@
 
 """REST moderation tests."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestModeration',
     ]
 
 
 import unittest
-
-from urllib2 import HTTPError
 
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message, hold_subscription
@@ -36,6 +32,7 @@ from mailman.interfaces.member import DeliveryMode
 from mailman.testing.helpers import (
     call_api, specialized_message_from_string as mfs)
 from mailman.testing.layers import RESTLayer
+from six.moves.urllib_error import HTTPError
 
 
 
@@ -97,7 +94,8 @@ Something else.
         with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg, 'Cannot convert parameters: action')
+        self.assertEqual(cm.exception.msg,
+                         b'Cannot convert parameters: action')
 
     def test_bad_subscription_request_id(self):
         # Bad request when request_id is not an integer.
@@ -123,4 +121,18 @@ Something else.
         with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg, 'Cannot convert parameters: action')
+        self.assertEqual(cm.exception.msg,
+                         b'Cannot convert parameters: action')
+
+    def test_discard(self):
+        # Discarding a message removes it from the moderation queue.
+        with transaction():
+            held_id = hold_message(self._mlist, self._msg)
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{}'.format(
+            held_id)
+        content, response = call_api(url, dict(action='discard'))
+        self.assertEqual(response.status, 204)
+        # Now it's gone.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url, dict(action='discard'))
+        self.assertEqual(cm.exception.code, 404)

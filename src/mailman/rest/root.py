@@ -17,9 +17,6 @@
 
 """The root of the REST API."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Root',
     ]
@@ -28,8 +25,6 @@ __all__ = [
 import falcon
 
 from base64 import b64decode
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.system import system
@@ -41,8 +36,10 @@ from mailman.rest.helpers import (
 from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
+from mailman.rest.queues import AQueue, AQueueFile, AllQueues
 from mailman.rest.templates import TemplateFinder
 from mailman.rest.users import AUser, AllUsers
+from zope.component import getUtility
 
 
 
@@ -66,17 +63,18 @@ class Root:
         # the case where no error is raised.
         if request.auth is None:
             raise falcon.HTTPUnauthorized(
-                b'401 Unauthorized',
-                b'The REST API requires authentication')
+                '401 Unauthorized',
+                'The REST API requires authentication')
         if request.auth.startswith('Basic '):
-            credentials = b64decode(request.auth[6:])
+            # b64decode() returns bytes, but we require a str.
+            credentials = b64decode(request.auth[6:]).decode('utf-8')
             username, password = credentials.split(':', 1)
             if (username != config.webservice.admin_user or
                 password != config.webservice.admin_pass):
                 # Not authorized.
                 raise falcon.HTTPUnauthorized(
-                    b'401 Unauthorized',
-                    b'User is not authorized for the REST API')
+                    '401 Unauthorized',
+                    'User is not authorized for the REST API')
         return TopLevel()
 
 
@@ -216,3 +214,15 @@ class TopLevel:
         content_type = None
         return TemplateFinder(
             fqdn_listname, template, language, content_type)
+
+    @child()
+    def queues(self, request, segments):
+        """/<api>/queues[/<name>[/file]]"""
+        if len(segments) == 0:
+            return AllQueues()
+        elif len(segments) == 1:
+            return AQueue(segments[0]), []
+        elif len(segments) == 2:
+            return AQueueFile(segments[0], segments[1]), []
+        else:
+            return BadRequest(), []

@@ -17,9 +17,6 @@
 
 """Test some Runner base class behavior."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestRunner',
     ]
@@ -70,7 +67,7 @@ To: test@example.com
 Message-ID: <ant>
 
 """)
-        config.switchboards['in'].enqueue(msg, listname='test@example.com')
+        config.switchboards['in'].enqueue(msg, listid='test.example.com')
         with event_subscribers(self._got_event):
             runner.run()
         # We should now have exactly one event, which will contain the
@@ -81,7 +78,7 @@ Message-ID: <ant>
         self.assertTrue(isinstance(event, RunnerCrashEvent))
         self.assertEqual(event.mailing_list, self._mlist)
         self.assertEqual(event.message['message-id'], '<ant>')
-        self.assertEqual(event.metadata['listname'], 'test@example.com')
+        self.assertEqual(event.metadata['listid'], 'test.example.com')
         self.assertTrue(isinstance(event.error, RuntimeError))
         self.assertEqual(str(event.error), 'borked')
         self.assertTrue(isinstance(event.runner, CrashingRunner))

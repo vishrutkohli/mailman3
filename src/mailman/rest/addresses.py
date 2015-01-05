@@ -17,9 +17,6 @@
 
 """REST for addresses."""
 
-from __future__ import absolute_import, print_function,unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AllAddresses',
     'AnAddress',
@@ -27,8 +24,7 @@ __all__ = [
     ]
 
 
-from operator import attrgetter
-from zope.component import getUtility
+import six
 
 from mailman.interfaces.address import (
     ExistingAddressError, InvalidEmailAddressError)
@@ -40,6 +36,8 @@ from mailman.rest.members import MemberCollection
 from mailman.rest.preferences import Preferences
 from mailman.rest.validator import Validator
 from mailman.utilities.datetime import now
+from operator import attrgetter
+from zope.component import getUtility
 
 
 
@@ -168,6 +166,7 @@ class AnAddress(_AddressBase):
         from mailman.rest.users import AddressUser
         return AddressUser(self._address)
 
+
 
 class UserAddresses(_AddressBase):
     """The addresses of a user."""
@@ -197,8 +196,8 @@ class UserAddresses(_AddressBase):
             not_found(response)
             return
         user_manager = getUtility(IUserManager)
-        validator = Validator(email=unicode,
-                              display_name=unicode,
+        validator = Validator(email=six.text_type,
+                              display_name=six.text_type,
                               _optional=('display_name',))
         try:
             address = user_manager.create_address(**validator(request))

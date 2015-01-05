@@ -17,25 +17,21 @@
 
 """Importing list data into Mailman 3."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Import21',
     ]
 
 
 import sys
-import cPickle
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.database.transaction import transactional
 from mailman.interfaces.command import ICLISubCommand
 from mailman.interfaces.listmanager import IListManager
 from mailman.utilities.importer import import_config_pck, Import21Error
+from six.moves import cPickle
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -78,7 +74,7 @@ class Import21:
         assert len(args.pickle_file) == 1, (
             'Unexpected positional arguments: %s' % args.pickle_file)
         filename = args.pickle_file[0]
-        with open(filename) as fp:
+        with open(filename, 'rb') as fp:
             while True:
                 try:
                     config_dict = cPickle.load(fp)

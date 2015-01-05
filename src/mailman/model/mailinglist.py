@@ -17,25 +17,12 @@
 
 """Model for mailing lists."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MailingList',
     ]
 
 
 import os
-
-from sqlalchemy import (
-    Boolean, Column, DateTime, Float, ForeignKey, Integer, Interval,
-    LargeBinary, PickleType, Unicode)
-from sqlalchemy.event import listen
-from sqlalchemy.orm import relationship
-from urlparse import urljoin
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
 
 from mailman.config import config
 from mailman.database.model import Model
@@ -65,6 +52,15 @@ from mailman.model.mime import ContentFilter
 from mailman.model.preferences import Preferences
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
+from six.moves.urllib_parse import urljoin
+from sqlalchemy import (
+    Boolean, Column, DateTime, Float, ForeignKey, Integer, Interval,
+    LargeBinary, PickleType, Unicode)
+from sqlalchemy.event import listen
+from sqlalchemy.orm import relationship
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 SPACE = ' '
@@ -482,7 +478,9 @@ class MailingList(Model):
                 Member._user == subscriber).first()
             if member:
                 raise AlreadySubscribedError(
-                    self.fqdn_listname, subscriber, role)
+                    self.fqdn_listname,
+                    subscriber.preferred_address.email,
+                    role)
         else:
             raise ValueError('subscriber must be an address or user')
         member = Member(role=role,

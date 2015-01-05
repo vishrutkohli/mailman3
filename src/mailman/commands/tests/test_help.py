@@ -17,10 +17,8 @@
 
 """Additional tests for the `help` email command."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestHelp',
     ]
 
 
@@ -47,11 +45,11 @@ class TestHelp(unittest.TestCase):
     def test_too_many_arguments(self):
         # Error message when too many help arguments are given.
         results = Results()
-        status = self._help.process(self._mlist, Message(), {}, 
+        status = self._help.process(self._mlist, Message(), {},
                                     ('more', 'than', 'one'),
                                     results)
         self.assertEqual(status, ContinueProcessing.no)
-        self.assertEqual(unicode(results), """\
+        self.assertEqual(str(results), """\
 The results of your email command are provided below.
 
 help: too many arguments: more than one
@@ -60,10 +58,10 @@ help: too many arguments: more than one
     def test_no_such_command(self):
         # Error message when asking for help on an existent command.
         results = Results()
-        status = self._help.process(self._mlist, Message(), {}, 
+        status = self._help.process(self._mlist, Message(), {},
                                     ('doesnotexist',), results)
         self.assertEqual(status, ContinueProcessing.no)
-        self.assertEqual(unicode(results), """\
+        self.assertEqual(str(results), """\
 The results of your email command are provided below.
 
 help: no such command: doesnotexist

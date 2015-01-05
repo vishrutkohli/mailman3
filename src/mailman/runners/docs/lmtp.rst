@@ -20,7 +20,7 @@ Let's start a testable LMTP runner.
 It also helps to have a nice LMTP client.
 
     >>> lmtp = helpers.get_lmtp_client()
-    (220, '... Python LMTP runner 1.0')
+    (220, b'... Python LMTP runner 1.0')
     >>> lmtp.lhlo('remote.example.org')
     (250, ...)
 
@@ -28,24 +28,8 @@ It also helps to have a nice LMTP client.
 Posting address
 ===============
 
-If the mail server tries to send a message to a nonexistent mailing list, it
-will get a 550 error.
-
-    >>> lmtp.sendmail(
-    ...     'anne.person@example.com',
-    ...     ['mylist@example.com'], """\
-    ... From: anne.person@example.com
-    ... To: mylist@example.com
-    ... Subject: An interesting message
-    ... Message-ID: <aardvark>
-    ...
-    ... This is an interesting message.
-    ... """)
-    Traceback (most recent call last):
-    ...
-    SMTPDataError: (550, 'Requested action not taken: mailbox unavailable')
-
-Once the mailing list is created, the posting address is valid.
+Once the mailing list is created, the posting address is valid, and messages
+can be sent to the list.
 ::
 
     >>> create_list('mylist@example.com')
@@ -82,7 +66,7 @@ queue.
     This is an interesting message.
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     to_list      : True
     version      : ...
@@ -92,24 +76,8 @@ Sub-addresses
 =============
 
 The LMTP server understands each of the list's sub-addreses, such as `-join`,
-`-leave`, `-request` and so on.  If the message is posted to an invalid
-sub-address though, it is rejected.
-
-    >>> lmtp.sendmail(
-    ...     'anne.person@example.com',
-    ...     ['mylist-bogus@example.com'], """\
-    ... From: anne.person@example.com
-    ... To: mylist-bogus@example.com
-    ... Subject: Help
-    ... Message-ID: <cow>
-    ...
-    ... Please help me.
-    ... """)
-    Traceback (most recent call last):
-    ...
-    SMTPDataError: (550, 'Requested action not taken: mailbox unavailable')
-
-But the message is accepted if posted to a valid sub-address.
+`-leave`, `-request` and so on.  The message is accepted if posted to a valid
+sub-address.
 
     >>> lmtp.sendmail(
     ...     'anne.person@example.com',
@@ -145,7 +113,7 @@ command queue for processing.
     Please help me.
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : request
     version      : ...
@@ -172,7 +140,7 @@ A message to the `-bounces` address goes to the bounce processor.
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : bounces
     version      : ...
@@ -199,7 +167,7 @@ Confirmation messages go to the command processor...
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : confirm
     version      : ...
@@ -221,7 +189,7 @@ Confirmation messages go to the command processor...
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : join
     version      : ...
@@ -240,7 +208,7 @@ Confirmation messages go to the command processor...
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : join
     version      : ...
@@ -262,7 +230,7 @@ Confirmation messages go to the command processor...
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : leave
     version      : ...
@@ -281,7 +249,7 @@ Confirmation messages go to the command processor...
     1
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : leave
     version      : ...
@@ -307,7 +275,7 @@ Messages to the `-owner` address also go to the incoming processor.
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg    : False
     envsender    : noreply@example.com
-    listname     : mylist@example.com
+    listid       : mylist.example.com
     original_size: ...
     subaddress   : owner
     to_owner     : True

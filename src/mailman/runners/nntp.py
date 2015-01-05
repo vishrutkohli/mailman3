@@ -17,9 +17,6 @@
 
 """NNTP runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'NNTPRunner',
     ]
@@ -31,11 +28,11 @@ import socket
 import logging
 import nntplib
 
-from cStringIO import StringIO
-
 from mailman.config import config
 from mailman.core.runner import Runner
 from mailman.interfaces.nntp import NewsgroupModeration
+from six.moves import cStringIO as StringIO
+
 
 COMMA = ','
 COMMASPACE = ', '
@@ -82,7 +79,7 @@ class NNTPRunner(Runner):
                                 user=config.nntp.user,
                                 password=config.nntp.password)
             conn.post(fp)
-        except nntplib.error_temp:
+        except nntplib.NNTPTemporaryError:
             log.exception('{0} NNTP error for {1}'.format(
                 msg.get('message-id', 'n/a'), mlist.fqdn_listname))
         except socket.error:
@@ -111,9 +108,9 @@ def prepare_message(mlist, msg, msgdata):
         del msg['approved']
         msg['Approved'] = mlist.posting_address
     # Should we restore the original, non-prefixed subject for gatewayed
-    # messages? TK: We use stripped_subject (prefix stripped) which was
-    # crafted in CookHeaders.py to ensure prefix was stripped from the subject
-    # came from mailing list user.
+    # messages? TK: We use stripped_subject (prefix stripped) which was crafted
+    # in the subject-prefix handler to ensure prefix was stripped from the
+    # subject came from mailing list user.
     stripped_subject = msgdata.get('stripped_subject',
                                    msgdata.get('original_subject'))
     if not mlist.nntp_prefix_subject_too and stripped_subject is not None:

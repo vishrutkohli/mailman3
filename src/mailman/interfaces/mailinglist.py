@@ -17,9 +17,6 @@
 
 """Interface for a mailing list."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'IAcceptableAlias',
     'IAcceptableAliasSet',
@@ -32,9 +29,8 @@ __all__ = [
 
 
 from enum import Enum
-from zope.interface import Interface, Attribute
-
 from mailman.interfaces.member import MemberRole
+from zope.interface import Interface, Attribute
 
 
 

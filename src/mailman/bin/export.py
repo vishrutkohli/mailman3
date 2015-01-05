@@ -134,7 +134,7 @@ class XMLDumper(object):
             print >> self._fp, '<%s%s/>' % (_name, attrs)
         else:
             # The value might contain angle brackets.
-            value = escape(unicode(_value))
+            value = escape(_value.decode('utf-8'))
             print >> self._fp, '<%s%s>%s</%s>' % (_name, attrs, value, _name)
 
     def _do_list_categories(self, mlist, k, subcat=None):

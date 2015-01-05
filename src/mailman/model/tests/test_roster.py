@@ -17,9 +17,6 @@
 
 """Test rosters."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestMailingListRoster',
     'TestMembershipsRoster',
@@ -28,13 +25,12 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.datetime import now
+from zope.component import getUtility
 
 
 

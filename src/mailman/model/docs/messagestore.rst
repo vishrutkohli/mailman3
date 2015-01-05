@@ -6,28 +6,20 @@ The message store is a collection of messages keyed off of ``Message-ID`` and
 ``X-Message-ID-Hash`` headers.  Either of these values can be combined with
 the message's ``List-Archive`` header to create a globally unique URI to the
 message object in the internet facing interface of the message store.  The
-``X-Message-ID-Hash`` is the Base32 SHA1 hash of the ``Message-ID``.
+``X-Message-ID-Hash`` is the base-32 SHA1 hash of the ``Message-ID``.
 
     >>> from mailman.interfaces.messages import IMessageStore
     >>> from zope.component import getUtility
     >>> message_store = getUtility(IMessageStore)
 
-If you try to add a message to the store which is missing the ``Message-ID``
-header, you will get an exception.
+A message with a ``Message-ID`` header can be stored.
 
     >>> msg = message_from_string("""\
     ... Subject: An important message
+    ... Message-ID: <87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>
     ...
     ... This message is very important.
     ... """)
-    >>> message_store.add(msg)
-    Traceback (most recent call last):
-    ...
-    ValueError: Exactly one Message-ID header required
-
-However, if the message has a ``Message-ID`` header, it can be stored.
-
-    >>> msg['Message-ID'] = '<87myycy5eh.fsf@uwakimon.sk.tsukuba.ac.jp>'
     >>> x_message_id_hash = message_store.add(msg)
     >>> print(x_message_id_hash)
     AGDWSNXXKCWEILKKNYTBOHRDQGOX3Y35
@@ -97,15 +89,7 @@ Deleting messages from the store
 ================================
 
 You delete a message from the storage service by providing the ``Message-ID``
-for the message you want to delete.  If you try to delete a ``Message-ID``
-that isn't in the store, you get an exception.
-
-    >>> message_store.delete_message('nothing')
-    Traceback (most recent call last):
-    ...
-    LookupError: nothing
-
-But if you delete an existing message, it really gets deleted.
+for the message you want to delete.
 
     >>> message_id = message['message-id']
     >>> message_store.delete_message(message_id)

@@ -229,15 +229,14 @@ You can also specify ``-`` as the filename, in which case the addresses are
 taken from standard input.
 ::
 
-    >>> from StringIO import StringIO
+    >>> from six import StringIO
     >>> fp = StringIO()
-    >>> fp.encoding = 'us-ascii'
     >>> for address in ('dperson@example.com',
     ...                 'Elly Person <eperson@example.com>',
     ...                 'fperson@example.com (Fred Person)',
     ...                 ):
     ...         print(address, file=fp)
-    >>> fp.seek(0)
+    >>> filepos = fp.seek(0)
     >>> import sys
     >>> sys.stdin = fp
 

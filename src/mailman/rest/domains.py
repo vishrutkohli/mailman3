@@ -17,14 +17,13 @@
 
 """REST for domains."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ADomain',
     'AllDomains',
     ]
 
+
+import six
 
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, IDomainManager)
@@ -99,10 +98,10 @@ class AllDomains(_DomainBase):
         """Create a new domain."""
         domain_manager = getUtility(IDomainManager)
         try:
-            validator = Validator(mail_host=unicode,
-                                  description=unicode,
-                                  base_url=unicode,
-                                  contact_address=unicode,
+            validator = Validator(mail_host=six.text_type,
+                                  description=six.text_type,
+                                  base_url=six.text_type,
+                                  contact_address=six.text_type,
                                   _optional=('description', 'base_url',
                                              'contact_address'))
             domain = domain_manager.add(**validator(request))

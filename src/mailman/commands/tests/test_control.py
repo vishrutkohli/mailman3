@@ -17,9 +17,6 @@
 
 """Test some additional corner cases for starting/stopping."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestStart',
     'find_master',
@@ -37,10 +34,10 @@ import socket
 import unittest
 
 from datetime import timedelta, datetime
-
 from mailman.commands.cli_control import Start, kill_watcher
 from mailman.config import config
 from mailman.testing.layers import ConfigLayer
+
 
 SEP = '|'
 

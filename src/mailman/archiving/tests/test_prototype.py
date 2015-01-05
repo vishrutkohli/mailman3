@@ -17,9 +17,6 @@
 
 """Test the prototype archiver."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPrototypeArchiver',
     ]
@@ -33,7 +30,6 @@ import threading
 
 from email import message_from_file
 from flufl.lock import Lock
-
 from mailman.app.lifecycle import create_list
 from mailman.archiving.prototype import Prototype
 from mailman.config import config
@@ -89,13 +85,13 @@ but the water deserves to be swum.
     def _find(self, path):
         all_filenames = set()
         for dirpath, dirnames, filenames in os.walk(path):
-            if not isinstance(dirpath, unicode):
-                dirpath = unicode(dirpath)
+            if isinstance(dirpath, bytes):
+                dirpath = dirpath.decode('utf-8')
             all_filenames.add(dirpath)
             for filename in filenames:
                 new_filename = filename
-                if not isinstance(filename, unicode):
-                    new_filename = unicode(filename)
+                if isinstance(filename, bytes):
+                    new_filename = filename.decode('utf-8')
                 all_filenames.add(os.path.join(dirpath, new_filename))
         return all_filenames
 

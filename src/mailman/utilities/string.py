@@ -17,9 +17,6 @@
 
 """String utilities."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'expand',
     'oneline',
@@ -73,9 +70,8 @@ def oneline(s, cset='us-ascii', in_unicode=False):
     :rtype: string
     """
     try:
-        h = make_header(decode_header(s))
-        ustr = h.__unicode__()
-        line = EMPTYSTRING.join(ustr.splitlines())
+        h = str(make_header(decode_header(s)))
+        line = EMPTYSTRING.join(h.splitlines())
         if in_unicode:
             return line
         else:

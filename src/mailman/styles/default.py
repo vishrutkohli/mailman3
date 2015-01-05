@@ -17,21 +17,17 @@
 
 """Application of list styles to new and existing lists."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'LegacyDefaultStyle',
     'LegacyAnnounceOnly',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.interfaces.styles import IStyle
 from mailman.styles.base import (
     Announcement, BasicOperation, Bounces, Discussion, Identity, Moderation,
     Public)
+from zope.interface import implementer
 
 
 

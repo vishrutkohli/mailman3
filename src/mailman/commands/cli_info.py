@@ -17,9 +17,6 @@
 
 """Information about this Mailman instance."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Info'
     ]
@@ -28,13 +25,12 @@ __all__ = [
 import sys
 
 from lazr.config import as_boolean
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.rest.helpers import path_to
 from mailman.version import MAILMAN_VERSION_FULL
+from zope.interface import implementer
 
 
 

@@ -17,21 +17,16 @@
 
 """The Mail-Archive.com archiver."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MailArchive',
     ]
 
 
-from urllib import quote
-from urlparse import urljoin
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import ArchivePolicy, IArchiver
+from six.moves.urllib_parse import quote, urljoin
+from zope.interface import implementer
 
 
 
@@ -77,5 +72,5 @@ class MailArchive:
         if mlist.archive_policy is ArchivePolicy.public:
             config.switchboards['out'].enqueue(
                 msg,
-                listname=mlist.fqdn_listname,
+                listid=mlist.list_id,
                 recipients=[self.recipient])

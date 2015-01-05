@@ -20,16 +20,10 @@
 This only happens if the sender has set their AcknowledgePosts attribute.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Acknowledge',
     ]
 
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
@@ -37,6 +31,8 @@ from mailman.interfaces.handler import IHandler
 from mailman.interfaces.languages import ILanguageManager
 from mailman.utilities.i18n import make
 from mailman.utilities.string import oneline
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -67,14 +63,13 @@ class Acknowledge:
         language = (language_manager[msgdata['lang']]
                     if 'lang' in msgdata
                     else member.preferred_language)
-        charset = language_manager[language.code].charset
         # Now get the acknowledgement template.
         display_name = mlist.display_name
         text = make('postack.txt',
                     mailing_list=mlist,
                     language=language.code,
                     wrap=False,
-                    subject=oneline(original_subject, charset),
+                    subject=oneline(original_subject, in_unicode=True),
                     list_name=mlist.list_name,
                     display_name=display_name,
                     listinfo_url=mlist.script_url('listinfo'),

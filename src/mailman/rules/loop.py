@@ -17,18 +17,14 @@
 
 """Look for a posting loop."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Loop',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.rules import IRule
+from zope.interface import implementer
 
 
 

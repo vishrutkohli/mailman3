@@ -21,9 +21,6 @@ Note that doctest extraction does not currently work for zip file
 distributions.  doctest discovery currently requires file system traversal.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'setup',
     'teardown'
@@ -31,7 +28,6 @@ __all__ = [
 
 
 from inspect import isfunction, ismethod
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.testing.helpers import call_api, specialized_message_from_string
@@ -145,11 +141,6 @@ def dump_json(url, data=None, method=None, username=None, password=None):
 
 def setup(testobj):
     """Test setup."""
-    # Make sure future statements in our doctests are the same as everywhere
-    # else.
-    testobj.globs['absolute_import'] = absolute_import
-    testobj.globs['print_function'] = print_function
-    testobj.globs['unicode_literals'] = unicode_literals
     # In general, I don't like adding convenience functions, since I think
     # doctests should do the imports themselves.  It makes for better
     # documentation that way.  However, a few are really useful, or help to

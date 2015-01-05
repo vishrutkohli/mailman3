@@ -24,7 +24,7 @@ The original message is ignored, but the results receive the echoed command.
     >>> from mailman.email.message import Message
     >>> print(command.process(mlist, Message(), {}, ('foo', 'bar'), results))
     ContinueProcessing.yes
-    >>> print(unicode(results))
+    >>> print(str(results))
     The results of your email command are provided below.
     <BLANKLINE>
     echo foo bar

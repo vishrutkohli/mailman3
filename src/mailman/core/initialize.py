@@ -24,9 +24,6 @@ line argument parsing, since some of the initialization behavior is controlled
 by the command line arguments.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'initialize',
     'initialize_1',
@@ -38,16 +35,15 @@ __all__ = [
 
 import os
 import sys
-
-from pkg_resources import resource_string
-from zope.component import getUtility
-from zope.configuration import xmlconfig
-
 import mailman.config.config
 import mailman.core.logging
 
 from mailman.interfaces.database import IDatabaseFactory
 from mailman.utilities.modules import call_name
+from pkg_resources import resource_string as resource_bytes
+from zope.component import getUtility
+from zope.configuration import xmlconfig
+
 
 # The test infrastructure uses this to prevent the search and loading of any
 # existing configuration file.  Otherwise the existence of say a
@@ -109,8 +105,8 @@ def initialize_1(config_path=None):
     :param config_path: The path to the configuration file.
     :type config_path: string
     """
-    zcml = resource_string('mailman.config', 'configure.zcml')
-    xmlconfig.string(zcml)
+    zcml = resource_bytes('mailman.config', 'configure.zcml')
+    xmlconfig.string(zcml.decode('utf-8'))
     # By default, set the umask so that only owner and group can read and
     # write our files.  Specifically we must have g+rw and we probably want
     # o-rwx although I think in most cases it doesn't hurt if other can read

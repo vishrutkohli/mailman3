@@ -64,13 +64,6 @@ But his address record can be accessed with the case-preserved version too.
     registered_on: 2005-08-01T07:49:23
     self_link: http://localhost:9001/3.0/addresses/bart.person@example.com
 
-A non-existent email address can't be retrieved.
-
-    >>> dump_json('http://localhost:9001/3.0/addresses/nobody@example.com')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
 When an address has a real name associated with it, this is also available in
 the REST API.
 
@@ -168,7 +161,7 @@ The user is now created and the address is linked to it:
     >>> cris.user == cris_user
     True
     >>> [a.email for a in cris_user.addresses]
-    [u'cris@example.com']
+    ['cris@example.com']
 
 A link to the user resource is now available as a sub-resource.
 
@@ -188,7 +181,7 @@ parameter to the POST request and set it to a false-equivalent value like 0:
     ...           {'display_name': 'Anne User', 'auto_create': 0})
     Traceback (most recent call last):
     ...
-    HTTPError: HTTP Error 403: 403 Forbidden
+    urllib.error.HTTPError: HTTP Error 403: ...
 
 A request to the `/user` sub-resource will return the linked user's
 representation:
@@ -219,7 +212,7 @@ The address and the user can be unlinked by sending a DELETE request on the
     >>> dump_json('http://localhost:9001/3.0/addresses/cris@example.com/user')
     Traceback (most recent call last):
     ...
-    HTTPError: HTTP Error 404: 404 Not Found
+    urllib.error.HTTPError: HTTP Error 404: ...
 
 You can link an existing user to an address by passing the user's ID in the
 POST request.
@@ -261,7 +254,7 @@ User addresses
 ==============
 
 Users control addresses.  The canonical URLs for these user-controlled
-addresses live in the `/addresses` namespace.
+addresses live in the ``/addresses`` namespace.
 ::
 
     >>> dave = user_manager.create_user('dave@example.com', 'Dave Person')

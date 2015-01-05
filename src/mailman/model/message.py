@@ -17,19 +17,16 @@
 
 """Model for messages."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Message',
     ]
 
-from sqlalchemy import Column, Integer, LargeBinary, Unicode
-from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.messages import IMessage
+from sqlalchemy import Column, Integer, Unicode
+from zope.interface import implementer
 
 
 
@@ -42,8 +39,8 @@ class Message(Model):
     id = Column(Integer, primary_key=True)
     # This is a Messge-ID field representation, not a database row id.
     message_id = Column(Unicode)
-    message_id_hash = Column(LargeBinary)
-    path = Column(LargeBinary)
+    message_id_hash = Column(Unicode)
+    path = Column(Unicode)
 
     @dbconnection
     def __init__(self, store, message_id, message_id_hash, path):

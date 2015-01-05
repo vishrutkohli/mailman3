@@ -332,7 +332,8 @@ recipients.
 
     >>> failures = bulk.deliver(mlist, msg, msgdata)
     >>> for address in sorted(failures):
-    ...     print(address, failures[address][0], failures[address][1])
+    ...     print(address, failures[address][0],
+    ...                    failures[address][1].decode('ascii'))
     aperson@example.org 500 Error: SMTPRecipientsRefused
     bperson@example.org 500 Error: SMTPRecipientsRefused
     cperson@example.org 500 Error: SMTPRecipientsRefused
@@ -350,7 +351,8 @@ Or there could be some other problem causing an SMTP response failure.
 
     >>> failures = bulk.deliver(mlist, msg, msgdata)
     >>> for address in sorted(failures):
-    ...     print(address, failures[address][0], failures[address][1])
+    ...     print(address, failures[address][0],
+    ...                    failures[address][1].decode('ascii'))
     aperson@example.org 450 Error: SMTPResponseException
     bperson@example.org 450 Error: SMTPResponseException
     cperson@example.org 450 Error: SMTPResponseException
@@ -361,7 +363,8 @@ Or there could be some other problem causing an SMTP response failure.
 
     >>> failures = bulk.deliver(mlist, msg, msgdata)
     >>> for address in sorted(failures):
-    ...     print(address, failures[address][0], failures[address][1])
+    ...     print(address, failures[address][0],
+    ...                    failures[address][1].decode('ascii'))
     aperson@example.org 500 Error: SMTPResponseException
     bperson@example.org 500 Error: SMTPResponseException
     cperson@example.org 500 Error: SMTPResponseException

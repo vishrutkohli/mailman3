@@ -17,22 +17,18 @@
 
 """RFC 2369 List-* and related headers."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'RFC2369',
     ]
 
 
 from email.utils import formataddr
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.handlers.cook_headers import uheader
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.mailinglist import IListArchiverSet
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
 
 
 CONTINUATION = ',\n\t'

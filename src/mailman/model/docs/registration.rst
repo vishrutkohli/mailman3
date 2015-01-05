@@ -8,7 +8,7 @@ additional information they may supply.  All registered email addresses must
 be verified before Mailman will send them any list traffic.
 
 The ``IUserManager`` manages users, but it does so at a fairly low level.
-Specifically, it does not handle verifications, email address syntax validity
+Specifically, it does not handle verification, email address syntax validity
 checks, etc.  The ``IRegistrar`` is the interface to the object handling all
 this stuff.
 
@@ -19,7 +19,7 @@ this stuff.
 Here is a helper function to check the token strings.
 
     >>> def check_token(token):
-    ...     assert isinstance(token, basestring), 'Not a string'
+    ...     assert isinstance(token, str), 'Not a string'
     ...     assert len(token) == 40, 'Unexpected length: %d' % len(token)
     ...     assert token.isalnum(), 'Not alphanumeric'
     ...     print('ok')
@@ -46,31 +46,6 @@ address of the user who is registering.
 Some amount of sanity checks are performed on the email address, although
 honestly, not as much as probably should be done.  Still, some patently bad
 addresses are rejected outright.
-
-    >>> registrar.register(mlist, '')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError
-    >>> registrar.register(mlist, 'some name@example.com')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: some name@example.com
-    >>> registrar.register(mlist, '<script>@example.com')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: <script>@example.com
-    >>> registrar.register(mlist, '\xa0@example.com')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: \xa0@example.com
-    >>> registrar.register(mlist, 'noatsign')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: noatsign
-    >>> registrar.register(mlist, 'nodom@ain')
-    Traceback (most recent call last):
-    ...
-    InvalidEmailAddressError: nodom@ain
 
 
 Register an email address
@@ -149,9 +124,9 @@ message is sent to the user in order to verify the registered address.
     <BLANKLINE>
     >>> dump_msgdata(items[0].msgdata)
     _parsemsg           : False
-    listname            : alpha@example.com
+    listid              : alpha.example.com
     nodecorate          : True
-    recipients          : set([u'aperson@example.com'])
+    recipients          : {'aperson@example.com'}
     reduced_list_headers: True
     version             : 3
 
@@ -312,7 +287,7 @@ Corner cases
 If you try to confirm a token that doesn't exist in the pending database, the
 confirm method will just return False.
 
-    >>> registrar.confirm(bytes('no token'))
+    >>> registrar.confirm(bytes(b'no token'))
     False
 
 Likewise, if you try to confirm, through the `IUserRegistrar` interface, a

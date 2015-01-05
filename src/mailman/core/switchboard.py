@@ -24,9 +24,6 @@ written.  First, the message is written to the pickle, then the metadata
 dictionary is written.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Switchboard',
     'handle_ConfigurationUpdatedEvent',
@@ -37,11 +34,8 @@ import os
 import time
 import email
 import pickle
-import cPickle
 import hashlib
 import logging
-
-from zope.interface import implementer
 
 from mailman.config import config
 from mailman.email.message import Message
@@ -49,10 +43,13 @@ from mailman.interfaces.configuration import ConfigurationUpdatedEvent
 from mailman.interfaces.switchboard import ISwitchboard
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.string import expand
+from six.moves import cPickle
+from zope.interface import implementer
 
 
-# 20 bytes of all bits set, maximum hashlib.sha.digest() value.
-shamax = 0xffffffffffffffffffffffffffffffffffffffffL
+# 20 bytes of all bits set, maximum hashlib.sha.digest() value.  We do it this
+# way for Python 2/3 compatibility.
+shamax = int('0xffffffffffffffffffffffffffffffffffffffff', 16)
 # Small increment to add to time in case two entries have the same time.  This
 # prevents skipping one of two entries with the same time until the next pass.
 DELTA = .0001
@@ -92,7 +89,7 @@ class Switchboard:
         self.queue_directory = queue_directory
         # If configured to, create the directory if it doesn't yet exist.
         if config.create_paths:
-            makedirs(self.queue_directory, 0770)
+            makedirs(self.queue_directory, 0o770)
         # Fast track for no slices
         self._lower = None
         self._upper = None
@@ -112,37 +109,37 @@ class Switchboard:
         # of parallel runner processes.
         data = _metadata.copy()
         data.update(_kws)
-        listname = data.get('listname', '--nolist--')
+        list_id = data.get('listid', '--nolist--')
         # Get some data for the input to the sha hash.
-        now = time.time()
+        now = repr(time.time())
         if data.get('_plaintext'):
             protocol = 0
             msgsave = cPickle.dumps(str(_msg), protocol)
         else:
             protocol = pickle.HIGHEST_PROTOCOL
             msgsave = cPickle.dumps(_msg, protocol)
-        # listname is unicode but the input to the hash function must be an
-        # 8-bit string (eventually, a bytes object).
-        hashfood = msgsave + listname.encode('utf-8') + repr(now)
+        # The list-id field is a string but the input to the hash function must
+        # be bytes.
+        hashfood = msgsave + list_id.encode('utf-8') + now.encode('utf-8')
         # Encode the current time into the file name for FIFO sorting.  The
         # file name consists of two parts separated by a '+': the received
         # time for this message (i.e. when it first showed up on this system)
         # and the sha hex digest.
-        filebase = repr(now) + '+' + hashlib.sha1(hashfood).hexdigest()
+        filebase = now + '+' + hashlib.sha1(hashfood).hexdigest()
         filename = os.path.join(self.queue_directory, filebase + '.pck')
         tmpfile = filename + '.tmp'
         # Always add the metadata schema version number
         data['version'] = config.QFILE_SCHEMA_VERSION
         # Filter out volatile entries.  Use .keys() so that we can mutate the
         # dictionary during the iteration.
-        for k in data.keys():
+        for k in list(data):
             if k.startswith('_'):
                 del data[k]
         # We have to tell the dequeue() method whether to parse the message
         # object or not.
         data['_parsemsg'] = (protocol == 0)
         # Write to the pickle file the message object and metadata.
-        with open(tmpfile, 'w') as fp:
+        with open(tmpfile, 'wb') as fp:
             fp.write(msgsave)
             cPickle.dump(data, fp, protocol)
             fp.flush()
@@ -156,7 +153,7 @@ class Switchboard:
         filename = os.path.join(self.queue_directory, filebase + '.pck')
         backfile = os.path.join(self.queue_directory, filebase + '.bak')
         # Read the message object and metadata.
-        with open(filename) as fp:
+        with open(filename, 'rb') as fp:
             # Move the file to the backup file name for processing.  If this
             # process crashes uncleanly the .bak file will be used to
             # re-instate the .pck file in order to try again.
@@ -207,13 +204,13 @@ class Switchboard:
             # Throw out any files which don't match our bitrange.  BAW: test
             # performance and end-cases of this algorithm.  MAS: both
             # comparisons need to be <= to get complete range.
-            if lower is None or (lower <= long(digest, 16) <= upper):
+            if lower is None or (lower <= int(digest, 16) <= upper):
                 key = float(when)
                 while key in times:
                     key += DELTA
                 times[key] = filebase
         # FIFO sort
-        return [times[key] for key in sorted(times)]
+        return [times[k] for k in sorted(times)]
 
     def recover_backup_files(self):
         """See `ISwitchboard`."""
@@ -228,7 +225,8 @@ class Switchboard:
             dst = os.path.join(self.queue_directory, filebase + '.pck')
             with open(src, 'rb+') as fp:
                 try:
-                    msg = cPickle.load(fp)
+                    # Throw away the message object.
+                    cPickle.load(fp)
                     data_pos = fp.tell()
                     data = cPickle.load(fp)
                 except Exception as error:

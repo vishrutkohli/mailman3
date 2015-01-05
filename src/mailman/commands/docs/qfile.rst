@@ -47,7 +47,6 @@ Once we've figured out the file name of the shunted message, we can print it.
     >>> command.process(FakeArgs)
     [----- start pickle -----]
     <----- start object 1 ----->
-    From nobody ...
     From: aperson@example.com
     To: test@example.com
     Subject: Uh oh
@@ -55,11 +54,7 @@ Once we've figured out the file name of the shunted message, we can print it.
     I borkeded Mailman.
     <BLANKLINE>
     <----- start object 2 ----->
-    {   u'_parsemsg': False,
-        'bad': u'yes',
-        'bar': u'baz',
-        'foo': 7,
-        u'version': 3}
+    {'_parsemsg': False, 'bad': 'yes', 'bar': 'baz', 'foo': 7, 'version': 3}
     [----- end pickle -----]
 
 Maybe we don't want to print the contents of the file though, in case we want

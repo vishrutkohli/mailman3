@@ -17,9 +17,6 @@
 
 """Base delivery class."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'BaseDelivery',
     'IndividualDelivery',
@@ -31,11 +28,10 @@ import socket
 import logging
 import smtplib
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.interfaces.mta import IMailTransportAgentDelivery
 from mailman.mta.connection import Connection
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.smtp')

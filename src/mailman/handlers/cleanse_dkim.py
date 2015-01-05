@@ -25,20 +25,16 @@ and it will also give the MTA the opportunity to regenerate valid keys
 originating at the Mailman server for the outgoing message.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'CleanseDKIM',
     ]
 
 
 from lazr.config import as_boolean
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
 
 
 

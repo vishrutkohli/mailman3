@@ -45,9 +45,9 @@ etc.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     Archived-At: http://lists.example.com/.../4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
     List-Archive: <http://lists.example.com/archives/test@example.com>
@@ -67,7 +67,7 @@ However there are currently no recipients for this message.
     >>> dump_msgdata(msgdata)
     original_sender : aperson@example.com
     original_subject: My first post
-    recipients      : set([])
+    recipients      : set()
     stripped_subject: My first post
 
 After pipeline processing, the message is now sitting in various other
@@ -84,9 +84,9 @@ processing queues.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     ...
     <BLANKLINE>
@@ -97,7 +97,7 @@ processing queues.
     _parsemsg       : False
     original_sender : aperson@example.com
     original_subject: My first post
-    recipients      : set([])
+    recipients      : set()
     stripped_subject: My first post
     version         : 3
 
@@ -121,9 +121,9 @@ delivered to end recipients.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     ...
     <BLANKLINE>
@@ -132,10 +132,10 @@ delivered to end recipients.
 
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg       : False
-    listname        : test@example.com
+    listid          : test.example.com
     original_sender : aperson@example.com
     original_subject: My first post
-    recipients      : set([])
+    recipients      : set()
     stripped_subject: My first post
     version         : 3
 
@@ -152,9 +152,9 @@ There's now one message in the digest mailbox, getting ready to be sent.
     To: test@example.com
     Message-ID: <first>
     X-Message-ID-Hash: 4CMWUN6BHVCMHMDAOSJZ2Q72G5M32MWB
-    Subject: [Test] My first post
     X-Mailman-Version: ...
     Precedence: list
+    Subject: [Test] My first post
     List-Id: <test.example.com>
     ...
     <BLANKLINE>

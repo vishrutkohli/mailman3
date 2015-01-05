@@ -17,17 +17,13 @@
 
 """The 'help' subcommand."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Help',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.interfaces.command import ICLISubCommand
+from zope.interface import implementer
 
 
 

@@ -17,9 +17,6 @@
 
 """Test the cook_headers handler."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestCookHeaders',
     ]
@@ -50,6 +47,6 @@ class TestCookHeaders(unittest.TestCase):
         for msg in messages:
             try:
                 cook_headers.process(self._mlist, msg, {})
-            except AttributeError as e:
+            except AttributeError as error:
                 # LP: #1130696 would raise an AttributeError on .sender
-                self.fail(e)
+                self.fail(error)

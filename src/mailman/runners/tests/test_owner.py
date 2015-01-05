@@ -22,9 +22,6 @@
 # tests.  They're not exactly integration tests, but they do touch lots of
 # parts of the system.
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestEmailToOwner',
     ]
@@ -32,22 +29,19 @@ __all__ = [
 
 import unittest
 
-from operator import itemgetter
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.database.transaction import transaction
 from mailman.interfaces.member import MemberRole
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
-    TestableMaster,
-    get_lmtp_client,
-    make_testable_runner)
+    TestableMaster, get_lmtp_client, make_testable_runner)
 from mailman.runners.incoming import IncomingRunner
 from mailman.runners.outgoing import OutgoingRunner
 from mailman.runners.pipeline import PipelineRunner
 from mailman.testing.layers import SMTPLayer
+from operator import itemgetter
+from zope.component import getUtility
 
 
 
@@ -89,7 +83,7 @@ class TestEmailToOwner(unittest.TestCase):
         # get a copy of the message.
         lmtp = get_lmtp_client(quiet=True)
         lmtp.lhlo('remote.example.org')
-        lmtp.sendmail('zuzu@example.org', ['test-owner@example.com'], """\
+        lmtp.sendmail('zuzu@example.org', ['test-owner@example.com'], b"""\
 From: Zuzu Person <zuzu@example.org>
 To: test-owner@example.com
 Message-ID: <ant>

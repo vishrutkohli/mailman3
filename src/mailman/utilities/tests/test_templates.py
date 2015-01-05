@@ -17,10 +17,10 @@
 
 """Testing i18n template search and interpolation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestFind',
+    'TestMake',
+    'TestSearchOrder',
     ]
 
 
@@ -29,14 +29,13 @@ import shutil
 import tempfile
 import unittest
 
-from pkg_resources import resource_filename
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.interfaces.languages import ILanguageManager
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.i18n import TemplateNotFoundError, find, make, search
+from pkg_resources import resource_filename
+from zope.component import getUtility
 
 
 
@@ -191,14 +190,14 @@ class TestFind(unittest.TestCase):
             with open(path, 'w') as fp:
                 fp.write(text)
         self.xxsite = os.path.join(
-            self.var_dir, 'templates', 'site', 'xx', 'site.txt') 
+            self.var_dir, 'templates', 'site', 'xx', 'site.txt')
         write('Site template', self.xxsite)
-        self.xxdomain = os.path.join(        
-              self.var_dir, 'templates', 
+        self.xxdomain = os.path.join(
+              self.var_dir, 'templates',
               'domains', 'example.com', 'xx', 'domain.txt')
         write('Domain template', self.xxdomain)
         self.xxlist = os.path.join(
-              self.var_dir, 'templates', 
+              self.var_dir, 'templates',
               'lists', 'test@example.com', 'xx', 'list.txt')
         write('List template', self.xxlist)
 

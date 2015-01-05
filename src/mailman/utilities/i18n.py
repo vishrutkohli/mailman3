@@ -17,9 +17,6 @@
 
 """i18n template search and interpolation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TemplateNotFoundError',
     'find',
@@ -29,17 +26,17 @@ __all__ = [
 
 
 import os
+import six
 import sys
 import errno
 
 from itertools import product
-from pkg_resources import resource_filename
-
 from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.errors import MailmanException
 from mailman.core.i18n import _
 from mailman.utilities.string import expand, wrap as wrap_text
+from pkg_resources import resource_filename
 
 
 
@@ -203,7 +200,8 @@ def make(template_file, mlist=None, language=None, wrap=True,
         template = _(fp.read()[:-1])
     finally:
         fp.close()
-    assert isinstance(template, unicode), 'Translated template is not unicode'
+    assert isinstance(template, six.text_type), (
+        'Translated template is not unicode')
     text = expand(template, kw)
     if wrap:
         return wrap_text(text)

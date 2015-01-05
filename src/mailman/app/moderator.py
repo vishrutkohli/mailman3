@@ -17,9 +17,6 @@
 
 """Application support for moderators."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'handle_ListDeletingEvent',
     'handle_message',
@@ -35,8 +32,6 @@ import time
 import logging
 
 from email.utils import formataddr, formatdate, getaddresses, make_msgid
-from zope.component import getUtility
-
 from mailman.app.membership import add_member, delete_member
 from mailman.app.notifications import send_admin_subscription_notice
 from mailman.config import config
@@ -51,6 +46,7 @@ from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
 from mailman.utilities.datetime import now
 from mailman.utilities.i18n import make
+from zope.component import getUtility
 
 
 NL = '\n'
@@ -86,14 +82,14 @@ def hold_message(mlist, msg, msgdata=None, reason=None):
     # Message-ID header.
     message_id = msg.get('message-id')
     if message_id is None:
-        msg['Message-ID'] = message_id = make_msgid().decode('ascii')
+        msg['Message-ID'] = message_id = make_msgid()
     elif isinstance(message_id, bytes):
         message_id = message_id.decode('ascii')
     getUtility(IMessageStore).add(msg)
     # Prepare the message metadata with some extra information needed only by
     # the moderation interface.
     msgdata['_mod_message_id'] = message_id
-    msgdata['_mod_fqdn_listname'] = mlist.fqdn_listname
+    msgdata['_mod_listid'] = mlist.list_id
     msgdata['_mod_sender'] = msg.sender
     msgdata['_mod_subject'] = msg.get('subject', _('(no subject)'))
     msgdata['_mod_reason'] = reason
@@ -134,7 +130,7 @@ def handle_message(mlist, id, action,
         # Start by getting the message from the message store.
         msg = message_store.get_message_by_id(message_id)
         # Delete moderation-specific entries from the message metadata.
-        for key in msgdata.keys():
+        for key in list(msgdata):
             if key.startswith('_mod_'):
                 del msgdata[key]
         # Add some metadata to indicate this message has now been approved.

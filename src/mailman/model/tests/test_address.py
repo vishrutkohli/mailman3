@@ -17,9 +17,6 @@
 
 """Test addresses."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestAddress',
     ]
@@ -28,8 +25,11 @@ __all__ = [
 import unittest
 
 from mailman.email.validate import InvalidEmailAddressError
+from mailman.interfaces.address import ExistingAddressError
+from mailman.interfaces.usermanager import IUserManager
 from mailman.model.address import Address
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -38,6 +38,25 @@ class TestAddress(unittest.TestCase):
 
     layer = ConfigLayer
 
+    def setUp(self):
+        self._usermgr = getUtility(IUserManager)
+        self._address = self._usermgr.create_address('FPERSON@example.com')
+
     def test_invalid_email_string_raises_exception(self):
         with self.assertRaises(InvalidEmailAddressError):
             Address('not_a_valid_email_string', '')
+
+    def test_local_part_differs_only_by_case(self):
+        with self.assertRaises(ExistingAddressError) as cm:
+            self._usermgr.create_address('fperson@example.com')
+        self.assertEqual(cm.exception.address, 'FPERSON@example.com')
+
+    def test_domain_part_differs_only_by_case(self):
+        with self.assertRaises(ExistingAddressError) as cm:
+            self._usermgr.create_address('fperson@EXAMPLE.COM')
+        self.assertEqual(cm.exception.address, 'FPERSON@example.com')
+
+    def test_mixed_case_exact_match(self):
+        with self.assertRaises(ExistingAddressError) as cm:
+            self._usermgr.create_address('FPERSON@example.com')
+        self.assertEqual(cm.exception.address, 'FPERSON@example.com')

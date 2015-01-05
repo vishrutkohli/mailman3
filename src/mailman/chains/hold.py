@@ -17,9 +17,6 @@
 
 """The terminal 'hold' chain."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'HoldChain',
     ]
@@ -30,10 +27,6 @@ import logging
 from email.mime.message import MIMEMessage
 from email.mime.text import MIMEText
 from email.utils import formatdate, make_msgid
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
-
 from mailman.app.moderator import hold_message
 from mailman.app.replybot import can_acknowledge
 from mailman.chains.base import TerminalChainBase
@@ -47,6 +40,9 @@ from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.i18n import make
 from mailman.utilities.string import oneline, wrap
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.vette')
@@ -157,7 +153,7 @@ class HoldChain(TerminalChainBase):
         if original_subject is None:
             original_subject = _('(no subject)')
         else:
-            original_subject = oneline(original_subject, charset)
+            original_subject = oneline(original_subject, in_unicode=True)
         substitutions = dict(
             listname    = mlist.fqdn_listname,
             subject     = original_subject,

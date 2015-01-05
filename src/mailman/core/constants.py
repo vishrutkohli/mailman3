@@ -17,21 +17,17 @@
 
 """Various constants and enumerations."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'system_preferences',
     ]
 
 
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.interfaces.preferences import IPreferences
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

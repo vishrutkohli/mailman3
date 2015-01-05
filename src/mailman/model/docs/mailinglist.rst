@@ -114,13 +114,16 @@ Subscribing users
 An alternative way of subscribing to a mailing list is as a user with a
 preferred address.  This way the user can change their subscription address
 just by changing their preferred address.
-::
+
+The user must have a preferred address.
 
     >>> from mailman.utilities.datetime import now
     >>> user = user_manager.create_user('dperson@example.com', 'Dave Person')
     >>> address = list(user.addresses)[0]
     >>> address.verified_on = now()
     >>> user.preferred_address = address
+
+The preferred address is used in the subscription.
 
     >>> mlist.subscribe(user)
     <Member: Dave Person <dperson@example.com> on aardvark@example.com
@@ -131,6 +134,10 @@ just by changing their preferred address.
     <Member: bperson@example.com on aardvark@example.com as MemberRole.member>
     <Member: Dave Person <dperson@example.com> on aardvark@example.com
              as MemberRole.member>
+
+If the user's preferred address changes, their subscribed email address also
+changes automatically.
+::
 
     >>> new_address = user.register('dave.person@example.com')
     >>> new_address.verified_on = now()
@@ -143,31 +150,12 @@ just by changing their preferred address.
     <Member: dave.person@example.com on aardvark@example.com
              as MemberRole.member>
 
-A user is not allowed to subscribe more than once to the mailing list.
-
-    >>> mlist.subscribe(user)
-    Traceback (most recent call last):
-    ...
-    AlreadySubscribedError: <User "Dave Person" (1) at ...>
-    is already a MemberRole.member of mailing list aardvark@example.com
-
-However, they are allowed to subscribe again with a specific address, even if
-this address is their preferred address.
+A user is allowed to explicitly subscribe again with a specific address, even
+if this address is their preferred address.
 
     >>> mlist.subscribe(user.preferred_address)
     <Member: dave.person@example.com
              on aardvark@example.com as MemberRole.member>
-
-A user cannot subscribe to a mailing list without a preferred address.
-
-    >>> user = user_manager.create_user('eperson@example.com', 'Elly Person')
-    >>> address = list(user.addresses)[0]
-    >>> address.verified_on = now()
-    >>> mlist.subscribe(user)
-    Traceback (most recent call last):
-    ...
-    MissingPreferredAddressError: User must have a preferred address:
-    <User "Elly Person" (2) at ...>
 
 
 .. _`RFC 2369`: http://www.faqs.org/rfcs/rfc2369.html

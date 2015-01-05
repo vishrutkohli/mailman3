@@ -17,9 +17,6 @@
 
 """Look for moderator pre-approval."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Approved',
     ]
@@ -28,11 +25,10 @@ __all__ = [
 import re
 
 from email.iterators import typed_subpart_iterator
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.rules import IRule
+from zope.interface import implementer
 
 
 EMPTYSTRING = ''
@@ -113,7 +109,7 @@ class Approved:
                 # may not work with rtf or whatever else is possible.
                 pattern = header + ':(\s|&nbsp;)*' + re.escape(password)
                 for part in typed_subpart_iterator(msg, 'text'):
-                    payload = part.get_payload(decode=True)
+                    payload = part.get_payload()
                     if payload is not None:
                         if re.search(pattern, payload):
                             reset_payload(part, re.sub(pattern, '', payload))

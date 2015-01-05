@@ -17,9 +17,6 @@
 
 """Fake MTA for testing purposes."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'FakeMTA',
     ]
@@ -27,13 +24,11 @@ __all__ = [
 
 import logging
 
-from Queue import Empty, Queue
-
 from lazr.smtptest.controller import QueueController
 from lazr.smtptest.server import Channel, QueueServer
-from zope.interface import implementer
-
 from mailman.interfaces.mta import IMailTransportAgentLifecycle
+from six.moves.queue import Empty, Queue
+from zope.interface import implementer
 
 
 log = logging.getLogger('lazr.smtptest')
@@ -60,28 +55,28 @@ class StatisticsChannel(Channel):
 
     def smtp_EHLO(self, arg):
         if not arg:
-            self.push(b'501 Syntax: HELO hostname')
+            self.push('501 Syntax: HELO hostname')
             return
         if self._SMTPChannel__greeting:
-            self.push(b'503 Duplicate HELO/EHLO')
+            self.push('503 Duplicate HELO/EHLO')
         else:
             self._SMTPChannel__greeting = arg
-            self.push(b'250-%s' % self._SMTPChannel__fqdn)
-            self.push(b'250 AUTH PLAIN')
+            self.push('250-%s' % self._SMTPChannel__fqdn)
+            self.push('250 AUTH PLAIN')
 
     def smtp_STAT(self, arg):
         """Cause the server to send statistics to its controller."""
         self._server.send_statistics()
-        self.push(b'250 Ok')
+        self.push('250 Ok')
 
     def smtp_AUTH(self, arg):
         """Record that the AUTH occurred."""
         if arg == 'PLAIN AHRlc3R1c2VyAHRlc3RwYXNz':
             # testuser:testpass
-            self.push(b'235 Ok')
+            self.push('235 Ok')
             self._server.send_auth(arg)
         else:
-            self.push(b'571 Bad authentication')
+            self.push('571 Bad authentication')
 
     def smtp_RCPT(self, arg):
         """For testing, sometimes cause a non-25x response."""
@@ -92,7 +87,7 @@ class StatisticsChannel(Channel):
         else:
             # The test suite wants this to fail.  The message corresponds to
             # the exception we expect smtplib.SMTP to raise.
-            self.push(b'%d Error: SMTPRecipientsRefused' % code)
+            self.push('%d Error: SMTPRecipientsRefused' % code)
 
     def smtp_MAIL(self, arg):
         """For testing, sometimes cause a non-25x response."""
@@ -103,7 +98,7 @@ class StatisticsChannel(Channel):
         else:
             # The test suite wants this to fail.  The message corresponds to
             # the exception we expect smtplib.SMTP to raise.
-            self.push(b'%d Error: SMTPResponseException' % code)
+            self.push('%d Error: SMTPResponseException' % code)
 
 
 
@@ -211,7 +206,7 @@ class ConnectionCountingController(QueueController):
         :rtype: integer
         """
         smtpd = self._connect()
-        smtpd.docmd(b'STAT')
+        smtpd.docmd('STAT')
         # An Empty exception will occur if the data isn't available in 10
         # seconds.  Let that propagate.
         return self.oob_queue.get(block=True, timeout=10)
@@ -232,4 +227,4 @@ class ConnectionCountingController(QueueController):
 
     def reset(self):
         smtpd = self._connect()
-        smtpd.docmd(b'RSET')
+        smtpd.docmd('RSET')

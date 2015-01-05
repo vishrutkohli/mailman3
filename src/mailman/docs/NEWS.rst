@@ -12,6 +12,22 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2015-XX-XX)
 
+Configuration
+-------------
+ * When specifying a file system path in the [paths.*] section, $cfg_file can
+   be used to expand into the path of the ``-C`` option if given.  In the
+   default ``[paths.dev]`` section, ``$var_dir`` is now specified relative to
+   ``$cfg_file`` so that it won't accidentally be relative to the current
+   working directory, if ``-C`` is given.
+ * ``$cwd`` is now an additional substitution variable for the ``mailman.cfg``
+   file's ``[paths.*]`` sections.  A new ``[paths.here]`` section is added,
+   which puts the ``var_dir`` in ``$cwd``.  It is made the default layout.
+
+REST
+----
+ * You can now view the contents of, inject messages into, and delete messages
+   from the various queue directories via the ``<api>/queues`` resource.
+
 
 3.0 beta 5 -- "Carve Away The Stone"
 ====================================
@@ -49,6 +65,7 @@ Database
 
 Development
 -----------
+ * Python 3.4 is now the minimum requirement.
  * You no longer have to create a virtual environment separately when running
    the test suite.  Just use `tox`.
  * You no longer have to edit `src/mailman/testing/testing.cfg` to run the

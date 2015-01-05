@@ -21,9 +21,6 @@ Use these functions to create unique ids rather than inlining calls to hashlib
 and whatnot.  These are better instrumented for testing purposes.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'UniqueIDFactory',
     'factory',
@@ -35,7 +32,6 @@ import uuid
 import errno
 
 from flufl.lock import Lock
-
 from mailman.config import config
 from mailman.model.uid import UID
 from mailman.testing import layers

@@ -17,9 +17,6 @@
 
 """Prototypical permalinking archiver."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Prototype',
     ]
@@ -30,14 +27,13 @@ import errno
 import logging
 
 from datetime import timedelta
-from mailbox import Maildir
-from urlparse import urljoin
-
 from flufl.lock import Lock, TimeOutError
-from zope.interface import implementer
-
+from mailbox import Maildir
 from mailman.config import config
 from mailman.interfaces.archiver import IArchiver
+from six.moves.urllib_parse import urljoin
+from zope.interface import implementer
+
 
 log = logging.getLogger('mailman.error')
 

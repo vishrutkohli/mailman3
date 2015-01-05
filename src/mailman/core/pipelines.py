@@ -17,9 +17,6 @@
 
 """Built-in pipelines."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'BasePipeline',
     'OwnerPipeline',
@@ -32,9 +29,6 @@ __all__ = [
 
 import logging
 
-from zope.interface import implementer
-from zope.interface.verify import verifyObject
-
 from mailman.app.bounces import bounce_message
 from mailman.config import config
 from mailman.core import errors
@@ -42,6 +36,8 @@ from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.pipeline import IPipeline
 from mailman.utilities.modules import find_components
+from zope.interface import implementer
+from zope.interface.verify import verifyObject
 
 
 dlog = logging.getLogger('mailman.debug')
@@ -120,6 +116,7 @@ class PostingPipeline(BasePipeline):
         'cleanse',
         'cleanse-dkim',
         'cook-headers',
+        'subject-prefix',
         'rfc-2369',
         'to-archive',
         'to-digest',

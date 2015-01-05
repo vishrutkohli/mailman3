@@ -23,9 +23,6 @@ safe pickle deserialization, even if the email package adds additional Message
 attributes.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Message',
     'MultipartDigestMessage',
@@ -40,7 +37,6 @@ import email.utils
 
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
-
 from mailman.config import config
 
 
@@ -149,8 +145,8 @@ class UserNotification(Message):
         subject = ('(no subject)' if subject is None else subject)
         if text is not None:
             self.set_payload(text.encode(charset), charset)
-        self['Subject'] = Header(subject.encode(charset), charset,
-                                 header_name='Subject', errors='replace')
+        self['Subject'] = Header(
+            subject, charset, header_name='Subject', errors='replace')
         self['From'] = sender
         if isinstance(recipients, (list, set, tuple)):
             self['To'] = COMMASPACE.join(recipients)
@@ -198,7 +194,7 @@ class UserNotification(Message):
             reduced_list_headers=True,
             )
         if mlist is not None:
-            enqueue_kws['listname'] = mlist.fqdn_listname
+            enqueue_kws['listid'] = mlist.list_id
         enqueue_kws.update(_kws)
         virginq.enqueue(self, **enqueue_kws)
 
@@ -227,7 +223,7 @@ class OwnerNotification(UserNotification):
         virginq = config.switchboards['virgin']
         # The message metadata better have a `recip' attribute
         virginq.enqueue(self,
-                        listname=mlist.fqdn_listname,
+                        listid=mlist.list_id,
                         recipients=self.recipients,
                         nodecorate=True,
                         reduced_list_headers=True,

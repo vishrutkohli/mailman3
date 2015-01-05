@@ -17,9 +17,6 @@
 
 """The process runner base class."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Runner',
     ]
@@ -30,12 +27,7 @@ import signal
 import logging
 import traceback
 
-from cStringIO import StringIO
 from lazr.config import as_boolean, as_timedelta
-from zope.component import getUtility
-from zope.event import notify
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.logging import reopen
@@ -44,6 +36,10 @@ from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.runner import IRunner, RunnerCrashEvent
 from mailman.utilities.string import expand
+from six.moves import cStringIO as StringIO
+from zope.component import getUtility
+from zope.event import notify
+from zope.interface import implementer
 
 
 dlog = logging.getLogger('mailman.debug')
@@ -218,16 +214,26 @@ class Runner:
         # them out of our sight.
         #
         # Find out which mailing list this message is destined for.
+        mlist = None
         missing = object()
-        listname = msgdata.get('listname', missing)
-        mlist = (None
-                 if listname is missing
-                 else getUtility(IListManager).get(unicode(listname)))
+        # First try to dig out the target list by id.  If there's no list-id
+        # in the metadata, fall back to the fqdn list name for backward
+        # compatibility.
+        list_manager = getUtility(IListManager)
+        list_id = msgdata.get('listid', missing)
+        fqdn_listname = None
+        if list_id is missing:
+            fqdn_listname = msgdata.get('listname', missing)
+            # XXX Deprecate.
+            if fqdn_listname is not missing:
+                mlist = list_manager.get(fqdn_listname)
+        else:
+            mlist = list_manager.get_by_list_id(list_id)
         if mlist is None:
+            identifier = (list_id if list_id is not None else fqdn_listname)
             elog.error(
                 '%s runner "%s" shunting message for missing list: %s',
-                msg['message-id'], self.name,
-                ('n/a' if listname is missing else listname))
+                msg['message-id'], self.name, identifier)
             config.switchboards['shunt'].enqueue(msg, msgdata)
             return
         # Now process this message.  We also want to set up the language

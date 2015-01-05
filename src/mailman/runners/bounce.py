@@ -20,11 +20,10 @@
 import logging
 
 from flufl.bounce import all_failures, scan_message
-from zope.component import getUtility
-
 from mailman.app.bounces import ProbeVERP, StandardVERP, maybe_forward
 from mailman.core.runner import Runner
 from mailman.interfaces.bounce import BounceContext, IBounceProcessor
+from zope.component import getUtility
 
 
 COMMASPACE = ', '
@@ -33,7 +32,7 @@ log = logging.getLogger('mailman.bounce')
 elog = logging.getLogger('mailman.error')
 
 
-
+
 class BounceRunner(Runner):
     """The bounce runner."""
 

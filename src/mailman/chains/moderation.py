@@ -34,21 +34,17 @@ made as to the disposition of the message.  `defer` is the default for
 members, while `hold` is the default for nonmembers.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ModerationChain',
     ]
 
-
-from zope.interface import implementer
 
 from mailman.chains.base import Link
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.action import Action
 from mailman.interfaces.chain import IChain, LinkAction
+from zope.interface import implementer
 
 
 

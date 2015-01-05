@@ -17,9 +17,6 @@
 
 """Digest runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'DigestRunner',
     ]
@@ -28,15 +25,11 @@ __all__ = [
 import re
 import logging
 
-# cStringIO doesn't support unicode.
-from StringIO import StringIO
 from copy import deepcopy
 from email.header import Header
 from email.mime.message import MIMEMessage
 from email.mime.text import MIMEText
 from email.utils import formatdate, getaddresses, make_msgid
-from urllib2 import URLError
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.runner import Runner
@@ -46,6 +39,8 @@ from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.utilities.i18n import make
 from mailman.utilities.mailbox import Mailbox
 from mailman.utilities.string import oneline, wrap
+from six.moves import cStringIO as StringIO
+from six.moves.urllib_error import URLError
 
 
 log = logging.getLogger('mailman.error')
@@ -260,17 +255,16 @@ class RFC1153Digester(Digester):
         # multipart message.  In that case, just stringify it.
         payload = msg.get_payload(decode=True)
         if not payload:
-            # Split using bytes so as not to turn the payload into unicode
-            # strings due to unicode_literals above.
-            payload = msg.as_string().split(b'\n\n', 1)[1]
-        try:
-            # Do the decoding inside the try/except so that if the charset
-            # conversion fails, we'll just drop back to ascii.
-            charset = msg.get_content_charset('us-ascii')
-            payload = payload.decode(charset, 'replace')
-        except (LookupError, TypeError):
-            # Unknown or empty charset.
-            payload = payload.decode('us-ascii', 'replace')
+            payload = msg.as_string().split('\n\n', 1)[1]
+        if isinstance(payload, bytes):
+            try:
+                # Do the decoding inside the try/except so that if the charset
+                # conversion fails, we'll just drop back to ascii.
+                charset = msg.get_content_charset('us-ascii')
+                payload = payload.decode(charset, 'replace')
+            except (LookupError, TypeError):
+                # Unknown or empty charset.
+                payload = payload.decode('us-ascii', 'replace')
         print(payload, file=self._text)
         if not payload.endswith('\n'):
             print(file=self._text)
@@ -384,9 +378,9 @@ class DigestRunner(Runner):
         queue = config.switchboards['virgin']
         queue.enqueue(mime,
                       recipients=mime_recipients,
-                      listname=mlist.fqdn_listname,
+                      listid=mlist.list_id,
                       isdigest=True)
         queue.enqueue(rfc1153,
                       recipients=rfc1153_recipients,
-                      listname=mlist.fqdn_listname,
+                      listid=mlist.list_id,
                       isdigest=True)

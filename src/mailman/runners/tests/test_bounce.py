@@ -17,9 +17,6 @@
 
 """Test the bounce runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestBounceRunner',
     'TestBounceRunnerBug876774',
@@ -28,9 +25,6 @@ __all__ = [
 
 
 import unittest
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.app.bounces import send_probe
 from mailman.app.lifecycle import create_list
@@ -42,11 +36,11 @@ from mailman.interfaces.styles import IStyle, IStyleManager
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.bounce import BounceRunner
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
-    make_testable_runner,
+    LogFileMark, get_queue_messages, make_testable_runner,
     specialized_message_from_string as message_from_string)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -69,7 +63,7 @@ To: test-bounces+anne=example.com@example.com
 Message-Id: <first>
 
 """)
-        self._msgdata = dict(listname='test@example.com')
+        self._msgdata = dict(listid='test.example.com')
         self._processor = getUtility(IBounceProcessor)
         config.push('site owner', """
         [mailman]
@@ -284,7 +278,7 @@ To: test-bounces+anne=example.com@example.com
 Message-Id: <first>
 
 """)
-        self._bounceq.enqueue(bounce, dict(listname='test@example.com'))
+        self._bounceq.enqueue(bounce, dict(listid='test.example.com'))
         self.assertEqual(len(self._bounceq.files), 1)
         self._runner.run()
         self.assertEqual(len(get_queue_messages('bounces')), 0)

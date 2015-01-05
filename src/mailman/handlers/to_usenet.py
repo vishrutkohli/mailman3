@@ -17,9 +17,6 @@
 
 """Move the message to the mail->news queue."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ToUsenet',
     ]
@@ -27,14 +24,13 @@ __all__ = [
 
 import logging
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
+
 
 COMMASPACE = ', '
-
 log = logging.getLogger('mailman.error')
 
 
@@ -65,5 +61,4 @@ class ToUsenet:
                       COMMASPACE.join(error))
             return
         # Put the message in the news runner's queue.
-        config.switchboards['nntp'].enqueue(
-            msg, msgdata, listname=mlist.fqdn_listname)
+        config.switchboards['nntp'].enqueue(msg, msgdata, listid=mlist.list_id)

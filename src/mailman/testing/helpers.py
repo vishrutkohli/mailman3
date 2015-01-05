@@ -17,9 +17,6 @@
 
 """Various test helpers."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'LogFileMark',
     'TestableMaster',
@@ -60,11 +57,6 @@ from contextlib import contextmanager
 from email import message_from_string
 from httplib2 import Http
 from lazr.config import as_timedelta
-from urllib import urlencode
-from urllib2 import HTTPError
-from zope import event
-from zope.component import getUtility
-
 from mailman.bin.master import Loop as Master
 from mailman.config import config
 from mailman.database.transaction import transaction
@@ -75,6 +67,10 @@ from mailman.interfaces.styles import IStyleManager
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.digest import DigestRunner
 from mailman.utilities.mailbox import Mailbox
+from six.moves.urllib_error import HTTPError
+from six.moves.urllib_parse import urlencode
+from zope import event
+from zope.component import getUtility
 
 
 NL = '\n'
@@ -335,7 +331,10 @@ def call_api(url, data=None, method=None, username=None, password=None):
     basic_auth = '{0}:{1}'.format(
         (config.webservice.admin_user if username is None else username),
         (config.webservice.admin_pass if password is None else password))
-    headers['Authorization'] = 'Basic ' + b64encode(basic_auth)
+    # b64encode() requires a bytes, but the header value must be str.  Do the
+    # necessary conversion dances.
+    token = b64encode(basic_auth.encode('utf-8')).decode('ascii')
+    headers['Authorization'] = 'Basic ' + token
     response, content = Http().request(url, method, data, headers)
     # If we did not get a 2xx status code, make this look like a urllib2
     # exception, for backward compatibility with existing doctests.
@@ -470,10 +469,11 @@ def reset_the_world():
     """
     # Reset the database between tests.
     config.db._reset()
-    # Remove any digest files.
+    # Remove any digest files and members.txt file (for the file-recips
+    # handler) in the lists' data directories.
     for dirpath, dirnames, filenames in os.walk(config.LIST_DATA_DIR):
         for filename in filenames:
-            if filename.endswith('.mmdf'):
+            if filename.endswith('.mmdf') or filename == 'members.txt':
                 os.remove(os.path.join(dirpath, filename))
     # Remove all residual queue files.
     for dirpath, dirnames, filenames in os.walk(config.QUEUE_DIR):
@@ -508,9 +508,8 @@ def specialized_message_from_string(unicode_text):
     """
     # This mimic what Switchboard.dequeue() does when parsing a message from
     # text into a Message instance.
-    text = unicode_text.encode('ascii')
-    original_size = len(text)
-    message = message_from_string(text, Message)
+    original_size = len(unicode_text)
+    message = message_from_string(unicode_text, Message)
     message.original_size = original_size
     return message
 

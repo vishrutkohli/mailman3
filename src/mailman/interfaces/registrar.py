@@ -22,9 +22,6 @@ etc. than the IUserManager.  The latter does no validation, syntax checking,
 or confirmation, while this interface does.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ConfirmationNeededEvent',
     'IRegistrar',

@@ -17,9 +17,6 @@
 
 """Base class for terminal chains."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Chain',
     'Link',
@@ -27,11 +24,10 @@ __all__ = [
     ]
 
 
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.interfaces.chain import (
     IChain, IChainIterator, IChainLink, IMutableChain, LinkAction)
+from zope.interface import implementer
 
 
 

@@ -17,9 +17,6 @@
 
 """Common argument parsing."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Options',
     'SingleMailingListOptions',
@@ -31,18 +28,17 @@ import os
 import sys
 
 from copy import copy
-from optparse import Option, OptionParser, OptionValueError
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.initialize import initialize
 from mailman.version import MAILMAN_VERSION
+from optparse import Option, OptionParser, OptionValueError
 
 
 
 def check_unicode(option, opt, value):
     """Check that the value is a unicode string."""
-    if isinstance(value, unicode):
+    if not isinstance(value, bytes):
         return value
     try:
         return value.decode(sys.getdefaultencoding())

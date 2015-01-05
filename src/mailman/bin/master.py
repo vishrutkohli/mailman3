@@ -17,9 +17,6 @@
 
 """Master subprocess watcher."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Loop',
     'main',
@@ -37,7 +34,6 @@ from datetime import timedelta
 from enum import Enum
 from flufl.lock import Lock, NotLockedError, TimeOutError
 from lazr.config import as_boolean
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.logging import reopen
@@ -357,7 +353,7 @@ class Loop:
         # Set the environment variable which tells the runner that it's
         # running under bin/master control.  This subtly changes the error
         # behavior of bin/runner.
-        os.environ['MAILMAN_UNDER_MASTER_CONTROL'] = '1'
+        env = {'MAILMAN_UNDER_MASTER_CONTROL': '1'}
         # Craft the command line arguments for the exec() call.
         rswitch = '--runner=' + spec
         # Wherever master lives, so too must live the runner script.
@@ -365,15 +361,21 @@ class Loop:
         # config.PYTHON, which is the absolute path to the Python interpreter,
         # must be given as argv[0] due to Python's library search algorithm.
         args = [sys.executable, sys.executable, exe, rswitch]
+        # Always pass the explicit path to the configuration file to the
+        # sub-runners.  This avoids any debate about which cfg file is used.
         config_file = (config.filename if self._config_file is None
                        else self._config_file)
         args.extend(['-C', config_file])
         log = logging.getLogger('mailman.runner')
         log.debug('starting: %s', args)
+        # We must pass this environment variable through if it's set,
+        # otherwise runner processes will not have the correct VAR_DIR.
+        var_dir = os.environ.get('MAILMAN_VAR_DIR')
+        if var_dir is not None:
+            env['MAILMAN_VAR_DIR'] = var_dir
         # For the testing framework, if this environment variable is set, pass
         # it on to the subprocess.
         coverage_env = os.environ.get('COVERAGE_PROCESS_START')
-        env = dict()
         if coverage_env is not None:
             env['COVERAGE_PROCESS_START'] = coverage_env
         args.append(env)

@@ -17,9 +17,6 @@
 
 """Database factory."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'DatabaseFactory',
     'DatabaseTestingFactory',
@@ -33,16 +30,15 @@ import alembic.command
 from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from flufl.lock import Lock
-from sqlalchemy import MetaData
-from zope.interface import implementer
-from zope.interface.verify import verifyObject
-
 from mailman.config import config
 from mailman.database.alembic import alembic_cfg
 from mailman.database.model import Model
 from mailman.interfaces.database import (
     DatabaseError, IDatabase, IDatabaseFactory)
 from mailman.utilities.modules import call_name
+from sqlalchemy import MetaData
+from zope.interface import implementer
+from zope.interface.verify import verifyObject
 
 
 LAST_STORM_SCHEMA_VERSION = '20130406000000'

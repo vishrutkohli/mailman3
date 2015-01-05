@@ -17,9 +17,6 @@
 
 """The 'mailman' command dispatcher."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'main',
     ]
@@ -28,13 +25,13 @@ __all__ = [
 import os
 import argparse
 
-from zope.interface.verify import verifyObject
-
+from functools import cmp_to_key
 from mailman.core.i18n import _
 from mailman.core.initialize import initialize
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.modules import find_components
 from mailman.version import MAILMAN_VERSION_FULL
+from zope.interface.verify import verifyObject
 
 
 
@@ -77,9 +74,14 @@ def main():
             return -1
         elif other.name == 'help':
             return 1
+        elif command.name < other.name:
+            return -1
+        elif command.name == other.name:
+            return 0
         else:
-            return cmp(command.name, other.name)
-    subcommands.sort(cmp=sort_function)
+            assert command.name > other.name
+            return 1
+    subcommands.sort(key=cmp_to_key(sort_function))
     for command in subcommands:
         command_parser = subparser.add_parser(
             command.name, help=_(command.__doc__))

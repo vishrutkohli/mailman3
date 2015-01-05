@@ -55,7 +55,7 @@ on instance variables.
     ... A test message.
     ... """)
     >>> switchboard = config.switchboards['test']
-    >>> filebase = switchboard.enqueue(msg, listname=mlist.fqdn_listname,
+    >>> filebase = switchboard.enqueue(msg, listid=mlist.list_id,
     ...                                foo='yes', bar='no')
     >>> runner.run()
     >>> print(runner.msg.as_string())
@@ -69,7 +69,7 @@ on instance variables.
     bar      : no
     foo      : yes
     lang     : en
-    listname : test@example.com
+    listid   : test.example.com
     version  : 3
 
 XXX More of the Runner API should be tested.

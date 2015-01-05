@@ -22,10 +22,6 @@ datetime.datetime.now() and datetime.date.today().  These are better
 instrumented for testing purposes.
 """
 
-
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'DateFactory',
     'RFC822_DATE_FMT',

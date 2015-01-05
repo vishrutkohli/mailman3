@@ -17,18 +17,14 @@
 
 """Application level domain support."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'handle_DomainDeletingEvent',
     ]
 
 
-from zope.component import getUtility
-
 from mailman.interfaces.domain import DomainDeletingEvent
 from mailman.interfaces.listmanager import IListManager
+from zope.component import getUtility
 
 
 

@@ -15,9 +15,8 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import, print_function, unicode_literals
+"""Common database support."""
 
-__metaclass__ = type
 __all__ = [
     'SABaseDatabase',
     ]
@@ -25,17 +24,15 @@ __all__ = [
 
 import logging
 
+from mailman.config import config
+from mailman.interfaces.database import IDatabase
+from mailman.utilities.string import expand
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from zope.interface import implementer
 
-from mailman.config import config
-from mailman.interfaces.database import IDatabase
-from mailman.utilities.string import expand
-
 
 log = logging.getLogger('mailman.database')
-NL = '\n'
 
 
 

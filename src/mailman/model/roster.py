@@ -22,9 +22,6 @@ the ones that fit a particular role.  These are used as the member, owner,
 moderator, and administrator roster filters.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AdministratorRoster',
     'DigestMemberRoster',
@@ -37,14 +34,13 @@ __all__ = [
     ]
 
 
-from sqlalchemy import and_, or_
-from zope.interface import implementer
-
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.roster import IRoster
 from mailman.model.address import Address
 from mailman.model.member import Member
+from sqlalchemy import and_, or_
+from zope.interface import implementer
 
 
 

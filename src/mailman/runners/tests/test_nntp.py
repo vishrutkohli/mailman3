@@ -17,9 +17,6 @@
 
 """Test the NNTP runner and related utilities."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPrepareMessage',
     'TestNNTPRunner',
@@ -36,10 +33,7 @@ from mailman.config import config
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.runners import nntp
 from mailman.testing.helpers import (
-    LogFileMark,
-    configuration,
-    get_queue_messages,
-    make_testable_runner,
+    LogFileMark, configuration, get_queue_messages, make_testable_runner,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 
@@ -257,7 +251,7 @@ Testing
     @mock.patch('nntplib.NNTP')
     def test_connect(self, class_mock):
         # Test connection to the NNTP server with default values.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         class_mock.assert_called_once_with(
             '', 119, user='', password='', readermode=True)
@@ -267,7 +261,7 @@ Testing
     @mock.patch('nntplib.NNTP')
     def test_connect_with_configuration(self, class_mock):
         # Test connection to the NNTP server with specific values.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         class_mock.assert_called_once_with(
             'nntp.example.com', 2112,
@@ -276,7 +270,7 @@ Testing
     @mock.patch('nntplib.NNTP')
     def test_post(self, class_mock):
         # Test that the message is posted to the NNTP server.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Get the mocked instance, which was used in the runner.
         conn_mock = class_mock()
@@ -295,7 +289,7 @@ Testing
     def test_connection_got_quit(self, class_mock):
         # The NNTP connection gets closed after a successful post.
         # Test that the message is posted to the NNTP server.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Get the mocked instance, which was used in the runner.
         conn_mock = class_mock()
@@ -304,18 +298,19 @@ Testing
         # and make some simple checks that the message is what we expected.
         conn_mock.quit.assert_called_once_with()
 
-    @mock.patch('nntplib.NNTP', side_effect=nntplib.error_temp)
+    @mock.patch('nntplib.NNTP', side_effect=nntplib.NNTPTemporaryError)
     def test_connect_with_nntplib_failure(self, class_mock):
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         mark = LogFileMark('mailman.error')
         self._runner.run()
         log_message = mark.readline()[:-1]
-        self.assertTrue(log_message.endswith(
-            'NNTP error for test@example.com'))
+        self.assertTrue(
+            log_message.endswith('NNTP error for test@example.com'),
+            log_message)
 
     @mock.patch('nntplib.NNTP', side_effect=socket.error)
     def test_connect_with_socket_failure(self, class_mock):
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         mark = LogFileMark('mailman.error')
         self._runner.run()
         log_message = mark.readline()[:-1]
@@ -330,7 +325,7 @@ Testing
             # I.e. stop immediately, since the queue will not be empty.
             return True
         runner = make_testable_runner(nntp.NNTPRunner, 'nntp', predicate=once)
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         mark = LogFileMark('mailman.error')
         runner.run()
         log_message = mark.readline()[:-1]
@@ -338,14 +333,14 @@ Testing
             'NNTP unexpected exception for test@example.com'))
         messages = get_queue_messages('nntp')
         self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].msgdata['listname'], 'test@example.com')
+        self.assertEqual(messages[0].msgdata['listid'], 'test.example.com')
         self.assertEqual(messages[0].msg['subject'], 'A newsgroup posting')
 
-    @mock.patch('nntplib.NNTP', side_effect=nntplib.error_temp)
+    @mock.patch('nntplib.NNTP', side_effect=nntplib.NNTPTemporaryError)
     def test_connection_never_gets_quit_after_failures(self, class_mock):
         # The NNTP connection doesn't get closed after a unsuccessful
         # connection, since there's nothing to close.
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Get the mocked instance, which was used in the runner.  Turn off the
         # exception raising side effect first though!
@@ -361,8 +356,8 @@ Testing
         # The NNTP connection does get closed after a unsuccessful post.
         # Add a side-effect to the instance mock's .post() method.
         conn_mock = class_mock()
-        conn_mock.post.side_effect = nntplib.error_temp
-        self._nntpq.enqueue(self._msg, {}, listname='test@example.com')
+        conn_mock.post.side_effect = nntplib.NNTPTemporaryError
+        self._nntpq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # The connection object's post() method was called once with a
         # file-like object containing the message's bytes.  Read those bytes

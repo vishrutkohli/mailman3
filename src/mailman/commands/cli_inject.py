@@ -17,9 +17,6 @@
 
 """bin/mailman inject"""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Inject',
     ]
@@ -27,14 +24,13 @@ __all__ = [
 
 import sys
 
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.app.inject import inject_text
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.interfaces.listmanager import IListManager
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -49,7 +45,7 @@ class Inject:
         self.parser = parser
         command_parser.add_argument(
             '-q', '--queue',
-            type=unicode, help=_("""
+            help=_("""
             The name of the queue to inject the message to.  QUEUE must be one
             of the directories inside the qfiles directory.  If omitted, the
             incoming queue is used."""))
@@ -59,7 +55,7 @@ class Inject:
             help=_('Show a list of all available queue names and exit.'))
         command_parser.add_argument(
             '-f', '--filename',
-            type=unicode, help=_("""
+            help=_("""
             Name of file containing the message to inject.  If not given, or
             '-' (without the quotes) standard input is used."""))
         # Required positional argument.

@@ -17,9 +17,6 @@
 
 """Test the `confirm` command."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestConfirm',
     ]
@@ -29,8 +26,6 @@ import unittest
 
 from datetime import datetime
 from email.iterators import body_line_iterator
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.database.transaction import transaction
@@ -38,10 +33,10 @@ from mailman.interfaces.registrar import IRegistrar
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.command import CommandRunner
 from mailman.testing.helpers import (
-    get_queue_messages,
-    make_testable_runner,
+    get_queue_messages, make_testable_runner,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -68,7 +63,7 @@ To: test-confirm@example.com
 
 """)
         msg['Subject'] = subject
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -88,7 +83,7 @@ To: test-confirm@example.com
 
 """)
         msg['Subject'] = subject
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -144,7 +139,7 @@ Franziskanerstra=C3=9Fe
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -177,7 +172,7 @@ Franziskanerstra=C3=9Fe
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com'))
+        self._commandq.enqueue(msg, dict(listid='test.example.com'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
         # should exist in the database.
@@ -208,7 +203,7 @@ From: Anne Person <anne@example.org>
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com',
+        self._commandq.enqueue(msg, dict(listid='test.example.com',
                                          subaddress='confirm'))
         self._runner.run()
         # Anne is now a confirmed member so her user record and email address
@@ -223,7 +218,7 @@ From: Anne Person <anne@example.org>
         # one 'Confirmation email' line.
         confirmation_lines = []
         in_results = False
-        for line in body_line_iterator(messages[0].msg, decode=True):
+        for line in body_line_iterator(messages[0].msg):
             line = line.strip()
             if in_results:
                 if line.startswith('- Done'):
@@ -253,7 +248,7 @@ From: Anne Person <anne@example.org>
 """)
         msg['Subject'] = subject
         msg['To'] = to
-        self._commandq.enqueue(msg, dict(listname='test@example.com',
+        self._commandq.enqueue(msg, dict(listid='test.example.com',
                                          subaddress='confirm'))
         self._runner.run()
         # Now there's a email command notification and a welcome message.  All

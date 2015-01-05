@@ -17,18 +17,12 @@
 
 """Handler for automatic responses."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Replybot',
     ]
 
 
 import logging
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
@@ -38,6 +32,8 @@ from mailman.interfaces.handler import IHandler
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import today
 from mailman.utilities.string import expand, wrap
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.error')

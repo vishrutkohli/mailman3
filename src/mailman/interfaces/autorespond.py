@@ -17,9 +17,6 @@
 
 """Autoresponder."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ALWAYS_REPLY',
     'IAutoResponseRecord',
@@ -32,6 +29,7 @@ __all__ = [
 from datetime import timedelta
 from enum import Enum
 from zope.interface import Interface, Attribute
+
 
 ALWAYS_REPLY = timedelta()
 

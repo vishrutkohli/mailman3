@@ -1,43 +1,41 @@
-===============
-Subject munging
-===============
+================
+Subject prefixes
+================
 
-Messages that flow through the global pipeline get their headers *cooked*,
-which basically means that their headers go through several mostly unrelated
-transformations.  Some headers get added, others get changed.  Some of these
-changes depend on mailing list settings and others depend on how the message
-is getting sent through the system.  We'll take things one-by-one.
+Mailing lists can define a *subject prefix* which gets added to the front of
+any ``Subject`` text.  This can be used to quickly identify which mailing list
+the message was posted to.
 
     >>> mlist = create_list('test@example.com')
 
+The default list style gives the mailing list a default prefix.
 
-Inserting a prefix
-==================
+    >>> print(mlist.subject_prefix)
+    [Test]
 
-Another thing header cooking does is *munge* the ``Subject`` header by
-inserting the subject prefix for the list at the front.  If there's no subject
-header in the original message, Mailman uses a canned default.  In order to do
-subject munging, a mailing list must have a preferred language.
-::
+This can be changed to anything, but typically ends with a trailing space.
 
     >>> mlist.subject_prefix = '[XTest] '
-    >>> mlist.preferred_language = 'en'
+    >>> process = config.handlers['subject-prefix'].process
+
+
+No Subject
+==========
+
+If the original message has no ``Subject``, then a canned one is used.
+
     >>> msg = message_from_string("""\
     ... From: aperson@example.com
     ...
     ... A message of great import.
     ... """)
-    >>> msgdata = {}
-
-    >>> from mailman.handlers.cook_headers import process
-    >>> process(mlist, msg, msgdata)
-
-The original subject header is stored in the message metadata.
-
-    >>> msgdata['original_subject']
-    u''
+    >>> process(mlist, msg, {})
     >>> print(msg['subject'])
     [XTest] (no subject)
+
+
+Inserting a prefix
+==================
 
 If the original message had a ``Subject`` header, then the prefix is inserted
 at the beginning of the header's value.
@@ -50,34 +48,12 @@ at the beginning of the header's value.
     ... """)
     >>> msgdata = {}
     >>> process(mlist, msg, msgdata)
-    >>> print(msgdata['original_subject'])
-    Something important
     >>> print(msg['subject'])
     [XTest] Something important
 
-``Subject`` headers are not munged for digest messages.
-    
-    >>> msg = message_from_string("""\
-    ... From: aperson@example.com
-    ... Subject: Something important
-    ...
-    ... A message of great import.
-    ... """)
-    >>> process(mlist, msg, dict(isdigest=True))
-    >>> print(msg['subject'])
-    Something important
+The original ``Subject`` is available in the metadata.
 
-Nor are they munged for *fast tracked* messages, which are generally defined
-as messages that Mailman crafts internally.
-
-    >>> msg = message_from_string("""\
-    ... From: aperson@example.com
-    ... Subject: Something important
-    ...
-    ... A message of great import.
-    ... """)
-    >>> process(mlist, msg, dict(_fasttrack=True))
-    >>> print(msg['subject'])
+    >>> print(msgdata['original_subject'])
     Something important
 
 If a ``Subject`` header already has a prefix, usually following a ``Re:``
@@ -95,8 +71,7 @@ front of the header text.
     [XTest] Re: Something important
 
 If the ``Subject`` header has a prefix at the front of the header text, that's
-where it will stay.  This is called *new style* prefixing and is the only
-option available in Mailman 3.
+where it will stay.
 
     >>> msg = message_from_string("""\
     ... From: aperson@example.com
@@ -122,10 +97,10 @@ set than the encoded header.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest] =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-    >>> unicode(msg['subject'])
-    u'[XTest] \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(str(msg['subject']))
+    [XTest] メールマン
 
 
 Prefix numbers
@@ -178,10 +153,10 @@ in the subject prefix, and the subject is encoded non-ASCII.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest 456] =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-    >>> unicode(msg['subject'])
-    u'[XTest 456] \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest 456] メールマン
 
 Even more fun is when the internationalized ``Subject`` header already has a
 prefix, possibly with a different posting number.
@@ -191,13 +166,10 @@ prefix, possibly with a different posting number.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest 456] Re: =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-
-..
- # XXX This requires Python email patch #1681333 to succeed.
- #    >>> unicode(msg['subject'])
- #    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest 456] Re: メールマン
 
 As before, old style subject prefixes are re-ordered.
 
@@ -206,14 +178,11 @@ As before, old style subject prefixes are re-ordered.
     ...
     ... """)
     >>> process(mlist, msg, {})
-    >>> print(msg['subject'])
+    >>> print(msg['subject'].encode())
     [XTest 456] Re:
       =?iso-2022-jp?b?GyRCJWEhPCVrJV4lcxsoQg==?=
-
-..
- # XXX This requires Python email patch #1681333 to succeed.
- #    >>> unicode(msg['subject'])
- #    u'[XTest 456] Re: \u30e1\u30fc\u30eb\u30de\u30f3'
+    >>> print(msg['subject'])
+    [XTest 456]  Re: メールマン
 
 
 In this test case, we get an extra space between the prefix and the original

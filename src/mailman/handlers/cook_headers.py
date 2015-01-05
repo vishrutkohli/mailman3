@@ -17,9 +17,6 @@
 
 """Cook a message's headers."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'CookHeaders',
     ]
@@ -27,21 +24,18 @@ __all__ = [
 
 import re
 
-from email.errors import HeaderParseError
-from email.header import Header, decode_header, make_header
+from email.header import Header
 from email.utils import parseaddr, formataddr, getaddresses
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
 from mailman.version import VERSION
+from zope.interface import implementer
 
 
 COMMASPACE = ', '
 MAXLINELEN = 78
-
-nonascii = re.compile('[^\s!-~]')
+NONASCII = re.compile('[^\s!-~]')
 
 
 
@@ -54,12 +48,12 @@ def uheader(mlist, s, header_name=None, continuation_ws='\t', maxlinelen=None):
     specified.
     """
     charset = mlist.preferred_language.charset
-    if nonascii.search(s):
+    if NONASCII.search(s):
         # use list charset but ...
         if charset == 'us-ascii':
             charset = 'iso-8859-1'
     else:
-        # there is no nonascii so ...
+        # there is no non-ascii so ...
         charset = 'us-ascii'
     return Header(s, charset, maxlinelen, header_name, continuation_ws)
 
@@ -78,13 +72,6 @@ def process(mlist, msg, msgdata):
     msgdata['original_sender'] = msg.sender
     # VirginRunner sets _fasttrack for internally crafted messages.
     fasttrack = msgdata.get('_fasttrack')
-    if not msgdata.get('isdigest') and not fasttrack:
-        try:
-            prefix_subject(mlist, msg, msgdata)
-        except (UnicodeError, ValueError):
-            # TK: Sometimes subject header is not MIME encoded for 8bit
-            # simply abort prefixing.
-            pass
     # Add Precedence: and other useful headers.  None of these are standard
     # and finding information on some of them are fairly difficult.  Some are
     # just common practice, and we'll add more here as they become necessary.
@@ -168,114 +155,6 @@ def process(mlist, msg, msgdata):
             add((str(i18ndesc), mlist.posting_address))
             del msg['Cc']
             msg['Cc'] = COMMASPACE.join([formataddr(pair) for pair in new])
-
-
-
-def prefix_subject(mlist, msg, msgdata):
-    """Maybe add a subject prefix.
-
-    Add the subject prefix unless the message is a digest or is being fast
-    tracked (e.g. internally crafted, delivered to a single user such as the
-    list admin).
-    """
-    if not mlist.subject_prefix.strip():
-        return
-    prefix = mlist.subject_prefix
-    subject = msg.get('subject', '')
-    # Try to figure out what the continuation_ws is for the header
-    if isinstance(subject, Header):
-        lines = str(subject).splitlines()
-    else:
-        lines = subject.splitlines()
-    ws = '\t'
-    if len(lines) > 1 and lines[1] and lines[1][0] in ' \t':
-        ws = lines[1][0]
-    msgdata['original_subject'] = subject
-    # The subject may be multilingual but we take the first charset as major
-    # one and try to decode.  If it is decodable, returned subject is in one
-    # line and cset is properly set.  If fail, subject is mime-encoded and
-    # cset is set as us-ascii.  See detail for ch_oneline() (CookHeaders one
-    # line function).
-    subject, cset = ch_oneline(subject)
-    # TK: Python interpreter has evolved to be strict on ascii charset code
-    # range.  It is safe to use unicode string when manupilating header
-    # contents with re module.  It would be best to return unicode in
-    # ch_oneline() but here is temporary solution.
-    subject = unicode(subject, cset)
-    # If the subject_prefix contains '%d', it is replaced with the
-    # mailing list sequential number.  Sequential number format allows
-    # '%d' or '%05d' like pattern.
-    prefix_pattern = re.escape(prefix)
-    # unescape '%' :-<
-    prefix_pattern = '%'.join(prefix_pattern.split(r'\%'))
-    p = re.compile('%\d*d')
-    if p.search(prefix, 1):
-        # prefix have number, so we should search prefix w/number in subject.
-        # Also, force new style.
-        prefix_pattern = p.sub(r'\s*\d+\s*', prefix_pattern)
-    subject = re.sub(prefix_pattern, '', subject)
-    rematch = re.match('((RE|AW|SV|VS)(\[\d+\])?:\s*)+', subject, re.I)
-    if rematch:
-        subject = subject[rematch.end():]
-        recolon = 'Re:'
-    else:
-        recolon = ''
-    # At this point, subject may become null if someone post mail with
-    # subject: [subject prefix]
-    if subject.strip() == '':
-        subject = _('(no subject)')
-        cset = mlist.preferred_language.charset
-    # and substitute %d in prefix with post_id
-    try:
-        prefix = prefix % mlist.post_id
-    except TypeError:
-        pass
-    # Get the header as a Header instance, with proper unicode conversion
-    if not recolon:
-        h = uheader(mlist, prefix, 'Subject', continuation_ws=ws)
-    else:
-        h = uheader(mlist, prefix, 'Subject', continuation_ws=ws)
-        h.append(recolon)
-    # TK: Subject is concatenated and unicode string.
-    subject = subject.encode(cset, 'replace')
-    h.append(subject, cset)
-    del msg['subject']
-    msg['Subject'] = h
-    ss = uheader(mlist, recolon, 'Subject', continuation_ws=ws)
-    ss.append(subject, cset)
-    msgdata['stripped_subject'] = ss
-
-
-
-def ch_oneline(headerstr):
-    # Decode header string in one line and convert into single charset.
-    # Return (string, cset) tuple as check for failure.
-    try:
-        d = decode_header(headerstr)
-        # At this point, we should rstrip() every string because some
-        # MUA deliberately add trailing spaces when composing return
-        # message.
-        d = [(s.rstrip(), c) for (s, c) in d]
-        # Find all charsets in the original header.  We use 'utf-8' rather
-        # than using the first charset (in mailman 2.1.x) if multiple
-        # charsets are used.
-        csets = []
-        for (s, c) in d:
-            if c and c not in csets:
-                csets.append(c)
-        if len(csets) == 0:
-            cset = 'us-ascii'
-        elif len(csets) == 1:
-            cset = csets[0]
-        else:
-            cset = 'utf-8'
-        h = make_header(d)
-        ustr = unicode(h)
-        oneline = ''.join(ustr.splitlines())
-        return oneline.encode(cset, 'replace'), cset
-    except (LookupError, UnicodeError, ValueError, HeaderParseError):
-        # possibly charset problem. return with undecoded string in one line.
-        return ''.join(headerstr.splitlines()), 'us-ascii'
 
 
 

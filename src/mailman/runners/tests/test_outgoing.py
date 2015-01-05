@@ -17,10 +17,11 @@
 
 """Test the outgoing runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestOnce',
+    'TestSocketError',
+    'TestSomeRecipientsFailed',
+    'TestVERPSettings',
     ]
 
 
@@ -32,8 +33,6 @@ import unittest
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from lazr.config import as_timedelta
-from zope.component import getUtility
-
 from mailman.app.bounces import send_probe
 from mailman.app.lifecycle import create_list
 from mailman.config import config
@@ -45,12 +44,11 @@ from mailman.interfaces.pending import IPendings
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.outgoing import OutgoingRunner
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
-    make_testable_runner,
+    LogFileMark, get_queue_messages, make_testable_runner,
     specialized_message_from_string as message_from_string)
 from mailman.testing.layers import ConfigLayer, SMTPLayer
 from mailman.utilities.datetime import factory, now
+from zope.component import getUtility
 
 
 
@@ -96,7 +94,7 @@ Message-Id: <first>
         deliver_after = now() + timedelta(days=10)
         self._msgdata['deliver_after'] = deliver_after
         self._outq.enqueue(self._msg, self._msgdata,
-                           tolist=True, listname='test@example.com')
+                           tolist=True, listid='test.example.com')
         self._runner.run()
         items = get_queue_messages('out')
         self.assertEqual(len(items), 1)
@@ -149,20 +147,20 @@ Message-Id: <first>
 
     def test_delivery_callback(self):
         # Test that the configuration variable calls the appropriate callback.
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         self.assertEqual(captured_mlist, self._mlist)
         self.assertEqual(captured_msg.as_string(), self._msg.as_string())
         # Of course, the message metadata will contain a bunch of keys added
         # by the processing.  We don't really care about the details, so this
         # test is a good enough stand-in.
-        self.assertEqual(captured_msgdata['listname'], 'test@example.com')
+        self.assertEqual(captured_msgdata['listid'], 'test.example.com')
 
     def test_verp_in_metadata(self):
         # Test that if the metadata has a 'verp' key, it is unchanged.
         marker = 'yepper'
         msgdata = dict(verp=marker)
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         self._runner.run()
         self.assertEqual(captured_msgdata['verp'], marker)
 
@@ -171,7 +169,7 @@ Message-Id: <first>
         # indicates, messages will be VERP'd.
         msgdata = {}
         self._mlist.personalize = Personalization.individual
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         with temporary_config('personalize', """
         [mta]
         verp_personalized_deliveries: yes
@@ -184,7 +182,7 @@ Message-Id: <first>
         # indicates, messages will be VERP'd.
         msgdata = {}
         self._mlist.personalize = Personalization.full
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         with temporary_config('personalize', """
         [mta]
         verp_personalized_deliveries: yes
@@ -197,14 +195,14 @@ Message-Id: <first>
         # does not indicate, messages will not be VERP'd.
         msgdata = {}
         self._mlist.personalize = Personalization.full
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         self._runner.run()
         self.assertFalse('verp' in captured_msgdata)
 
     def test_verp_never(self):
         # Never VERP when the interval is zero.
         msgdata = {}
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         with temporary_config('personalize', """
         [mta]
         verp_delivery_interval: 0
@@ -215,7 +213,7 @@ Message-Id: <first>
     def test_verp_always(self):
         # Always VERP when the interval is one.
         msgdata = {}
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         with temporary_config('personalize', """
         [mta]
         verp_delivery_interval: 1
@@ -227,7 +225,7 @@ Message-Id: <first>
         # VERP every so often, when the post_id matches.
         self._mlist.post_id = 5
         msgdata = {}
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         with temporary_config('personalize', """
         [mta]
         verp_delivery_interval: 5
@@ -239,7 +237,7 @@ Message-Id: <first>
         # VERP every so often, when the post_id matches.
         self._mlist.post_id = 4
         msgdata = {}
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         with temporary_config('personalize', """
             [mta]
             verp_delivery_interval: 5
@@ -287,7 +285,7 @@ Message-Id: <first>
         error_log = logging.getLogger('mailman.error')
         filename = error_log.handlers[0].filename
         filepos = os.stat(filename).st_size
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         with temporary_config('port 0', """
             [mta]
             smtp_port: 0
@@ -308,7 +306,7 @@ Message-Id: <first>
         # that is a log message.  Start by opening the error log and reading
         # the current file position.
         mark = LogFileMark('mailman.error')
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         with temporary_config('port 0', """
             [mta]
             smtp_port: 2112
@@ -369,7 +367,7 @@ Message-Id: <first>
         token = send_probe(member, self._msg)
         msgdata = dict(probe_token=token)
         permanent_failures.append('anne@example.com')
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 1)
@@ -390,7 +388,7 @@ Message-Id: <first>
         getUtility(IPendings).confirm(token)
         msgdata = dict(probe_token=token)
         permanent_failures.append('anne@example.com')
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 0)
@@ -404,7 +402,7 @@ Message-Id: <first>
         getUtility(IPendings).confirm(token)
         msgdata = dict(probe_token=token)
         temporary_failures.append('anne@example.com')
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 0)
@@ -412,7 +410,7 @@ Message-Id: <first>
     def test_one_permanent_failure(self):
         # Normal (i.e. non-probe) permanent failures just get registered.
         permanent_failures.append('anne@example.com')
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 1)
@@ -423,7 +421,7 @@ Message-Id: <first>
         # Two normal (i.e. non-probe) permanent failures just get registered.
         permanent_failures.append('anne@example.com')
         permanent_failures.append('bart@example.com')
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 2)
@@ -437,7 +435,7 @@ Message-Id: <first>
         # put in the retry queue, but with some metadata to prevent infinite
         # retries.
         temporary_failures.append('cris@example.com')
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 0)
@@ -458,7 +456,7 @@ Message-Id: <first>
         # retries.
         temporary_failures.append('cris@example.com')
         temporary_failures.append('dave@example.com')
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         events = list(self._processor.unprocessed)
         self.assertEqual(len(events), 0)
@@ -476,7 +474,7 @@ Message-Id: <first>
         permanent_failures.append('fred@example.com')
         temporary_failures.append('gwen@example.com')
         temporary_failures.append('herb@example.com')
-        self._outq.enqueue(self._msg, {}, listname='test@example.com')
+        self._outq.enqueue(self._msg, {}, listid='test.example.com')
         self._runner.run()
         # Let's look at the permanent failures.
         events = list(self._processor.unprocessed)
@@ -503,7 +501,7 @@ Message-Id: <first>
                          as_timedelta(config.mta.delivery_retry_period))
         msgdata = dict(last_recip_count=2,
                        deliver_until=deliver_until)
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         self._runner.run()
         # The retry queue should have our message waiting to be retried.
         items = get_queue_messages('retry')
@@ -522,7 +520,7 @@ Message-Id: <first>
         deliver_until = datetime(2005, 8, 1, 7, 49, 23) + retry_period
         msgdata = dict(last_recip_count=2,
                        deliver_until=deliver_until)
-        self._outq.enqueue(self._msg, msgdata, listname='test@example.com')
+        self._outq.enqueue(self._msg, msgdata, listid='test.example.com')
         # Before the runner runs, several days pass.
         factory.fast_forward(retry_period.days + 1)
         mark = LogFileMark('mailman.smtp')

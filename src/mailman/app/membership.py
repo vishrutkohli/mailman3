@@ -17,9 +17,6 @@
 
 """Application support for membership management."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'add_member',
     'delete_member',
@@ -28,8 +25,6 @@ __all__ = [
 
 
 from email.utils import formataddr
-from zope.component import getUtility
-
 from mailman.app.notifications import (
     send_goodbye_message, send_welcome_message)
 from mailman.config import config
@@ -40,6 +35,7 @@ from mailman.interfaces.member import (
     MemberRole, MembershipIsBannedError, NotAMemberError, SubscriptionEvent)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.i18n import make
+from zope.component import getUtility
 
 
 

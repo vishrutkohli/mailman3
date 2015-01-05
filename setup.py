@@ -15,17 +15,15 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-# Do *not* import unicode_literals.  This breaks setuptools.
-from __future__ import absolute_import, print_function
-
 import re
 import sys
 
 from setuptools import setup, find_packages
 from string import Template
 
-if sys.hexversion < 0x20700f0:
-    print('Mailman requires at least Python 2.7')
+
+if sys.hexversion < 0x30400f0:
+    print('Mailman requires at least Python 3.4')
     sys.exit(1)
 
 
@@ -105,6 +103,7 @@ case second `m'.  Any other spelling is incorrect.""",
         'mock',
         'nose2',
         'passlib',
+        'six',
         'sqlalchemy',
         'zope.component',
         'zope.configuration',

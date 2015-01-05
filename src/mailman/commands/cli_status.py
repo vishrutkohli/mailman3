@@ -17,9 +17,6 @@
 
 """bin/mailman status."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Status',
     ]
@@ -27,11 +24,10 @@ __all__ = [
 
 import socket
 
-from zope.interface import implementer
-
 from mailman.bin.master import WatcherState, master_state
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
+from zope.interface import implementer
 
 
 

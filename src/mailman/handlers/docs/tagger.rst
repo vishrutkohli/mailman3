@@ -55,7 +55,7 @@ and the message metadata gets a key with a list of matching topic names.
     <BLANKLINE>
     <BLANKLINE>
     >>> msgdata['topichits']
-    [u'bar fight']
+    ['bar fight']
 
 
 Scanning body lines
@@ -114,7 +114,7 @@ found.
     Keywords: barbaz
     <BLANKLINE>
     >>> msgdata['topichits']
-    [u'bar fight']
+    ['bar fight']
 
 However, scanning stops at the first body line that doesn't look like a
 header.
@@ -161,7 +161,7 @@ When set to a negative number, all body lines will be scanned.
     >>> print(msg['x-topics'])
     bar fight
     >>> msgdata['topichits']
-    [u'bar fight']
+    ['bar fight']
 
 
 Scanning sub-parts
@@ -175,14 +175,14 @@ text payload.
     ... Subject: Was
     ... Keywords: Raw
     ... Content-Type: multipart/alternative; boundary="BOUNDARY"
-    ... 
+    ...
     ... --BOUNDARY
     ... From: sabo
     ... To: obas
-    ... 
+    ...
     ... Subject: farbaw
     ... Keywords: barbaz
-    ... 
+    ...
     ... --BOUNDARY--
     ... """)
     >>> msgdata = {}
@@ -203,7 +203,7 @@ text payload.
     --BOUNDARY--
     <BLANKLINE>
     >>> msgdata['topichits']
-    [u'bar fight']
+    ['bar fight']
 
 But the tagger will not descend into non-text parts.
 
@@ -211,23 +211,23 @@ But the tagger will not descend into non-text parts.
     ... Subject: Was
     ... Keywords: Raw
     ... Content-Type: multipart/alternative; boundary=BOUNDARY
-    ... 
+    ...
     ... --BOUNDARY
     ... From: sabo
     ... To: obas
     ... Content-Type: message/rfc822
-    ... 
+    ...
     ... Subject: farbaw
     ... Keywords: barbaz
-    ... 
+    ...
     ... --BOUNDARY
     ... From: sabo
     ... To: obas
     ... Content-Type: message/rfc822
-    ... 
+    ...
     ... Subject: farbaw
     ... Keywords: barbaz
-    ... 
+    ...
     ... --BOUNDARY--
     ... """)
     >>> msgdata = {}

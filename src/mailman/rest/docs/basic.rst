@@ -24,13 +24,10 @@ Credentials
 When the `Authorization` header contains the proper credentials, the request
 succeeds.
 
-    >>> from base64 import b64encode
     >>> from httplib2 import Http
-    >>> auth = b64encode('{0}:{1}'.format(config.webservice.admin_user,
-    ...                                   config.webservice.admin_pass))
     >>> headers = {
     ...     'Content-Type': 'application/x-www-form-urlencode',
-    ...     'Authorization': 'Basic ' + auth,
+    ...     'Authorization': 'Basic cmVzdGFkbWluOnJlc3RwYXNz',
     ...     }
     >>> url = 'http://localhost:9001/3.0/system/versions'
     >>> response, content = Http().request(url, 'GET', None, headers)

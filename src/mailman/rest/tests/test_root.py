@@ -17,9 +17,6 @@
 
 """REST root object tests."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestRoot',
     ]
@@ -35,7 +32,7 @@ from mailman.config import config
 from mailman.core.system import system
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
-from urllib2 import HTTPError
+from six.moves.urllib_error import HTTPError
 
 
 
@@ -106,22 +103,23 @@ class TestRoot(unittest.TestCase):
             }
         response, raw_content = Http().request(url, 'GET', None, headers)
         self.assertEqual(response.status, 401)
-        content = json.loads(raw_content)
+        content = json.loads(raw_content.decode('utf-8'))
         self.assertEqual(content['title'], '401 Unauthorized')
         self.assertEqual(content['description'],
                          'The REST API requires authentication')
 
     def test_unauthorized(self):
         # Bad Basic Auth credentials results in a 401 error.
-        auth = b64encode('baduser:badpass')
+        userpass = b64encode(b'baduser:badpass')
+        auth = 'Basic {}'.format(userpass.decode('ascii'))
         url = 'http://localhost:9001/3.0/system'
         headers = {
             'Content-Type': 'application/x-www-form-urlencode',
-            'Authorization': 'Basic ' + auth,
+            'Authorization': auth,
             }
         response, raw_content = Http().request(url, 'GET', None, headers)
         self.assertEqual(response.status, 401)
-        content = json.loads(raw_content)
+        content = json.loads(raw_content.decode('utf-8'))
         self.assertEqual(content['title'], '401 Unauthorized')
         self.assertEqual(content['description'],
                          'User is not authorized for the REST API')

@@ -17,21 +17,17 @@
 
 """The content filter."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ContentFilter'
     ]
 
 
-from sqlalchemy import Column, ForeignKey, Integer, Unicode
-from sqlalchemy.orm import relationship
-from zope.interface import implementer
-
 from mailman.database.model import Model
 from mailman.database.types import Enum
 from mailman.interfaces.mime import IContentFilter, FilterType
+from sqlalchemy import Column, ForeignKey, Integer, Unicode
+from sqlalchemy.orm import relationship
+from zope.interface import implementer
 
 
 

@@ -39,12 +39,11 @@ list, or ask on IRC channel ``#mailman`` on Freenode.
 Requirements
 ============
 
-Python 2.7 is required.  It can either be the default 'python' on your
-``$PATH`` or it can be accessible via the ``python2.7`` binary.  If
-your operating system does not include Python, see http://www.python.org
-for information about downloading installers (where available) and
-installing it from source (when necessary or preferred).  Python 3 is
-not yet supported.
+Python 3.4 or newer is required.  It can either be the default 'python3' on
+your ``$PATH`` or it can be accessible via the ``python3.4`` binary.  If your
+operating system does not include Python, see http://www.python.org for
+information about downloading installers (where available) and installing it
+from source (when necessary or preferred).  Python 2 is not supported.
 
 You may need some additional dependencies, which are either available from
 your OS vendor, or can be downloaded automatically from the `Python
@@ -80,9 +79,9 @@ downloads everything from the Cheeseshop.
 You do have access to the virtualenv, and you can use this to run individual
 tests, e.g.::
 
-    $ .tox/py27/bin/python -m nose2 -vv -P user
+    $ .tox/py34/bin/python -m nose2 -vv -P user
 
-Use `.tox/py27/bin/python -m nose2 --help` for more options.
+Use `.tox/py34/bin/python -m nose2 --help` for more options.
 
 If you want to run the full test suite against the PostgreSQL database, set
 the database up as described in :doc:`DATABASE`, then create a `postgres.cfg`
@@ -112,23 +111,23 @@ installed.
 
 First, create a virtual environment.  By default ``virtualenv`` uses the
 ``python`` executable it finds first on your ``$PATH``.  Make sure this is
-Python 2.7 (just start the interactive interpreter and check the version in
+Python 3.4 (just start the interactive interpreter and check the version in
 the startup banner).  The directory you install the virtualenv into is up to
-you, but for purposes of this document, we'll install it into ``/tmp/py27``::
+you, but for purposes of this document, we'll install it into ``/tmp/mm3``::
 
-    % virtualenv --system-site-packages /tmp/py27
+    % virtualenv -p python3 --system-site-packages /tmp/mm3
 
-If your default Python is not version 2.7, use the ``--python`` option to
+If your default Python is not version 3.4, use the ``--python`` option to
 specify the Python executable.  You can use the command name if this version
 is on your ``PATH``::
 
-    % virtualenv --system-site-packages --python=python2.7 /tmp/py27
+    % virtualenv --system-site-packages --python=python3.4 /tmp/mm3
 
-or you may specify the full path to any Python 2.7 executable.
+or you may specify the full path to any Python 3.4 executable.
 
 Now, activate the virtual environment and set it up for development::
 
-    % source /tmp/py27/bin/activate
+    % source /tmp/mm3/bin/activate
     % python setup.py develop
 
 Sit back and have some Kombucha while you wait for everything to download and

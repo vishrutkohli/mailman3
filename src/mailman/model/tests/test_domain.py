@@ -17,9 +17,6 @@
 
 """Test domains."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestDomainLifecycleEvents',
     'TestDomainManager',
@@ -28,8 +25,6 @@ __all__ = [
 
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.interfaces.domain import (
     DomainCreatedEvent, DomainCreatingEvent, DomainDeletedEvent,
@@ -37,6 +32,7 @@ from mailman.interfaces.domain import (
 from mailman.interfaces.listmanager import IListManager
 from mailman.testing.helpers import event_subscribers
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -45,6 +41,7 @@ class TestDomainManager(unittest.TestCase):
 
     def setUp(self):
         self._events = []
+        self._manager = getUtility(IDomainManager)
 
     def _record_event(self, event):
         self._events.append(event)
@@ -53,7 +50,7 @@ class TestDomainManager(unittest.TestCase):
         # Test that creating a domain in the domain manager propagates the
         # expected events.
         with event_subscribers(self._record_event):
-            domain = getUtility(IDomainManager).add('example.org')
+            domain = self._manager.add('example.org')
         self.assertEqual(len(self._events), 2)
         self.assertTrue(isinstance(self._events[0], DomainCreatingEvent))
         self.assertEqual(self._events[0].mail_host, 'example.org')
@@ -63,14 +60,23 @@ class TestDomainManager(unittest.TestCase):
     def test_delete_domain_event(self):
         # Test that deleting a domain in the domain manager propagates the
         # expected event.
-        domain = getUtility(IDomainManager).add('example.org')
+        domain = self._manager.add('example.org')
         with event_subscribers(self._record_event):
-            getUtility(IDomainManager).remove('example.org')
+            self._manager.remove('example.org')
         self.assertEqual(len(self._events), 2)
         self.assertTrue(isinstance(self._events[0], DomainDeletingEvent))
         self.assertEqual(self._events[0].domain, domain)
         self.assertTrue(isinstance(self._events[1], DomainDeletedEvent))
         self.assertEqual(self._events[1].mail_host, 'example.org')
+
+    def test_lookup_missing_domain(self):
+        # Like dictionaries, getitem syntax raises KeyError on missing domain.
+        with self.assertRaises(KeyError):
+            self._manager['doesnotexist.com']
+
+    def test_delete_missing_domain(self):
+        # Trying to delete a missing domain gives you a KeyError.
+        self.assertRaises(KeyError, self._manager.remove, 'doesnotexist.com')
 
 
 

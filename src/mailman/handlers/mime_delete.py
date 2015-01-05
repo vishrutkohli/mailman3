@@ -24,9 +24,6 @@ wrapping only single sections after other processing are replaced by their
 contents.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MIMEDelete',
     ]
@@ -41,9 +38,6 @@ from email.iterators import typed_subpart_iterator
 from email.mime.message import MIMEMessage
 from email.mime.text import MIMEText
 from lazr.config import as_boolean
-from os.path import splitext
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core import errors
 from mailman.core.i18n import _
@@ -52,6 +46,8 @@ from mailman.interfaces.action import FilterAction
 from mailman.interfaces.handler import IHandler
 from mailman.utilities.string import oneline
 from mailman.version import VERSION
+from os.path import splitext
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.error')
@@ -245,7 +241,7 @@ def to_plaintext(msg):
         filename = tempfile.mktemp('.html')
         fp = open(filename, 'w')
         try:
-            fp.write(subpart.get_payload(decode=True))
+            fp.write(subpart.get_payload())
             fp.close()
             cmd = os.popen(config.HTML_TO_PLAIN_TEXT_COMMAND %
                            {'filename': filename})

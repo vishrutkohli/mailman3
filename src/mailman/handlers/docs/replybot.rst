@@ -49,9 +49,9 @@ response.
 
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg           : False
-    listname            : _xtest@example.com
+    listid              : _xtest.example.com
     nodecorate          : True
-    recipients          : set([u'aperson@example.com'])
+    recipients          : {'aperson@example.com'}
     reduced_list_headers: True
     version             : 3
 
@@ -141,9 +141,9 @@ Unless the ``X-Ack:`` header has a value of ``yes``, in which case, the
 
     >>> dump_msgdata(messages[0].msgdata)
     _parsemsg           : False
-    listname            : _xtest@example.com
+    listid              : _xtest.example.com
     nodecorate          : True
-    recipients          : set([u'asystem@example.com'])
+    recipients          : {'asystem@example.com'}
     reduced_list_headers: True
     version             : 3
 

@@ -17,9 +17,6 @@
 
 """Tests for the LMTP server."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestLMTP',
     ]
@@ -30,7 +27,6 @@ import smtplib
 import unittest
 
 from datetime import datetime
-
 from mailman.config import config
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
@@ -67,7 +63,7 @@ Subject: This has no Message-ID header
         # reasons)
         self.assertEqual(cm.exception.smtp_code, 550)
         self.assertEqual(cm.exception.smtp_error,
-                         'No Message-ID header provided')
+                         b'No Message-ID header provided')
 
     def test_message_id_hash_is_added(self):
         self._lmtp.sendmail('anne@example.com', ['test@example.com'], """\
@@ -118,6 +114,36 @@ Message-ID: <ant>
         queue_directory = os.path.join(config.QUEUE_DIR, 'lmtp')
         self.assertFalse(os.path.isdir(queue_directory))
 
+    def test_nonexistent_mailing_list(self):
+        # Trying to post to a nonexistent mailing list is an error.
+        with self.assertRaises(smtplib.SMTPDataError) as cm:
+            self._lmtp.sendmail('anne@example.com',
+                                ['notalist@example.com'], """\
+From: anne.person@example.com
+To: notalist@example.com
+Subject: An interesting message
+Message-ID: <aardvark>
+
+""")
+        self.assertEqual(cm.exception.smtp_code, 550)
+        self.assertEqual(cm.exception.smtp_error,
+                         b'Requested action not taken: mailbox unavailable')
+
+    def test_missing_subaddress(self):
+        # Trying to send a message to a bogus subaddress is an error.
+        with self.assertRaises(smtplib.SMTPDataError) as cm:
+            self._lmtp.sendmail('anne@example.com',
+                                ['test-bogus@example.com'], """\
+From: anne.person@example.com
+To: test-bogus@example.com
+Subject: An interesting message
+Message-ID: <aardvark>
+
+""")
+        self.assertEqual(cm.exception.smtp_code, 550)
+        self.assertEqual(cm.exception.smtp_error,
+                         b'Requested action not taken: mailbox unavailable')
+
 
 
 class TestBugs(unittest.TestCase):
@@ -142,5 +168,5 @@ Message-ID: <alpha>
 """)
         messages = get_queue_messages('in')
         self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].msgdata['listname'],
-                         'my-list@example.com')
+        self.assertEqual(messages[0].msgdata['listid'],
+                         'my-list.example.com')

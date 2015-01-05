@@ -128,6 +128,7 @@ class TestSystemConfiguration(unittest.TestCase):
             'passwords',
             'paths.dev',
             'paths.fhs',
+            'paths.here',
             'paths.local',
             'paths.testing',
             'runner.archive',

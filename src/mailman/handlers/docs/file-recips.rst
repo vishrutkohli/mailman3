@@ -34,26 +34,6 @@ returns.
     recipients: 7
 
 
-Missing file
-============
-
-The include file must live inside the list's data directory, under the name
-``members.txt``.  If the file doesn't exist, the list of recipients will be
-empty.
-
-    >>> import os
-    >>> file_path = os.path.join(mlist.data_path, 'members.txt')
-    >>> open(file_path)
-    Traceback (most recent call last):
-    ...
-    IOError: [Errno ...]
-    No such file or directory: u'.../_xtest@example.com/members.txt'
-    >>> msgdata = {}
-    >>> handler.process(mlist, msg, msgdata)
-    >>> dump_list(msgdata['recipients'])
-    *Empty*
-
-
 Existing file
 =============
 
@@ -61,16 +41,15 @@ If the file exists, it contains a list of addresses, one per line.  These
 addresses are returned as the set of recipients.
 ::
 
-    >>> fp = open(file_path, 'w')
-    >>> try:
+    >>> import os
+    >>> file_path = os.path.join(mlist.data_path, 'members.txt')
+    >>> with open(file_path, 'w', encoding='utf-8') as fp:
     ...     print('bperson@example.com', file=fp)
     ...     print('cperson@example.com', file=fp)
     ...     print('dperson@example.com', file=fp)
     ...     print('eperson@example.com', file=fp)
     ...     print('fperson@example.com', file=fp)
     ...     print('gperson@example.com', file=fp)
-    ... finally:
-    ...     fp.close()
 
     >>> msgdata = {}
     >>> handler.process(mlist, msg, msgdata)

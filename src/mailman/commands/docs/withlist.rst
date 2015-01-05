@@ -52,10 +52,10 @@ single argument, the mailing list.
     >>> with open(os.path.join(config.VAR_DIR, 'showme.py'), 'w') as fp:
     ...     print("""\
     ... def showme(mailing_list):
-    ...     print "The list's name is", mailing_list.fqdn_listname
+    ...     print("The list's name is", mailing_list.fqdn_listname)
     ...
     ... def displayname(mailing_list):
-    ...     print "The list's display name is", mailing_list.display_name
+    ...     print("The list's display name is", mailing_list.display_name)
     ... """, file=fp)
 
 If the name of the function is the same as the module, then you only need to

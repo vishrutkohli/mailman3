@@ -17,9 +17,6 @@
 
 """Sending notifications."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'send_admin_subscription_notice',
     'send_goodbye_message',
@@ -31,9 +28,6 @@ import logging
 
 from email.utils import formataddr
 from lazr.config import as_boolean
-from urllib2 import URLError
-from zope.component import getUtility
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification, UserNotification
@@ -41,6 +35,8 @@ from mailman.interfaces.member import DeliveryMode
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.utilities.i18n import make
 from mailman.utilities.string import expand, wrap
+from six.moves.urllib_error import URLError
+from zope.component import getUtility
 
 
 log = logging.getLogger('mailman.error')
@@ -141,7 +137,6 @@ def send_admin_subscription_notice(mlist, address, display_name, language):
     """
     with _.using(mlist.preferred_language.code):
         subject = _('$mlist.display_name subscription notification')
-    display_name = display_name.encode(language.charset, 'replace')
     text = make('adminsubscribeack.txt',
                 mailing_list=mlist,
                 listname=mlist.display_name,

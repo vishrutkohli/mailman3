@@ -17,9 +17,6 @@
 
 """Test the retry runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestRetryRunner',
     ]
@@ -31,8 +28,7 @@ from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.runners.retry import RetryRunner
 from mailman.testing.helpers import (
-    get_queue_messages,
-    make_testable_runner,
+    get_queue_messages, make_testable_runner,
     specialized_message_from_string as message_from_string)
 from mailman.testing.layers import ConfigLayer
 
@@ -54,7 +50,7 @@ To: test@example.com
 Message-Id: <first>
 
 """)
-        self._msgdata = dict(listname='test@example.com')
+        self._msgdata = dict(listid='test.example.com')
 
     def test_message_put_in_outgoing_queue(self):
         self._retryq.enqueue(self._msg, self._msgdata)

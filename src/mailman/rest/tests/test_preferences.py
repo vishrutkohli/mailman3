@@ -17,9 +17,6 @@
 
 """Test various preference functionality."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestPreferences',
     ]
@@ -32,10 +29,11 @@ from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
-from urllib2 import HTTPError
+from six.moves.urllib_error import HTTPError
 from zope.component import getUtility
 
 
+
 class TestPreferences(unittest.TestCase):
     """Test various preference functionality."""
 

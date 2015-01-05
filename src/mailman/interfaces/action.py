@@ -17,7 +17,6 @@
 
 """Message actions."""
 
-__metaclass__ = type
 __all__ = [
     'Action',
     'FilterAction',

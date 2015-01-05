@@ -17,9 +17,6 @@
 
 """The 'members' subcommand."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Members',
     ]
@@ -29,11 +26,6 @@ import sys
 import codecs
 
 from email.utils import formataddr, parseaddr
-from operator import attrgetter
-from passlib.utils import generate_password as generate
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.app.membership import add_member
 from mailman.config import config
 from mailman.core.i18n import _
@@ -42,6 +34,10 @@ from mailman.interfaces.command import ICLISubCommand
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.member import (
     AlreadySubscribedError, DeliveryMode, DeliveryStatus)
+from operator import attrgetter
+from passlib.utils import generate_password as generate
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -197,8 +193,6 @@ class Members:
                     continue
                 # Parse the line and ensure that the values are unicodes.
                 display_name, email = parseaddr(line)
-                display_name = display_name.decode(fp.encoding)
-                email = email.decode(fp.encoding)
                 # Give the user a default, user-friendly password.
                 password = generate(int(config.passwords.password_length))
                 try:

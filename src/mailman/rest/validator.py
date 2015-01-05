@@ -17,9 +17,6 @@
 
 """REST web form validation."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'PatchValidator',
     'Validator',
@@ -29,12 +26,11 @@ __all__ = [
     ]
 
 
-from uuid import UUID
-from zope.component import getUtility
-
 from mailman.core.errors import (
     ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
 from mailman.interfaces.languages import ILanguageManager
+from uuid import UUID
+from zope.component import getUtility
 
 
 COMMASPACE = ', '
@@ -62,7 +58,7 @@ def subscriber_validator(subscriber):
     try:
         return UUID(int=int(subscriber))
     except ValueError:
-        return unicode(subscriber)
+        return subscriber
 
 
 def language_validator(code):

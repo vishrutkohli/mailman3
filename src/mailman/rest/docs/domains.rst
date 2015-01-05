@@ -228,13 +228,5 @@ Domains can also be deleted via the API.
     server: ...
     status: 204
 
-It is an error to delete a domain twice.
-
-    >>> dump_json('http://localhost:9001/3.0/domains/lists.example.com',
-    ...           method='DELETE')
-    Traceback (most recent call last):
-    ...
-    HTTPError: HTTP Error 404: 404 Not Found
-
 
 .. _Domains: ../../model/docs/domains.html

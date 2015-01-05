@@ -17,9 +17,6 @@
 
 """Test database schema migrations"""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestSchemaManager',
     ]
@@ -28,17 +25,16 @@ __all__ = [
 import unittest
 import alembic.command
 
-from mock import patch
-from sqlalchemy import MetaData, Table, Column, Integer, Unicode
-from sqlalchemy.exc import ProgrammingError, OperationalError
-from sqlalchemy.schema import Index
-
 from mailman.config import config
 from mailman.database.alembic import alembic_cfg
 from mailman.database.factory import LAST_STORM_SCHEMA_VERSION, SchemaManager
 from mailman.database.model import Model
 from mailman.interfaces.database import DatabaseError
 from mailman.testing.layers import ConfigLayer
+from mock import patch
+from sqlalchemy import MetaData, Table, Column, Integer, Unicode
+from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlalchemy.schema import Index
 
 
 

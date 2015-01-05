@@ -17,9 +17,6 @@
 
 """REST for mailing lists."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AList',
     'AllLists',
@@ -30,10 +27,9 @@ __all__ = [
     ]
 
 
-from lazr.config import as_boolean
-from operator import attrgetter
-from zope.component import getUtility
+import six
 
+from lazr.config import as_boolean
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.config import config
 from mailman.interfaces.domain import BadDomainSpecificationError
@@ -50,6 +46,8 @@ from mailman.rest.helpers import (
 from mailman.rest.members import AMember, MemberCollection
 from mailman.rest.moderation import HeldMessages, SubscriptionRequests
 from mailman.rest.validator import Validator
+from operator import attrgetter
+from zope.component import getUtility
 
 
 
@@ -204,16 +202,15 @@ class AllLists(_ListBase):
     def on_post(self, request, response):
         """Create a new mailing list."""
         try:
-            validator = Validator(fqdn_listname=unicode,
-                                  style_name=unicode,
+            validator = Validator(fqdn_listname=six.text_type,
+                                  style_name=six.text_type,
                                   _optional=('style_name',))
             mlist = create_list(**validator(request))
         except ListAlreadyExistsError:
             bad_request(response, b'Mailing list exists')
         except BadDomainSpecificationError as error:
-            bad_request(
-                response,
-                b'Domain does not exist: {0}'.format(error.domain))
+            reason = 'Domain does not exist: {}'.format(error.domain)
+            bad_request(response, reason.encode('utf-8'))
         except ValueError as error:
             bad_request(response, str(error))
         else:
@@ -273,7 +270,7 @@ class ArchiverGetterSetter(GetterSetter):
         # attribute will contain the (bytes) name of the archiver that is
         # getting a new status.  value will be the representation of the new
         # boolean status.
-        archiver = self._archiver_set.get(attribute.decode('utf-8'))
+        archiver = self._archiver_set.get(attribute)
         if archiver is None:
             raise ValueError('No such archiver: {}'.format(attribute))
         archiver.is_enabled = as_boolean(value)

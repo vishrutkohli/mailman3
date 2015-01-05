@@ -62,7 +62,7 @@ You can iterate over all the known language codes.
     >>> mgr.add('pl', 'iso-8859-2', 'Polish')
     <Language [pl] Polish>
     >>> sorted(mgr.codes)
-    [u'en', u'it', u'pl']
+    ['en', 'it', 'pl']
 
 You can iterate over all the known languages.
 
@@ -89,7 +89,7 @@ You can get a particular language by its code.
     >>> print(mgr['xx'].code)
     Traceback (most recent call last):
     ...
-    KeyError: u'xx'
+    KeyError: 'xx'
     >>> print(mgr.get('it').description)
     Italian
     >>> print(mgr.get('xx'))

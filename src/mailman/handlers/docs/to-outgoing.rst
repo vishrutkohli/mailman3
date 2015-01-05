@@ -37,6 +37,6 @@ additional key set: the mailing list name.
     _parsemsg: False
     bar      : 2
     foo      : 1
-    listname : test@example.com
+    listid   : test.example.com
     verp     : True
     version  : 3

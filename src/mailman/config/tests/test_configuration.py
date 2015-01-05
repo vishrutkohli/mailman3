@@ -17,9 +17,6 @@
 
 """Test the system-wide global configuration."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestConfiguration',
     'TestConfigurationErrors',
@@ -32,6 +29,7 @@ import mock
 import tempfile
 import unittest
 
+from contextlib import ExitStack
 from mailman.config.config import (
     Configuration, external_configuration, load_external)
 from mailman.interfaces.configuration import (
@@ -65,26 +63,13 @@ class TestConfiguration(unittest.TestCase):
 class TestExternal(unittest.TestCase):
     """Test external configuration file loading APIs."""
 
-    def test_load_external_by_filename_as_bytes(self):
+    def test_load_external_by_filename(self):
         filename = resource_filename('mailman.config', 'postfix.cfg')
         contents = load_external(filename)
-        self.assertIsInstance(contents, bytes)
-        self.assertEqual(contents[:9], b'[postfix]')
-
-    def test_load_external_by_path_as_bytes(self):
-        contents = load_external('python:mailman.config.postfix')
-        self.assertIsInstance(contents, bytes)
-        self.assertEqual(contents[:9], b'[postfix]')
-
-    def test_load_external_by_filename_as_string(self):
-        filename = resource_filename('mailman.config', 'postfix.cfg')
-        contents = load_external(filename, encoding='utf-8')
-        self.assertIsInstance(contents, unicode)
         self.assertEqual(contents[:9], '[postfix]')
 
-    def test_load_external_by_path_as_string(self):
-        contents = load_external('python:mailman.config.postfix', 'utf-8')
-        self.assertIsInstance(contents, unicode)
+    def test_load_external_by_path(self):
+        contents = load_external('python:mailman.config.postfix')
         self.assertEqual(contents[:9], '[postfix]')
 
     def test_external_configuration_by_filename(self):
@@ -121,24 +106,32 @@ layout: nonesuch
         # Use a fake sys.exit() function that records that it was called, and
         # that prevents further processing.
         config = Configuration()
-        # Suppress warning messages in the test output.
-        with self.assertRaises(SystemExit) as cm, mock.patch('sys.stderr'):
+        # Suppress warning messages in the test output.  Also, make sure that
+        # the config.load() call doesn't break global state.
+        with ExitStack() as resources:
+            resources.enter_context(mock.patch('sys.stderr'))
+            resources.enter_context(mock.patch.object(config, '_clear'))
+            cm = resources.enter_context(self.assertRaises(SystemExit))
             config.load(filename)
         self.assertEqual(cm.exception.args, (1,))
 
     def test_path_expansion_infloop(self):
-        # A path expansion never completes because it references a
-        # non-existent substitution variable.
+        # A path expansion never completes because it references a non-existent
+        # substitution variable.
         fd, filename = tempfile.mkstemp()
         self.addCleanup(os.remove, filename)
         os.close(fd)
         with open(filename, 'w') as fp:
             print("""\
-[paths.dev]
+[paths.here]
 log_dir: $nopath/log_dir
 """, file=fp)
         config = Configuration()
-        # Suppress warning messages in the test output.
-        with self.assertRaises(SystemExit) as cm, mock.patch('sys.stderr'):
+        # Suppress warning messages in the test output.  Also, make sure that
+        # the config.load() call doesn't break global state.
+        with ExitStack() as resources:
+            resources.enter_context(mock.patch('sys.stderr'))
+            resources.enter_context(mock.patch.object(config, '_clear'))
+            cm = resources.enter_context(self.assertRaises(SystemExit))
             config.load(filename)
         self.assertEqual(cm.exception.args, (1,))

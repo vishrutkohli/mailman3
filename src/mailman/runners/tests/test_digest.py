@@ -17,26 +17,25 @@
 
 """Test the digest runner."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestDigest',
+    'TestI18nDigest',
     ]
 
 
 import unittest
 
-from StringIO import StringIO
 from email.iterators import _structure as structure
 from email.mime.text import MIMEText
+from io import StringIO
 from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.email.message import Message
 from mailman.runners.digest import DigestRunner
 from mailman.testing.helpers import (
     LogFileMark, digest_mbox, get_queue_messages, make_digest_messages,
-    make_testable_runner, message_from_string)
+    make_testable_runner, message_from_string,
+    specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
 from string import Template
 
@@ -140,3 +139,77 @@ multipart/mixed
         text/plain
     text/plain
 """)
+
+
+
+class TestI18nDigest(unittest.TestCase):
+    layer = ConfigLayer
+    maxDiff = None
+
+    def setUp(self):
+        config.push('french', """
+        [mailman]
+        default_language: fr
+        """)
+        self.addCleanup(config.pop, 'french')
+        self._mlist = create_list('test@example.com')
+        self._mlist.preferred_language = 'fr'
+        self._mlist.digest_size_threshold = 0
+        self._process = config.handlers['to-digest'].process
+        self._runner = make_testable_runner(DigestRunner)
+
+    def test_multilingual_digest(self):
+        # When messages come in with a content-type character set different
+        # than that of the list's preferred language, recipients will get an
+        # internationalized digest.
+        msg = mfs("""\
+From: aperson@example.org
+To: test@example.com
+Subject: =?iso-2022-jp?b?GyRCMGxIVhsoQg==?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+
+\x1b$B0lHV\x1b(B
+""")
+        self._process(self._mlist, msg, {})
+        self._runner.run()
+        # There are two digests in the virgin queue; one is the MIME digest
+        # and the other is the RFC 1153 digest.
+        messages = get_queue_messages('virgin')
+        self.assertEqual(len(messages), 2)
+        if messages[0].msg.is_multipart():
+            mime, rfc1153 = messages[0].msg, messages[1].msg
+        else:
+            rfc1153, mime = messages[0].msg, messages[1].msg
+        # The MIME version contains a mix of French and Japanese.  The digest
+        # chrome added by Mailman is in French.
+        self.assertEqual(mime['subject'].encode(),
+                         '=?iso-8859-1?q?Groupe_Test=2C_Vol_1=2C_Parution_1?=')
+        self.assertEqual(str(mime['subject']),
+                         'Groupe Test, Vol 1, Parution 1')
+        # The first subpart contains the iso-8859-1 masthead.
+        masthead = mime.get_payload(0).get_payload(decode=True).decode(
+            'iso-8859-1')
+        self.assertMultiLineEqual(masthead.splitlines()[0],
+                                  'Envoyez vos messages pour la liste Test à')
+        # The second subpart contains the utf-8 table of contents.
+        self.assertEqual(mime.get_payload(1)['content-description'],
+                         "Today's Topics (1 messages)")
+        toc = mime.get_payload(1).get_payload(decode=True).decode('utf-8')
+        self.assertMultiLineEqual(toc.splitlines()[0], 'Thèmes du jour :')
+        # The third subpart contains the posted message in Japanese.
+        self.assertEqual(mime.get_payload(2).get_content_type(),
+                         'message/rfc822')
+        post = mime.get_payload(2).get_payload(0)
+        self.assertEqual(post['subject'], '=?iso-2022-jp?b?GyRCMGxIVhsoQg==?=')
+        # Compare the bytes so that this module doesn't contain string
+        # literals in multiple incompatible character sets.
+        self.assertEqual(post.get_payload(decode=True), b'\x1b$B0lHV\x1b(B\n')
+        # The RFC 1153 digest will have the same subject, but its payload will
+        # be recast into utf-8.
+        self.assertEqual(str(rfc1153['subject']),
+                         'Groupe Test, Vol 1, Parution 1')
+        self.assertEqual(rfc1153.get_charset(), 'utf-8')
+        lines = rfc1153.get_payload(decode=True).decode('utf-8').splitlines()
+        self.assertEqual(lines[0], 'Envoyez vos messages pour la liste Test à')

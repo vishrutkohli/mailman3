@@ -162,7 +162,7 @@ deleted.
     >>> dump_json('http://localhost:9001/3.0/addresses/anne@example.com'
     ...           '/preferences')
     acknowledge_posts: True
-    http_etag: "1ff07b0367bede79ade27d217e12df3915aaee2b"
+    http_etag: "..."
     preferred_language: ja
     self_link: http://localhost:9001/3.0/addresses/anne@example.com/preferences
 

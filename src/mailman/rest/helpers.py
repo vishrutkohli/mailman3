@@ -17,9 +17,6 @@
 
 """Web service helpers."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'BadRequest',
     'ChildError',
@@ -59,7 +56,7 @@ def path_to(resource):
     :return: The full path to the resource.
     :rtype: bytes
     """
-    return b'{0}://{1}:{2}/{3}/{4}'.format(
+    return '{0}://{1}:{2}/{3}/{4}'.format(
         ('https' if as_boolean(config.webservice.use_https) else 'http'),
         config.webservice.hostname,
         config.webservice.port,
@@ -107,8 +104,10 @@ def etag(resource):
     assert 'http_etag' not in resource, 'Resource already etagged'
     # Calculate the tag from a predictable (i.e. sorted) representation of the
     # dictionary.  The actual details aren't so important.  pformat() is
-    # guaranteed to sort the keys.
-    etag = hashlib.sha1(pformat(resource)).hexdigest()
+    # guaranteed to sort the keys, however it returns a str and the hash
+    # library requires a bytes.  Use the safest possible encoding.
+    hashfood = pformat(resource).encode('raw-unicode-escape')
+    etag = hashlib.sha1(hashfood).hexdigest()
     resource['http_etag'] = '"{0}"'.format(etag)
     return json.dumps(resource, cls=ExtendedEncoder)
 

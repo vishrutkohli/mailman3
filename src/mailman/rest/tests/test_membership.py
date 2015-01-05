@@ -17,9 +17,6 @@
 
 """REST membership tests."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestMembership',
     'TestNonmembership',
@@ -27,9 +24,6 @@ __all__ = [
 
 
 import unittest
-
-from urllib2 import HTTPError
-from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
@@ -41,6 +35,8 @@ from mailman.testing.helpers import (
 from mailman.runners.incoming import IncomingRunner
 from mailman.testing.layers import ConfigLayer, RESTLayer
 from mailman.utilities.datetime import now
+from six.moves.urllib_error import HTTPError
+from zope.component import getUtility
 
 
 
@@ -60,7 +56,7 @@ class TestMembership(unittest.TestCase):
                 'subscriber': 'nobody@example.com',
                 })
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg, 'No such list')
+        self.assertEqual(cm.exception.reason, b'No such list')
 
     def test_try_to_leave_missing_list(self):
         # A user tries to leave a non-existent list.
@@ -100,7 +96,7 @@ class TestMembership(unittest.TestCase):
                 'subscriber': 'anne@example.com',
                 })
         self.assertEqual(cm.exception.code, 409)
-        self.assertEqual(cm.exception.msg, 'Member already subscribed')
+        self.assertEqual(cm.exception.reason, b'Member already subscribed')
 
     def test_join_with_invalid_delivery_mode(self):
         with self.assertRaises(HTTPError) as cm:
@@ -111,8 +107,8 @@ class TestMembership(unittest.TestCase):
                 'delivery_mode': 'invalid-mode',
                 })
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg,
-                         'Cannot convert parameters: delivery_mode')
+        self.assertEqual(cm.exception.reason,
+                         b'Cannot convert parameters: delivery_mode')
 
     def test_join_email_contains_slash(self):
         content, response = call_api('http://localhost:9001/3.0/members', {
@@ -204,7 +200,7 @@ class TestMembership(unittest.TestCase):
                      'powers': 'super',
                      }, method='PATCH')
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg, 'Unexpected parameters: powers')
+        self.assertEqual(cm.exception.reason, b'Unexpected parameters: powers')
 
     def test_member_all_without_preferences(self):
         # /members/<id>/all should return a 404 when it isn't trailed by

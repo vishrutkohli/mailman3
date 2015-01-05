@@ -17,9 +17,6 @@
 
 """Testing app.bounces functions."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestBounceMessage',
     'TestMaybeForward',
@@ -36,8 +33,6 @@ import shutil
 import tempfile
 import unittest
 
-from zope.component import getUtility
-
 from mailman.app.bounces import (
     ProbeVERP, StandardVERP, bounce_message, maybe_forward, send_probe)
 from mailman.app.lifecycle import create_list
@@ -49,10 +44,9 @@ from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.pending import IPendings
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
-    specialized_message_from_string as mfs)
+    LogFileMark, get_queue_messages, specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -334,7 +328,7 @@ $owneraddr
         send_probe(self._member, self._msg)
         message = get_queue_messages('virgin')[0].msg
         self.assertEqual(
-            message['Subject'],
+            message['subject'].encode(),
             '=?utf-8?q?ailing-may_ist-lay_Test_obe-pray_essage-may?=')
 
     def test_probe_notice_with_member_nonenglish(self):
@@ -533,7 +527,7 @@ Subject: Ignore
 
     def test_no_sender(self):
         # The message won't be bounced if it has no discernible sender.
-        self._msg.sender = None
+        del self._msg['from']
         bounce_message(self._mlist, self._msg)
         items = get_queue_messages('virgin')
         # Nothing in the virgin queue means nothing's been bounced.

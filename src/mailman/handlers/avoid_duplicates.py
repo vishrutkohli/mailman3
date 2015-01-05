@@ -23,19 +23,15 @@ has already received a copy, we either drop the message, add a duplicate
 warning header, or pass it through, depending on the user's preferences.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AvoidDuplicates',
     ]
 
 
 from email.utils import getaddresses, formataddr
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.handler import IHandler
+from zope.interface import implementer
 
 
 COMMASPACE = ', '

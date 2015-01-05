@@ -17,19 +17,11 @@
 
 """Domains."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Domain',
     'DomainManager',
     ]
 
-
-from sqlalchemy import Column, Integer, Unicode
-from urlparse import urljoin, urlparse
-from zope.event import notify
-from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
@@ -37,6 +29,10 @@ from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
 from mailman.model.mailinglist import MailingList
+from six.moves.urllib_parse import urljoin, urlparse
+from sqlalchemy import Column, Integer, Unicode
+from zope.event import notify
+from zope.interface import implementer
 
 
 

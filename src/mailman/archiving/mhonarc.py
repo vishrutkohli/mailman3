@@ -17,9 +17,6 @@
 
 """MHonArc archiver."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MHonArc',
     ]
@@ -28,13 +25,12 @@ __all__ = [
 import logging
 import subprocess
 
-from urlparse import urljoin
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.config.config import external_configuration
 from mailman.interfaces.archiver import IArchiver
 from mailman.utilities.string import expand
+from six.moves.urllib_parse import urljoin
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.archiver')
@@ -84,7 +80,7 @@ class MHonArc:
         command = expand(self.command, substitutions)
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            shell=True)
+            universal_newlines=True, shell=True)
         stdout, stderr = proc.communicate(msg.as_string())
         if proc.returncode != 0:
             log.error('%s: mhonarc subprocess had non-zero exit code: %s' %

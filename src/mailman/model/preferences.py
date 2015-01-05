@@ -17,23 +17,19 @@
 
 """Model for preferences."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Preferences',
     ]
 
-
-from sqlalchemy import Boolean, Column, Integer, Unicode
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.database.model import Model
 from mailman.database.types import Enum
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.interfaces.preferences import IPreferences
+from sqlalchemy import Boolean, Column, Integer, Unicode
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 

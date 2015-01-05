@@ -17,9 +17,6 @@
 
 """Interface describing the basics of a member."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'AlreadySubscribedError',
     'DeliveryMode',
@@ -37,9 +34,8 @@ __all__ = [
 
 
 from enum import Enum
-from zope.interface import Interface, Attribute
-
 from mailman.core.errors import MailmanError
+from zope.interface import Interface, Attribute
 
 
 

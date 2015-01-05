@@ -17,24 +17,22 @@
 
 """Getting information out of a qfile."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'QFile',
     ]
 
 
-import cPickle
-
-from pprint import PrettyPrinter
-from zope.interface import implementer
+import six
 
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
 from mailman.utilities.interact import interact
+from pprint import PrettyPrinter
+from six.moves import cPickle
+from zope.interface import implementer
 
 
+# This is deliberately called 'm' for use with --interactive.
 m = []
 
 
@@ -71,7 +69,7 @@ class QFile:
         """See `ICLISubCommand`."""
         printer = PrettyPrinter(indent=4)
         assert len(args.qfile) == 1, 'Wrong number of positional arguments'
-        with open(args.qfile[0]) as fp:
+        with open(args.qfile[0], 'rb') as fp:
             while True:
                 try:
                     m.append(cPickle.load(fp))
@@ -82,7 +80,7 @@ class QFile:
             for i, obj in enumerate(m):
                 count = i + 1
                 print(_('<----- start object $count ----->'))
-                if isinstance(obj, basestring):
+                if isinstance(obj, six.string_types):
                     print(obj)
                 else:
                     printer.pprint(obj)

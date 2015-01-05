@@ -17,9 +17,6 @@
 
 """Test the core modification pipelines."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestOwnerPipeline',
     'TestPostingPipeline',
@@ -27,9 +24,6 @@ __all__ = [
 
 
 import unittest
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
@@ -40,11 +34,11 @@ from mailman.interfaces.member import MemberRole
 from mailman.interfaces.pipeline import IPipeline
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
-    LogFileMark,
-    get_queue_messages,
-    reset_the_world,
+    LogFileMark, get_queue_messages, reset_the_world,
     specialized_message_from_string as mfs)
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -175,5 +169,5 @@ To: test-owner@example.com
                 pipeline_name='default-owner-pipeline')
         messages = get_queue_messages('out', sort_on='to')
         self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].msgdata['recipients'], 
+        self.assertEqual(messages[0].msgdata['recipients'],
                          set(('anne@example.com', 'bart@example.com')))

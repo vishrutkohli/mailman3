@@ -108,12 +108,7 @@ In the global domain manager, domains are indexed by their email host name.
             base_url: http://lists.example.net,
             contact_address: postmaster@example.com>
 
-    >>> print(manager['doesnotexist.com'])
-    Traceback (most recent call last):
-    ...
-    KeyError: u'doesnotexist.com'
-
-As with a dictionary, you can also get the domain.  If the domain does not
+As with dictionaries, you can also get the domain.  If the domain does not
 exist, ``None`` or a default is returned.
 ::
 
@@ -127,13 +122,6 @@ exist, ``None`` or a default is returned.
 
     >>> print(manager.get('doesnotexist.com', 'blahdeblah'))
     blahdeblah
-
-Non-existent domains cannot be removed.
-
-    >>> manager.remove('doesnotexist.com')
-    Traceback (most recent call last):
-    ...
-    KeyError: u'doesnotexist.com'
 
 
 Confirmation tokens

@@ -17,9 +17,6 @@
 
 """Print the mailman configuration."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Conf'
     ]
@@ -29,11 +26,10 @@ import sys
 
 from contextlib import closing
 from lazr.config._config import Section
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.command import ICLISubCommand
+from zope.interface import implementer
 
 
 

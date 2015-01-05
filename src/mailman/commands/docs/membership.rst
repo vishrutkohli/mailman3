@@ -45,7 +45,7 @@ If that's missing though, then an error is returned.
     >>> from mailman.email.message import Message
     >>> print(join.process(mlist, Message(), {}, (), results))
     ContinueProcessing.no
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     join: No valid address found to subscribe
@@ -60,7 +60,7 @@ The ``subscribe`` command is an alias.
     >>> results = Results()
     >>> print(subscribe.process(mlist, Message(), {}, (), results))
     ContinueProcessing.no
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     subscribe: No valid address found to subscribe
@@ -79,7 +79,7 @@ When the message has a From field, that address will be subscribed.
     >>> results = Results()
     >>> print(join.process(mlist, msg, {}, (), results))
     ContinueProcessing.yes
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmation email sent to Anne Person <anne@example.com>
@@ -150,7 +150,7 @@ list.
     >>> results = Results()
     >>> print(confirm.process(mlist, msg, {}, (token,), results))
     ContinueProcessing.yes
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmed
@@ -208,7 +208,7 @@ list.
     >>> results = Results()
     >>> print(confirm.process(mlist_2, msg, {}, (token,), results))
     ContinueProcessing.yes
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmed
@@ -241,7 +241,7 @@ is sent a confirmation message for her request.
     >>> results = Results()
     >>> print(leave.process(mlist_2, msg, {}, (), results))
     ContinueProcessing.yes
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Anne Person <anne@example.com> left baker@example.com
@@ -278,7 +278,7 @@ to unsubscribe Anne from the alpha mailing list.
     >>> print(leave.process(mlist, msg, {}, (), results))
     ContinueProcessing.no
 
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Invalid or unverified email address: anne.person@example.org
@@ -299,7 +299,7 @@ unsubscribe her from the list.
     >>> print(leave.process(mlist, msg, {}, (), results))
     ContinueProcessing.yes
 
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Anne Person <anne.person@example.org> left alpha@example.com
@@ -354,7 +354,7 @@ a user of the system.
     >>> print(confirm.process(mlist, msg, {}, (token,), results))
     ContinueProcessing.yes
 
-    >>> print(unicode(results))
+    >>> print(results)
     The results of your email command are provided below.
     <BLANKLINE>
     Confirmed

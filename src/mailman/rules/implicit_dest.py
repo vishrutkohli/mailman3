@@ -17,21 +17,18 @@
 
 """The implicit destination rule."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'ImplicitDestination',
     ]
 
 
 import re
-from email.utils import getaddresses
-from zope.interface import implementer
 
+from email.utils import getaddresses
 from mailman.core.i18n import _
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.rules import IRule
+from zope.interface import implementer
 
 
 

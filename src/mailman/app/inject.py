@@ -17,9 +17,6 @@
 
 """Inject a message into a queue."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'inject_message',
     'inject_text',
@@ -28,7 +25,6 @@ __all__ = [
 
 from email import message_from_string
 from email.utils import formatdate, make_msgid
-
 from mailman.config import config
 from mailman.email.message import Message
 from mailman.utilities.email import add_message_hash
@@ -53,6 +49,8 @@ def inject_message(mlist, msg, recipients=None, switchboard=None, **kws):
     :type switchboard: string
     :param kws: Additional values for the message metadata.
     :type kws: dictionary
+    :return: filebase of enqueued message
+    :rtype: string
     """
     if switchboard is None:
         switchboard = 'in'
@@ -66,13 +64,13 @@ def inject_message(mlist, msg, recipients=None, switchboard=None, **kws):
         msg['Date'] = formatdate(localtime=True)
     msg.original_size = len(msg.as_string())
     msgdata = dict(
-        listname=mlist.fqdn_listname,
+        listid=mlist.list_id,
         original_size=msg.original_size,
         )
     msgdata.update(kws)
     if recipients is not None:
         msgdata['recipients'] = recipients
-    config.switchboards[switchboard].enqueue(msg, **msgdata)
+    return config.switchboards[switchboard].enqueue(msg, **msgdata)
 
 
 
@@ -95,6 +93,8 @@ def inject_text(mlist, text, recipients=None, switchboard=None, **kws):
     :type switchboard: string
     :param kws: Additional values for the message metadata.
     :type kws: dictionary
+    :return: filebase of enqueued message
+    :rtype: string
     """
     message = message_from_string(text, Message)
-    inject_message(mlist, message, recipients, switchboard, **kws)
+    return inject_message(mlist, message, recipients, switchboard, **kws)

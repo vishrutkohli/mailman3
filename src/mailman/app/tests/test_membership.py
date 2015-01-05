@@ -17,9 +17,6 @@
 
 """Tests of application level membership functions."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestAddMember',
     'TestAddMemberPassword',
@@ -28,8 +25,6 @@ __all__ = [
 
 
 import unittest
-
-from zope.component import getUtility
 
 from mailman.app.lifecycle import create_list
 from mailman.app.membership import add_member, delete_member
@@ -40,6 +35,7 @@ from mailman.interfaces.member import (
     NotAMemberError)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 

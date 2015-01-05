@@ -17,30 +17,27 @@
 
 """Template loader."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TemplateLoader',
     ]
 
 
-import urllib2
-
 from contextlib import closing
-from urllib import addinfourl
-from urlparse import urlparse
-from zope.component import getUtility
-from zope.interface import implementer
-
-from mailman.utilities.i18n import TemplateNotFoundError, find
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.templates import ITemplateLoader
+from mailman.utilities.i18n import TemplateNotFoundError, find
+from six.moves.urllib_error import URLError
+from six.moves.urllib_parse import urlparse
+from six.moves.urllib_request import (
+    BaseHandler, build_opener, install_opener, urlopen)
+from six.moves.urllib_response import addinfourl
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
-class MailmanHandler(urllib2.BaseHandler):
+class MailmanHandler(BaseHandler):
     # Handle internal mailman: URLs.
     def mailman_open(self, req):
         # Parse urls of the form:
@@ -55,9 +52,9 @@ class MailmanHandler(urllib2.BaseHandler):
         assert parsed.scheme == 'mailman'
         # The path can contain one, two, or three components.  Since no empty
         # path components are legal, filter them out.
-        parts = filter(None, parsed.path.split('/'))
+        parts = [p for p in parsed.path.split('/') if p]
         if len(parts) == 0:
-            raise urllib2.URLError('No template specified')
+            raise URLError('No template specified')
         elif len(parts) == 1:
             template = parts[0]
         elif len(parts) == 2:
@@ -69,25 +66,25 @@ class MailmanHandler(urllib2.BaseHandler):
             language = getUtility(ILanguageManager).get(part0)
             mlist = getUtility(IListManager).get(part0)
             if language is None and mlist is None:
-                raise urllib2.URLError('Bad language or list name')
+                raise URLError('Bad language or list name')
             elif mlist is None:
                 code = language.code
         elif len(parts) == 3:
             fqdn_listname, code, template = parts
             mlist = getUtility(IListManager).get(fqdn_listname)
             if mlist is None:
-                raise urllib2.URLError('Missing list')
+                raise URLError('Missing list')
             language = getUtility(ILanguageManager).get(code)
             if language is None:
-                raise urllib2.URLError('No such language')
+                raise URLError('No such language')
             code = language.code
         else:
-            raise urllib2.URLError('No such file')
+            raise URLError('No such file')
         # Find the template, mutating any missing template exception.
         try:
             path, fp = find(template, mlist, code)
         except TemplateNotFoundError:
-            raise urllib2.URLError('No such file')
+            raise URLError('No such file')
         return addinfourl(fp, {}, original_url)
 
 
@@ -97,10 +94,10 @@ class TemplateLoader:
     """Loader of templates, with caching and support for mailman:// URIs."""
 
     def __init__(self):
-        opener = urllib2.build_opener(MailmanHandler())
-        urllib2.install_opener(opener)
+        opener = build_opener(MailmanHandler())
+        install_opener(opener)
 
     def get(self, uri):
         """See `ITemplateLoader`."""
-        with closing(urllib2.urlopen(uri)) as fp:
-            return fp.read().decode('utf-8')
+        with closing(urlopen(uri)) as fp:
+            return fp.read()

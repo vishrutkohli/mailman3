@@ -17,9 +17,6 @@
 
 """REST list tests."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'TestListArchivers',
     'TestListPagination',
@@ -30,14 +27,13 @@ __all__ = [
 
 import unittest
 
-from urllib2 import HTTPError
-from zope.component import getUtility
-
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
+from six.moves.urllib_error import HTTPError
+from zope.component import getUtility
 
 
 
@@ -129,7 +125,7 @@ class TestLists(unittest.TestCase):
                      })
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason,
-                         'Domain does not exist: no-domain.example.org')
+                         b'Domain does not exist: no-domain.example.org')
 
     def test_cannot_create_duplicate_list(self):
         # You cannot create a list that already exists.
@@ -141,7 +137,7 @@ class TestLists(unittest.TestCase):
                      'fqdn_listname': 'ant@example.com',
                      })
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.reason, 'Mailing list exists')
+        self.assertEqual(cm.exception.reason, b'Mailing list exists')
 
     def test_cannot_delete_missing_list(self):
         # You cannot delete a list that does not exist.
@@ -220,7 +216,7 @@ class TestListArchivers(unittest.TestCase):
                 method='PATCH')
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason,
-                         'Unexpected parameters: bogus-archiver')
+                         b'Unexpected parameters: bogus-archiver')
 
     def test_put_incomplete_statuses(self):
         # PUT requires the full resource representation.  This one forgets to
@@ -233,7 +229,7 @@ class TestListArchivers(unittest.TestCase):
                 method='PUT')
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason,
-                         'Missing parameters: mhonarc, prototype')
+                         b'Missing parameters: mhonarc, prototype')
 
     def test_patch_bogus_status(self):
         # Archiver statuses must be interpretable as booleans.
@@ -246,7 +242,7 @@ class TestListArchivers(unittest.TestCase):
                     },
                 method='PATCH')
         self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.reason, 'Invalid boolean value: sure')
+        self.assertEqual(cm.exception.reason, b'Invalid boolean value: sure')
 
 
 

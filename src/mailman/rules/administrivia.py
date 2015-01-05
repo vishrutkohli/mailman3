@@ -17,20 +17,16 @@
 
 """The administrivia rule."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Administrivia',
     ]
 
 
 from email.iterators import typed_subpart_iterator
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.interfaces.rules import IRule
+from zope.interface import implementer
 
 
 # The list of email commands we search for in the Subject header and payload.
@@ -74,7 +70,7 @@ class Administrivia:
         # Search only the first text/plain subpart of the message.  There's
         # really no good way to find email commands in any other content type.
         for part in typed_subpart_iterator(msg, 'text', 'plain'):
-            payload = part.get_payload(decode=True)
+            payload = part.get_payload()
             lines = payload.splitlines()
             # Count lines without using enumerate() because blank lines in the
             # payload don't count against the maximum examined.

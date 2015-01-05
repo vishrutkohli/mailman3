@@ -17,10 +17,10 @@
 
 """Test configuration file searching."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
+    'TestConfigFileBase',
+    'TestConfigFileSearch',
+    'TestConfigFileSearchWithChroot',
     ]
 
 
@@ -31,7 +31,6 @@ import tempfile
 import unittest
 
 from contextlib import contextmanager
-
 from mailman.core.initialize import search_for_configuration_file
 
 
@@ -107,6 +106,7 @@ class TestConfigFileBase(unittest.TestCase):
         return os.path.join(self._root, path)
 
 
+
 class TestConfigFileSearch(TestConfigFileBase):
     """Test various aspects of searching for configuration files.
 
@@ -128,6 +128,7 @@ class TestConfigFileSearch(TestConfigFileBase):
                 self.assertEqual(found, config_file)
 
 
+
 class TestConfigFileSearchWithChroot(TestConfigFileBase):
     """Like `TestConfigFileSearch` but with a special os.path.exists()."""
 

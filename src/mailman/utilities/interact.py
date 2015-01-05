@@ -17,9 +17,6 @@
 
 """Provide an interactive prompt, mimicking the Python interpreter."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'interact',
     ]
@@ -78,9 +75,3 @@ Type "help", "copyright", "credits" or "license" for more information.''' % (
     elif not banner:
         banner = None
     interp.interact(banner)
-    # When an exception occurs in the InteractiveConsole, the various
-    # sys.exc_* attributes get set so that error handling works the same way
-    # there as it does in the built-in interpreter.  Be anal about clearing
-    # any exception information before we're done.
-    sys.exc_clear()
-    sys.last_type = sys.last_value = sys.last_traceback = None

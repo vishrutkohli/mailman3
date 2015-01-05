@@ -17,9 +17,6 @@
 
 """Creation/deletion hooks for the Postfix MTA."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'LMTP',
     ]
@@ -29,16 +26,15 @@ import os
 import logging
 
 from flufl.lock import Lock
-from operator import attrgetter
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.config import config
 from mailman.config.config import external_configuration
 from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.mta import (
     IMailTransportAgentAliases, IMailTransportAgentLifecycle)
 from mailman.utilities.datetime import now
+from operator import attrgetter
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 log = logging.getLogger('mailman.error')

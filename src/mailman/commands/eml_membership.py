@@ -17,9 +17,6 @@
 
 """The email commands 'join' and 'subscribe'."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Join',
     'Subscribe',
@@ -29,15 +26,14 @@ __all__ = [
 
 
 from email.utils import formataddr, parseaddr
-from zope.component import getUtility
-from zope.interface import implementer
-
 from mailman.core.i18n import _
 from mailman.interfaces.command import ContinueProcessing, IEmailCommand
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.registrar import IRegistrar
 from mailman.interfaces.subscriptions import ISubscriptionService
 from mailman.interfaces.usermanager import IUserManager
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 
@@ -182,6 +178,7 @@ You may be asked to confirm your request.""")
         return ContinueProcessing.yes
 
 
+
 class Unsubscribe(Leave):
     """The email 'unsubscribe' command (an alias for 'leave')."""
 

@@ -17,18 +17,12 @@
 
 """The 'lists' subcommand."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'Create',
     'Lists',
     'Remove',
     ]
 
-
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.app.lifecycle import create_list, remove_list
 from mailman.core.constants import system_preferences
@@ -43,6 +37,8 @@ from mailman.interfaces.domain import (
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import IListManager, ListAlreadyExistsError
 from mailman.utilities.i18n import make
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 COMMASPACE = ', '
@@ -135,12 +131,12 @@ class Create:
         self.parser = parser
         command_parser.add_argument(
             '--language',
-            type=unicode, metavar='CODE', help=_("""\
+            metavar='CODE', help=_("""\
             Set the list's preferred language to CODE, which must be a
             registered two letter language code."""))
         command_parser.add_argument(
             '-o', '--owner',
-            type=unicode, action='append', default=[],
+            action='append', default=[],
             dest='owners', metavar='OWNER', help=_("""\
             Specify a listowner email address.  If the address is not
             currently registered with Mailman, the address is registered and

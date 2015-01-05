@@ -15,33 +15,25 @@ http://barry.warsaw.us/software/STYLEGUIDE.txt
 This document contains a style guide for Python programming, as used in GNU
 Mailman.  `PEP 8`_ is the basis for this style guide so it's recommendations
 should be followed except for the differences outlined here.  This document
-assumes the use of Python 2.7, but not (yet) Python 3.
+assumes the use of Python 3.
 
-* After file comments (e.g. license block), add a ``__metaclass__`` definition
-  so that all classes will be new-style.  Following that, add an ``__all__``
-  section that names, one-per-line, all the public names exported by this
-  module.  You should enable absolute imports and unicode literals.  See the
+* After file comments (e.g. license block), add an ``__all__`` section that
+  names, one-per-line, all the public names exported by this module.  See the
   `GNU Mailman Python template`_ as an example.
 
 * Imports are always put at the top of the file, just after any module
   comments and docstrings, and before module globals and constants, but after
-  any ``__future__`` imports, or ``__metaclass__`` and ``__all__``
-  definitions.
+  any ``__all__`` definitions.
 
   Imports should be grouped, with the order being:
 
-  1. non-from imports for standard and third party libraries
-  2. non-from imports from the application
-  3. from-imports from the standard and third party libraries
-  4. from-imports from the application
+  1. non-from imports, grouped from shorted module name to longest module
+     name, with ties being broken by alphabetical order.
+  3. from-imports grouped alphabetically.
 
-  From-imports should follow non-from imports.  Dotted imports should follow
-  non-dotted imports.  Non-dotted imports should be grouped by increasing
-  length, while dotted imports should be grouped alphabetically.
-
-* In general, there should be one class per module.  Keep files small, but
-  it's okay to group related code together.  List everything exported from the
-  module in the ``__all__``.
+* In general, there should be one class per module.  This is not a
+  hard-and-fast rule.  Keep files small, but it's okay to group related code
+  together.  List everything exported from the module in the ``__all__``.
 
 * Right hanging comments are discouraged, in favor of preceding comments.
   E.g. bad::

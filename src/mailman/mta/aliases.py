@@ -17,17 +17,13 @@
 
 """Utility for generating all the aliases of a mailing list."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'MailTransportAgentAliases',
     ]
 
 
-from zope.interface import implementer
-
 from mailman.interfaces.mta import IMailTransportAgentAliases
+from zope.interface import implementer
 
 
 SUBDESTINATIONS = (

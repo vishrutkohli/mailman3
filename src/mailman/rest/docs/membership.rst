@@ -572,7 +572,7 @@ Elly is now a known user, and a member of the mailing list.
     <User "Elly Person" (...) at ...>
 
     >>> set(member.list_id for member in elly.memberships.members)
-    set([u'ant.example.com'])
+    {'ant.example.com'}
 
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
@@ -674,7 +674,7 @@ so she leaves from the mailing list.
 Elly is no longer a member of the mailing list.
 
     >>> set(member.mailing_list for member in elly.memberships.members)
-    set([])
+    set()
 
 
 Digest delivery

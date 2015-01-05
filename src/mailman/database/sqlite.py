@@ -17,9 +17,6 @@
 
 """SQLite database support."""
 
-from __future__ import absolute_import, print_function, unicode_literals
-
-__metaclass__ = type
 __all__ = [
     'SQLiteDatabase',
     ]
@@ -28,7 +25,7 @@ __all__ = [
 import os
 
 from mailman.database.base import SABaseDatabase
-from urlparse import urlparse
+from six.moves.urllib_parse import urlparse
 
 
 
