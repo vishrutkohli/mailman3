@@ -28,7 +28,7 @@ import os
 import sys
 import mailman.templates
 
-from configparser import ConfigParser, RawConfigParser
+from configparser import ConfigParser
 from flufl.lock import Lock
 from lazr.config import ConfigSchema, as_boolean
 from mailman import version
@@ -39,7 +39,6 @@ from mailman.utilities.filesystem import makedirs
 from mailman.utilities.modules import call_name, expand_path
 from pkg_resources import resource_filename, resource_string as resource_bytes
 from string import Template
-from unittest.mock import patch
 from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
@@ -63,11 +62,6 @@ MAILMAN_CFG_TEMPLATE = """\
 # [devmode]
 # enabled: yes
 # recipient: your.address@your.domain"""
-
-class _NonStrictRawConfigParser(RawConfigParser):
-    def __init__(self, *args, **kws):
-        kws['strict'] = False
-        super().__init__(*args, **kws)
 
 
 
@@ -122,12 +116,7 @@ class Configuration:
     def push(self, config_name, config_string):
         """Push a new configuration onto the stack."""
         self._clear()
-        # In Python 3, the RawConfigParser() must be created with
-        # strict=False, otherwise we'll get a DuplicateSectionError.
-        # See https://bugs.launchpad.net/lazr.config/+bug/1397779
-        with patch('lazr.config._config.RawConfigParser',
-                   _NonStrictRawConfigParser):
-            self._config.push(config_name, config_string)
+        self._config.push(config_name, config_string)
         self._post_process()
 
     def pop(self, config_name):
