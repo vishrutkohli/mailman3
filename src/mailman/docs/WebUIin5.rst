@@ -7,11 +7,13 @@ Mailman 3's web UI, called Postorius.  If all goes as planned, you should be
 done within 5 minutes.  This has been tested on Ubuntu 11.04.
 
 In order to download the components necessary you need to have the `Bazaar`_
-version control system installed on your system.  Mailman requires Python 2.7,
+version control system installed on your system.  Mailman requires Python 3.4,
 while mailman.client needs at least Python version 2.6.
 
 It's probably a good idea to set up a virtual Python environment using
-`virtualenv`_.  `Here is a brief HOWTO`_.
+`virtualenv`_.  `Here is a brief HOWTO`_. You would need two separate virtual
+environment one using Python version 2.6 (for Postorius and mailman.client)
+and other using Python version 3.4 (for Mailman core).
 
 .. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
 .. _`Here is a brief HOWTO`: ./ArchiveUIin5.html#get-it-running-under-virtualenv
@@ -24,19 +26,17 @@ GNU Mailman 3
 First download the latest revision of Mailman 3 from Launchpad.
 ::
 
-  $ bzr branch lp:mailman
+  $(py3) bzr branch lp:mailman
 
-Install and test::
+Install the Core::
 
-  $ cd mailman
-  $ python bootstrap.py
-  $ bin/buildout
-  $ bin/test
+  $(py3) cd mailman
+  $(py3) python setup.py develop
 
 If you get no errors you can now start Mailman::
 
-  $ bin/mailman start
-  $ cd ..
+  $(py3) mailman start
+  $(py3) cd ..
 
 At this point Mailman will not send nor receive any real emails.  But that's
 fine as long as you only want to work on the components related to the REST
@@ -46,31 +46,18 @@ client or the web ui.
 mailman.client (the Python bindings for Mailman's REST API)
 ===========================================================
 
+Now you should switch to the virtual environment running Python version 2.6
 Download from Launchpad::
 
-  $ bzr branch lp:mailman.client
+  $(py2) bzr branch lp:mailman.client
 
 Install in development mode to be able to change the code without working
 directly on the PYTHONPATH.
 ::
 
-  $ cd mailman.client
-  $ sudo python setup.py develop
-  $ cd ..
-
-
-Django >= 1.3
-=============
-
-Postorius is a pluggable Django application.  Therefore you need to have
-Django (at least version 1.3) installed.
-::
-
-  $ wget http://www.djangoproject.com/download/1.3.1/tarball/ -O Django-1.3.1.tar.gz
-  $ tar xzf Django-1.3.1.tar.gz
-  $ cd Django-1.3.1
-  $ sudo python setup.py install
-  $ cd ..
+  $(py2) cd mailman.client
+  $(py2) sudo python setup.py develop
+  $(py2) cd ..
 
 
 Postorius
@@ -78,19 +65,21 @@ Postorius
 
 ::
 
-  $ bzr branch lp:postorius
-  $ cd postorius
-  $ sudo python setup.py develop
+  $(py2) bzr branch lp:postorius
+  $(py2) cd postorius
+  $(py2) sudo python setup.py develop
 
 
 Start the development server
 ============================
 
-::
+Since postorius is a django app which can be used with any django project. We
+have an project already developed which you can setup like this::
 
-  $ cd dev_setup
-  $ python manage.py syncdb
-  $ python manage.py runserver
+  $(py2) bzr branch lp:~mailman-coders/postorius/postorius_standalone
+  $(py2) cd postorius_standalone
+  $(py2) python manage.py syncdb
+  $(py2) python manage.py runserver
 
 The last command will start the dev server on http://localhost:8000.
 
