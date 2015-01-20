@@ -103,6 +103,19 @@ class Start:
         def log(message):
             if not args.quiet:
                 print(message)
+        # Try to find the path to a valid, existing configuration file, and
+        # refuse to start if one cannot be found.
+        if args.config is not None:
+            config_path = args.config
+        elif config.filename is not None:
+            config_path = config.filename
+        else:
+            config_path = os.path.join(config.VAR_DIR, 'etc', 'mailman.cfg')
+            if not os.path.exists(config_path):
+                print(_("""\
+No valid configuration file could be found, so Mailman will refuse to start.
+Use -C/--config to specify a valid configuration file."""), file=sys.stderr)
+                sys.exit(1)
         # Daemon process startup according to Stevens, Advanced Programming in
         # the UNIX Environment, Chapter 13.
         pid = os.fork()
@@ -117,11 +130,7 @@ class Start:
         os.setsid()
         # Instead of cd'ing to root, cd to the Mailman runtime directory.
         # However, before we do that, set an environment variable used by the
-        # subprocesses to calculate their path to the $VAR_DIR.  Before we
-        # chdir() though, calculate the absolute path to the configuration
-        # file.
-        config_path = (config.filename if args.config is None
-                       else os.path.abspath(args.config))
+        # subprocesses to calculate their path to the $VAR_DIR.
         os.environ['MAILMAN_VAR_DIR'] = config.VAR_DIR
         os.chdir(config.VAR_DIR)
         # Exec the master watcher.

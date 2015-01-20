@@ -12,6 +12,11 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2015-XX-XX)
 
+Bugs
+----
+ * Fix calculation of default configuration file to use when the ``$var_dir``
+   is created by ``mailman start``.  (LP: #1411435)
+
 Configuration
 -------------
  * When specifying a file system path in the [paths.*] section, $cfg_file can
