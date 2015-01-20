@@ -28,6 +28,11 @@ Configuration
    file's ``[paths.*]`` sections.  A new ``[paths.here]`` section is added,
    which puts the ``var_dir`` in ``$cwd``.  It is made the default layout.
 
+Documentation
+-------------
+ * Improve the documentation describing how to run Alembic to add new schema
+   migrations.  Given by Abhilash Raj.
+
 REST
 ----
  * You can now view the contents of, inject messages into, and delete messages

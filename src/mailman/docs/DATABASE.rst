@@ -59,8 +59,35 @@ it::
 My thanks to Stephen A. Goss for his contribution of PostgreSQL support.
 
 
+Database Migrations
+===================
+
+Mailman uses `Alembic`_ to manage database migrations.  Let's say you change
+something in the models, what steps are needed to reflect that change in the
+database schema?  You need to create and enter a virtual environment, install
+Mailman into that, and then run the ``alembic`` command.  For example::
+
+    $ virtualenv -p python3 /tmp/mm3
+    $ source /tmp/mm3/bin/activate
+    $ python setup.py develop
+    $ alembic -c src/mailman/config/alembic.cfg revision --autogenerate
+
+This would create a new migration which would automatically be migrated to the
+database on the next run of Mailman.  Note that the database needs to be in
+the older state so that Alembic can track the changes in the schema and
+autogenerate a migration.  If you don't have the database in the older state
+you can remove the `--autogenerate` flag in the above command.  It would then
+create a new empty revision which you can edit manually to reflect your
+changes in the database schema.
+
+People upgrading Mailman from previous versions need not do anything manually,
+as soon as a new migration is added in the sources, it will be automatically
+reflected in the schema on first-run post-update.
+
+
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 .. _SQLite3: http://docs.python.org/library/sqlite3.html
 .. _PostgreSQL: http://www.postgresql.org/
 .. _MySQL: http://dev.mysql.com/
 .. _`Ubuntu article`: https://help.ubuntu.com/community/PostgreSQL
+.. _`Alembic`: https://alembic.readthedocs.org/en/latest/
