@@ -29,7 +29,7 @@ assumes the use of Python 3.
 
   1. non-from imports, grouped from shorted module name to longest module
      name, with ties being broken by alphabetical order.
-  3. from-imports grouped alphabetically.
+  2. from-imports grouped alphabetically.
 
 * In general, there should be one class per module.  This is not a
   hard-and-fast rule.  Keep files small, but it's okay to group related code
