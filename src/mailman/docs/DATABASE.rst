@@ -70,7 +70,8 @@ Mailman into that, and then run the ``alembic`` command.  For example::
     $ virtualenv -p python3 /tmp/mm3
     $ source /tmp/mm3/bin/activate
     $ python setup.py develop
-    $ alembic -c src/mailman/config/alembic.cfg revision --autogenerate
+    $ alembic -c src/mailman/config/alembic.cfg revision --autogenerate -m
+	  "<migration_name>"
 
 This would create a new migration which would automatically be migrated to the
 database on the next run of Mailman.  Note that the database needs to be in
