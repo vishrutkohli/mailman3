@@ -85,6 +85,14 @@ People upgrading Mailman from previous versions need not do anything manually,
 as soon as a new migration is added in the sources, it will be automatically
 reflected in the schema on first-run post-update.
 
+'''Note:''' When autogenerating migrations using alembic, be sure to check the
+created migration before adding it to the version control. For some of the
+special datatypes defined in ``mailman.database.types``, you will have to
+manually change the datatype. For example, ``mailman.database.types.Enum()``
+needs to be changed to ``sa.Integer()`` ,as Enum type stores just the integer in
+the database. A more complex migration would be needed for ``UUID`` depending
+upon the database layer to be used.
+
 
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 .. _SQLite3: http://docs.python.org/library/sqlite3.html
