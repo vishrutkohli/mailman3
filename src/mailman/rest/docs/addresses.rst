@@ -446,3 +446,64 @@ does not show up in the list of memberships for his other address.
     http_etag: "..."
     start: 0
     total_size: 1
+
+
+
+
+Deleting
+========
+
+Addresses can be deleted via the REST API.
+::
+
+    >>> fred = user_manager.create_address('fred@example.com', 'Fred Person')
+    >>> transaction.commit()
+    >>> dump_json('http://localhost:9001/3.0/addresses/fred@example.com')
+    display_name: Fred Person
+    email: fred@example.com
+    http_etag: "..."
+    original_email: fred@example.com
+    registered_on: 2005-08-01T07:49:23
+    self_link: http://localhost:9001/3.0/addresses/fred@example.com
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/fred@example.com',
+    ...     method='DELETE')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+    >>> transaction.abort()
+
+    >>> print(user_manager.get_address('fred@example.com'))
+    None
+
+If an address is linked to a user, deleting the address does not delete the
+user, it just unlinks it.
+::
+
+    >>> gwen = user_manager.create_user('gwen@example.com', 'Gwen Person')
+    >>> transaction.commit()
+    >>> dump_json('http://localhost:9001/3.0/users/5/addresses')
+    entry 0:
+        display_name: Gwen Person
+        email: gwen@example.com
+        http_etag: "..."
+        original_email: gwen@example.com
+        registered_on: 2005-08-01T07:49:23
+        self_link: http://localhost:9001/3.0/addresses/gwen@example.com
+        user: http://localhost:9001/3.0/users/5
+    http_etag: "795b0680c57ec2df3dceb68ccce2619fecdc7225"
+    start: 0
+    total_size: 1
+
+    >>> dump_json('http://localhost:9001/3.0/addresses/gwen@example.com',
+    ...     method='DELETE')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/users/5/addresses')
+    http_etag: "..."
+    start: 0
+    total_size: 0

@@ -40,6 +40,8 @@ REST
 ----
  * You can now view the contents of, inject messages into, and delete messages
    from the various queue directories via the ``<api>/queues`` resource.
+ * You can now DELETE an address.  If the address is linked to a user, the
+   user is not delete, it is just unlinked.
 
 
 3.0 beta 5 -- "Carve Away The Stone"

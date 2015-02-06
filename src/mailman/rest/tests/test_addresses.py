@@ -382,3 +382,12 @@ class TestAddresses(unittest.TestCase):
         anne_addr = user_manager.get_address('anne@example.com')
         self.assertIsNotNone(anne_addr)
         self.assertEqual(anne_addr.user, anne_person)
+
+    def test_delete_missing_address(self):
+        # DELETEing an address through the REST API that doesn't exist returns
+        # a 404 error.
+        with self.assertRaises(HTTPError) as cm:
+            response, headers = call_api(
+                'http://localhost:9001/3.0/addresses/anne@example.com',
+                method='DELETE')
+        self.assertEqual(cm.exception.code, 404)

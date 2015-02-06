@@ -114,6 +114,13 @@ class AnAddress(_AddressBase):
         else:
             okay(response, self._resource_as_json(self._address))
 
+    def on_delete(self, request, response):
+        if self._address is None:
+            not_found(response)
+        else:
+            getUtility(IUserManager).delete_address(self._address)
+            no_content(response)
+
     @child()
     def memberships(self, request, segments):
         """/addresses/<email>/memberships"""
