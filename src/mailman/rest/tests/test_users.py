@@ -188,6 +188,28 @@ class TestUsers(unittest.TestCase):
                      })
         self.assertEqual(cm.exception.code, 404)
 
+    def test_create_user_twice(self):
+        # LP: #1418280.  No additional users should be created when an address
+        # that already exists is given.
+        content, response = call_api('http://localhost:9001/3.0/users')
+        self.assertEqual(content['total_size'], 0)
+        # Create the user.
+        call_api('http://localhost:9001/3.0/users', dict(
+            email='anne@example.com'))
+        # There is now one user.
+        content, response = call_api('http://localhost:9001/3.0/users')
+        self.assertEqual(content['total_size'], 1)
+        # Trying to create the user with the same address results in an error.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users', dict(
+                email='anne@example.com'))
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.reason,
+                         b'Address already exists: anne@example.com')
+        # But at least no new users was created.
+        content, response = call_api('http://localhost:9001/3.0/users')
+        self.assertEqual(content['total_size'], 1)
+
 
 
 class TestLP1074374(unittest.TestCase):

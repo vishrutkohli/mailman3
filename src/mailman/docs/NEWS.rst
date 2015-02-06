@@ -16,6 +16,9 @@ Bugs
 ----
  * Fix calculation of default configuration file to use when the ``$var_dir``
    is created by ``mailman start``.  (LP: #1411435)
+ * When creating a user with an email address, do not create the user record
+   if the email address already exists.  Given by Andrew Stuart.
+   (LP: #1418280)
 
 Configuration
 -------------

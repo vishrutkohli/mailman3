@@ -39,9 +39,10 @@ class UserManager:
 
     def create_user(self, email=None, display_name=None):
         """See `IUserManager`."""
-        user = User(display_name, Preferences())
         if email:
             address = self.create_address(email, display_name)
+        user = User(display_name, Preferences())
+        if email:
             user.link(address)
         return user
 
