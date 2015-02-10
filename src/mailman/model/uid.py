@@ -59,7 +59,7 @@ class UID(Model):
 
     @staticmethod
     @dbconnection
-    # Note that the parameter order is deliberate reversed here.  Normally,
+    # Note that the parameter order is deliberately reversed here.  Normally,
     # `store` is the first parameter after `self`, but since this is a
     # staticmethod and there is no self, the decorator will see the uid in
     # arg[0].

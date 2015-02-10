@@ -19,6 +19,7 @@
 
 __all__ = [
     'TestLP1074374',
+    'TestLP1419519',
     'TestLogin',
     'TestUsers',
     ]
@@ -212,6 +213,85 @@ class TestUsers(unittest.TestCase):
 
 
 
+class TestLogin(unittest.TestCase):
+    """Test user 'login' (really just password verification)."""
+
+    layer = RESTLayer
+
+    def setUp(self):
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            self.anne = user_manager.create_user(
+                'anne@example.com', 'Anne Person')
+            self.anne.password = config.password_context.encrypt('abc123')
+
+    def test_login_with_cleartext_password(self):
+        # A user can log in with the correct clear text password.
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com/login', {
+                'cleartext_password': 'abc123',
+                }, method='POST')
+        self.assertEqual(response.status, 204)
+        # But the user cannot log in with an incorrect password.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(
+                'http://localhost:9001/3.0/users/anne@example.com/login', {
+                    'cleartext_password': 'not-the-password',
+                    }, method='POST')
+        self.assertEqual(cm.exception.code, 403)
+
+    def test_wrong_parameter(self):
+        # A bad request because it is mistyped the required attribute.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/1/login', {
+                     'hashed_password': 'bad hash',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_not_enough_parameters(self):
+        # A bad request because it is missing the required attribute.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/1/login', {
+                     })
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_too_many_parameters(self):
+        # A bad request because it has too many attributes.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/users/1/login', {
+                     'cleartext_password': 'abc123',
+                     'display_name': 'Annie Personhood',
+                     })
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_successful_login_updates_password(self):
+        # Passlib supports updating the hash when the hash algorithm changes.
+        # When a user logs in successfully, the password will be updated if
+        # necessary.
+        #
+        # Start by hashing Anne's password with a different hashing algorithm
+        # than the one that the REST runner uses by default during testing.
+        config_file = os.path.join(config.VAR_DIR, 'passlib-tmp.config')
+        with open(config_file, 'w') as fp:
+            print("""\
+[passlib]
+schemes = hex_md5
+""", file=fp)
+        with configuration('passwords', configuration=config_file):
+            with transaction():
+                self.anne.password = config.password_context.encrypt('abc123')
+                # Just ensure Anne's password is hashed correctly.
+                self.assertEqual(self.anne.password,
+                                 'e99a18c428cb38d5f260853678922e03')
+        # Now, Anne logs in with a successful password.  This should change it
+        # back to the plaintext hash.
+        call_api('http://localhost:9001/3.0/users/1/login', {
+                 'cleartext_password': 'abc123',
+                 })
+        self.assertEqual(self.anne.password, '{plaintext}abc123')
+
+
+
 class TestLP1074374(unittest.TestCase):
     """LP: #1074374 - deleting a user left their address records active."""
 
@@ -299,79 +379,44 @@ class TestLP1074374(unittest.TestCase):
 
 
 
-class TestLogin(unittest.TestCase):
-    """Test user 'login' (really just password verification)."""
-
+class TestLP1419519(unittest.TestCase):
+    # LP: #1419519 - deleting a user with many linked addresses does not delete
+    # all address records.
     layer = RESTLayer
 
     def setUp(self):
-        user_manager = getUtility(IUserManager)
+        # Create a user and link 10 addresses to that user.
+        self.manager = getUtility(IUserManager)
         with transaction():
-            self.anne = user_manager.create_user(
-                'anne@example.com', 'Anne Person')
-            self.anne.password = config.password_context.encrypt('abc123')
+            anne = self.manager.create_user('anne@example.com', 'Anne Person')
+            for i in range(10):
+                email = 'a{:02d}@example.com'.format(i)
+                address = self.manager.create_address(email)
+                anne.link(address)
 
-    def test_login_with_cleartext_password(self):
-        # A user can log in with the correct clear text password.
-        content, response = call_api(
-            'http://localhost:9001/3.0/users/anne@example.com/login', {
-                'cleartext_password': 'abc123',
-                }, method='POST')
-        self.assertEqual(response.status, 204)
-        # But the user cannot log in with an incorrect password.
-        with self.assertRaises(HTTPError) as cm:
-            call_api(
-                'http://localhost:9001/3.0/users/anne@example.com/login', {
-                    'cleartext_password': 'not-the-password',
-                    }, method='POST')
-        self.assertEqual(cm.exception.code, 403)
-
-    def test_wrong_parameter(self):
-        # A bad request because it is mistyped the required attribute.
-        with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/users/1/login', {
-                     'hashed_password': 'bad hash',
-                     })
-        self.assertEqual(cm.exception.code, 400)
-
-    def test_not_enough_parameters(self):
-        # A bad request because it is missing the required attribute.
-        with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/users/1/login', {
-                     })
-        self.assertEqual(cm.exception.code, 400)
-
-    def test_too_many_parameters(self):
-        # A bad request because it has too many attributes.
-        with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/users/1/login', {
-                     'cleartext_password': 'abc123',
-                     'display_name': 'Annie Personhood',
-                     })
-        self.assertEqual(cm.exception.code, 400)
-
-    def test_successful_login_updates_password(self):
-        # Passlib supports updating the hash when the hash algorithm changes.
-        # When a user logs in successfully, the password will be updated if
-        # necessary.
+    def test_delete_user(self):
+        # Deleting the user deletes all their linked addresses.
         #
-        # Start by hashing Anne's password with a different hashing algorithm
-        # than the one that the REST runner uses by default during testing.
-        config_file = os.path.join(config.VAR_DIR, 'passlib-tmp.config')
-        with open(config_file, 'w') as fp:
-            print("""\
-[passlib]
-schemes = hex_md5
-""", file=fp)
-        with configuration('passwords', configuration=config_file):
-            with transaction():
-                self.anne.password = config.password_context.encrypt('abc123')
-                # Just ensure Anne's password is hashed correctly.
-                self.assertEqual(self.anne.password,
-                                 'e99a18c428cb38d5f260853678922e03')
-        # Now, Anne logs in with a successful password.  This should change it
-        # back to the plaintext hash.
-        call_api('http://localhost:9001/3.0/users/1/login', {
-                 'cleartext_password': 'abc123',
-                 })
-        self.assertEqual(self.anne.password, '{plaintext}abc123')
+        # We start with 11 addresses in the database.
+        emails = sorted(address.email for address in self.manager.addresses)
+        self.assertEqual(emails, [
+            'a00@example.com',
+            'a01@example.com',
+            'a02@example.com',
+            'a03@example.com',
+            'a04@example.com',
+            'a05@example.com',
+            'a06@example.com',
+            'a07@example.com',
+            'a08@example.com',
+            'a09@example.com',
+            'anne@example.com',
+            ])
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com',
+            method='DELETE')
+        self.assertEqual(response.status, 204)
+        # Now there should be no addresses in the database.
+        config.db.abort()
+        emails = sorted(address.email for address in self.manager.addresses)
+        self.assertEqual(len(emails), 0)

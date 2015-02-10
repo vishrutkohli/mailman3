@@ -19,6 +19,8 @@ Bugs
  * When creating a user with an email address, do not create the user record
    if the email address already exists.  Given by Andrew Stuart.
    (LP: #1418280)
+ * When deleting a user via REST, make sure all linked addresses are deleted.
+   Found by Andrew Stuart.  (LP: #1419519)
 
 Configuration
 -------------
