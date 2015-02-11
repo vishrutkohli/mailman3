@@ -120,7 +120,7 @@ existing mailing list.
     content-length: 0
     date: ...
     location: http://localhost:9001/3.0/lists/ant.example.com
-    server: WSGIServer/0.2 CPython/3.4.2
+    server: WSGIServer/0.2 CPython/...
     status: 201
 
 While list creation takes an FQDN list name, injecting a message to the queue
