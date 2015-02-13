@@ -74,3 +74,20 @@ class UID(Model):
         if existing.count() != 0:
             raise ValueError(uid)
         return UID(uid)
+
+    @staticmethod
+    @dbconnection
+    def get_total_uid_count(store):
+        return store.query(UID).count()
+
+    @staticmethod
+    @dbconnection
+    def cull_orphans(store):
+        # Avoid circular imports.
+        from mailman.model.user import User
+        # Delete all uids in this table that are not associated with user
+        # rows.
+        results = store.query(UID).filter(
+            ~UID.uid.in_(store.query(User._user_id)))
+        for uid in results.all():
+            store.delete(uid)

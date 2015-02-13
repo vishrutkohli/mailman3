@@ -70,6 +70,9 @@ def dbconnection(function):
     attribute.  This calls the function with `store` as the first argument.
     """
     def wrapper(*args, **kws):
-        # args[0] is self.
-        return function(args[0], config.db.store, *args[1:], **kws)
+        # args[0] is self, if there is one.
+        if len(args) > 0:
+            return function(args[0], config.db.store, *args[1:], **kws)
+        else:
+            return function(config.db.store, **kws)
     return wrapper

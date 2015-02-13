@@ -44,6 +44,11 @@ REST
    from the various queue directories via the ``<api>/queues`` resource.
  * You can now DELETE an address.  If the address is linked to a user, the
    user is not delete, it is just unlinked.
+ * A new API is provided to support non-production testing infrastructures,
+   allowing a client to cull all orphaned UIDs via ``DELETE`` on
+   ``<api>/reserved/uids/orphans``.  Note that *no guarantees* of API
+   stability will ever be made for resources under ``reserved``.
+   (LP: #1420083)
 
 
 3.0 beta 5 -- "Carve Away The Stone"

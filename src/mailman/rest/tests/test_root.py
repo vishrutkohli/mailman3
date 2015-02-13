@@ -123,3 +123,11 @@ class TestRoot(unittest.TestCase):
         self.assertEqual(content['title'], '401 Unauthorized')
         self.assertEqual(content['description'],
                          'User is not authorized for the REST API')
+
+    def test_reserved_bad_subpath(self):
+        # Only <api>/reserved/uids/orphans is a defined resource.  DELETEing
+        # anything else gives a 404.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/reserved/uids/assigned',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)

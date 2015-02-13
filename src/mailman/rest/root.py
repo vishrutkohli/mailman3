@@ -29,10 +29,11 @@ from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.core.system import system
 from mailman.interfaces.listmanager import IListManager
+from mailman.model.uid import UID
 from mailman.rest.addresses import AllAddresses, AnAddress
 from mailman.rest.domains import ADomain, AllDomains
 from mailman.rest.helpers import (
-    BadRequest, NotFound, child, etag, not_found, okay, path_to)
+    BadRequest, NotFound, child, etag, no_content, not_found, okay, path_to)
 from mailman.rest.lists import AList, AllLists, Styles
 from mailman.rest.members import AMember, AllMembers, FindMembers
 from mailman.rest.preferences import ReadOnlyPreferences
@@ -40,6 +41,9 @@ from mailman.rest.queues import AQueue, AQueueFile, AllQueues
 from mailman.rest.templates import TemplateFinder
 from mailman.rest.users import AUser, AllUsers
 from zope.component import getUtility
+
+
+SLASH = '/'
 
 
 
@@ -108,6 +112,25 @@ class SystemConfiguration:
         # iterate over them.
         resource = {key: section[key] for key in section}
         okay(response, etag(resource))
+
+
+class Reserved:
+    """Top level API for reserved operations.
+
+    Nothing under this resource should be considered part of the stable API.
+    The resources that appear here are purely for the support of external
+    non-production systems, such as testing infrastructures for cooperating
+    components.  Use at your own risk.
+    """
+    def __init__(self, segments):
+        self._resource_path = SLASH.join(segments)
+
+    def on_delete(self, request, response):
+        if self._resource_path != 'uids/orphans':
+            not_found(response)
+            return
+        UID.cull_orphans()
+        no_content(response)
 
 
 class TopLevel:
@@ -226,3 +249,8 @@ class TopLevel:
             return AQueueFile(segments[0], segments[1]), []
         else:
             return BadRequest(), []
+
+    @child()
+    def reserved(self, request, segments):
+        """/<api>/reserved/[...]"""
+        return Reserved(segments), []

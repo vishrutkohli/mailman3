@@ -25,8 +25,11 @@ __all__ = [
 import uuid
 import unittest
 
+from mailman.config import config
+from mailman.interfaces.usermanager import IUserManager
 from mailman.model.uid import UID
 from mailman.testing.layers import ConfigLayer
+from zope.component import getUtility
 
 
 
@@ -44,3 +47,41 @@ class TestUID(unittest.TestCase):
         my_uuid = uuid.uuid4()
         UID.record(my_uuid)
         self.assertRaises(ValueError, UID.record, my_uuid)
+
+    def test_get_total_uid_count(self):
+        # The reserved REST API needs this.
+        for i in range(10):
+            UID.record(uuid.uuid4())
+        self.assertEqual(UID.get_total_uid_count(), 10)
+
+    def test_cull_orphan_uids(self):
+        # The reserved REST API needs to cull entries from the uid table that
+        # are not associated with actual entries in the user table.
+        manager = getUtility(IUserManager)
+        uids = set()
+        for i in range(10):
+            user = manager.create_user()
+            uids.add(user.user_id)
+            # The testing infrastructure does not record the UIDs for new user
+            # objects, so do that now to mimic the real system.
+            UID.record(user.user_id)
+        self.assertEqual(len(uids), 10)
+        # Now add some orphan uids.
+        orphans = set()
+        for i in range(100, 113):
+            uid = UID.record(uuid.UUID(int=i))
+            orphans.add(uid.uid)
+        self.assertEqual(len(orphans), 13)
+        # Normally we wouldn't do a query in a test, since we'd want the model
+        # object to expose this, but we actually don't support exposing all
+        # the UIDs to the rest of Mailman.
+        all_uids = set(row[0] for row in config.db.store.query(UID.uid))
+        self.assertEqual(all_uids, uids | orphans)
+        # Now, cull all the UIDs that aren't associated with users.  Do use
+        # the model API for this.
+        UID.cull_orphans()
+        non_orphans = set(row[0] for row in config.db.store.query(UID.uid))
+        self.assertEqual(uids, non_orphans)
+        # And all the users still exist.
+        non_orphans = set(user.user_id for user in manager.users)
+        self.assertEqual(uids, non_orphans)
