@@ -46,6 +46,7 @@ the REST interface.
         email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 1
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
@@ -61,6 +62,7 @@ Bart's specific membership can be accessed directly:
     email: bperson@example.com
     http_etag: ...
     list_id: bee.example.com
+    member_id: 1
     role: member
     self_link: http://localhost:9001/3.0/members/1
     user: http://localhost:9001/3.0/users/1
@@ -76,6 +78,7 @@ the REST interface.
         email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 1
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
@@ -85,6 +88,7 @@ the REST interface.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -105,6 +109,7 @@ subscribes, she is returned first.
         email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 3
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
@@ -114,6 +119,7 @@ subscribes, she is returned first.
         email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 1
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
@@ -123,6 +129,7 @@ subscribes, she is returned first.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -147,6 +154,7 @@ User ids are different than member ids.
         email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 4
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
@@ -156,6 +164,7 @@ User ids are different than member ids.
         email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 5
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
@@ -165,6 +174,7 @@ User ids are different than member ids.
         email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 3
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
@@ -174,6 +184,7 @@ User ids are different than member ids.
         email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 1
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
@@ -183,6 +194,7 @@ User ids are different than member ids.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -200,6 +212,7 @@ We can also get just the members of a single mailing list.
         email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 4
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
@@ -209,6 +222,7 @@ We can also get just the members of a single mailing list.
         email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 5
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
@@ -234,6 +248,7 @@ page.
         email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 4
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
@@ -251,6 +266,7 @@ This works with members of a single list as well as with all members.
         email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 4
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
@@ -296,6 +312,7 @@ mailing list.
         email: dperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 6
         role: moderator
         self_link: http://localhost:9001/3.0/members/6
         user: http://localhost:9001/3.0/users/4
@@ -305,6 +322,7 @@ mailing list.
         email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 4
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
@@ -314,6 +332,7 @@ mailing list.
         email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 5
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
@@ -323,6 +342,7 @@ mailing list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 7
         role: owner
         self_link: http://localhost:9001/3.0/members/7
         user: http://localhost:9001/3.0/users/2
@@ -332,6 +352,7 @@ mailing list.
         email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 3
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
@@ -341,6 +362,7 @@ mailing list.
         email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 1
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
@@ -350,6 +372,7 @@ mailing list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -367,6 +390,7 @@ We can access all the owners of a list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 7
         role: owner
         self_link: http://localhost:9001/3.0/members/7
         user: http://localhost:9001/3.0/users/2
@@ -387,6 +411,7 @@ A specific member can always be referenced by their role and address.
     email: cperson@example.com
     http_etag: ...
     list_id: bee.example.com
+    member_id: 7
     role: owner
     self_link: http://localhost:9001/3.0/members/7
     user: http://localhost:9001/3.0/users/2
@@ -403,6 +428,7 @@ example, we can search for all the memberships of a particular address.
         email: aperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 4
         role: member
         self_link: http://localhost:9001/3.0/members/4
         user: http://localhost:9001/3.0/users/3
@@ -412,6 +438,7 @@ example, we can search for all the memberships of a particular address.
         email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 3
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
@@ -430,6 +457,7 @@ Or, we can find all the memberships for a particular mailing list.
         email: aperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 3
         role: member
         self_link: http://localhost:9001/3.0/members/3
         user: http://localhost:9001/3.0/users/3
@@ -439,6 +467,7 @@ Or, we can find all the memberships for a particular mailing list.
         email: bperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 1
         role: member
         self_link: http://localhost:9001/3.0/members/1
         user: http://localhost:9001/3.0/users/1
@@ -448,6 +477,7 @@ Or, we can find all the memberships for a particular mailing list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -457,6 +487,7 @@ Or, we can find all the memberships for a particular mailing list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 7
         role: owner
         self_link: http://localhost:9001/3.0/members/7
         user: http://localhost:9001/3.0/users/2
@@ -477,6 +508,7 @@ list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -486,6 +518,7 @@ list.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 7
         role: owner
         self_link: http://localhost:9001/3.0/members/7
         user: http://localhost:9001/3.0/users/2
@@ -505,6 +538,7 @@ Or, we can find all the memberships for an address with a specific role.
         email: cperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 5
         role: member
         self_link: http://localhost:9001/3.0/members/5
         user: http://localhost:9001/3.0/users/2
@@ -514,6 +548,7 @@ Or, we can find all the memberships for an address with a specific role.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -534,6 +569,7 @@ Finally, we can search for a specific member given all three criteria.
         email: cperson@example.com
         http_etag: ...
         list_id: bee.example.com
+        member_id: 2
         role: member
         self_link: http://localhost:9001/3.0/members/2
         user: http://localhost:9001/3.0/users/2
@@ -583,6 +619,7 @@ Elly is now a known user, and a member of the mailing list.
         email: eperson@example.com
         http_etag: ...
         list_id: ant.example.com
+        member_id: 8
         role: member
         self_link: http://localhost:9001/3.0/members/8
         user: http://localhost:9001/3.0/users/5
@@ -625,6 +662,7 @@ list with her preferred address.
         email: gwen@example.com
         http_etag: "..."
         list_id: ant.example.com
+        member_id: 9
         role: member
         self_link: http://localhost:9001/3.0/members/9
         user: http://localhost:9001/3.0/users/6
@@ -649,6 +687,7 @@ the new address.
         email: gwen.person@example.com
         http_etag: "..."
         list_id: ant.example.com
+        member_id: 9
         role: member
         self_link: http://localhost:9001/3.0/members/9
         user: http://localhost:9001/3.0/users/6
@@ -715,6 +754,7 @@ Fred is getting MIME deliveries.
     email: fperson@example.com
     http_etag: "..."
     list_id: ant.example.com
+    member_id: 10
     role: member
     self_link: http://localhost:9001/3.0/members/10
     user: http://localhost:9001/3.0/users/7
@@ -738,6 +778,7 @@ This can be done by PATCH'ing his member with the `delivery_mode` parameter.
     email: fperson@example.com
     http_etag: "..."
     list_id: ant.example.com
+    member_id: 10
     role: member
     self_link: http://localhost:9001/3.0/members/10
     user: http://localhost:9001/3.0/users/7
@@ -757,6 +798,7 @@ If a PATCH request changes no attributes, nothing happens.
     email: fperson@example.com
     http_etag: "..."
     list_id: ant.example.com
+    member_id: 10
     role: member
     self_link: http://localhost:9001/3.0/members/10
     user: http://localhost:9001/3.0/users/7
@@ -800,6 +842,7 @@ addresses.
         email: herb@example.com
         http_etag: "..."
         list_id: ant.example.com
+        member_id: 11
         role: member
         self_link: http://localhost:9001/3.0/members/11
         user: http://localhost:9001/3.0/users/8
@@ -810,6 +853,7 @@ addresses.
         email: herb@example.com
         http_etag: "..."
         list_id: bee.example.com
+        member_id: 12
         role: member
         self_link: http://localhost:9001/3.0/members/12
         user: http://localhost:9001/3.0/users/8
@@ -867,6 +911,7 @@ his membership ids have not changed.
         email: hperson@example.com
         http_etag: "..."
         list_id: ant.example.com
+        member_id: 11
         role: member
         self_link: http://localhost:9001/3.0/members/11
         user: http://localhost:9001/3.0/users/8
@@ -876,6 +921,7 @@ his membership ids have not changed.
         email: hperson@example.com
         http_etag: "..."
         list_id: bee.example.com
+        member_id: 12
         role: member
         self_link: http://localhost:9001/3.0/members/12
         user: http://localhost:9001/3.0/users/8

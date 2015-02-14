@@ -127,6 +127,7 @@ REST
    section names via ``/3.0/system/configuration`` which returns a dictionary
    containing the ``http_etag`` and the section names as a sorted list under
    the ``sections`` key.  The system configuration resource is read-only.
+ * Member resource JSON now include the ``member_id`` as a separate key.
 
 
 3.0 beta 4 -- "Time and Motion"

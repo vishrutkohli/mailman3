@@ -58,13 +58,15 @@ class _MemberBase(CollectionMixin):
         # subscribed to will not have a user id.   The user_id and the
         # member_id are UUIDs.  We need to use the integer equivalent in the
         # URL.
+        member_id = member.member_id.int
         response = dict(
             list_id=member.list_id,
             email=member.address.email,
             role=role,
             address=path_to('addresses/{}'.format(member.address.email)),
-            self_link=path_to('members/{}'.format(member.member_id.int)),
+            self_link=path_to('members/{}'.format(member_id)),
             delivery_mode=member.delivery_mode,
+            member_id=member_id,
             )
         # Add the user link if there is one.
         user = member.user
