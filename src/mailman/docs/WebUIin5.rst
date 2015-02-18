@@ -56,7 +56,7 @@ directly on the PYTHONPATH.
 ::
 
   $(py2) cd mailman.client
-  $(py2) sudo python setup.py develop
+  $(py2) python setup.py develop
   $(py2) cd ..
 
 
@@ -67,7 +67,7 @@ Postorius
 
   $(py2) bzr branch lp:postorius
   $(py2) cd postorius
-  $(py2) sudo python setup.py develop
+  $(py2) python setup.py develop
 
 
 Start the development server
