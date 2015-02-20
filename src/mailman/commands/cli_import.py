@@ -35,6 +35,14 @@ from zope.interface import implementer
 
 
 
+# Mock the Bouncer class from Mailman 2.1, we don't use it but there are
+# instances in the pickled config files
+class Bouncer:
+    class _BounceInfo:
+        pass
+
+
+
 @implementer(ICLISubCommand)
 class Import21:
     """Import Mailman 2.1 list data."""
@@ -74,10 +82,11 @@ class Import21:
         assert len(args.pickle_file) == 1, (
             'Unexpected positional arguments: %s' % args.pickle_file)
         filename = args.pickle_file[0]
+        sys.modules["Mailman.Bouncer"] = Bouncer
         with open(filename, 'rb') as fp:
             while True:
                 try:
-                    config_dict = pickle.load(fp)
+                    config_dict = pickle.load(fp, encoding="utf-8", errors="ignore")
                 except EOFError:
                     break
                 except pickle.UnpicklingError:
@@ -94,3 +103,4 @@ class Import21:
                     except Import21Error as error:
                         print(error, file=sys.stderr)
                         sys.exit(1)
+        del sys.modules["Mailman.Bouncer"]
