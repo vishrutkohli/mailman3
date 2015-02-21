@@ -388,11 +388,17 @@ def import_config_pck(mlist, config_dict):
     regulars_set = set(config_dict.get('members', {}))
     digesters_set = set(config_dict.get('digest_members', {}))
     members = regulars_set.union(digesters_set)
-    import_roster(mlist, config_dict, members, MemberRole.member)
-    import_roster(mlist, config_dict, config_dict.get('owner', []),
-                  MemberRole.owner)
-    import_roster(mlist, config_dict, config_dict.get('moderator', []),
-                  MemberRole.moderator)
+    # don't send welcome messages...
+    send_welcome_message = mlist.send_welcome_message
+    mlist.send_welcome_message = False
+    try:
+        import_roster(mlist, config_dict, members, MemberRole.member)
+        import_roster(mlist, config_dict, config_dict.get('owner', []),
+                      MemberRole.owner)
+        import_roster(mlist, config_dict, config_dict.get('moderator', []),
+                      MemberRole.moderator)
+    finally:
+        mlist.send_welcome_message = send_welcome_message
 
 
 

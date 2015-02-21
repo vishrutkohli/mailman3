@@ -772,6 +772,17 @@ class TestRosterImport(unittest.TestCase):
         self.assertEqual(['anne@example.com'],
                          [a.email for a in self._mlist.members.addresses])
 
+    def test_no_email_sent(self):
+        self._pckdict
+        import_config_pck(self._mlist, self._pckdict)
+        self.assertIn("anne@example.com",
+                      [a.email for a in self._mlist.members.addresses])
+        # no email in any queue
+        for qname, sb in config.switchboards.items():
+            self.assertEqual(len(sb.files), 0,
+                "Queue '{}' has {} emails".format(qname, len(sb.files)))
+        self.assertTrue(self._mlist.send_welcome_message)
+
 
 
 class TestPreferencesImport(unittest.TestCase):
