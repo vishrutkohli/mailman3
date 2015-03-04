@@ -98,7 +98,7 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
     else:
         # The user exists and is linked to the address.
         for address in user.addresses:
-            if address.email == email:
+            if address.email == email.lower():
                 break
         else:
             raise AssertionError(

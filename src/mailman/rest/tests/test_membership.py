@@ -98,6 +98,15 @@ class TestMembership(unittest.TestCase):
         self.assertEqual(cm.exception.code, 409)
         self.assertEqual(cm.exception.reason, b'Member already subscribed')
 
+        # Member subscription using case sensitive email
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/members', {
+                'list_id': 'test.example.com',
+                'subscriber': 'ANNE@example.com',
+                })
+        self.assertEqual(cm.exception.code, 409)
+        self.assertEqual(cm.exception.reason, b'Member already subscribed')
+
     def test_join_with_invalid_delivery_mode(self):
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members', {
