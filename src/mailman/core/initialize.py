@@ -130,8 +130,8 @@ def initialize_1(config_path=None):
     # PostgreSQL.
     extra_cfg_path = os.environ.get('MAILMAN_EXTRA_TESTING_CFG')
     if extra_cfg_path is not None:
-        with open(extra_cfg_path) as fp:
-            extra_cfg = fp.read().decode('utf-8')
+        with open(extra_cfg_path, 'r', encoding='utf-8') as fp:
+            extra_cfg = fp.read()
         mailman.config.config.push('extra testing config', extra_cfg)
 
 
