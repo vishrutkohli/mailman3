@@ -57,6 +57,7 @@ def do_walk():
     for root, dirs, files in os.walk('.'):
         if root == '.':
             remove(dirs, '.bzr')
+            remove(dirs, '.git')
             remove(dirs, 'bin')
             remove(dirs, 'contrib')
             remove(dirs, 'develop-eggs')
