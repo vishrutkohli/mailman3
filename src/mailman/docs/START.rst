@@ -188,14 +188,14 @@ The first existing file found wins.
  * ``/etc/mailman.cfg``
  * ``argv[0]/../../etc/mailman.cfg``
 
-Run the ``bin/mailman info`` command to see which configuration file Mailman
+Run the ``mailman info`` command to see which configuration file Mailman
 will use, and where it will put its database file.  The first time you run
 this, Mailman will also create any necessary run-time directories and log
 files.
 
-Try ``bin/mailman --help`` for more details.  You can use the commands
-``bin/mailman start`` to start the runner subprocess daemons, and of course
-``bin/mailman stop`` to stop them.
+Try ``mailman --help`` for more details.  You can use the commands
+``mailman start`` to start the runner subprocess daemons, and of course
+``mailman stop`` to stop them.
 
 Postorius, a web UI for administration and subscriber settings, is being
 developed as a separate, Django-based project.  For now, the most flexible

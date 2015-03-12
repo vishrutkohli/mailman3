@@ -143,7 +143,7 @@ Transport maps
 
 By default, Mailman works well with Postfix transport maps as a way to deliver
 incoming messages to Mailman's LMTP server.  Mailman will automatically write
-the correct transport map when its ``bin/mailman aliases`` command is run, or
+the correct transport map when its ``mailman aliases`` command is run, or
 whenever a mailing list is created or removed via other commands.  To connect
 Postfix to Mailman's LMTP server, add the following to Postfix's ``main.cf``
 file::

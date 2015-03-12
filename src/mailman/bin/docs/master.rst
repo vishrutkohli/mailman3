@@ -4,7 +4,7 @@ Mailman runner control
 
 Mailman has a number of *runner subprocesses* which perform long-running tasks
 such as listening on an LMTP port, processing REST API requests, or processing
-messages in a queue directory.  In normal operation, the ``bin/mailman``
+messages in a queue directory.  In normal operation, the ``mailman``
 command is used to start, stop and manage the runners.  This is just a wrapper
 around the real master watcher, which handles runner starting, stopping,
 exiting, and log file reopening.

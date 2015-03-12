@@ -149,7 +149,7 @@ class Configuration:
         # First, collect all variables in a substitution dictionary.  $VAR_DIR
         # is taken from the environment or from the configuration file if the
         # environment is not set.  Because the var_dir setting in the config
-        # file could be a relative path, and because 'bin/mailman start'
+        # file could be a relative path, and because 'mailman start'
         # chdirs to $VAR_DIR, without this subprocesses bin/master and
         # bin/runner will create $VAR_DIR hierarchies under $VAR_DIR when that
         # path is relative.

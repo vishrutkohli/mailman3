@@ -162,7 +162,7 @@ when the Mailman daemon starts, and what queue the Runner manages.
 Shell Commands
 ==============
 
-`bin/mailman`: This is an ubercommand, with subcommands for all the various
+`mailman`: This is an ubercommand, with subcommands for all the various
 things admins might want to do, similar to Mailman 2's mailmanctl, but with
 more functionality.
 

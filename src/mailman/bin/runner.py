@@ -116,7 +116,7 @@ def main():
         -r is required unless -l or -h is given, and its argument must
         be one of the names displayed by the -l switch.
 
-        Normally, this script should be started from 'bin/mailman
+        Normally, this script should be started from 'mailman
         start'.  Running it separately or with -o is generally useful
         only for debugging.  When run this way, the environment variable
         $MAILMAN_UNDER_MASTER_CONTROL will be set which subtly changes

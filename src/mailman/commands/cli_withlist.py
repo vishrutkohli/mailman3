@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""bin/mailman withlist"""
+"""mailman withlist"""
 
 __all__ = [
     'Shell',
@@ -190,7 +190,7 @@ Programmatically, you can write a function to operate on a mailing list, and
 this script will take care of the housekeeping (see below for examples).  In
 that case, the general usage syntax is:
 
-    % bin/mailman withlist [options] listname [args ...]"""))
+    % mailman withlist [options] listname [args ...]"""))
         print()
         print(_("""\
 Here's an example of how to use the --run option.  Say you have a file in the
@@ -207,7 +207,7 @@ functions:
 You can print the list's posting address by running the following from the
 command line:
 
-    % bin/mailman withlist -r listaddr mylist@example.com
+    % mailman withlist -r listaddr mylist@example.com
     Importing listaddr ...
     Running listaddr.listaddr() ...
     mylist@example.com"""))
@@ -215,7 +215,7 @@ command line:
         print(_("""\
 And you can print the list's request address by running:
 
-    % bin/mailman withlist -r listaddr.requestaddr mylist
+    % mailman withlist -r listaddr.requestaddr mylist
     Importing listaddr ...
     Running listaddr.requestaddr() ...
     mylist-request@example.com"""))
@@ -232,7 +232,7 @@ mailing list.  You could put the following function in a file called
 
 and run this from the command line:
 
-    % bin/mailman withlist -r change mylist@example.com 'My List'"""))
+    % mailman withlist -r change mylist@example.com 'My List'"""))
 
 
 

@@ -173,7 +173,7 @@ Configuration
 -------------
  * Add support for the Exim 4 MTA.  [Stephen Turnbull]
  * When creating the initial file system layout in ``var``, e.g. via
-   ``bin/mailman info``, add an ``var/etc/mailman.cfg`` file if one does not
+   ``mailman info``, add an ``var/etc/mailman.cfg`` file if one does not
    already exist.  Also, when initializing the system, look for that file as
    the configuration file, just after ``./mailman.cfg`` and before
    ``~/.mailman.cfg``.  (LP: #1157861)
@@ -291,10 +291,10 @@ Interfaces
 
 Commands
 --------
- * `bin/mailman aliases` loses the `--output`, `--format`, and `--simple`
+ * `mailman aliases` loses the `--output`, `--format`, and `--simple`
    arguments, and adds a `--directory` argument.  This is necessary to support
    the Postfix `relay_domains` support.
- * `bin/mailman start` was passing the wrong relative path to its runner
+ * `mailman start` was passing the wrong relative path to its runner
    subprocesses when -C was given.  (LP: #982551)
  * `bin/runner` command has been simplified and its command line options
    reduced.  Now, only one `-r/--runner` option may be provided and the
@@ -437,7 +437,7 @@ Bug fixes
    (LP: #953497)
  * List-Post should be NO when posting is not allowed. (LP: #987563)
  * Non-unicode values in msgdata broke pending requests. (LP: #1031391)
- * Show devmode in `bin/mailman info` output. (LP: #1035028)
+ * Show devmode in `mailman info` output. (LP: #1035028)
  * Fix residual references to the old `IMailingList` archive variables.
    (LP: #1031393)
 
@@ -546,11 +546,11 @@ Interfaces
 
 Commands
 --------
- * IPython support in `bin/mailman shell` contributed by Andrea Crotti.
+ * IPython support in `mailman shell` contributed by Andrea Crotti.
    (LP: #949926).
  * The `mailman.cfg` configuration file will now automatically be detected if
    it exists in an `etc` directory which is a sibling of argv0.
- * `bin/mailman shell` is an alias for `withlist`.
+ * `mailman shell` is an alias for `withlist`.
  * The `confirm` email command now properly handles `Re:`-like prefixes, even
    if they contain non-ASCII characters.  (LP: #685261)
  * The `join` email command no longer accepts an `address=` argument.  Its
@@ -638,10 +638,10 @@ REST
 Commands
 --------
  * `bin/qrunner` is renamed to `bin/runner`.
- * `bin/mailman aliases` gains `-f` and `-s` options.
- * `bin/mailman create` no longer allows a list to be created with bogus owner
+ * `mailman aliases` gains `-f` and `-s` options.
+ * `mailman create` no longer allows a list to be created with bogus owner
    addresses.  (LP: #778687)
- * `bin/mailman start --force` option is fixed.  (LP: #869317)
+ * `mailman start --force` option is fixed.  (LP: #869317)
 
 Documentation
 -------------
@@ -715,11 +715,11 @@ Configuration
 
 Commands
 --------
- * 'bin/mailman start' does a better job of producing an error when Mailman is
+ * 'mailman start' does a better job of producing an error when Mailman is
    already running.
- * 'bin/mailman status' added for providing command line status on the master
+ * 'mailman status' added for providing command line status on the master
    queue runner watcher process.
- * 'bin/mailman info' now prints the REST root url and credentials.
+ * 'mailman info' now prints the REST root url and credentials.
  * mmsitepass removed; there is no more site password.
 
 REST
@@ -763,8 +763,8 @@ Bugs fixed
 Commands
 --------
  * The functionality of 'bin/list_members' has been moved to
-   'bin/mailman members'.
- * 'bin/mailman info' -v/--verbose output displays the file system
+   'mailman members'.
+ * 'mailman info' -v/--verbose output displays the file system
    layout paths Mailman is currently configured to use.
 
 Configuration
@@ -825,8 +825,8 @@ REST
 
 Commands
 --------
- * 'bin/dumpdb' is now 'bin/mailman qfile'
- * 'bin/unshunt' is now 'bin/mailman unshunt'
+ * 'bin/dumpdb' is now 'mailman qfile'
+ * 'bin/unshunt' is now 'mailman unshunt'
  * Mailman now properly handles the '-join', '-leave', and '-confirm' email
    commands and sub-addresses.  '-subscribe' and '-unsubscribe' are aliases
    for '-join' and '-leave' respectively.
@@ -850,16 +850,16 @@ Configuration
 
 Commands
 --------
- * 'bin/inject' is now 'bin/mailman inject', with some changes
- * 'bin/mailmanctl' is now 'bin/mailman start|stop|reopen|restart'
- * 'bin/mailman version' is added (output same as 'bin/mailman --version')
- * 'bin/mailman members' command line arguments have changed.  It also
+ * 'inject' is now 'mailman inject', with some changes
+ * 'mailmanctl' is now 'mailman start|stop|reopen|restart'
+ * 'mailman version' is added (output same as 'mailman --version')
+ * 'mailman members' command line arguments have changed.  It also
    now ignores blank lines and lines that start with #.  It also no longer
    quits when it sees an address that's already subscribed.
- * 'bin/withlist' is now 'bin/mailman withlist', and its command line
+ * 'bin/withlist' is now 'mailman withlist', and its command line
    arguments have changed.
- * 'bin/mailman lists' command line arguments have changed.
- * 'bin/genaliases' is now 'bin/mailman aliases'
+ * 'mailman lists' command line arguments have changed.
+ * 'bin/genaliases' is now 'mailman aliases'
 
 Architecture
 ------------
@@ -901,7 +901,7 @@ Configuration
 
 Architecture
 ------------
- * 'bin/mailman' is a new super-command for managing Mailman from the command
+ * 'mailman' is a new super-command for managing Mailman from the command
    line.  Some older bin scripts have been converted, with more to come.
  * Mailman now has an administrative REST interface which can be used to get
    information from and manage Mailman remotely.

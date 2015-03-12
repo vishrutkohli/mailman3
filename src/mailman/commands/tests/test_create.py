@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test `bin/mailman create`."""
+"""Test `mailman create`."""
 
 __all__ = [
     'TestCreate',
@@ -51,7 +51,7 @@ class FakeParser:
 
 
 class TestCreate(unittest.TestCase):
-    """Test `bin/mailman create`."""
+    """Test `mailman create`."""
 
     layer = ConfigLayer
 

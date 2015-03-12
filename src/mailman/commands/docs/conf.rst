@@ -2,12 +2,12 @@
 Display configuration values
 ============================
 
-Just like the `Postfix command postconf(1)`_, the ``bin/mailman conf`` command
+Just like the `Postfix command postconf(1)`_, the ``mailman conf`` command
 lets you dump one or more Mailman configuration variables to standard output
 or a file.
 
 Mailman's configuration is divided in multiple sections which contain multiple
-key-value pairs.  The ``bin/mailman conf`` command allows you to display
+key-value pairs.  The ``mailman conf`` command allows you to display
 a specific key-value pair, or several key-value pairs.
 
     >>> class FakeArgs:

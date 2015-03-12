@@ -72,10 +72,10 @@ queue.  You can think of these as fairly typical server process, and examples
 include the LMTP server, and the HTTP server for processing REST commands.
 
 All of the runners are managed by a *master watcher* process.  When you type
-``bin/mailman start`` you are actually starting the master.  Based on
+``mailman start`` you are actually starting the master.  Based on
 configuration options, the master will start the appropriate runners as
 subprocesses, and it will watch for the clean exiting of these subprocesses
-when ``bin/mailman stop`` is called.
+when ``mailman stop`` is called.
 
 
 Rules and chains
