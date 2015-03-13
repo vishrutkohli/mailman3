@@ -21,6 +21,9 @@ Bugs
    (LP: #1418280)
  * When deleting a user via REST, make sure all linked addresses are deleted.
    Found by Andrew Stuart.  (LP: #1419519)
+ * When trying to subscribe an address to a mailing list through the REST API
+   where a case-differing version of the address is already subscribed, return
+   a 409 error instead of a 500 error.  Found by Ankush Sharma.  (LP: #1425359)
 
 Configuration
 -------------

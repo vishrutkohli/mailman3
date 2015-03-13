@@ -166,6 +166,32 @@ class TestAddMember(unittest.TestCase):
         self.assertEqual(member_1.role, MemberRole.member)
         self.assertEqual(member_2.role, MemberRole.owner)
 
+    def test_add_member_with_mixed_case_email(self):
+        # LP: #1425359 - Mailman is case-perserving, case-insensitive.  This
+        # test subscribes the lower case address and ensures the original
+        # mixed case address can't be subscribed.
+        email = 'APerson@example.com'
+        add_member(self._mlist, email.lower(), 'Ann Person', '123',
+                   DeliveryMode.regular, system_preferences.preferred_language)
+        with self.assertRaises(AlreadySubscribedError) as cm:
+            add_member(self._mlist, email, 'Ann Person', '123',
+                       DeliveryMode.regular,
+                       system_preferences.preferred_language)
+        self.assertEqual(cm.exception.email, email)
+            
+    def test_add_member_with_lower_case_email(self):
+        # LP: #1425359 - Mailman is case-perserving, case-insensitive.  This
+        # test subscribes the mixed case address and ensures the lower cased
+        # address can't be added.
+        email = 'APerson@example.com'
+        add_member(self._mlist, email, 'Ann Person', '123',
+                   DeliveryMode.regular, system_preferences.preferred_language)
+        with self.assertRaises(AlreadySubscribedError) as cm:
+            add_member(self._mlist, email.lower(), 'Ann Person', '123',
+                       DeliveryMode.regular,
+                       system_preferences.preferred_language)
+        self.assertEqual(cm.exception.email, email.lower())
+
 
 
 class TestAddMemberPassword(unittest.TestCase):

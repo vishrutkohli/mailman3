@@ -32,7 +32,8 @@ from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
-    MemberRole, MembershipIsBannedError, NotAMemberError, SubscriptionEvent)
+    AlreadySubscribedError, MemberRole, MembershipIsBannedError,
+    NotAMemberError, SubscriptionEvent)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.i18n import make
 from zope.component import getUtility
@@ -96,15 +97,32 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
         member = mlist.subscribe(address, role)
         member.preferences.delivery_mode = delivery_mode
     else:
-        # The user exists and is linked to the address.
+        # The user exists and is linked to the case-insensitive address.
+        # We're looking for two versions of the email address, the case
+        # preserved version and the case insensitive version.   We'll
+        # subscribe the version with matching case if it exists, otherwise
+        # we'll use one of the matching case-insensitively ones.  It's
+        # undefined which one we pick.
+        case_preserved = None
+        case_insensitive = None
         for address in user.addresses:
-            if address.email == email:
-                break
-        else:
-            raise AssertionError(
-                'User should have had linked address: {0}'.format(address))
-        # Create the member and set the appropriate preferences.
-        member = mlist.subscribe(address, role)
+            if address.original_email == email:
+                case_preserved = address
+            if address.email == email.lower():
+                case_insensitive = address
+        assert case_preserved is not None or case_insensitive is not None, (
+            'Could not find a linked address for: {}'.format(email))
+        address = (case_preserved if case_preserved is not None
+                   else case_insensitive)
+        # Create the member and set the appropriate preferences.  It's
+        # possible we're subscribing the lower cased version of the address;
+        # if that's already subscribed re-issue the exception with the correct
+        # email address (i.e. the one passed in here).
+        try:
+            member = mlist.subscribe(address, role)
+        except AlreadySubscribedError as error:
+            raise AlreadySubscribedError(
+                error.fqdn_listname, email, error.role)
         member.preferences.preferred_language = language
         member.preferences.delivery_mode = delivery_mode
     return member
