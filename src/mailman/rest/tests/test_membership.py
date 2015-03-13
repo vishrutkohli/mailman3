@@ -39,6 +39,12 @@ from urllib.error import HTTPError
 from zope.component import getUtility
 
 
+def _set_preferred(user):
+    preferred = list(user.addresses)[0]
+    preferred.verified_on = now()
+    user.preferred_address = preferred
+
+
 
 class TestMembership(unittest.TestCase):
     layer = RESTLayer
@@ -98,6 +104,36 @@ class TestMembership(unittest.TestCase):
         self.assertEqual(cm.exception.code, 409)
         self.assertEqual(cm.exception.reason, b'Member already subscribed')
 
+    def test_add_member_with_mixed_case_email(self):
+        # LP: #1425359 - Mailman is case-perserving, case-insensitive.  This
+        # test subscribes the lower case address and ensures the original mixed
+        # case address can't be subscribed.
+        with transaction():
+            anne = self._usermanager.create_address('anne@example.com')
+            self._mlist.subscribe(anne)
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/members', {
+                'list_id': 'test.example.com',
+                'subscriber': 'ANNE@example.com',
+                })
+        self.assertEqual(cm.exception.code, 409)
+        self.assertEqual(cm.exception.reason, b'Member already subscribed')
+
+    def test_add_member_with_lower_case_email(self):
+        # LP: #1425359 - Mailman is case-perserving, case-insensitive.  This
+        # test subscribes the mixed case address and ensures the lower cased
+        # address can't be added.
+        with transaction():
+            anne = self._usermanager.create_address('ANNE@example.com')
+            self._mlist.subscribe(anne)
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/members', {
+                'list_id': 'test.example.com',
+                'subscriber': 'anne@example.com',
+                })
+        self.assertEqual(cm.exception.code, 409)
+        self.assertEqual(cm.exception.reason, b'Member already subscribed')
+
     def test_join_with_invalid_delivery_mode(self):
         with self.assertRaises(HTTPError) as cm:
             call_api('http://localhost:9001/3.0/members', {
@@ -129,9 +165,7 @@ class TestMembership(unittest.TestCase):
     def test_join_as_user_with_preferred_address(self):
         with transaction():
             anne = self._usermanager.create_user('anne@example.com')
-            preferred = list(anne.addresses)[0]
-            preferred.verified_on = now()
-            anne.preferred_address = preferred
+            _set_preferred(anne)
             self._mlist.subscribe(anne)
         content, response = call_api('http://localhost:9001/3.0/members')
         self.assertEqual(response.status, 200)
@@ -150,9 +184,7 @@ class TestMembership(unittest.TestCase):
     def test_member_changes_preferred_address(self):
         with transaction():
             anne = self._usermanager.create_user('anne@example.com')
-            preferred = list(anne.addresses)[0]
-            preferred.verified_on = now()
-            anne.preferred_address = preferred
+            _set_preferred(anne)
             self._mlist.subscribe(anne)
         # Take a look at Anne's current membership.
         content, response = call_api('http://localhost:9001/3.0/members')
