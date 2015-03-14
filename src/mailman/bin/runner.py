@@ -108,19 +108,18 @@ def main():
         description=_("""\
         Start a runner
 
-        The runner named on the command line is started, and it can
-        either run through its main loop once (for those runners that
-        support this) or continuously.  The latter is how the master
-        runner starts all its subprocesses.
+        The runner named on the command line is started, and it can either run
+        through its main loop once (for those runners that support this) or
+        continuously.  The latter is how the master runner starts all its
+        subprocesses.
 
-        -r is required unless -l or -h is given, and its argument must
-        be one of the names displayed by the -l switch.
+        -r is required unless -l or -h is given, and its argument must be one
+        of the names displayed by the -l switch.
 
-        Normally, this script should be started from 'bin/mailman
-        start'.  Running it separately or with -o is generally useful
-        only for debugging.  When run this way, the environment variable
-        $MAILMAN_UNDER_MASTER_CONTROL will be set which subtly changes
-        some error handling behavior.
+        Normally, this script should be started from 'mailman start'.  Running
+        it separately or with -o is generally useful only for debugging.  When
+        run this way, the environment variable $MAILMAN_UNDER_MASTER_CONTROL
+        will be set which subtly changes some error handling behavior.
         """))
     parser.add_argument(
         '--version',

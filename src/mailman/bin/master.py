@@ -320,7 +320,7 @@ class Loop:
             log.info('Master watcher caught SIGUSR1.  Exiting.')
         signal.signal(signal.SIGUSR1, sigusr1_handler)
         # SIGTERM is what init will kill this process with when changing run
-        # levels.  It's also the signal 'bin/mailman stop' uses.
+        # levels.  It's also the signal 'mailman stop' uses.
         def sigterm_handler(signum, frame):
             for pid in self._kids:
                 os.kill(pid, signal.SIGTERM)

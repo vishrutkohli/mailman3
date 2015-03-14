@@ -2,8 +2,8 @@
 Managing members
 ================
 
-The ``bin/mailman members`` command allows a site administrator to display,
-add, and remove members from a mailing list.
+The ``mailman members`` command allows a site administrator to display, add,
+and remove members from a mailing list.
 ::
 
     >>> mlist1 = create_list('test1@example.com')

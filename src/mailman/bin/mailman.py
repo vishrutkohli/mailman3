@@ -36,7 +36,7 @@ from zope.interface.verify import verifyObject
 
 
 def main():
-    """bin/mailman"""
+    """The `mailman` command dispatcher."""
     # Create the basic parser and add all globally common options.
     parser = argparse.ArgumentParser(
         description=_("""\

@@ -103,8 +103,8 @@ def _init_logger(propagate, sub_name, log, logger_config):
     # Get settings from log configuration file (or defaults).
     log_format = logger_config.format
     log_datefmt = logger_config.datefmt
-    # Propagation to the root logger is how we handle logging to stderr
-    # when the runners are not run as a subprocess of 'bin/mailman start'.
+    # Propagation to the root logger is how we handle logging to stderr when
+    # the runners are not run as a subprocess of 'mailman start'.
     log.propagate = (as_boolean(logger_config.propagate)
                      if propagate is None else propagate)
     # Set the logger's level.

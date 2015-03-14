@@ -6,7 +6,7 @@ For some mail servers, Mailman must generate data files that are used to hook
 Mailman up to the mail server.  The details of this differ for each mail
 server.  Generally these files are automatically kept up-to-date when mailing
 lists are created or removed, but you might occasionally need to manually
-regenerate the file.  The ``bin/mailman aliases`` command does this.
+regenerate the file.  The ``mailman aliases`` command does this.
 
     >>> class FakeArgs:
     ...     directory = None
