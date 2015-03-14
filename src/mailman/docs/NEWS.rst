@@ -24,6 +24,8 @@ Bugs
  * When trying to subscribe an address to a mailing list through the REST API
    where a case-differing version of the address is already subscribed, return
    a 409 error instead of a 500 error.  Found by Ankush Sharma.  (LP: #1425359)
+ * ``mailman lists --domain`` was not properly handling its arguments.  Given
+   by Manish Gill.  (LP: #1166911)
 
 Configuration
 -------------

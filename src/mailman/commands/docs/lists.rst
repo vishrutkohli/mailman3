@@ -100,14 +100,14 @@ You can narrow the search down to a specific domain with the --domain option.
 A helpful message is displayed if no matching domains are given.
 
     >>> FakeArgs.quiet = False
-    >>> FakeArgs.domains = ['example.org']
+    >>> FakeArgs.domain = ['example.org']
     >>> command.process(FakeArgs)
     No matching mailing lists found
 
 But if a matching domain is given, only mailing lists in that domain are
 shown.
 
-    >>> FakeArgs.domains = ['example.net']
+    >>> FakeArgs.domain = ['example.net']
     >>> command.process(FakeArgs)
     1 matching mailing lists found:
     list-one@example.net
@@ -115,7 +115,7 @@ shown.
 More than one --domain argument can be given; then all mailing lists in
 matching domains are shown.
 
-    >>> FakeArgs.domains = ['example.com', 'example.net']
+    >>> FakeArgs.domain = ['example.com', 'example.net']
     >>> command.process(FakeArgs)
     3 matching mailing lists found:
     list-one@example.com
@@ -131,7 +131,7 @@ knowledge.  Non-advertised lists are considered private.  Display through the
 command line can select on this attribute.
 ::
 
-    >>> FakeArgs.domains = []
+    >>> FakeArgs.domain = []
     >>> FakeArgs.advertised = True
     >>> mlist_1.advertised = False
 
