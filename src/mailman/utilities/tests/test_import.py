@@ -38,6 +38,7 @@ from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.handlers.decorate import decorate
 from mailman.interfaces.action import Action, FilterAction
+from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.bans import IBanManager
@@ -747,6 +748,40 @@ class TestRosterImport(unittest.TestCase):
         anne = self._usermanager.get_user('anne@example.com')
         self.assertTrue(anne.controls('anne@example.com'))
 
+    def test_invalid_original_email(self):
+        self._pckdict["members"]["anne@example.com"] = b'invalid email address'
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except InvalidEmailAddressError as e:
+            self.fail(e)
+        self.assertIn('anne@example.com',
+                      [a.email for a in self._mlist.members.addresses])
+        anne = self._usermanager.get_address('anne@example.com')
+        self.assertEqual(anne.original_email, 'anne@example.com')
+
+    def test_invalid_email(self):
+        self._pckdict["members"] = {
+            'anne@example.com': 0,
+            'invalid email address': b'invalid email address'
+        }
+        self._pckdict["digest_members"] = {}
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except InvalidEmailAddressError as e:
+            self.fail(e)
+        self.assertEqual(['anne@example.com'],
+                         [a.email for a in self._mlist.members.addresses])
+
+    def test_no_email_sent(self):
+        self._pckdict
+        import_config_pck(self._mlist, self._pckdict)
+        self.assertIn("anne@example.com",
+                      [a.email for a in self._mlist.members.addresses])
+        # no email in any queue
+        for qname, sb in config.switchboards.items():
+            self.assertEqual(len(sb.files), 0,
+                "Queue '{}' has {} emails".format(qname, len(sb.files)))
+        self.assertTrue(self._mlist.send_welcome_message)
 
 
 

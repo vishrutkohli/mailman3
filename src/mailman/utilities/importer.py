@@ -32,6 +32,7 @@ from mailman.config import config
 from mailman.core.errors import MailmanError
 from mailman.handlers.decorate import decorate, decorate_template
 from mailman.interfaces.action import Action, FilterAction
+from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.bans import IBanManager
@@ -387,11 +388,17 @@ def import_config_pck(mlist, config_dict):
     regulars_set = set(config_dict.get('members', {}))
     digesters_set = set(config_dict.get('digest_members', {}))
     members = regulars_set.union(digesters_set)
-    import_roster(mlist, config_dict, members, MemberRole.member)
-    import_roster(mlist, config_dict, config_dict.get('owner', []),
-                  MemberRole.owner)
-    import_roster(mlist, config_dict, config_dict.get('moderator', []),
-                  MemberRole.moderator)
+    # don't send welcome messages...
+    send_welcome_message = mlist.send_welcome_message
+    mlist.send_welcome_message = False
+    try:
+        import_roster(mlist, config_dict, members, MemberRole.member)
+        import_roster(mlist, config_dict, config_dict.get('owner', []),
+                      MemberRole.owner)
+        import_roster(mlist, config_dict, config_dict.get('moderator', []),
+                      MemberRole.moderator)
+    finally:
+        mlist.send_welcome_message = send_welcome_message
 
 
 
@@ -427,8 +434,12 @@ def import_roster(mlist, config_dict, members, role):
                 merged_members.update(config_dict.get('digest_members', {}))
                 if merged_members.get(email, 0) != 0:
                     original_email = bytes_to_str(merged_members[email])
+                    if not getUtility(IEmailValidator).is_valid(original_email):
+                        original_email = email
                 else:
                     original_email = email
+                if not getUtility(IEmailValidator).is_valid(original_email):
+                    continue # skip this one entirely
                 address = usermanager.create_address(original_email)
                 address.verified_on = datetime.datetime.now()
             user.link(address)
