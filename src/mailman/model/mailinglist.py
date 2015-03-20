@@ -38,7 +38,7 @@ from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.mailinglist import (
     IAcceptableAlias, IAcceptableAliasSet, IListArchiver, IListArchiverSet,
-    IMailingList, Personalization, ReplyToMunging)
+    IMailingList, Personalization, ReplyToMunging, SubscriptionPolicy)
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError,
     SubscriptionEvent)
@@ -197,6 +197,8 @@ class MailingList(Model):
         self._list_id = '{0}.{1}'.format(listname, hostname)
         # For the pending database
         self.next_request_id = 1
+        # XXX Make this a database column: Enum(SubscriptionPolicy)
+        self.subscription_policy = None
         # We need to set up the rosters.  Normally, this method will get called
         # when the MailingList object is loaded from the database, but when the
         # constructor is called, SQLAlchemy's `load` event isn't triggered.
@@ -455,6 +457,8 @@ class MailingList(Model):
             return self.owners
         elif role is MemberRole.moderator:
             return self.moderators
+        elif role is MemberRole.nonmember:
+            return self.nonmembers
         else:
             raise TypeError('Undefined MemberRole: {}'.format(role))
 

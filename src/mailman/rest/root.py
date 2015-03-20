@@ -182,6 +182,7 @@ class TopLevel:
     @child()
     def lists(self, request, segments):
         """/<api>/lists
+           /<api>/lists/styles
            /<api>/lists/<list>
            /<api>/lists/<list>/...
         """

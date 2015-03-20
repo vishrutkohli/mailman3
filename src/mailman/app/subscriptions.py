@@ -19,28 +19,35 @@
 
 __all__ = [
     'SubscriptionService',
+    'SubscriptionWorkflow',
     'handle_ListDeletingEvent',
     ]
 
 
+from collections import deque
 from operator import attrgetter
-from passlib.utils import generate_password as generate
+#from passlib.utils import generate_password as generate
 from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
 from zope.interface import implementer
 
 from mailman.app.membership import add_member, delete_member
-from mailman.config import config
+#from mailman.config import config
+from mailman.app.moderator import hold_subscription
 from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection
+from mailman.interfaces.address import IAddress
 from mailman.interfaces.listmanager import (
     IListManager, ListDeletingEvent, NoSuchListError)
+from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.subscriptions import (
-    ISubscriptionService, MissingUserError)
+    ISubscriptionService, MissingUserError, RequestRecord)
+from mailman.interfaces.user import IUser
 from mailman.interfaces.usermanager import IUserManager
 from mailman.model.member import Member
+from mailman.utilities.datetime import now
 
 
 
@@ -51,6 +58,118 @@ def _membership_sort_key(member):
     address, then by role.
     """
     return (member.list_id, member.address.email, member.role.value)
+
+
+
+class SubscriptionWorkflow:
+    """Workflow of a subscription request."""
+
+    def __init__(self, mlist, subscriber,
+                 pre_verified, pre_confirmed, pre_approved):
+        self.mlist = mlist
+        # The subscriber must be either an IUser or IAddress.
+        if IAddress.providedBy(subscriber):
+            self.address = subscriber
+            self.user = self.address.user
+        elif IUser.providedBy(subscriber):
+            self.address = subscriber.preferred_address
+            self.user = subscriber
+        self.subscriber = subscriber
+        self.pre_verified = pre_verified
+        self.pre_confirmed = pre_confirmed
+        self.pre_approved = pre_approved
+        # Prepare the state machine.
+        self._next = deque()
+        self._next.append(self._verification_check)
+
+    def __iter__(self):
+        return self
+
+    def _pop(self):
+        step = self._next.popleft()
+        # step could be a partial or a method.
+        name = getattr(step, 'func', step).__name__
+        return step, name
+
+    def __next__(self):
+        try:
+            step, name = self._pop()
+            step()
+        except IndexError:
+            raise StopIteration
+        except:
+            raise
+
+    def _maybe_set_preferred_address(self):
+        if self.user is None:
+            # The address has no linked user so create one, link it, and set
+            # the user's preferred address.
+            assert self.address is not None, 'No address or user'
+            self.user = getUtility(IUserManager).make_user(self.address.email)
+            self.user.preferred_address = self.address
+        elif self.user.preferred_address is None:
+            assert self.address is not None, 'No address or user'
+            # The address has a linked user, but no preferred address is set
+            # yet.  This is required, so use the address.
+            self.user.preferred_address = self.address
+
+    def _verification_check(self):
+        if self.address.verified_on is not None:
+            # The address is already verified.  Give the user a preferred
+            # address if it doesn't already have one.  We may still have to do
+            # a subscription confirmation check.  See below.
+            self._maybe_set_preferred_address()
+        else:
+            # The address is not yet verified.  Maybe we're pre-verifying it.
+            # If so, we also want to give the user a preferred address if it
+            # doesn't already have one.  We may still have to do a
+            # subscription confirmation check.  See below.
+            if self.pre_verified:
+                self.address.verified_on = now()
+                self._maybe_set_preferred_address()
+            else:
+                # Since the address was not already verified, and not
+                # pre-verified, we have to send a confirmation check, which
+                # doubles as a verification step.  Skip to that now.
+                self._next.append(self._send_confirmation)
+                return
+        self._next.append(self._confirmation_check)
+
+    def _confirmation_check(self):
+        # Must the user confirm their subscription request?  If the policy is
+        # open subscriptions, then we need neither confirmation nor moderator
+        # approval, so just subscribe them now.
+        if self.mlist.subscription_policy == SubscriptionPolicy.open:
+            self._next.append(self._do_subscription)
+        elif self.pre_confirmed:
+            # No confirmation is necessary.  We can skip to seeing whether a
+            # moderator confirmation is necessary.
+            self._next.append(self._moderation_check)
+        else:
+            self._next.append(self._send_confirmation)
+
+    def _moderation_check(self):
+        # Does the moderator need to approve the subscription request?
+        if self.mlist.subscription_policy in (
+                SubscriptionPolicy.moderate,
+                SubscriptionPolicy.confirm_then_moderate):
+            self._next.append(self._get_moderator_approval)
+        else:
+            # The moderator does not need to approve the subscription, so go
+            # ahead and do that now.
+            self._next.append(self._do_subscription)
+
+    def _get_moderator_approval(self):
+        # In order to get the moderator's approval, we need to hold the
+        # subscription request in the database
+        request = RequestRecord(
+            self.address.email, self.subscriber.display_name,
+            DeliveryMode.regular, 'en')
+        hold_subscription(self._mlist, request)
+
+    def _do_subscription(self):
+        # We can immediately subscribe the user to the mailing list.
+        self.mlist.subscribe(self.subscriber)
 
 
 
@@ -148,16 +267,11 @@ class SubscriptionService:
         if isinstance(subscriber, str):
             if display_name is None:
                 display_name, at, domain = subscriber.partition('@')
-            # Because we want to keep the REST API simple, there is no
-            # password or language given to us.  We'll use the system's
-            # default language for the user's default language.  We'll set the
-            # password to a system default.  This will have to get reset since
-            # it can't be retrieved.  Note that none of these are used unless
-            # the address is completely new to us.
-            password = generate(int(config.passwords.password_length))
-            return add_member(mlist, subscriber, display_name, password,
-                              delivery_mode,
-                              system_preferences.preferred_language, role)
+            return add_member(
+                mlist,
+                RequestRecord(subscriber, display_name, delivery_mode,
+                              system_preferences.preferred_language),
+                role)
         else:
             # We have to assume it's a UUID.
             assert isinstance(subscriber, UUID), 'Not a UUID'

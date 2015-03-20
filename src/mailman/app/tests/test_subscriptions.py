@@ -18,7 +18,8 @@
 """Tests for the subscription service."""
 
 __all__ = [
-    'TestJoin'
+    'TestJoin',
+    'TestSubscriptionWorkflow',
     ]
 
 
@@ -26,11 +27,14 @@ import uuid
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.app.subscriptions import SubscriptionWorkflow
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
 from mailman.testing.layers import ConfigLayer
+from mailman.interfaces.mailinglist import SubscriptionPolicy
+from mailman.interfaces.usermanager import IUserManager
 from zope.component import getUtility
 
 
@@ -65,3 +69,32 @@ class TestJoin(unittest.TestCase):
                           self._service.join,
                           'test.example.com', anne.user.user_id,
                           role=MemberRole.owner)
+
+
+
+class TestSubscriptionWorkflow(unittest.TestCase):
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('test@example.com')
+        self._anne = 'anne@example.com'
+        self._user_manager = getUtility(IUserManager)
+
+    def test_preverified_address_joins_open_list(self):
+        # The mailing list has an open subscription policy, so the subscriber
+        # becomes a member with no human intervention.
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        anne = self._user_manager.create_address(self._anne, 'Anne Person')
+        self.assertIsNone(anne.verified_on)
+        self.assertIsNone(anne.user)
+        self.assertIsNone(self._mlist.subscribers.get_member(self._anne))
+        workflow = SubscriptionWorkflow(
+            self._mlist, anne,
+            pre_verified=True, pre_confirmed=False, pre_approved=False)
+        # Run the state machine to the end.  The result is that her address
+        # will be verified, linked to a user, and subscribed to the mailing
+        # list.
+        list(workflow)
+        self.assertIsNotNone(anne.verified_on)
+        self.assertIsNotNone(anne.user)
+        self.assertIsNotNone(self._mlist.subscribers.get_member(self._anne))

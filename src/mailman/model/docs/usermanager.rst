@@ -179,3 +179,25 @@ There are now four members in the system.  Sort them by address then role.
     test.example.com bperson@example.com MemberRole.owner
     test.example.com eperson@example.com MemberRole.member
     test.example.com fperson@example.com MemberRole.member
+
+
+Creating a new user
+===================
+
+A common situation (especially during the subscription life cycle) is to
+create a user linked to an address, with a preferred address.  Say for
+example, we are asked to subscribe a new address we have never seen before.
+
+    >>> cris = user_manager.make_user('cris@example.com', 'Cris Person')
+
+Since we've never seen ``cris@example.com`` before, this call creates a new
+user with the given email and display name.
+
+    >>> cris
+    <User "Cris Person" (5) at ...>
+
+The user has a single unverified address object.
+
+    >>> for address in cris.addresses:
+    ...     print(repr(address))
+    <Address: Cris Person <cris@example.com> [not verified] at ...>

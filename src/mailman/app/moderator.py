@@ -44,6 +44,7 @@ from mailman.interfaces.member import (
     AlreadySubscribedError, DeliveryMode, NotAMemberError)
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
+from mailman.interfaces.subscriptions import RequestRecord
 from mailman.utilities.datetime import now
 from mailman.utilities.i18n import make
 from zope.component import getUtility
@@ -192,26 +193,26 @@ def handle_message(mlist, id, action,
 
 
 
-def hold_subscription(mlist, address, display_name, password, mode, language):
+def hold_subscription(mlist, record):
     data = dict(when=now().isoformat(),
-                address=address,
-                display_name=display_name,
-                password=password,
-                delivery_mode=mode.name,
-                language=language)
-    # Now hold this request.  We'll use the address as the key.
+                email=record.email,
+                display_name=record.display_name,
+                delivery_mode=record.delivery_mode.name,
+                language=record.language)
+    # Now hold this request.  We'll use the email address as the key.
     requestsdb = IListRequests(mlist)
     request_id = requestsdb.hold_request(
-        RequestType.subscription, address, data)
+        RequestType.subscription, record.email, data)
     vlog.info('%s: held subscription request from %s',
-              mlist.fqdn_listname, address)
+              mlist.fqdn_listname, record.email)
     # Possibly notify the administrator in default list language
     if mlist.admin_immed_notify:
+        email = record.email # XXX: seems unnecessary
         subject = _(
-            'New subscription request to $mlist.display_name from $address')
+            'New subscription request to $mlist.display_name from $email')
         text = make('subauth.txt',
                     mailing_list=mlist,
-                    username=address,
+                    username=record.email,
                     listname=mlist.fqdn_listname,
                     admindb_url=mlist.script_url('admindb'),
                     )
@@ -236,19 +237,19 @@ def handle_subscription(mlist, id, action, comment=None):
     elif action is Action.reject:
         key, data = requestdb.get_request(id)
         _refuse(mlist, _('Subscription request'),
-                data['address'],
+                data['email'],
                 comment or _('[No reason given]'),
                 lang=getUtility(ILanguageManager)[data['language']])
     elif action is Action.accept:
         key, data = requestdb.get_request(id)
         delivery_mode = DeliveryMode[data['delivery_mode']]
-        address = data['address']
+        email = data['email']
         display_name = data['display_name']
         language = getUtility(ILanguageManager)[data['language']]
-        password = data['password']
         try:
-            add_member(mlist, address, display_name, password,
-                       delivery_mode, language)
+            add_member(
+                mlist,
+                RequestRecord(email, display_name, delivery_mode, language))
         except AlreadySubscribedError:
             # The address got subscribed in some other way after the original
             # request was made and accepted.
@@ -256,9 +257,9 @@ def handle_subscription(mlist, id, action, comment=None):
         else:
             if mlist.admin_notify_mchanges:
                 send_admin_subscription_notice(
-                    mlist, address, display_name, language)
+                    mlist, email, display_name, language)
         slog.info('%s: new %s, %s %s', mlist.fqdn_listname,
-                  delivery_mode, formataddr((display_name, address)),
+                  delivery_mode, formataddr((display_name, email)),
                   'via admin approval')
     else:
         raise AssertionError('Unexpected action: {0}'.format(action))
@@ -267,20 +268,20 @@ def handle_subscription(mlist, id, action, comment=None):
 
 
 
-def hold_unsubscription(mlist, address):
-    data = dict(address=address)
+def hold_unsubscription(mlist, email):
+    data = dict(email=email)
     requestsdb = IListRequests(mlist)
     request_id = requestsdb.hold_request(
-        RequestType.unsubscription, address, data)
+        RequestType.unsubscription, email, data)
     vlog.info('%s: held unsubscription request from %s',
-              mlist.fqdn_listname, address)
+              mlist.fqdn_listname, email)
     # Possibly notify the administrator of the hold
     if mlist.admin_immed_notify:
         subject = _(
-            'New unsubscription request from $mlist.display_name by $address')
+            'New unsubscription request from $mlist.display_name by $email')
         text = make('unsubauth.txt',
                     mailing_list=mlist,
-                    address=address,
+                    email=email,
                     listname=mlist.fqdn_listname,
                     admindb_url=mlist.script_url('admindb'),
                     )
@@ -297,7 +298,7 @@ def hold_unsubscription(mlist, address):
 def handle_unsubscription(mlist, id, action, comment=None):
     requestdb = IListRequests(mlist)
     key, data = requestdb.get_request(id)
-    address = data['address']
+    email = data['email']
     if action is Action.defer:
         # Nothing to do.
         return
@@ -306,16 +307,16 @@ def handle_unsubscription(mlist, id, action, comment=None):
         pass
     elif action is Action.reject:
         key, data = requestdb.get_request(id)
-        _refuse(mlist, _('Unsubscription request'), address,
+        _refuse(mlist, _('Unsubscription request'), email,
                 comment or _('[No reason given]'))
     elif action is Action.accept:
         key, data = requestdb.get_request(id)
         try:
-            delete_member(mlist, address)
+            delete_member(mlist, email)
         except NotAMemberError:
             # User has already been unsubscribed.
             pass
-        slog.info('%s: deleted %s', mlist.fqdn_listname, address)
+        slog.info('%s: deleted %s', mlist.fqdn_listname, email)
     else:
         raise AssertionError('Unexpected action: {0}'.format(action))
     # Delete the request from the database.

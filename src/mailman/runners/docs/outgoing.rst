@@ -11,24 +11,13 @@ a *delivery module*, essentially a pluggable interface for determining how the
 recipient set will be batched, whether messages will be personalized and
 VERP'd, etc.  The outgoing runner doesn't itself support retrying but it can
 move messages to the 'retry queue' for handling delivery failures.
-::
 
+    >>> from mailman.testing.helpers import subscribe
     >>> mlist = create_list('test@example.com')
 
-    >>> from mailman.app.membership import add_member
-    >>> from mailman.interfaces.member import DeliveryMode
-    >>> add_member(mlist, 'aperson@example.com', 'Anne Person',
-    ...            'password', DeliveryMode.regular, 'en')
-    <Member: Anne Person <aperson@example.com>
-             on test@example.com as MemberRole.member>
-    >>> add_member(mlist, 'bperson@example.com', 'Bart Person',
-    ...            'password', DeliveryMode.regular, 'en')
-    <Member: Bart Person <bperson@example.com>
-             on test@example.com as MemberRole.member>
-    >>> add_member(mlist, 'cperson@example.com', 'Cris Person',
-    ...            'password', DeliveryMode.regular, 'en')
-    <Member: Cris Person <cperson@example.com>
-             on test@example.com as MemberRole.member>
+    >>> subscribe(mlist, 'Anne', email='aperson@example.com')
+    >>> subscribe(mlist, 'Bart', email='bperson@example.com')
+    >>> subscribe(mlist, 'Cris', email='cperson@example.com')
 
 Normally, messages would show up in the outgoing queue after the message has
 been processed by the rule set and pipeline.  But we can simulate that here by
