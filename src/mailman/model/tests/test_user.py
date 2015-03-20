@@ -25,10 +25,13 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
+from mailman.database.transaction import transaction
 from mailman.interfaces.address import (
     AddressAlreadyLinkedError, AddressNotLinkedError)
 from mailman.interfaces.user import UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
+from mailman.model.preferences import Preferences
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.datetime import now
 from zope.component import getUtility
@@ -41,8 +44,9 @@ class TestUser(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
+        self._manager = getUtility(IUserManager)
         self._mlist = create_list('test@example.com')
-        self._anne = getUtility(IUserManager).create_user(
+        self._anne = self._manager.create_user(
             'anne@example.com', 'Anne Person')
         preferred = list(self._anne.addresses)[0]
         preferred.verified_on = now()
@@ -79,7 +83,7 @@ class TestUser(unittest.TestCase):
             self._anne.user_id = 'foo'
 
     def test_addresses_may_only_be_linked_to_one_user(self):
-        user = getUtility(IUserManager).create_user()
+        user = self._manager.create_user()
         # Anne's preferred address is already linked to her.
         with self.assertRaises(AddressAlreadyLinkedError) as cm:
             user.link(self._anne.preferred_address)
@@ -88,23 +92,37 @@ class TestUser(unittest.TestCase):
     def test_unlink_from_address_not_linked_to(self):
         # You cannot unlink an address from a user if that address is not
         # already linked to the user.
-        user = getUtility(IUserManager).create_user()
+        user = self._manager.create_user()
         with self.assertRaises(AddressNotLinkedError) as cm:
             user.unlink(self._anne.preferred_address)
         self.assertEqual(cm.exception.address, self._anne.preferred_address)
 
     def test_unlink_address_which_is_not_linked(self):
         # You cannot unlink an address which is not linked to any user.
-        address = getUtility(IUserManager).create_address('bart@example.com')
-        user = getUtility(IUserManager).create_user()
+        address = self._manager.create_address('bart@example.com')
+        user = self._manager.create_user()
         with self.assertRaises(AddressNotLinkedError) as cm:
             user.unlink(address)
         self.assertEqual(cm.exception.address, address)
 
     def test_set_unverified_preferred_address(self):
         # A user's preferred address cannot be set to an unverified address.
-        new_preferred = getUtility(IUserManager).create_address(
+        new_preferred = self._manager.create_address(
             'anne.person@example.com')
         with self.assertRaises(UnverifiedAddressError) as cm:
             self._anne.preferred_address = new_preferred
         self.assertEqual(cm.exception.address, new_preferred)
+
+    def test_preferences_deletion_on_user_deletion(self):
+        # LP: #1418276 - deleting a user did not delete their preferences.
+        with transaction():
+            user = self._manager.create_user()
+        # The user's preference is in the database.
+        preferences = config.db.store.query(Preferences).filter_by(
+            id=user.preferences.id)
+        self.assertEqual(preferences.count(), 1)
+        self._manager.delete_user(user)
+        # The user's preference has been deleted.
+        preferences = config.db.store.query(Preferences).filter_by(
+            id=user.preferences.id)
+        self.assertEqual(preferences.count(), 0)

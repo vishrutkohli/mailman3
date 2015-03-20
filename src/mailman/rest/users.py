@@ -185,7 +185,7 @@ class AUser(_UserBase):
         return UserAddresses(self._user)
 
     def on_delete(self, request, response):
-        """Delete the named user, all her memberships, and addresses."""
+        """Delete the named user and all associated resources."""
         if self._user is None:
             not_found(response)
             return

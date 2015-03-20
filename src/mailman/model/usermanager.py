@@ -49,6 +49,7 @@ class UserManager:
     @dbconnection
     def delete_user(self, store, user):
         """See `IUserManager`."""
+        store.delete(user.preferences)
         store.delete(user)
 
     @dbconnection
