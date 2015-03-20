@@ -67,8 +67,9 @@ CREATION_FIELDS = dict(
     email=str,
     display_name=str,
     password=str,
-    _optional=('display_name', 'password'),
-    )
+    is_serverowner=bool,
+    _optional=('display_name', 'password', 'is_serverowner'),
+)
 
 
 
@@ -108,7 +109,8 @@ class _UserBase(CollectionMixin):
             user_id=user_id,
             created_on=user.created_on,
             self_link=path_to('users/{}'.format(user_id)),
-            )
+            is_serverowner=user.is_serverowner,
+        )
         # Add the password attribute, only if the user has a password.  Same
         # with the real name.  These could be None or the empty string.
         if user.password:
@@ -377,3 +379,31 @@ class Login:
             no_content(response)
         else:
             forbidden(response)
+
+class OwnersForDomain(_UserBase):
+    """Owners for a particular domain."""
+
+    def __init__(self, domain):
+        self._domain = domain
+
+    def on_get(self, request, response):
+        """/domains/<domain>/owners"""
+        resource = self._make_collection(request)
+        okay(response, etag(resource))
+
+    def on_post(self, request, response):
+        """POST to /domains/<domain>/owners """
+        validator = Validator(owner_id=GetterSetter(int))
+        try:
+            values = validator(request)
+        except ValueError as error:
+            bad_request(response, str(error))
+            return
+        owner = getUtility(IUserManager).get_user_by_id(values['owner_id'])
+        self._domain.add_owner(owner)
+        return no_content(response)
+
+    @paginate
+    def _get_collection(self, request):
+        """See `CollectionMixin`."""
+        return list(self._domain.owners)
