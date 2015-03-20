@@ -26,14 +26,12 @@ __all__ = [
 
 from collections import deque
 from operator import attrgetter
-#from passlib.utils import generate_password as generate
 from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
 from zope.interface import implementer
 
 from mailman.app.membership import add_member, delete_member
-#from mailman.config import config
 from mailman.app.moderator import hold_subscription
 from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection

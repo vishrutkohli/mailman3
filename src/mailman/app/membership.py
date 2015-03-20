@@ -92,6 +92,8 @@ def add_member(mlist, record, role=MemberRole.member):
     except AlreadySubscribedError as error:
         raise AlreadySubscribedError(
             error.fqdn_listname, record.email, error.role)
+    member.preferences.preferred_language = record.language
+    member.preferences.delivery_mode = record.delivery_mode
     return member
 
 
