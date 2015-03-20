@@ -83,7 +83,9 @@ class User(Model):
             'Duplicate user id {0}'.format(user_id))
         self._user_id = user_id
         self.display_name = ('' if display_name is None else display_name)
-        self.preferences = preferences
+        if preferences is not None:
+            store.add(preferences)
+            self.preferences = preferences
         store.add(self)
 
     def __repr__(self):
