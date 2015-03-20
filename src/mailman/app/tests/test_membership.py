@@ -208,7 +208,7 @@ class TestAddMember(unittest.TestCase):
                 RequestRecord(email, 'Ann Person',
                               DeliveryMode.regular,
                               system_preferences.preferred_language))
-        self.assertEqual(cm.exception.email, email.lower())
+        self.assertEqual(cm.exception.email, email)
 
     def test_add_member_with_lower_case_email(self):
         # LP: #1425359 - Mailman is case-perserving, case-insensitive.  This

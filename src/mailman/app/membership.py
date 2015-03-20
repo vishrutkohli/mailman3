@@ -67,14 +67,31 @@ def add_member(mlist, record, role=MemberRole.member):
     # Encrypt the password using the currently selected hash scheme.
     user.preferences.preferred_language = record.language
     # Subscribe the address, not the user.
-    address = user_manager.get_address(record.email)
-    if address is None or address.user is not user:
-        raise AssertionError(
-            'User should have had linked address: {0}'.format(address))
-    # Create the member and set the appropriate preferences.
-    member = mlist.subscribe(address, role)
-    member.preferences.preferred_language = record.language
-    member.preferences.delivery_mode = record.delivery_mode
+    # We're looking for two versions of the email address, the case
+    # preserved version and the case insensitive version.   We'll
+    # subscribe the version with matching case if it exists, otherwise
+    # we'll use one of the matching case-insensitively ones.  It's
+    # undefined which one we pick.
+    case_preserved = None
+    case_insensitive = None
+    for address in user.addresses:
+        if address.original_email == record.email:
+            case_preserved = address
+        if address.email == record.email.lower():
+            case_insensitive = address
+    assert case_preserved is not None or case_insensitive is not None, (
+        'Could not find a linked address for: {}'.format(record.email))
+    address = (case_preserved if case_preserved is not None
+               else case_insensitive)
+    # Create the member and set the appropriate preferences.  It's
+    # possible we're subscribing the lower cased version of the address;
+    # if that's already subscribed re-issue the exception with the correct
+    # email address (i.e. the one passed in here).
+    try:
+        member = mlist.subscribe(address, role)
+    except AlreadySubscribedError as error:
+        raise AlreadySubscribedError(
+            error.fqdn_listname, record.email, error.role)
     return member
 
 
