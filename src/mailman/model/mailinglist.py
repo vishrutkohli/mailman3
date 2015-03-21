@@ -183,6 +183,7 @@ class MailingList(Model):
     send_goodbye_message = Column(Boolean)
     send_welcome_message = Column(Boolean)
     subject_prefix = Column(Unicode)
+    subscription_policy = Column(Enum(SubscriptionPolicy))
     topics = Column(PickleType)
     topics_bodylines_limit = Column(Integer)
     topics_enabled = Column(Boolean)
@@ -197,8 +198,6 @@ class MailingList(Model):
         self._list_id = '{0}.{1}'.format(listname, hostname)
         # For the pending database
         self.next_request_id = 1
-        # XXX Make this a database column: Enum(SubscriptionPolicy)
-        self.subscription_policy = None
         # We need to set up the rosters.  Normally, this method will get called
         # when the MailingList object is loaded from the database, but when the
         # constructor is called, SQLAlchemy's `load` event isn't triggered.
