@@ -64,7 +64,6 @@ def add_member(mlist, record, role=MemberRole.member):
     # Make sure there is a user linked with the given address.
     user_manager = getUtility(IUserManager)
     user = user_manager.make_user(record.email, record.display_name)
-    # Encrypt the password using the currently selected hash scheme.
     user.preferences.preferred_language = record.language
     # Subscribe the address, not the user.
     # We're looking for two versions of the email address, the case
