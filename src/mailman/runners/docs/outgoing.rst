@@ -17,16 +17,20 @@ move messages to the 'retry queue' for handling delivery failures.
 
     >>> from mailman.app.membership import add_member
     >>> from mailman.interfaces.member import DeliveryMode
-    >>> add_member(mlist, 'aperson@example.com', 'Anne Person',
-    ...            'password', DeliveryMode.regular, 'en')
+    >>> from mailman.interfaces.subscriptions import RequestRecord
+
+    >>> add_member(mlist, RequestRecord('aperson@example.com', 'Anne Person',
+    ...                                 DeliveryMode.regular, 'en'))
     <Member: Anne Person <aperson@example.com>
              on test@example.com as MemberRole.member>
-    >>> add_member(mlist, 'bperson@example.com', 'Bart Person',
-    ...            'password', DeliveryMode.regular, 'en')
+
+    >>> add_member(mlist, RequestRecord('bperson@example.com', 'Bart Person',
+    ...                                 DeliveryMode.regular, 'en'))
     <Member: Bart Person <bperson@example.com>
              on test@example.com as MemberRole.member>
-    >>> add_member(mlist, 'cperson@example.com', 'Cris Person',
-    ...            'password', DeliveryMode.regular, 'en')
+
+    >>> add_member(mlist, RequestRecord('cperson@example.com', 'Cris Person',
+    ...                                 DeliveryMode.regular, 'en'))
     <Member: Cris Person <cperson@example.com>
              on test@example.com as MemberRole.member>
 

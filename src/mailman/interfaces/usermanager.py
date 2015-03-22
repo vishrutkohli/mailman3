@@ -43,6 +43,22 @@ class IUserManager(Interface):
             registered.
         """
 
+    def make_user(email, display_name=None):
+        """Create a new user linked to an address object.
+
+        If ``email`` is already associated with an existing `IAddress`
+        object, use that, otherwise create a new `IAddress`.  If the
+        address object already points to an `IUser` return it.  If a new
+        `IUser` is created, link the address to the user.
+
+        :param email: The email address.
+        :type email: str
+        :param display_name: The display name.
+        :type display_name: str
+        :return: the IUser object that exists or was created.
+        :rtype: IUser
+        """
+
     def delete_user(user):
         """Delete the given user.
 

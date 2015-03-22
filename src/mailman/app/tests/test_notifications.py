@@ -32,6 +32,7 @@ from mailman.app.membership import add_member
 from mailman.config import config
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.member import DeliveryMode, MemberRole
+from mailman.interfaces.subscriptions import RequestRecord
 from mailman.testing.helpers import get_queue_messages
 from mailman.testing.layers import ConfigLayer
 from zope.component import getUtility
@@ -78,8 +79,10 @@ Welcome to the $list_name mailing list.
         shutil.rmtree(self.var_dir)
 
     def test_welcome_message(self):
-        add_member(self._mlist, 'anne@example.com', 'Anne Person',
-                   'password', DeliveryMode.regular, 'en')
+        add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'en'))
         # Now there's one message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 1)
@@ -104,8 +107,10 @@ Welcome to the Test List mailing list.
         # Add the xx language and subscribe Anne using it.
         manager = getUtility(ILanguageManager)
         manager.add('xx', 'us-ascii', 'Xlandia')
-        add_member(self._mlist, 'anne@example.com', 'Anne Person',
-                   'password', DeliveryMode.regular, 'xx')
+        add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'xx'))
         # Now there's one message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 1)
@@ -118,27 +123,33 @@ Welcome to the Test List mailing list.
 
     def test_no_welcome_message_to_owners(self):
         # Welcome messages go only to mailing list members, not to owners.
-        add_member(self._mlist, 'anne@example.com', 'Anne Person',
-                   'password', DeliveryMode.regular, 'xx',
-                   MemberRole.owner)
+        add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'xx'),
+            MemberRole.owner)
         # There is no welcome message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 0)
 
     def test_no_welcome_message_to_nonmembers(self):
         # Welcome messages go only to mailing list members, not to nonmembers.
-        add_member(self._mlist, 'anne@example.com', 'Anne Person',
-                   'password', DeliveryMode.regular, 'xx',
-                   MemberRole.nonmember)
+        add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'xx'),
+            MemberRole.nonmember)
         # There is no welcome message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 0)
 
     def test_no_welcome_message_to_moderators(self):
         # Welcome messages go only to mailing list members, not to moderators.
-        add_member(self._mlist, 'anne@example.com', 'Anne Person',
-                   'password', DeliveryMode.regular, 'xx',
-                   MemberRole.moderator)
+        add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'xx'),
+            MemberRole.moderator)
         # There is no welcome message in the virgin queue.
         messages = get_queue_messages('virgin')
         self.assertEqual(len(messages), 0)

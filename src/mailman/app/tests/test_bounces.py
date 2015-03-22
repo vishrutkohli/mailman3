@@ -42,6 +42,7 @@ from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.pending import IPendings
+from mailman.interfaces.subscriptions import RequestRecord
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
     LogFileMark, get_queue_messages, specialized_message_from_string as mfs)
@@ -193,9 +194,10 @@ class TestSendProbe(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('test@example.com')
         self._mlist.send_welcome_message = False
-        self._member = add_member(self._mlist, 'anne@example.com',
-                                  'Anne Person', 'xxx',
-                                  DeliveryMode.regular, 'en')
+        self._member = add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'en'))
         self._msg = mfs("""\
 From: bouncer@example.com
 To: anne@example.com
@@ -285,9 +287,10 @@ class TestSendProbeNonEnglish(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        self._member = add_member(self._mlist, 'anne@example.com',
-                                  'Anne Person', 'xxx',
-                                  DeliveryMode.regular, 'en')
+        self._member = add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'en'))
         self._msg = mfs("""\
 From: bouncer@example.com
 To: anne@example.com
@@ -351,9 +354,10 @@ class TestProbe(unittest.TestCase):
     def setUp(self):
         self._mlist = create_list('test@example.com')
         self._mlist.send_welcome_message = False
-        self._member = add_member(self._mlist, 'anne@example.com',
-                                  'Anne Person', 'xxx',
-                                  DeliveryMode.regular, 'en')
+        self._member = add_member(
+            self._mlist,
+            RequestRecord('anne@example.com', 'Anne Person',
+                          DeliveryMode.regular, 'en'))
         self._msg = mfs("""\
 From: bouncer@example.com
 To: anne@example.com

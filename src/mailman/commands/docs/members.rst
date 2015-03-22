@@ -36,12 +36,16 @@ Once the mailing list add some members, they will be displayed.
 
     >>> from mailman.interfaces.member import DeliveryMode
     >>> from mailman.app.membership import add_member
-    >>> add_member(mlist1, 'anne@example.com', 'Anne Person', 'xxx',
-    ...            DeliveryMode.regular, mlist1.preferred_language.code)
+    >>> from mailman.interfaces.subscriptions import RequestRecord
+
+    >>> add_member(mlist1, RequestRecord('anne@example.com', 'Anne Person',
+    ...                                  DeliveryMode.regular,
+    ...                                  mlist1.preferred_language.code))
     <Member: Anne Person <anne@example.com>
              on test1@example.com as MemberRole.member>
-    >>> add_member(mlist1, 'bart@example.com', 'Bart Person', 'xxx',
-    ...            DeliveryMode.regular, mlist1.preferred_language.code)
+    >>> add_member(mlist1, RequestRecord('bart@example.com', 'Bart Person',
+    ...                                  DeliveryMode.regular,
+    ...                                  mlist1.preferred_language.code))
     <Member: Bart Person <bart@example.com>
              on test1@example.com as MemberRole.member>
 
@@ -52,8 +56,9 @@ Once the mailing list add some members, they will be displayed.
 Members are displayed in alphabetical order based on their address.
 ::
 
-    >>> add_member(mlist1, 'anne@aaaxample.com', 'Anne Person', 'xxx',
-    ...            DeliveryMode.regular, mlist1.preferred_language.code)
+    >>> add_member(mlist1, RequestRecord('anne@aaaxample.com', 'Anne Person',
+    ...                                  DeliveryMode.regular,
+    ...                                  mlist1.preferred_language.code))
     <Member: Anne Person <anne@aaaxample.com>
              on test1@example.com as MemberRole.member>
 
@@ -136,21 +141,29 @@ status is enabled...
 ::
 
     >>> from mailman.interfaces.member import DeliveryStatus
+
     >>> member = mlist1.members.get_member('anne@aaaxample.com')
     >>> member.preferences.delivery_status = DeliveryStatus.by_moderator
     >>> member = mlist1.members.get_member('bart@example.com')
     >>> member.preferences.delivery_status = DeliveryStatus.by_user
+
     >>> member = add_member(
-    ...     mlist1, 'cris@example.com', 'Cris Person', 'xxx',
-    ...     DeliveryMode.regular, mlist1.preferred_language.code)
+    ...     mlist1,
+    ...     RequestRecord('cris@example.com', 'Cris Person',
+    ...                   DeliveryMode.regular,
+    ...                   mlist1.preferred_language.code))
     >>> member.preferences.delivery_status = DeliveryStatus.unknown
     >>> member = add_member(
-    ...     mlist1, 'dave@example.com', 'Dave Person', 'xxx',
-    ...     DeliveryMode.regular, mlist1.preferred_language.code)
+    ...     mlist1,
+    ...     RequestRecord('dave@example.com', 'Dave Person',
+    ...                   DeliveryMode.regular,
+    ...                   mlist1.preferred_language.code))
     >>> member.preferences.delivery_status = DeliveryStatus.enabled
     >>> member = add_member(
-    ...     mlist1, 'elly@example.com', 'Elly Person', 'xxx',
-    ...     DeliveryMode.regular, mlist1.preferred_language.code)
+    ...     mlist1,
+    ...     RequestRecord('elly@example.com', 'Elly Person',
+    ...                   DeliveryMode.regular,
+    ...                   mlist1.preferred_language.code))
     >>> member.preferences.delivery_status = DeliveryStatus.by_bounces
 
     >>> args.nomail = 'enabled'

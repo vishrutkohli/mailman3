@@ -27,7 +27,6 @@ __all__ = [
 from email.utils import formataddr
 from mailman.app.notifications import (
     send_goodbye_message, send_welcome_message)
-from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import OwnerNotification
 from mailman.interfaces.bans import IBanManager
@@ -40,8 +39,7 @@ from zope.component import getUtility
 
 
 
-def add_member(mlist, email, display_name, password, delivery_mode, language,
-               role=MemberRole.member):
+def add_member(mlist, record, role=MemberRole.member):
     """Add a member right now.
 
     The member's subscription must be approved by whatever policy the list
@@ -49,16 +47,8 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
 
     :param mlist: The mailing list to add the member to.
     :type mlist: `IMailingList`
-    :param email: The email address to subscribe.
-    :type email: str
-    :param display_name: The subscriber's full name.
-    :type display_name: str
-    :param password: The subscriber's plain text password.
-    :type password: str
-    :param delivery_mode: The delivery mode the subscriber has chosen.
-    :type delivery_mode: DeliveryMode
-    :param language: The language that the subscriber is going to use.
-    :type language: str
+    :param record: a subscription request record.
+    :type record: RequestRecord
     :param role: The membership role for this subscription.
     :type role: `MemberRole`
     :return: The just created member.
@@ -69,62 +59,41 @@ def add_member(mlist, email, display_name, password, delivery_mode, language,
     :raises MembershipIsBannedError: if the membership is not allowed.
     """
     # Check to see if the email address is banned.
-    if IBanManager(mlist).is_banned(email):
-        raise MembershipIsBannedError(mlist, email)
-    # See if there's already a user linked with the given address.
+    if IBanManager(mlist).is_banned(record.email):
+        raise MembershipIsBannedError(mlist, record.email)
+    # Make sure there is a user linked with the given address.
     user_manager = getUtility(IUserManager)
-    user = user_manager.get_user(email)
-    if user is None:
-        # A user linked to this address does not yet exist.  Is the address
-        # itself known but just not linked to a user?
-        address = user_manager.get_address(email)
-        if address is None:
-            # Nope, we don't even know about this address, so create both the
-            # user and address now.
-            user = user_manager.create_user(email, display_name)
-            # Do it this way so we don't have to flush the previous change.
-            address = list(user.addresses)[0]
-        else:
-            # The address object exists, but it's not linked to a user.
-            # Create the user and link it now.
-            user = user_manager.create_user()
-            user.display_name = (
-                display_name if display_name else address.display_name)
-            user.link(address)
-        # Encrypt the password using the currently selected hash scheme.
-        user.password = config.password_context.encrypt(password)
-        user.preferences.preferred_language = language
+    user = user_manager.make_user(record.email, record.display_name)
+    # Encrypt the password using the currently selected hash scheme.
+    user.preferences.preferred_language = record.language
+    # Subscribe the address, not the user.
+    # We're looking for two versions of the email address, the case
+    # preserved version and the case insensitive version.   We'll
+    # subscribe the version with matching case if it exists, otherwise
+    # we'll use one of the matching case-insensitively ones.  It's
+    # undefined which one we pick.
+    case_preserved = None
+    case_insensitive = None
+    for address in user.addresses:
+        if address.original_email == record.email:
+            case_preserved = address
+        if address.email == record.email.lower():
+            case_insensitive = address
+    assert case_preserved is not None or case_insensitive is not None, (
+        'Could not find a linked address for: {}'.format(record.email))
+    address = (case_preserved if case_preserved is not None
+               else case_insensitive)
+    # Create the member and set the appropriate preferences.  It's
+    # possible we're subscribing the lower cased version of the address;
+    # if that's already subscribed re-issue the exception with the correct
+    # email address (i.e. the one passed in here).
+    try:
         member = mlist.subscribe(address, role)
-        member.preferences.delivery_mode = delivery_mode
-    else:
-        # The user exists and is linked to the case-insensitive address.
-        # We're looking for two versions of the email address, the case
-        # preserved version and the case insensitive version.   We'll
-        # subscribe the version with matching case if it exists, otherwise
-        # we'll use one of the matching case-insensitively ones.  It's
-        # undefined which one we pick.
-        case_preserved = None
-        case_insensitive = None
-        for address in user.addresses:
-            if address.original_email == email:
-                case_preserved = address
-            if address.email == email.lower():
-                case_insensitive = address
-        assert case_preserved is not None or case_insensitive is not None, (
-            'Could not find a linked address for: {}'.format(email))
-        address = (case_preserved if case_preserved is not None
-                   else case_insensitive)
-        # Create the member and set the appropriate preferences.  It's
-        # possible we're subscribing the lower cased version of the address;
-        # if that's already subscribed re-issue the exception with the correct
-        # email address (i.e. the one passed in here).
-        try:
-            member = mlist.subscribe(address, role)
-        except AlreadySubscribedError as error:
-            raise AlreadySubscribedError(
-                error.fqdn_listname, email, error.role)
-        member.preferences.preferred_language = language
-        member.preferences.delivery_mode = delivery_mode
+    except AlreadySubscribedError as error:
+        raise AlreadySubscribedError(
+            error.fqdn_listname, record.email, error.role)
+    member.preferences.preferred_language = record.language
+    member.preferences.delivery_mode = record.delivery_mode
     return member
 
 
