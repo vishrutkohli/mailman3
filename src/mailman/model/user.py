@@ -55,7 +55,7 @@ class User(Model):
     _password = Column('password', Unicode)
     _user_id = Column(UUID, index=True)
     _created_on = Column(DateTime)
-    is_serverowner = Column(Boolean, default=False)
+    is_server_owner = Column(Boolean, default=False)
 
     addresses = relationship(
         'Address', backref='user',

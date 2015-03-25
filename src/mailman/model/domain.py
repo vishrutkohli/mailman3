@@ -133,10 +133,10 @@ class DomainManager:
         # Be sure that the owner exists
         owner = None
         if owner_id is not None:
-            owner = store.query(User).filter(id==owner_id).first()
+            owner = store.query(User).get(owner_id)
             if owner is None:
                 raise BadDomainSpecificationError(
-                    'Owner does not exist')
+                    'Owner of this domain does not exist')
         notify(DomainCreatingEvent(mail_host))
         domain = Domain(mail_host, description, base_url, owner)
         store.add(domain)
