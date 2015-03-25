@@ -19,11 +19,14 @@
 
 __all__ = [
     'WorkflowState',
+    'WorkflowStateManager',
     ]
 
 
 from mailman.database.model import Model
-from mailman.interfaces.workflowstate import IWorkflowState
+from mailman.database.transaction import dbconnection
+from mailman.interfaces.workflowstate import (
+    IWorkflowState, IWorkflowStateManager)
 from sqlalchemy import Column, Unicode
 from zope.interface import implementer
 
@@ -39,3 +42,25 @@ class WorkflowState(Model):
     key = Column(Unicode, primary_key=True)
     step = Column(Unicode, nullable=False)
     data = Column(Unicode)
+
+
+
+@implementer(IWorkflowStateManager)
+class WorkflowStateManager:
+    """See `IWorkflowStateManager`."""
+
+    @dbconnection
+    def save(self, store, name, key, step, data=None):
+        """See `IWorkflowStateManager`."""
+        state = store.query(WorkflowState).get((name, key))
+        if state is None:
+            state = store.add(WorkflowState(
+                name=name, key=key, step=step, data=data))
+        else:
+            state.step = step
+            state.data = data
+
+    @dbconnection
+    def restore(self, store, name, key):
+        """See `IWorkflowStateManager`."""
+        return store.query(WorkflowState).get((name, key))

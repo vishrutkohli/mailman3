@@ -19,6 +19,7 @@
 
 __all__ = [
     'IWorkflowState',
+    'IWorkflowStateManager',
     ]
 
 
@@ -27,7 +28,7 @@ from zope.interface import Interface, Attribute
 
 
 class IWorkflowState(Interface):
-    """A basic user."""
+    """The state of a workflow."""
 
     name = Attribute(
         """The name of the workflow.""")
@@ -40,3 +41,30 @@ class IWorkflowState(Interface):
 
     data = Attribute(
         """Additional data (may be JSON-encodedeJSON .""")
+
+
+
+class IWorkflowStateManager(Interface):
+    """The workflow states manager."""
+
+    def save(name, key, step, data=None):
+        """Save the state of a workflow
+
+        :param name: The name of the workflow.
+        :type name: str
+        :param key: A unique key identifying this workflow instance.
+        :type key: str
+        :param step: The next step for this workflow.
+        :type step: str
+        :param data: Additional data (workflow-specific).
+        :type data: str
+        """
+
+    def restore(name, key):
+        """Get the saved state for a workflow or None if nothing was saved.
+
+        :param name: The name of the workflow.
+        :type name: str
+        :param key: A unique key identifying this workflow instance.
+        :type key: str
+        """

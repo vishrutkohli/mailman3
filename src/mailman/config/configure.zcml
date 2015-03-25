@@ -118,8 +118,8 @@
    />
 
   <utility
-    provides="mailman.interfaces.workflowstate.IWorkflowState"
-    factory="mailman.model.workflowstate.WorkflowState"
+    provides="mailman.interfaces.workflowstate.IWorkflowStateManager"
+    factory="mailman.model.workflowstate.WorkflowStateManager"
     />
 
 </configure>
