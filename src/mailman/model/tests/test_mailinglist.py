@@ -18,6 +18,7 @@
 """Test MailingLists and related model objects.."""
 
 __all__ = [
+    'TestAcceptableAliases',
     'TestDisabledListArchiver',
     'TestListArchiver',
     'TestMailingList',
@@ -28,7 +29,10 @@ import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
-from mailman.interfaces.mailinglist import IListArchiverSet
+from mailman.database.transaction import transaction
+from mailman.interfaces.listmanager import IListManager
+from mailman.interfaces.mailinglist import (
+    IAcceptableAliasSet, IListArchiverSet)
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError)
 from mailman.interfaces.usermanager import IUserManager
@@ -141,3 +145,21 @@ class TestDisabledListArchiver(unittest.TestCase):
         archiver = archiver_set.get('prototype')
         self.assertTrue(archiver.is_enabled)
         config.pop('enable prototype')
+
+
+
+class TestAcceptableAliases(unittest.TestCase):
+    layer = ConfigLayer
+
+    def setUp(self):
+        self._mlist = create_list('ant@example.com')
+
+    def test_delete_list_with_acceptable_aliases(self):
+        # LP: #1432239 - deleting a mailing list with acceptable aliases
+        # causes a SQLAlchemy error.  The aliases must be deleted first.
+        with transaction():
+            alias_set = IAcceptableAliasSet(self._mlist)
+            alias_set.add('bee@example.com')
+        self.assertEqual(['bee@example.com'], list(alias_set.aliases))
+        getUtility(IListManager).delete(self._mlist)
+        self.assertEqual(len(list(alias_set.aliases)), 0)

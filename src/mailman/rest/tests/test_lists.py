@@ -28,8 +28,12 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
 from mailman.database.transaction import transaction
+from mailman.interfaces.listmanager import IListManager
+from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.usermanager import IUserManager
+from mailman.model.mailinglist import AcceptableAlias
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 from urllib.error import HTTPError
@@ -175,6 +179,18 @@ class TestLists(unittest.TestCase):
         member = resource['entries'][1]
         self.assertEqual(member['email'], 'bart@example.com')
         self.assertEqual(member['role'], 'member')
+
+    def test_delete_list_with_acceptable_aliases(self):
+        # LP: #1432239 - deleting a mailing list with acceptable aliases
+        # causes a SQLAlchemy error.  The aliases must be deleted first.
+        with transaction():
+            alias_set = IAcceptableAliasSet(self._mlist)
+            alias_set.add('bee@example.com')
+        call_api('http://localhost:9001/3.0/lists/test.example.com',
+                 method='DELETE')
+        # Neither the mailing list, nor the aliases are present.
+        self.assertIsNone(getUtility(IListManager).get('test@example.com'))
+        self.assertEqual(config.db.store.query(AcceptableAlias).count(), 0)
 
 
 

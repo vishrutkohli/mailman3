@@ -28,6 +28,8 @@ Bugs
    by Manish Gill.  (LP: #1166911)
  * When deleting a user object, make sure their preferences are also deleted.
    Given by Abhishek.  (LP: #1418276)
+ * Be sure a mailing list's acceptable aliases are deleted when the mailing
+   list itself is deleted.  (LP: #1432239)
 
 Configuration
 -------------

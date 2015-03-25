@@ -504,10 +504,11 @@ class AcceptableAlias(Model):
     mailing_list_id = Column(
         Integer, ForeignKey('mailinglist.id'),
         index=True, nullable=False)
-    mailing_list = relationship('MailingList', backref='acceptable_alias')
+    mailing_list = relationship('MailingList', backref='acceptablealias')
     alias = Column(Unicode, index=True, nullable=False)
 
     def __init__(self, mailing_list, alias):
+        super(AcceptableAlias, self).__init__()
         self.mailing_list = mailing_list
         self.alias = alias
 
