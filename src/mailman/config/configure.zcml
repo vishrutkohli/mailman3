@@ -117,4 +117,9 @@
    factory="mailman.app.templates.TemplateLoader"
    />
 
+  <utility
+    provides="mailman.interfaces.workflowstate.IWorkflowState"
+    factory="mailman.model.workflowstate.WorkflowState"
+    />
+
 </configure>
