@@ -48,7 +48,6 @@ from mailman.model.member import Member
 from mailman.utilities.datetime import now
 
 
-
 def _membership_sort_key(member):
     """Sort function for find_members().
 
@@ -58,7 +57,6 @@ def _membership_sort_key(member):
     return (member.list_id, member.address.email, member.role.value)
 
 
-
 class SubscriptionWorkflow:
     """Workflow of a subscription request."""
 
@@ -163,14 +161,13 @@ class SubscriptionWorkflow:
         request = RequestRecord(
             self.address.email, self.subscriber.display_name,
             DeliveryMode.regular, 'en')
-        hold_subscription(self._mlist, request)
+        hold_subscription(self.mlist, request)
 
     def _do_subscription(self):
         # We can immediately subscribe the user to the mailing list.
         self.mlist.subscribe(self.subscriber)
 
 
-
 @implementer(ISubscriptionService)
 class SubscriptionService:
     """Subscription services for the REST API."""
@@ -287,7 +284,6 @@ class SubscriptionService:
         delete_member(mlist, email, False, False)
 
 
-
 def handle_ListDeletingEvent(event):
     """Delete a mailing list's members when the list is being deleted."""
 

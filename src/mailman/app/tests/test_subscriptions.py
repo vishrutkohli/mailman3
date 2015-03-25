@@ -30,11 +30,13 @@ from mailman.app.lifecycle import create_list
 from mailman.app.subscriptions import SubscriptionWorkflow
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
+from mailman.interfaces.requests import IListRequests, RequestType
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
 from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
+from mailman.utilities.datetime import now
 from zope.component import getUtility
 
 
@@ -98,3 +100,28 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self.assertIsNotNone(anne.verified_on)
         self.assertIsNotNone(anne.user)
         self.assertIsNotNone(self._mlist.subscribers.get_member(self._anne))
+
+    def test_verified_address_joins_moderated_list(self):
+        # The mailing list is moderated but the subscriber is not a verified
+        # address and the subscription request is not pre-verified.
+        # A confirmation email must be sent, it will serve as the verification
+        # email too.
+        anne = self._user_manager.create_address(self._anne, 'Anne Person')
+        request_db = IListRequests(self._mlist)
+        def _do_check():
+            anne.verified_on = now()
+            self.assertIsNone(self._mlist.subscribers.get_member(self._anne))
+            workflow = SubscriptionWorkflow(
+                self._mlist, anne,
+                pre_verified=False, pre_confirmed=True, pre_approved=False)
+            # Run the state machine to the end.
+            list(workflow)
+            # Look in the requests db
+            requests = list(request_db.of_type(RequestType.subscription))
+            self.assertEqual(len(requests), 1)
+            self.assertEqual(requests[0].key, anne.email)
+            request_db.delete_request(requests[0].id)
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        _do_check()
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm_then_moderate
+        _do_check()
