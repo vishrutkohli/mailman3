@@ -76,15 +76,14 @@ class SubscriptionWorkflow:
         self.pre_approved = pre_approved
         # Prepare the state machine.
         self._next = deque()
-        self._next.append(self._verification_check)
+        self._next.append("verification_check")
 
     def __iter__(self):
         return self
 
     def _pop(self):
-        step = self._next.popleft()
-        # step could be a partial or a method.
-        name = getattr(step, 'func', step).__name__
+        name = self._next.popleft()
+        step = getattr(self, '_step_{}'.format(name))
         return step, name
 
     def __next__(self):
@@ -109,7 +108,7 @@ class SubscriptionWorkflow:
             # yet.  This is required, so use the address.
             self.user.preferred_address = self.address
 
-    def _verification_check(self):
+    def _step_verification_check(self):
         if self.address.verified_on is not None:
             # The address is already verified.  Give the user a preferred
             # address if it doesn't already have one.  We may still have to do
@@ -127,35 +126,35 @@ class SubscriptionWorkflow:
                 # Since the address was not already verified, and not
                 # pre-verified, we have to send a confirmation check, which
                 # doubles as a verification step.  Skip to that now.
-                self._next.append(self._send_confirmation)
+                self._next.append("send_confirmation")
                 return
-        self._next.append(self._confirmation_check)
+        self._next.append("confirmation_check")
 
-    def _confirmation_check(self):
+    def _step_confirmation_check(self):
         # Must the user confirm their subscription request?  If the policy is
         # open subscriptions, then we need neither confirmation nor moderator
         # approval, so just subscribe them now.
         if self.mlist.subscription_policy == SubscriptionPolicy.open:
-            self._next.append(self._do_subscription)
+            self._next.append("do_subscription")
         elif self.pre_confirmed:
             # No confirmation is necessary.  We can skip to seeing whether a
             # moderator confirmation is necessary.
-            self._next.append(self._moderation_check)
+            self._next.append("moderation_check")
         else:
-            self._next.append(self._send_confirmation)
+            self._next.append("send_confirmation")
 
-    def _moderation_check(self):
+    def _step_moderation_check(self):
         # Does the moderator need to approve the subscription request?
         if self.mlist.subscription_policy in (
                 SubscriptionPolicy.moderate,
                 SubscriptionPolicy.confirm_then_moderate):
-            self._next.append(self._get_moderator_approval)
+            self._next.append("get_moderator_approval")
         else:
             # The moderator does not need to approve the subscription, so go
             # ahead and do that now.
-            self._next.append(self._do_subscription)
+            self._next.append("do_subscription")
 
-    def _get_moderator_approval(self):
+    def _step_get_moderator_approval(self):
         # In order to get the moderator's approval, we need to hold the
         # subscription request in the database
         request = RequestRecord(
@@ -163,7 +162,7 @@ class SubscriptionWorkflow:
             DeliveryMode.regular, 'en')
         hold_subscription(self.mlist, request)
 
-    def _do_subscription(self):
+    def _step_do_subscription(self):
         # We can immediately subscribe the user to the mailing list.
         self.mlist.subscribe(self.subscriber)
 
