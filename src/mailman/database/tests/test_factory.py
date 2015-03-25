@@ -129,17 +129,14 @@ class TestSchemaManager(unittest.TestCase):
             md.tables['alembic_version'].select()).scalar()
         self.assertEqual(current_rev, head_rev)
 
-    @patch('alembic.command.stamp')
-    def test_storm(self, alembic_command_stamp):
+    @patch('alembic.command')
+    def test_storm(self, alembic_command):
         # Existing Storm database.
         Model.metadata.create_all(config.db.engine)
         self._create_storm_database(LAST_STORM_SCHEMA_VERSION)
         self.schema_mgr.setup_database()
-        self.assertFalse(alembic_command_stamp.called)
-        self.assertTrue(
-            self._table_exists('mailinglist')
-            and self._table_exists('alembic_version')
-            and not self._table_exists('version'))
+        self.assertFalse(alembic_command.stamp.called)
+        self.assertTrue(alembic_command.upgrade.called)
 
     @patch('alembic.command')
     def test_old_storm(self, alembic_command):
