@@ -38,6 +38,7 @@ from mailman.app.lifecycle import create_list
 from mailman.config import config
 from mailman.handlers.decorate import decorate
 from mailman.interfaces.action import Action, FilterAction
+from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.bans import IBanManager
@@ -747,6 +748,48 @@ class TestRosterImport(unittest.TestCase):
         anne = self._usermanager.get_user('anne@example.com')
         self.assertTrue(anne.controls('anne@example.com'))
 
+    def test_invalid_original_email(self):
+        # When the member has an original email address (i.e. the
+        # case-preserved version) that is invalid, their new address record's
+        # original_email attribute will only be the case insensitive version.
+        self._pckdict['members']['anne@example.com'] = b'invalid email address'
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except InvalidEmailAddressError as error:
+            self.fail(error)
+        self.assertIn('anne@example.com',
+                      [a.email for a in self._mlist.members.addresses])
+        anne = self._usermanager.get_address('anne@example.com')
+        self.assertEqual(anne.original_email, 'anne@example.com')
+
+    def test_invalid_email(self):
+        # When a member's email address is invalid, that member is skipped
+        # during the import.
+        self._pckdict['members'] = {
+            'anne@example.com': 0,
+            'invalid email address': b'invalid email address'
+            }
+        self._pckdict['digest_members'] = {}
+        try:
+            import_config_pck(self._mlist, self._pckdict)
+        except InvalidEmailAddressError as error:
+            self.fail(error)
+        self.assertEqual(['anne@example.com'],
+                         [a.email for a in self._mlist.members.addresses])
+
+    def test_no_email_sent(self):
+        # No welcome message is sent to newly imported members.
+        self.assertTrue(self._mlist.send_welcome_message)
+        import_config_pck(self._mlist, self._pckdict)
+        self.assertIn('anne@example.com',
+                      [a.email for a in self._mlist.members.addresses])
+        # There are no messages in any of the queues.
+        for queue, switchboard in config.switchboards.items():
+            file_count = len(switchboard.files)
+            self.assertEqual(file_count, 0,
+                             "Unexpected queue '{}' file count: {}".format(
+                                 queue, file_count))
+        self.assertTrue(self._mlist.send_welcome_message)
 
 
 

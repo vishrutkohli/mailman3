@@ -25,6 +25,7 @@ __all__ = [
 import sys
 import pickle
 
+from contextlib import ExitStack, contextmanager
 from mailman.core.i18n import _
 from mailman.database.transaction import transactional
 from mailman.interfaces.command import ICLISubCommand
@@ -32,6 +33,25 @@ from mailman.interfaces.listmanager import IListManager
 from mailman.utilities.importer import import_config_pck, Import21Error
 from zope.component import getUtility
 from zope.interface import implementer
+
+
+
+# A fake Bouncer class from Mailman 2.1, we don't use it but there are
+# instances in the .pck files.
+class Bouncer:
+    class _BounceInfo:
+        pass
+
+
+@contextmanager
+def hacked_sys_modules():
+    assert 'Mailman.Bouncer' not in sys.modules
+    sys.modules['Mailman.Bouncer'] = Bouncer
+    try:
+        yield
+    finally:
+        del sys.modules['Mailman.Bouncer']
+
 
 
 
@@ -74,10 +94,13 @@ class Import21:
         assert len(args.pickle_file) == 1, (
             'Unexpected positional arguments: %s' % args.pickle_file)
         filename = args.pickle_file[0]
-        with open(filename, 'rb') as fp:
+        with ExitStack() as resources:
+            fp = resources.enter_context(open(filename, 'rb'))
+            resources.enter_context(hacked_sys_modules())
             while True:
                 try:
-                    config_dict = pickle.load(fp)
+                    config_dict = pickle.load(
+                        fp, encoding='utf-8', errors='ignore')
                 except EOFError:
                     break
                 except pickle.UnpicklingError:
