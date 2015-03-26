@@ -36,6 +36,7 @@ from mailman.testing.helpers import call_api, configuration
 from mailman.testing.layers import RESTLayer
 from urllib.error import HTTPError
 from zope.component import getUtility
+from mailman.model.preferences import Preferences
 
 
 
@@ -210,6 +211,26 @@ class TestUsers(unittest.TestCase):
         # But at least no new users was created.
         content, response = call_api('http://localhost:9001/3.0/users')
         self.assertEqual(content['total_size'], 1)
+
+    def test_preferences_deletion_on_user_deletion(self):
+        # LP: #1418276 - deleting a user did not delete their preferences.
+        with transaction():
+            anne = getUtility(IUserManager).create_user(
+                'anne@example.com', 'Anne Person')
+        # Anne's preference is in the database.
+        preferences = config.db.store.query(Preferences).filter_by(
+            id=anne.preferences.id)
+        self.assertEqual(preferences.count(), 1)
+        # Delete the user via REST.
+        content, response = call_api(
+            'http://localhost:9001/3.0/users/anne@example.com',
+            method='DELETE')
+        self.assertEqual(response.status, 204)
+        # The user's preference has been deleted.
+        with transaction():
+            preferences = config.db.store.query(Preferences).filter_by(
+                id=anne.preferences.id)
+            self.assertEqual(preferences.count(), 0)
 
 
 
