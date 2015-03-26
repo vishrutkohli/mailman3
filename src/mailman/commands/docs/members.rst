@@ -34,21 +34,13 @@ options.  To start with, there are no members of the mailing list.
 Once the mailing list add some members, they will be displayed.
 ::
 
-    >>> from mailman.interfaces.member import DeliveryMode
-    >>> from mailman.app.membership import add_member
-    >>> from mailman.interfaces.subscriptions import RequestRecord
-
-    >>> add_member(mlist1, RequestRecord('anne@example.com', 'Anne Person',
-    ...                                  DeliveryMode.regular,
-    ...                                  mlist1.preferred_language.code))
-    <Member: Anne Person <anne@example.com>
-             on test1@example.com as MemberRole.member>
-    >>> add_member(mlist1, RequestRecord('bart@example.com', 'Bart Person',
-    ...                                  DeliveryMode.regular,
-    ...                                  mlist1.preferred_language.code))
-    <Member: Bart Person <bart@example.com>
-             on test1@example.com as MemberRole.member>
-
+    >>> from mailman.testing.helpers import subscribe
+    >>> subscribe(mlist1, 'Anne', email='anne@example.com')
+    <Member: Anne Person <anne@example.com> on test1@example.com
+             as MemberRole.member>
+    >>> subscribe(mlist1, 'Bart', email='bart@example.com')
+    <Member: Bart Person <bart@example.com> on test1@example.com
+             as MemberRole.member>
     >>> command.process(args)
     Anne Person <anne@example.com>
     Bart Person <bart@example.com>
@@ -56,12 +48,9 @@ Once the mailing list add some members, they will be displayed.
 Members are displayed in alphabetical order based on their address.
 ::
 
-    >>> add_member(mlist1, RequestRecord('anne@aaaxample.com', 'Anne Person',
-    ...                                  DeliveryMode.regular,
-    ...                                  mlist1.preferred_language.code))
-    <Member: Anne Person <anne@aaaxample.com>
-             on test1@example.com as MemberRole.member>
-
+    >>> subscribe(mlist1, 'Anne', email='anne@aaaxample.com')
+    <Member: Anne Person <anne@aaaxample.com> on test1@example.com
+             as MemberRole.member>
     >>> command.process(args)
     Anne Person <anne@aaaxample.com>
     Anne Person <anne@example.com>
@@ -97,6 +86,7 @@ Filtering on delivery mode
 
 You can limit output to just the regular non-digest members...
 
+    >>> from mailman.interfaces.member import DeliveryMode
     >>> args.regular = True
     >>> member = mlist1.members.get_member('anne@example.com')
     >>> member.preferences.delivery_mode = DeliveryMode.plaintext_digests
@@ -147,23 +137,11 @@ status is enabled...
     >>> member = mlist1.members.get_member('bart@example.com')
     >>> member.preferences.delivery_status = DeliveryStatus.by_user
 
-    >>> member = add_member(
-    ...     mlist1,
-    ...     RequestRecord('cris@example.com', 'Cris Person',
-    ...                   DeliveryMode.regular,
-    ...                   mlist1.preferred_language.code))
+    >>> member = subscribe(mlist1, 'Cris', email='cris@example.com')
     >>> member.preferences.delivery_status = DeliveryStatus.unknown
-    >>> member = add_member(
-    ...     mlist1,
-    ...     RequestRecord('dave@example.com', 'Dave Person',
-    ...                   DeliveryMode.regular,
-    ...                   mlist1.preferred_language.code))
+    >>> member = subscribe(mlist1, 'Dave', email='dave@example.com')
     >>> member.preferences.delivery_status = DeliveryStatus.enabled
-    >>> member = add_member(
-    ...     mlist1,
-    ...     RequestRecord('elly@example.com', 'Elly Person',
-    ...                   DeliveryMode.regular,
-    ...                   mlist1.preferred_language.code))
+    >>> member = subscribe(mlist1, 'Elle', email='elle@example.com')
     >>> member.preferences.delivery_status = DeliveryStatus.by_bounces
 
     >>> args.nomail = 'enabled'
@@ -187,7 +165,7 @@ status is enabled...
 
     >>> args.nomail = 'bybounces'
     >>> command.process(args)
-    Elly Person <elly@example.com>
+    Elle Person <elle@example.com>
 
 ...or for unknown (legacy) reasons.
 
@@ -203,7 +181,7 @@ You can also display all members who have delivery disabled for any reason.
     Anne Person <anne@aaaxample.com>
     Bart Person <bart@example.com>
     Cris Person <cris@example.com>
-    Elly Person <elly@example.com>
+    Elle Person <elle@example.com>
 
     # Reset for following tests.
     >>> args.nomail = None
