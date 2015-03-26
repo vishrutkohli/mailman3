@@ -249,10 +249,9 @@ Viewing unsubscription requests
 
 Bart tries to leave a mailing list, but he may not be allowed to.
 
-    >>> from mailman.app.membership import add_member
+    >>> from mailman.testing.helpers import subscribe
     >>> from mailman.app.moderator import hold_unsubscription
-    >>> bart = add_member(ant, RequestRecord('bart@example.com', 'Bart Person',
-    ...                                      DeliveryMode.regular, 'en'))
+    >>> bart = subscribe(ant, 'Bart', email='bart@example.com')
     >>> unsub_req_id = hold_unsubscription(ant, 'bart@example.com')
     >>> transaction.commit()
 
