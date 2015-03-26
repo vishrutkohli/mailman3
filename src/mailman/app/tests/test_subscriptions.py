@@ -93,9 +93,12 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Now create a new instance and restore
         workflow = SubscriptionWorkflow(
             self._mlist, anne,
-            pre_verified=True, pre_confirmed=False, pre_approved=False)
+            pre_verified=None, pre_confirmed=None, pre_approved=None)
         workflow.restore_state()
         self.assertEqual(next_step, workflow._next[0])
+        self.assertEqual(workflow.pre_verified, True)
+        self.assertEqual(workflow.pre_confirmed, False)
+        self.assertEqual(workflow.pre_approved, False)
 
     def test_preverified_address_joins_open_list(self):
         # The mailing list has an open subscription policy, so the subscriber

@@ -24,6 +24,7 @@ __all__ = [
     ]
 
 
+import json
 from collections import deque
 from operator import attrgetter
 from sqlalchemy import and_, or_
@@ -75,7 +76,10 @@ class SubscriptionWorkflow:
         self.pre_verified = pre_verified
         self.pre_confirmed = pre_confirmed
         self.pre_approved = pre_approved
+        # State saving
         self._save_key = "{}:{}".format(self.mlist.list_id, self.address.email)
+        self._save_attributes = ("pre_verified", "pre_confirmed",
+                                 "pre_approved")
         # Prepare the state machine.
         self._next = deque()
         self._next.append("verification_check")
@@ -98,18 +102,24 @@ class SubscriptionWorkflow:
             raise
 
     def save_state(self):
-        manager = getUtility(IWorkflowStateManager)
+        state_manager = getUtility(IWorkflowStateManager)
+        data = {attr: getattr(self, attr) for attr in self._save_attributes}
         # Note: only the next step is saved, not the whole stack. Not an issue
         # since there's never more than a single step in the queue anyway.
-        # Also: we don't save & restore the self.pre_* variables, but we could,
-        # using the data argument.
-        manager.save(self.__class__.__name__, self._save_key, self._next[0])
+        state_manager.save(
+            self.__class__.__name__,
+            self._save_key,
+            self._next[0],
+            json.dumps(data))
 
     def restore_state(self):
-        manager = getUtility(IWorkflowStateManager)
-        state = manager.restore(self.__class__.__name__, self._save_key)
+        state_manager = getUtility(IWorkflowStateManager)
+        state = state_manager.restore(self.__class__.__name__, self._save_key)
         if state is not None:
             self._next[0] = state.step
+            if state.data is not None:
+                for attr, value in json.loads(state.data).items():
+                    setattr(self, attr, value)
 
     def _maybe_set_preferred_address(self):
         if self.user is None:
