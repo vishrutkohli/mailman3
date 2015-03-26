@@ -89,9 +89,13 @@ Accepted messages
 We have a message that is going to be sent to the mailing list.  Once Anne is
 a member of the mailing list, this message is so perfectly fine for posting
 that it will be accepted and forward to the pipeline queue.
+::
 
     >>> from mailman.testing.helpers import subscribe
     >>> subscribe(mlist, 'Anne')
+    <Member: Anne Person <aperson@example.com> on test@example.com
+             as MemberRole.member>
+
     >>> msg = message_from_string("""\
     ... From: aperson@example.com
     ... To: test@example.com

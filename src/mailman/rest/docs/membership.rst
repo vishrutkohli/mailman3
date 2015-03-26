@@ -39,6 +39,9 @@ the REST interface.
 
     >>> from mailman.testing.helpers import subscribe
     >>> subscribe(bee, 'Bart')
+    <Member: Bart Person <bperson@example.com> on bee@example.com
+             as MemberRole.member>
+
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
         address: http://localhost:9001/3.0/addresses/bperson@example.com
@@ -69,8 +72,12 @@ Bart's specific membership can be accessed directly:
 
 When Cris also joins the mailing list, her subscription is also available via
 the REST interface.
+::
 
     >>> subscribe(bee, 'Cris')
+    <Member: Cris Person <cperson@example.com> on bee@example.com
+             as MemberRole.member>
+
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
         address: http://localhost:9001/3.0/addresses/bperson@example.com
@@ -101,6 +108,8 @@ subscribes, she is returned first.
 ::
 
     >>> subscribe(bee, 'Anna')
+    <Member: Anna Person <aperson@example.com> on bee@example.com
+             as MemberRole.member>
 
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
@@ -143,7 +152,11 @@ address.  Anna and Cris subscribe to this new mailing list.
 
     >>> ant = create_list('ant@example.com')
     >>> subscribe(ant, 'Anna')
+    <Member: Anna Person <aperson@example.com> on ant@example.com
+             as MemberRole.member>
     >>> subscribe(ant, 'Cris')
+    <Member: Cris Person <cperson@example.com> on ant@example.com
+             as MemberRole.member>
 
 User ids are different than member ids.
 

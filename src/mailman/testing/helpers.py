@@ -435,10 +435,14 @@ class chdir:
 
 
 
-def subscribe(mlist, first_name, role=MemberRole.member):
-    """Helper for subscribing a sample person to a mailing list."""
+def subscribe(mlist, first_name, role=MemberRole.member, email=None):
+    """Helper for subscribing a sample person to a mailing list.
+
+    Returns the newly created member object.
+    """
     user_manager = getUtility(IUserManager)
-    email = '{0}person@example.com'.format(first_name[0].lower())
+    email = ('{0}person@example.com'.format(first_name[0].lower())
+             if email is None else email)
     full_name = '{0} Person'.format(first_name)
     with transaction():
         person = user_manager.get_user(email)
@@ -446,13 +450,14 @@ def subscribe(mlist, first_name, role=MemberRole.member):
             address = user_manager.get_address(email)
             if address is None:
                 person = user_manager.create_user(email, full_name)
-                preferred_address = list(person.addresses)[0]
-                mlist.subscribe(preferred_address, role)
+                subscription_address = list(person.addresses)[0]
             else:
-                mlist.subscribe(address, role)
+                subscription_address = address
         else:
-            preferred_address = list(person.addresses)[0]
-            mlist.subscribe(preferred_address, role)
+            subscription_address = list(person.addresses)[0]
+        mlist.subscribe(subscription_address, role)
+        roster = mlist.get_roster(role)
+        return roster.get_member(email)
 
 
 

@@ -24,21 +24,19 @@ __all__ = [
 
 
 from operator import attrgetter
-from passlib.utils import generate_password as generate
 from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
 from zope.interface import implementer
 
 from mailman.app.membership import add_member, delete_member
-from mailman.config import config
 from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.listmanager import (
     IListManager, ListDeletingEvent, NoSuchListError)
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.subscriptions import (
-    ISubscriptionService, MissingUserError)
+    ISubscriptionService, MissingUserError, RequestRecord)
 from mailman.interfaces.usermanager import IUserManager
 from mailman.model.member import Member
 
@@ -148,16 +146,11 @@ class SubscriptionService:
         if isinstance(subscriber, str):
             if display_name is None:
                 display_name, at, domain = subscriber.partition('@')
-            # Because we want to keep the REST API simple, there is no
-            # password or language given to us.  We'll use the system's
-            # default language for the user's default language.  We'll set the
-            # password to a system default.  This will have to get reset since
-            # it can't be retrieved.  Note that none of these are used unless
-            # the address is completely new to us.
-            password = generate(int(config.passwords.password_length))
-            return add_member(mlist, subscriber, display_name, password,
-                              delivery_mode,
-                              system_preferences.preferred_language, role)
+            return add_member(
+                mlist,
+                RequestRecord(subscriber, display_name, delivery_mode,
+                              system_preferences.preferred_language),
+                role)
         else:
             # We have to assume it's a UUID.
             assert isinstance(subscriber, UUID), 'Not a UUID'

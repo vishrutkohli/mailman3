@@ -46,6 +46,27 @@ class UserManager:
             user.link(address)
         return user
 
+    def make_user(self, email, display_name=None):
+        """See `IUserManager`."""
+        # See if there's already a user linked with the given address.
+        user = self.get_user(email)
+        if user is None:
+            # A user linked to this address does not yet exist.  Is the
+            # address itself known but just not linked to a user?
+            address = self.get_address(email)
+            if address is None:
+                # Nope, we don't even know about this address, so create both
+                # the user and address now.
+                return self.create_user(email, display_name)
+            # The address exists, but it's not yet linked to a user.  Create
+            # the empty user object and link them together.
+            user = self.create_user()
+            user.display_name = (
+                display_name if display_name else address.display_name)
+            user.link(address)
+            return user
+        return user
+
     @dbconnection
     def delete_user(self, store, user):
         """See `IUserManager`."""

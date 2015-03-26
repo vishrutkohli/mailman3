@@ -19,8 +19,11 @@
 
 __all__ = [
     'ISubscriptionService',
+    'RequestRecord',
     ]
 
+
+from collections import namedtuple
 
 from mailman.interfaces.errors import MailmanError
 from mailman.interfaces.member import DeliveryMode, MemberRole
@@ -37,6 +40,19 @@ class MissingUserError(MailmanError):
 
     def __str__(self):
         return self.user_id
+
+
+
+_RequestRecord = namedtuple(
+    'RequestRecord',
+    'email display_name delivery_mode, language')
+def RequestRecord(email, display_name='',
+                  delivery_mode=DeliveryMode.regular,
+                  language=None):
+    if language is None:
+        from mailman.core.constants import system_preferences
+        language = system_preferences.preferred_language
+    return _RequestRecord(email, display_name, delivery_mode, language)
 
 
 

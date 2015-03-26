@@ -302,6 +302,7 @@ This message will end up in the `pipeline` queue.
 
     >>> from mailman.testing.helpers import subscribe
     >>> subscribe(mlist, 'Anne')
+    <Member: aperson@example.com on test@example.com as MemberRole.member>
 
     >>> with event_subscribers(print_msgid):
     ...     process(mlist, msg, {})

@@ -31,13 +31,13 @@ Posts by list members are moderated if the member's moderation action is not
 deferred.  The default setting for the moderation action of new members is
 determined by the mailing list's settings.  By default, a mailing list is not
 set to moderate new member postings.
+::
 
-    >>> from mailman.app.membership import add_member
-    >>> from mailman.interfaces.member import DeliveryMode
-    >>> member = add_member(mlist, 'anne@example.com', 'Anne', 'aaa',
-    ...                     DeliveryMode.regular, 'en')
+    >>> from mailman.testing.helpers import subscribe
+    >>> member = subscribe(mlist, 'Anne', email='anne@example.com')
     >>> member
-    <Member: Anne <anne@example.com> on test@example.com as MemberRole.member>
+    <Member: Anne Person <anne@example.com> on test@example.com
+             as MemberRole.member>
     >>> print(member.moderation_action)
     Action.defer
 

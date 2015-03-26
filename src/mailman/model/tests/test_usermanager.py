@@ -33,18 +33,50 @@ from zope.component import getUtility
 class TestUserManager(unittest.TestCase):
     layer = ConfigLayer
 
+    def setUp(self):
+        self._usermanager = getUtility(IUserManager)
+
     def test_create_user_with_existing_address(self):
         # LP: #1418280.  If a user is created when an email address is passed
         # in, and that address already exists, the user object should not get
         # created.
-        manager = getUtility(IUserManager)
         # Create the address we're going to try to duplicate.
-        manager.create_address('anne@example.com')
+        self._usermanager.create_address('anne@example.com')
         # There are no users.
-        self.assertEqual(len(list(manager.users)), 0)
+        self.assertEqual(len(list(self._usermanager.users)), 0)
         # Now create the user with an already existing address.
         with self.assertRaises(ExistingAddressError) as cm:
-            manager.create_user('anne@example.com')
+            self._usermanager.create_user('anne@example.com')
         self.assertEqual(cm.exception.address, 'anne@example.com')
         # There are still no users.
-        self.assertEqual(len(list(manager.users)), 0)
+        self.assertEqual(len(list(self._usermanager.users)), 0)
+
+    def test_make_new_user(self):
+        # Neither the user nor address objects exist yet.
+        self.assertIsNone(self._usermanager.get_user('anne@example.com'))
+        self.assertIsNone(self._usermanager.get_address('anne@example.com'))
+        user = self._usermanager.make_user('anne@example.com', 'Anne Person')
+        self.assertIn('anne@example.com',
+                      [address.email for address in user.addresses])
+        addresses = list(user.addresses)
+        self.assertEqual(len(addresses), 1)
+        address = addresses[0]
+        self.assertEqual(address.email, 'anne@example.com')
+        self.assertEqual(address.display_name, 'Anne Person')
+        self.assertEqual(address.user.display_name, 'Anne Person')
+        self.assertIs(address.user, user)
+
+    def test_make_linked_user(self):
+        # The address exists, but there is no linked user.
+        self.assertIsNone(self._usermanager.get_user('anne@example.com'))
+        address = self._usermanager.create_address('anne@example.com')
+        user = self._usermanager.make_user('anne@example.com', 'Anne Person')
+        self.assertIsNotNone(address.user)
+        self.assertIs(user, address.user)
+        self.assertIn(address, user.addresses)
+        self.assertEqual(user.display_name, 'Anne Person')
+
+    def test_make_user_exists(self):
+        user = self._usermanager.create_user('anne@example.com', 'Anne Person')
+        other_user = self._usermanager.make_user('anne@example.com')
+        self.assertIs(user, other_user)
