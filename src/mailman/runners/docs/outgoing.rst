@@ -15,22 +15,16 @@ move messages to the 'retry queue' for handling delivery failures.
 
     >>> mlist = create_list('test@example.com')
 
-    >>> from mailman.app.membership import add_member
-    >>> from mailman.interfaces.member import DeliveryMode
-    >>> from mailman.interfaces.subscriptions import RequestRecord
-
-    >>> add_member(mlist, RequestRecord('aperson@example.com', 'Anne Person',
-    ...                                 DeliveryMode.regular, 'en'))
+    >>> from mailman.testing.helpers import subscribe
+    >>> subscribe(mlist, 'Anne')
     <Member: Anne Person <aperson@example.com>
              on test@example.com as MemberRole.member>
 
-    >>> add_member(mlist, RequestRecord('bperson@example.com', 'Bart Person',
-    ...                                 DeliveryMode.regular, 'en'))
+    >>> subscribe(mlist, 'Bart')
     <Member: Bart Person <bperson@example.com>
              on test@example.com as MemberRole.member>
 
-    >>> add_member(mlist, RequestRecord('cperson@example.com', 'Cris Person',
-    ...                                 DeliveryMode.regular, 'en'))
+    >>> subscribe(mlist, 'Cris')
     <Member: Cris Person <cperson@example.com>
              on test@example.com as MemberRole.member>
 
