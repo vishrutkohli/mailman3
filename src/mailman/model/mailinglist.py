@@ -455,6 +455,8 @@ class MailingList(Model):
             return self.owners
         elif role is MemberRole.moderator:
             return self.moderators
+        elif role is MemberRole.nonmember:
+            return self.nonmembers
         else:
             raise TypeError('Undefined MemberRole: {}'.format(role))
 
