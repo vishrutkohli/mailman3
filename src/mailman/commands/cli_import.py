@@ -45,6 +45,8 @@ class Bouncer:
 
 @contextmanager
 def hacked_sys_modules():
+    #yield
+    #return
     assert 'Mailman.Bouncer' not in sys.modules
     sys.modules['Mailman.Bouncer'] = Bouncer
     try:
