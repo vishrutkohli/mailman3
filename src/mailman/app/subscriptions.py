@@ -59,30 +59,16 @@ def _membership_sort_key(member):
     return (member.list_id, member.address.email, member.role.value)
 
 
-class SubscriptionWorkflow:
-    """Workflow of a subscription request."""
+class Workflow:
+    """Generic workflow."""
+    # TODO: move this class to a more generic module
 
-    def __init__(self, mlist, subscriber,
-                 pre_verified, pre_confirmed, pre_approved):
-        self.mlist = mlist
-        # The subscriber must be either an IUser or IAddress.
-        if IAddress.providedBy(subscriber):
-            self.address = subscriber
-            self.user = self.address.user
-        elif IUser.providedBy(subscriber):
-            self.address = subscriber.preferred_address
-            self.user = subscriber
-        self.subscriber = subscriber
-        self.pre_verified = pre_verified
-        self.pre_confirmed = pre_confirmed
-        self.pre_approved = pre_approved
-        # State saving
-        self._save_key = "{}:{}".format(self.mlist.list_id, self.address.email)
-        self._save_attributes = ("pre_verified", "pre_confirmed",
-                                 "pre_approved")
-        # Prepare the state machine.
-        self._next = deque()
-        self._next.append("verification_check")
+    _save_key = None
+    _save_attributes = []
+    _initial_state = []
+
+    def __init__(self):
+        self._next = deque(self._initial_state)
 
     def __iter__(self):
         return self
@@ -106,6 +92,9 @@ class SubscriptionWorkflow:
         data = {attr: getattr(self, attr) for attr in self._save_attributes}
         # Note: only the next step is saved, not the whole stack. Not an issue
         # since there's never more than a single step in the queue anyway.
+        # If we want to support more than a single step in the queue AND want
+        # to support state saving/restoring, change this method and
+        # restore_state().
         state_manager.save(
             self.__class__.__name__,
             self._save_key,
@@ -120,6 +109,31 @@ class SubscriptionWorkflow:
             if state.data is not None:
                 for attr, value in json.loads(state.data).items():
                     setattr(self, attr, value)
+
+
+class SubscriptionWorkflow(Workflow):
+    """Workflow of a subscription request."""
+
+    _save_attributes = ["pre_verified", "pre_confirmed", "pre_approved"]
+    _initial_state = ["verification_check"]
+
+    def __init__(self, mlist, subscriber,
+                 pre_verified, pre_confirmed, pre_approved):
+        super(SubscriptionWorkflow, self).__init__()
+        self.mlist = mlist
+        # The subscriber must be either an IUser or IAddress.
+        if IAddress.providedBy(subscriber):
+            self.address = subscriber
+            self.user = self.address.user
+        elif IUser.providedBy(subscriber):
+            self.address = subscriber.preferred_address
+            self.user = subscriber
+        self.subscriber = subscriber
+        self.pre_verified = pre_verified
+        self.pre_confirmed = pre_confirmed
+        self.pre_approved = pre_approved
+        # State saving
+        self._save_key = "{}:{}".format(self.mlist.list_id, self.address.email)
 
     def _maybe_set_preferred_address(self):
         if self.user is None:
