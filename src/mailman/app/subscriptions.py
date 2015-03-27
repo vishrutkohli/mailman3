@@ -93,19 +93,30 @@ class Workflow:
         # Note: only the next step is saved, not the whole stack. Not an issue
         # since there's never more than a single step in the queue anyway.
         # If we want to support more than a single step in the queue AND want
-        # to support state saving/restoring, change this method and
-        # restore_state().
+        # to support state saving/restoring, change this method and the
+        # restore_state() method.
+        if len(self._next) == 0:
+            step = None
+        elif len(self._next) == 1:
+            step = self._next[0]
+        else:
+            raise AssertionError(
+                "Can't save a workflow state with more than one step "
+                "in the queue")
         state_manager.save(
             self.__class__.__name__,
             self._save_key,
-            self._next[0],
+            step,
             json.dumps(data))
 
     def restore_state(self):
         state_manager = getUtility(IWorkflowStateManager)
         state = state_manager.restore(self.__class__.__name__, self._save_key)
         if state is not None:
-            self._next[0] = state.step
+            if not state.step:
+                self._next.clear()
+            else:
+                self._next[0] = state.step
             if state.data is not None:
                 for attr, value in json.loads(state.data).items():
                     setattr(self, attr, value)

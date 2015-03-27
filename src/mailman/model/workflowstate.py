@@ -40,7 +40,7 @@ class WorkflowState(Model):
 
     name = Column(Unicode, primary_key=True)
     key = Column(Unicode, primary_key=True)
-    step = Column(Unicode, nullable=False)
+    step = Column(Unicode)
     data = Column(Unicode)
 
 
@@ -50,7 +50,7 @@ class WorkflowStateManager:
     """See `IWorkflowStateManager`."""
 
     @dbconnection
-    def save(self, store, name, key, step, data=None):
+    def save(self, store, name, key, step=None, data=None):
         """See `IWorkflowStateManager`."""
         state = store.query(WorkflowState).get((name, key))
         if state is None:
