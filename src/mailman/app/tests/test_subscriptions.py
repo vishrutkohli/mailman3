@@ -166,5 +166,24 @@ class TestSubscriptionWorkflow(unittest.TestCase):
             request_db.delete_request(requests[0].id)
         self._mlist.subscription_policy = SubscriptionPolicy.moderate
         _do_check()
-        self._mlist.subscription_policy = SubscriptionPolicy.confirm_then_moderate
+        self._mlist.subscription_policy = \
+            SubscriptionPolicy.confirm_then_moderate
         _do_check()
+
+    def test_confirmation_required(self):
+        # Tests subscriptions where user confirmation is required
+        self._mlist.subscription_policy = \
+            SubscriptionPolicy.confirm_then_moderate
+        anne = self._user_manager.create_address(self._anne, 'Anne Person')
+        self.assertIsNone(self._mlist.subscribers.get_member(self._anne))
+        workflow = SubscriptionWorkflow(
+            self._mlist, anne,
+            pre_verified=True, pre_confirmed=False, pre_approved=True)
+        # Run the state machine to the end.
+        list(workflow)
+        # A confirmation request must be pending
+        # TODO: test it
+        # Now restore and re-run the state machine as if we got the confirmation
+        workflow.restore_state()
+        list(workflow)
+        self.assertIsNotNone(self._mlist.subscribers.get_member(self._anne))

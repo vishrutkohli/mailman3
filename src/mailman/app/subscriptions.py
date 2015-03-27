@@ -202,7 +202,7 @@ class SubscriptionWorkflow(Workflow):
 
     def _step_moderation_check(self):
         # Does the moderator need to approve the subscription request?
-        if self.mlist.subscription_policy in (
+        if not self.pre_approved and self.mlist.subscription_policy in (
                 SubscriptionPolicy.moderate,
                 SubscriptionPolicy.confirm_then_moderate):
             self._next.append("get_moderator_approval")
