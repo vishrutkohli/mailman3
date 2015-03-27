@@ -63,7 +63,7 @@ class Workflow:
     """Generic workflow."""
     # TODO: move this class to a more generic module
 
-    _save_key = None
+    _save_key = ""
     _save_attributes = []
     _initial_state = []
 
@@ -113,10 +113,9 @@ class Workflow:
         state_manager = getUtility(IWorkflowStateManager)
         state = state_manager.restore(self.__class__.__name__, self._save_key)
         if state is not None:
-            if not state.step:
-                self._next.clear()
-            else:
-                self._next[0] = state.step
+            self._next.clear()
+            if state.step:
+                self._next.append(state.step)
             if state.data is not None:
                 for attr, value in json.loads(state.data).items():
                     setattr(self, attr, value)

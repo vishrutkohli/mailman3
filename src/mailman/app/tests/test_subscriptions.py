@@ -27,7 +27,7 @@ import uuid
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.app.subscriptions import SubscriptionWorkflow
+from mailman.app.subscriptions import Workflow, SubscriptionWorkflow
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
 from mailman.interfaces.requests import IListRequests, RequestType
@@ -37,6 +37,7 @@ from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import now
+from mock import Mock
 from zope.component import getUtility
 
 
@@ -74,6 +75,48 @@ class TestJoin(unittest.TestCase):
 
 
 
+class TestWorkflow(unittest.TestCase):
+    layer = ConfigLayer
+
+    def setUp(self):
+        self.workflow = Workflow()
+        self.workflow._test_attribute = "test-value"
+        self.workflow._step_test = Mock()
+        self.workflow._next.append("test")
+
+    def test_iter_steps(self):
+        next(self.workflow)
+        self.assertTrue(self.workflow._step_test.called)
+        self.assertEqual(len(self.workflow._next), 0)
+        try:
+            next(self.workflow)
+        except StopIteration:
+            pass
+        else:
+            self.fail()
+
+    def test_save_restore(self):
+        self.workflow.save_state()
+        # Now create a new instance and restore
+        new_workflow = Workflow()
+        self.assertEqual(len(new_workflow._next), 0)
+        self.assertFalse(hasattr(new_workflow, "_test_attribute"))
+        new_workflow.restore_state()
+        self.assertEqual(len(new_workflow._next), 1)
+        self.assertEqual(new_workflow._next[0], "test")
+        self.assertEqual(self.workflow._test_attribute, "test-value")
+
+    def test_save_restore_no_next_step(self):
+        self.workflow._next.clear()
+        self.workflow.save_state()
+        # Now create a new instance and restore
+        new_workflow = Workflow()
+        new_workflow._next.append("test")
+        new_workflow.restore_state()
+        self.assertEqual(len(new_workflow._next), 0)
+
+
+
 class TestSubscriptionWorkflow(unittest.TestCase):
     layer = ConfigLayer
 
@@ -81,39 +124,6 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self._mlist = create_list('test@example.com')
         self._anne = 'anne@example.com'
         self._user_manager = getUtility(IUserManager)
-
-    def test_save_restore(self):
-        anne = self._user_manager.create_address(self._anne, 'Anne Person')
-        workflow = SubscriptionWorkflow(
-            self._mlist, anne,
-            pre_verified=True, pre_confirmed=False, pre_approved=False)
-        next(workflow)
-        next_step = workflow._next[0]
-        workflow.save_state()
-        # Now create a new instance and restore
-        workflow = SubscriptionWorkflow(
-            self._mlist, anne,
-            pre_verified=None, pre_confirmed=None, pre_approved=None)
-        workflow.restore_state()
-        self.assertEqual(next_step, workflow._next[0])
-        self.assertEqual(workflow.pre_verified, True)
-        self.assertEqual(workflow.pre_confirmed, False)
-        self.assertEqual(workflow.pre_approved, False)
-
-    def test_save_restore_no_next_step(self):
-        anne = self._user_manager.create_address(self._anne, 'Anne Person')
-        workflow = SubscriptionWorkflow(
-            self._mlist, anne,
-            pre_verified=True, pre_confirmed=False, pre_approved=False)
-        workflow._next.pop()
-        self.assertEqual(len(workflow._next), 0)
-        workflow.save_state()
-        # Now create a new instance and restore
-        workflow = SubscriptionWorkflow(
-            self._mlist, anne,
-            pre_verified=None, pre_confirmed=None, pre_approved=None)
-        workflow.restore_state()
-        self.assertEqual(len(workflow._next), 0)
 
     def test_preverified_address_joins_open_list(self):
         # The mailing list has an open subscription policy, so the subscriber
