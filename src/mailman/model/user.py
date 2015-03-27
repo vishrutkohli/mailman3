@@ -34,7 +34,7 @@ from mailman.model.preferences import Preferences
 from mailman.model.roster import Memberships
 from mailman.utilities.datetime import factory as date_factory
 from mailman.utilities.uid import UniqueIDFactory
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode, Boolean
 from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
@@ -55,6 +55,7 @@ class User(Model):
     _password = Column('password', Unicode)
     _user_id = Column(UUID, index=True)
     _created_on = Column(DateTime)
+    is_server_owner = Column(Boolean, default=False)
 
     addresses = relationship(
         'Address', backref='user',
@@ -176,3 +177,11 @@ class User(Model):
     @property
     def memberships(self):
         return Memberships(self)
+
+
+class Owner(Model):
+    """Doomain to owners(user) association class"""
+
+    __tablename__ = 'owner'
+    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
+    domain_id = Column(Integer, ForeignKey('domain.id'), primary_key=True)

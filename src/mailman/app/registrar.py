@@ -161,8 +161,6 @@ def handle_ConfirmationNeededEvent(event):
     # For i18n interpolation.
     confirm_url = mlist.domain.confirm_url(event.token)
     email_address = event.pendable['email']
-    domain_name = mlist.domain.mail_host
-    contact_address = mlist.domain.contact_address
     # Send a verification email to the address.
     template = getUtility(ITemplateLoader).get(
         'mailman:///{0}/{1}/confirm.txt'.format(

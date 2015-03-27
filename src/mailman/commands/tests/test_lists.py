@@ -48,7 +48,7 @@ class TestLists(unittest.TestCase):
         # LP: #1166911 - non-matching lists were returned.
         getUtility(IDomainManager).add(
             'example.net', 'An example domain.',
-            'http://lists.example.net', 'postmaster@example.net')
+            'http://lists.example.net')
         create_list('test1@example.com')
         create_list('test2@example.com')
         # Only this one should show up.
