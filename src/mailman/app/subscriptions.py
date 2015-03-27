@@ -194,6 +194,13 @@ class SubscriptionWorkflow(Workflow):
         else:
             self._next.append("send_confirmation")
 
+    def _step_send_confirmation(self):
+        self._next.append("moderation_check")
+        self.save_state()
+        self._next.clear() # stop iteration until we get confirmation
+        # XXX: create the Pendable, send the ConfirmationNeededEvent
+        # (see Registrar.register)
+
     def _step_moderation_check(self):
         # Does the moderator need to approve the subscription request?
         if self.mlist.subscription_policy in (
