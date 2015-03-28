@@ -290,9 +290,9 @@ confirm method will just return False.
     >>> registrar.confirm(bytes(b'no token'))
     False
 
-Likewise, if you try to confirm, through the `IUserRegistrar` interface, a
-token that doesn't match a registration event, you will get ``None``.
-However, the pending event matched with that token will still be removed.
+Likewise, if you try to confirm, through the `IRegistrar` interface, a token
+that doesn't match a registration event, you will get ``None``.  However, the
+pending event matched with that token will still be removed.
 ::
 
     >>> from mailman.interfaces.pending import IPendable

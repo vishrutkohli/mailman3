@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Implementation of the IUserRegistrar interface."""
+"""Implementation of the IRegistrar interface."""
 
 __all__ = [
     'Registrar',
@@ -55,7 +55,7 @@ class Registrar:
     """Handle registrations and confirmations for subscriptions."""
 
     def register(self, mlist, email, display_name=None, delivery_mode=None):
-        """See `IUserRegistrar`."""
+        """See `IRegistrar`."""
         if delivery_mode is None:
             delivery_mode = DeliveryMode.regular
         # First, do validation on the email address.  If the address is
@@ -76,7 +76,7 @@ class Registrar:
         return token
 
     def confirm(self, token):
-        """See `IUserRegistrar`."""
+        """See `IRegistrar`."""
         # For convenience
         pendable = getUtility(IPendings).confirm(token)
         if pendable is None:
