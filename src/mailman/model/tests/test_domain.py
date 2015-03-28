@@ -26,9 +26,11 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
 from mailman.interfaces.domain import (
     DomainCreatedEvent, DomainCreatingEvent, DomainDeletedEvent,
-    DomainDeletingEvent, IDomainManager)
+    DomainDeletingEvent, IDomainManager, BadDomainSpecificationError)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.testing.helpers import event_subscribers
 from mailman.testing.layers import ConfigLayer
@@ -78,6 +80,32 @@ class TestDomainManager(unittest.TestCase):
         # Trying to delete a missing domain gives you a KeyError.
         self.assertRaises(KeyError, self._manager.remove, 'doesnotexist.com')
 
+    def test_domain_create_with_owner(self):
+        user = getUtility(IUserManager).create_user('someuser@somedomain.org')
+        config.db.commit()
+        domain = self._manager.add('example.org', owner_id=user.id)
+        self.assertEqual(len(domain.owners), 1)
+        self.assertEqual(domain.owners[0].id, user.id)
+
+    def test_domain_create_with_non_existent_owner(self):
+        with self.assertRaises(BadDomainSpecificationError):
+            self._manager.add('testdomain.org', owner_id=100)
+
+    def test_add_domain_owner(self):
+        user = getUtility(IUserManager).create_user('someuser@somedomain.org')
+        config.db.commit()
+        domain = self._manager.add('example.org')
+        domain.add_owner(user)
+        self.assertEqual(len(domain.owners), 1)
+        self.assertEqual(domain.owners[0].id, user.id)
+
+    def test_remove_domain_owner(self):
+        user = getUtility(IUserManager).create_user('someuser@somedomain.org')
+        config.db.commit()
+        domain = self._manager.add('example.org', owner_id=user.id)
+        domain.remove_owner(user)
+        self.assertEqual(len(domain.owners), 0)
+
 
 
 class TestDomainLifecycleEvents(unittest.TestCase):
@@ -110,3 +138,7 @@ class TestDomainLifecycleEvents(unittest.TestCase):
         self.assertEqual(listmanager.get('dog@example.org'), None)
         self.assertEqual(listmanager.get('ewe@example.com'), ewe)
         self.assertEqual(listmanager.get('fly@example.com'), fly)
+
+    def test_owners_are_deleted_when_domain_is(self):
+        #TODO: Complete this
+        pass

@@ -29,7 +29,7 @@ from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
 from mailman.model.mailinglist import MailingList
-from mailman.model.user import User
+from mailman.model.user import User, Owner
 from urllib.parse import urljoin, urlparse
 from sqlalchemy import Column, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
@@ -105,14 +105,20 @@ class Domain(Model):
     def __repr__(self):
         """repr(a_domain)"""
         if self.description is None:
-            return ('<Domain {0.mail_host}, base_url: {0.base_url}').format(self)
+            return ('<Domain {0.mail_host}, base_url: {0.base_url}>').format(self)
         else:
             return ('<Domain {0.mail_host}, {0.description}, '
-                    'base_url: {0.base_url}, ').format(self)
+                    'base_url: {0.base_url}>').format(self)
 
     def add_owner(self, owner):
-        """ Add an owner to a domain"""
+        """ Add a domain owner"""
         self.owners.append(owner)
+
+    @dbconnection
+    def remove_owner(self, store, owner):
+        """ Remove a domain owner"""
+        self.owners.remove(owner)
+
 
 @implementer(IDomainManager)
 class DomainManager:
@@ -137,6 +143,7 @@ class DomainManager:
             if owner is None:
                 raise BadDomainSpecificationError(
                     'Owner of this domain does not exist')
+
         notify(DomainCreatingEvent(mail_host))
         domain = Domain(mail_host, description, base_url, owner)
         store.add(domain)

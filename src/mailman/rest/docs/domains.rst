@@ -29,14 +29,12 @@ Once a domain is added, it is accessible through the API.
     >>> domain_manager.add(
     ...     'example.com', 'An example domain', 'http://lists.example.com')
     <Domain example.com, An example domain,
-            base_url: http://lists.example.com,
-            contact_address: postmaster@example.com>
+            base_url: http://lists.example.com>
     >>> transaction.commit()
 
     >>> dump_json('http://localhost:9001/3.0/domains')
     entry 0:
         base_url: http://lists.example.com
-        contact_address: postmaster@example.com
         description: An example domain
         http_etag: "..."
         mail_host: example.com
@@ -51,24 +49,19 @@ At the top level, all domains are returned as separate entries.
 
     >>> domain_manager.add(
     ...     'example.org',
-    ...     base_url='http://mail.example.org',
-    ...     contact_address='listmaster@example.org')
-    <Domain example.org, base_url: http://mail.example.org,
-            contact_address: listmaster@example.org>
+    ...     base_url='http://mail.example.org')
+    <Domain example.org, base_url: http://mail.example.org>
     >>> domain_manager.add(
     ...     'lists.example.net',
     ...     'Porkmasters',
-    ...     'http://example.net',
-    ...     'porkmaster@example.net')
+    ...     'http://example.net')
     <Domain lists.example.net, Porkmasters,
-            base_url: http://example.net,
-            contact_address: porkmaster@example.net>
+            base_url: http://example.net>
     >>> transaction.commit()
 
     >>> dump_json('http://localhost:9001/3.0/domains')
     entry 0:
         base_url: http://lists.example.com
-        contact_address: postmaster@example.com
         description: An example domain
         http_etag: "..."
         mail_host: example.com
@@ -76,7 +69,6 @@ At the top level, all domains are returned as separate entries.
         url_host: lists.example.com
     entry 1:
         base_url: http://mail.example.org
-        contact_address: listmaster@example.org
         description: None
         http_etag: "..."
         mail_host: example.org
@@ -84,7 +76,6 @@ At the top level, all domains are returned as separate entries.
         url_host: mail.example.org
     entry 2:
         base_url: http://example.net
-        contact_address: porkmaster@example.net
         description: Porkmasters
         http_etag: "..."
         mail_host: lists.example.net
@@ -103,7 +94,6 @@ The information for a single domain is available by following one of the
 
     >>> dump_json('http://localhost:9001/3.0/domains/lists.example.net')
     base_url: http://example.net
-    contact_address: porkmaster@example.net
     description: Porkmasters
     http_etag: "..."
     mail_host: lists.example.net
@@ -165,7 +155,6 @@ Now the web service knows about our new domain.
 
     >>> dump_json('http://localhost:9001/3.0/domains/lists.example.com')
     base_url: http://lists.example.com
-    contact_address: postmaster@lists.example.com
     description: None
     http_etag: "..."
     mail_host: lists.example.com
@@ -176,9 +165,7 @@ And the new domain is in our database.
 ::
 
     >>> domain_manager['lists.example.com']
-    <Domain lists.example.com,
-            base_url: http://lists.example.com,
-            contact_address: postmaster@lists.example.com>
+    <Domain lists.example.com, base_url: http://lists.example.com>
 
     # Unlock the database.
     >>> transaction.abort()
@@ -190,8 +177,7 @@ address.
     >>> dump_json('http://localhost:9001/3.0/domains', {
     ...           'mail_host': 'my.example.com',
     ...           'description': 'My new domain',
-    ...           'base_url': 'http://allmy.example.com',
-    ...           'contact_address': 'helpme@example.com'
+    ...           'base_url': 'http://allmy.example.com'
     ...           })
     content-length: 0
     date: ...
@@ -200,7 +186,6 @@ address.
 
     >>> dump_json('http://localhost:9001/3.0/domains/my.example.com')
     base_url: http://allmy.example.com
-    contact_address: helpme@example.com
     description: My new domain
     http_etag: "..."
     mail_host: my.example.com
@@ -208,9 +193,7 @@ address.
     url_host: allmy.example.com
 
     >>> domain_manager['my.example.com']
-    <Domain my.example.com, My new domain,
-            base_url: http://allmy.example.com,
-            contact_address: helpme@example.com>
+    <Domain my.example.com, My new domain, base_url: http://allmy.example.com>
 
     # Unlock the database.
     >>> transaction.abort()
