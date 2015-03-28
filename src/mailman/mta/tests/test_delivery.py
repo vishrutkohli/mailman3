@@ -28,13 +28,11 @@ import tempfile
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.app.membership import add_member
 from mailman.config import config
 from mailman.interfaces.mailinglist import Personalization
-from mailman.interfaces.member import DeliveryMode
 from mailman.mta.deliver import Deliver
 from mailman.testing.helpers import (
-    specialized_message_from_string as mfs)
+    specialized_message_from_string as mfs, subscribe)
 from mailman.testing.layers import ConfigLayer
 
 
@@ -63,9 +61,7 @@ class TestIndividualDelivery(unittest.TestCase):
         self._mlist = create_list('test@example.com')
         self._mlist.personalize = Personalization.individual
         # Make Anne a member of this mailing list.
-        self._anne = add_member(self._mlist,
-                                'anne@example.org', 'Anne Person',
-                                'xyz', DeliveryMode.regular, 'en')
+        self._anne = subscribe(self._mlist, 'Anne', email='anne@example.org')
         # Clear out any results from the previous test.
         del _deliveries[:]
         self._msg = mfs("""\

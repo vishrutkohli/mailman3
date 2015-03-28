@@ -49,6 +49,10 @@ Documentation
 
 REST
 ----
+ * **Backward incompatible change**: The JSON representation for pending
+   mailing list subscription hold now no longer includes the ``password``
+   key.  Also, the ``address`` key has been renamed ``email`` for consistent
+   terminology and other usage.
  * You can now view the contents of, inject messages into, and delete messages
    from the various queue directories via the ``<api>/queues`` resource.
  * You can now DELETE an address.  If the address is linked to a user, the

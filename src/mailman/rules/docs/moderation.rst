@@ -26,6 +26,9 @@ postings are not moderated.
 
     >>> from mailman.testing.helpers import subscribe
     >>> subscribe(mlist, 'Anne')
+    <Member: Anne Person <aperson@example.com> on test@example.com
+             as MemberRole.member>
+
     >>> member = mlist.members.get_member('aperson@example.com')
     >>> print(member.moderation_action)
     Action.defer
@@ -66,9 +69,13 @@ postings are held for moderator approval.
     nonmember-moderation
 
 Bart, who is not a member of the mailing list, sends a message to the list.
+::
 
     >>> from mailman.interfaces.member import MemberRole
     >>> subscribe(mlist, 'Bart', MemberRole.nonmember)
+    <Member: Bart Person <bperson@example.com> on test@example.com
+             as MemberRole.nonmember>
+
     >>> nonmember = mlist.nonmembers.get_member('bperson@example.com')
     >>> print(nonmember.moderation_action)
     Action.hold
