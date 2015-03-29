@@ -11,8 +11,8 @@ a *delivery module*, essentially a pluggable interface for determining how the
 recipient set will be batched, whether messages will be personalized and
 VERP'd, etc.  The outgoing runner doesn't itself support retrying but it can
 move messages to the 'retry queue' for handling delivery failures.
-::
 
+    >>> from mailman.testing.helpers import subscribe
     >>> mlist = create_list('test@example.com')
 
     >>> from mailman.testing.helpers import subscribe

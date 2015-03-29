@@ -99,9 +99,7 @@ class AbstractRoster:
     @dbconnection
     def get_member(self, store, address):
         """See `IRoster`."""
-        results = store.query(Member).filter(
-            Member.list_id == self._mlist.list_id,
-            Member.role == self.role,
+        results = self._query().filter(
             Address.email == address,
             Member.address_id == Address.id)
         if results.count() == 0:

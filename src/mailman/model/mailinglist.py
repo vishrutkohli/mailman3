@@ -38,7 +38,7 @@ from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.mailinglist import (
     IAcceptableAlias, IAcceptableAliasSet, IListArchiver, IListArchiverSet,
-    IMailingList, Personalization, ReplyToMunging)
+    IMailingList, Personalization, ReplyToMunging, SubscriptionPolicy)
 from mailman.interfaces.member import (
     AlreadySubscribedError, MemberRole, MissingPreferredAddressError,
     SubscriptionEvent)
@@ -183,6 +183,7 @@ class MailingList(Model):
     send_goodbye_message = Column(Boolean)
     send_welcome_message = Column(Boolean)
     subject_prefix = Column(Unicode)
+    subscription_policy = Column(Enum(SubscriptionPolicy))
     topics = Column(PickleType)
     topics_bodylines_limit = Column(Integer)
     topics_enabled = Column(Boolean)

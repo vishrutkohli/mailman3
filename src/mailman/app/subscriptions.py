@@ -19,10 +19,13 @@
 
 __all__ = [
     'SubscriptionService',
+    'SubscriptionWorkflow',
     'handle_ListDeletingEvent',
     ]
 
 
+import json
+from collections import deque
 from operator import attrgetter
 from sqlalchemy import and_, or_
 from uuid import UUID
@@ -30,18 +33,23 @@ from zope.component import getUtility
 from zope.interface import implementer
 
 from mailman.app.membership import add_member, delete_member
+from mailman.app.moderator import hold_subscription
 from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection
+from mailman.interfaces.address import IAddress
 from mailman.interfaces.listmanager import (
     IListManager, ListDeletingEvent, NoSuchListError)
+from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError, RequestRecord)
+from mailman.interfaces.user import IUser
 from mailman.interfaces.usermanager import IUserManager
+from mailman.interfaces.workflowstate import IWorkflowStateManager
 from mailman.model.member import Member
+from mailman.utilities.datetime import now
 
 
-
 def _membership_sort_key(member):
     """Sort function for find_members().
 
@@ -51,7 +59,171 @@ def _membership_sort_key(member):
     return (member.list_id, member.address.email, member.role.value)
 
 
-
+class Workflow:
+    """Generic workflow."""
+    # TODO: move this class to a more generic module
+
+    _save_key = ""
+    _save_attributes = []
+    _initial_state = []
+
+    def __init__(self):
+        self._next = deque(self._initial_state)
+
+    def __iter__(self):
+        return self
+
+    def _pop(self):
+        name = self._next.popleft()
+        step = getattr(self, '_step_{}'.format(name))
+        return step, name
+
+    def __next__(self):
+        try:
+            step, name = self._pop()
+            step()
+        except IndexError:
+            raise StopIteration
+        except:
+            raise
+
+    def save_state(self):
+        state_manager = getUtility(IWorkflowStateManager)
+        data = {attr: getattr(self, attr) for attr in self._save_attributes}
+        # Note: only the next step is saved, not the whole stack. Not an issue
+        # since there's never more than a single step in the queue anyway.
+        # If we want to support more than a single step in the queue AND want
+        # to support state saving/restoring, change this method and the
+        # restore_state() method.
+        if len(self._next) == 0:
+            step = None
+        elif len(self._next) == 1:
+            step = self._next[0]
+        else:
+            raise AssertionError(
+                "Can't save a workflow state with more than one step "
+                "in the queue")
+        state_manager.save(
+            self.__class__.__name__,
+            self._save_key,
+            step,
+            json.dumps(data))
+
+    def restore_state(self):
+        state_manager = getUtility(IWorkflowStateManager)
+        state = state_manager.restore(self.__class__.__name__, self._save_key)
+        if state is not None:
+            self._next.clear()
+            if state.step:
+                self._next.append(state.step)
+            if state.data is not None:
+                for attr, value in json.loads(state.data).items():
+                    setattr(self, attr, value)
+
+
+class SubscriptionWorkflow(Workflow):
+    """Workflow of a subscription request."""
+
+    _save_attributes = ["pre_verified", "pre_confirmed", "pre_approved"]
+    _initial_state = ["verification_check"]
+
+    def __init__(self, mlist, subscriber,
+                 pre_verified, pre_confirmed, pre_approved):
+        super(SubscriptionWorkflow, self).__init__()
+        self.mlist = mlist
+        # The subscriber must be either an IUser or IAddress.
+        if IAddress.providedBy(subscriber):
+            self.address = subscriber
+            self.user = self.address.user
+        elif IUser.providedBy(subscriber):
+            self.address = subscriber.preferred_address
+            self.user = subscriber
+        self.subscriber = subscriber
+        self.pre_verified = pre_verified
+        self.pre_confirmed = pre_confirmed
+        self.pre_approved = pre_approved
+        # State saving
+        self._save_key = "{}:{}".format(self.mlist.list_id, self.address.email)
+
+    def _maybe_set_preferred_address(self):
+        if self.user is None:
+            # The address has no linked user so create one, link it, and set
+            # the user's preferred address.
+            assert self.address is not None, 'No address or user'
+            self.user = getUtility(IUserManager).make_user(self.address.email)
+            self.user.preferred_address = self.address
+        elif self.user.preferred_address is None:
+            assert self.address is not None, 'No address or user'
+            # The address has a linked user, but no preferred address is set
+            # yet.  This is required, so use the address.
+            self.user.preferred_address = self.address
+
+    def _step_verification_check(self):
+        if self.address.verified_on is not None:
+            # The address is already verified.  Give the user a preferred
+            # address if it doesn't already have one.  We may still have to do
+            # a subscription confirmation check.  See below.
+            self._maybe_set_preferred_address()
+        else:
+            # The address is not yet verified.  Maybe we're pre-verifying it.
+            # If so, we also want to give the user a preferred address if it
+            # doesn't already have one.  We may still have to do a
+            # subscription confirmation check.  See below.
+            if self.pre_verified:
+                self.address.verified_on = now()
+                self._maybe_set_preferred_address()
+            else:
+                # Since the address was not already verified, and not
+                # pre-verified, we have to send a confirmation check, which
+                # doubles as a verification step.  Skip to that now.
+                self._next.append("send_confirmation")
+                return
+        self._next.append("confirmation_check")
+
+    def _step_confirmation_check(self):
+        # Must the user confirm their subscription request?  If the policy is
+        # open subscriptions, then we need neither confirmation nor moderator
+        # approval, so just subscribe them now.
+        if self.mlist.subscription_policy == SubscriptionPolicy.open:
+            self._next.append("do_subscription")
+        elif self.pre_confirmed:
+            # No confirmation is necessary.  We can skip to seeing whether a
+            # moderator confirmation is necessary.
+            self._next.append("moderation_check")
+        else:
+            self._next.append("send_confirmation")
+
+    def _step_send_confirmation(self):
+        self._next.append("moderation_check")
+        self.save_state()
+        self._next.clear() # stop iteration until we get confirmation
+        # XXX: create the Pendable, send the ConfirmationNeededEvent
+        # (see Registrar.register)
+
+    def _step_moderation_check(self):
+        # Does the moderator need to approve the subscription request?
+        if not self.pre_approved and self.mlist.subscription_policy in (
+                SubscriptionPolicy.moderate,
+                SubscriptionPolicy.confirm_then_moderate):
+            self._next.append("get_moderator_approval")
+        else:
+            # The moderator does not need to approve the subscription, so go
+            # ahead and do that now.
+            self._next.append("do_subscription")
+
+    def _step_get_moderator_approval(self):
+        # In order to get the moderator's approval, we need to hold the
+        # subscription request in the database
+        request = RequestRecord(
+            self.address.email, self.subscriber.display_name,
+            DeliveryMode.regular, 'en')
+        hold_subscription(self.mlist, request)
+
+    def _step_do_subscription(self):
+        # We can immediately subscribe the user to the mailing list.
+        self.mlist.subscribe(self.subscriber)
+
+
 @implementer(ISubscriptionService)
 class SubscriptionService:
     """Subscription services for the REST API."""
@@ -168,7 +340,6 @@ class SubscriptionService:
         delete_member(mlist, email, False, False)
 
 
-
 def handle_ListDeletingEvent(event):
     """Delete a mailing list's members when the list is being deleted."""
 
