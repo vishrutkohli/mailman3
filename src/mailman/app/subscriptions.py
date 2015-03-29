@@ -48,6 +48,7 @@ from zope.component import getUtility
 from zope.interface import implementer
 
 
+
 def _membership_sort_key(member):
     """Sort function for find_members().
 
@@ -57,6 +58,7 @@ def _membership_sort_key(member):
     return (member.list_id, member.address.email, member.role.value)
 
 
+
 class SubscriptionWorkflow(Workflow):
     """Workflow of a subscription request."""
 
@@ -276,6 +278,7 @@ class SubscriptionService:
         delete_member(mlist, email, False, False)
 
 
+
 def handle_ListDeletingEvent(event):
     """Delete a mailing list's members when the list is being deleted."""
 
