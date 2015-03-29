@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2015 by the Free Software Foundation, Inc.
+# Copyright (C) 2015 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -25,8 +25,7 @@ __all__ = [
 
 from mailman.database.model import Model
 from mailman.database.transaction import dbconnection
-from mailman.interfaces.workflowstate import (
-    IWorkflowState, IWorkflowStateManager)
+from mailman.interfaces.workflow import IWorkflowState, IWorkflowStateManager
 from sqlalchemy import Column, Unicode
 from zope.interface import implementer
 
@@ -54,8 +53,8 @@ class WorkflowStateManager:
         """See `IWorkflowStateManager`."""
         state = store.query(WorkflowState).get((name, key))
         if state is None:
-            state = store.add(WorkflowState(
-                name=name, key=key, step=step, data=data))
+            state = WorkflowState(name=name, key=key, step=step, data=data)
+            store.add(state)
         else:
             state.step = step
             state.data = data

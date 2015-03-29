@@ -21,7 +21,7 @@ def upgrade():
         sa.Column('step', sa.Unicode(), nullable=True),
         sa.Column('data', sa.Unicode(), nullable=True),
         sa.PrimaryKeyConstraint('name', 'key')
-    )
+        )
 
 
 def downgrade():

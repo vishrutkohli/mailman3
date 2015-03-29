@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2015 by the Free Software Foundation, Inc.
+# Copyright (C) 2015 by the Free Software Foundation, Inc.
 #
 # This file is part of GNU Mailman.
 #
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Interface describing the state of a workflow."""
+"""Interfaces describing the state of a workflow."""
 
 __all__ = [
     'IWorkflowState',
@@ -23,24 +23,20 @@ __all__ = [
     ]
 
 
-from zope.interface import Interface, Attribute
+from zope.interface import Attribute, Interface
 
 
 
 class IWorkflowState(Interface):
     """The state of a workflow."""
 
-    name = Attribute(
-        """The name of the workflow.""")
+    name = Attribute('The name of the workflow.')
 
-    key = Attribute(
-        """A unique key identifying the workflow instance.""")
+    key = Attribute('A unique key identifying the workflow instance.')
 
-    step = Attribute(
-        """This workflow's next step.""")
+    step = Attribute("This workflow's next step.")
 
-    data = Attribute(
-        """Additional data (may be JSON-encodedeJSON .""")
+    data = Attribute('Additional data (may be JSON-encodedeJSON .')
 
 
 

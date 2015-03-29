@@ -24,16 +24,10 @@ __all__ = [
     ]
 
 
-import json
-from collections import deque
-from operator import attrgetter
-from sqlalchemy import and_, or_
-from uuid import UUID
-from zope.component import getUtility
-from zope.interface import implementer
 
 from mailman.app.membership import add_member, delete_member
 from mailman.app.moderator import hold_subscription
+from mailman.app.workflow import Workflow
 from mailman.core.constants import system_preferences
 from mailman.database.transaction import dbconnection
 from mailman.interfaces.address import IAddress
@@ -45,9 +39,13 @@ from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError, RequestRecord)
 from mailman.interfaces.user import IUser
 from mailman.interfaces.usermanager import IUserManager
-from mailman.interfaces.workflowstate import IWorkflowStateManager
 from mailman.model.member import Member
 from mailman.utilities.datetime import now
+from operator import attrgetter
+from sqlalchemy import and_, or_
+from uuid import UUID
+from zope.component import getUtility
+from zope.interface import implementer
 
 
 def _membership_sort_key(member):
@@ -57,68 +55,6 @@ def _membership_sort_key(member):
     address, then by role.
     """
     return (member.list_id, member.address.email, member.role.value)
-
-
-class Workflow:
-    """Generic workflow."""
-    # TODO: move this class to a more generic module
-
-    _save_key = ""
-    _save_attributes = []
-    _initial_state = []
-
-    def __init__(self):
-        self._next = deque(self._initial_state)
-
-    def __iter__(self):
-        return self
-
-    def _pop(self):
-        name = self._next.popleft()
-        step = getattr(self, '_step_{}'.format(name))
-        return step, name
-
-    def __next__(self):
-        try:
-            step, name = self._pop()
-            step()
-        except IndexError:
-            raise StopIteration
-        except:
-            raise
-
-    def save_state(self):
-        state_manager = getUtility(IWorkflowStateManager)
-        data = {attr: getattr(self, attr) for attr in self._save_attributes}
-        # Note: only the next step is saved, not the whole stack. Not an issue
-        # since there's never more than a single step in the queue anyway.
-        # If we want to support more than a single step in the queue AND want
-        # to support state saving/restoring, change this method and the
-        # restore_state() method.
-        if len(self._next) == 0:
-            step = None
-        elif len(self._next) == 1:
-            step = self._next[0]
-        else:
-            raise AssertionError(
-                "Can't save a workflow state with more than one step "
-                "in the queue")
-        state_manager.save(
-            self.__class__.__name__,
-            self._save_key,
-            step,
-            json.dumps(data))
-
-    def restore_state(self):
-        state_manager = getUtility(IWorkflowStateManager)
-        state = state_manager.restore(self.__class__.__name__, self._save_key)
-        if state is not None:
-            self._next.clear()
-            if state.step:
-                self._next.append(state.step)
-            if state.data is not None:
-                for attr, value in json.loads(state.data).items():
-                    setattr(self, attr, value)
 
 
 class SubscriptionWorkflow(Workflow):
