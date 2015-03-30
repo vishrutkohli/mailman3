@@ -27,7 +27,7 @@ import uuid
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.app.subscriptions import Workflow, SubscriptionWorkflow
+from mailman.app.subscriptions import SubscriptionWorkflow
 from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
 from mailman.interfaces.requests import IListRequests, RequestType
@@ -37,7 +37,6 @@ from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import now
-from mock import Mock
 from zope.component import getUtility
 
 
@@ -72,48 +71,6 @@ class TestJoin(unittest.TestCase):
                           self._service.join,
                           'test.example.com', anne.user.user_id,
                           role=MemberRole.owner)
-
-
-
-class TestWorkflow(unittest.TestCase):
-    layer = ConfigLayer
-
-    def setUp(self):
-        self.workflow = Workflow()
-        self.workflow._test_attribute = "test-value"
-        self.workflow._step_test = Mock()
-        self.workflow._next.append("test")
-
-    def test_iter_steps(self):
-        next(self.workflow)
-        self.assertTrue(self.workflow._step_test.called)
-        self.assertEqual(len(self.workflow._next), 0)
-        try:
-            next(self.workflow)
-        except StopIteration:
-            pass
-        else:
-            self.fail()
-
-    def test_save_restore(self):
-        self.workflow.save_state()
-        # Now create a new instance and restore
-        new_workflow = Workflow()
-        self.assertEqual(len(new_workflow._next), 0)
-        self.assertFalse(hasattr(new_workflow, "_test_attribute"))
-        new_workflow.restore_state()
-        self.assertEqual(len(new_workflow._next), 1)
-        self.assertEqual(new_workflow._next[0], "test")
-        self.assertEqual(self.workflow._test_attribute, "test-value")
-
-    def test_save_restore_no_next_step(self):
-        self.workflow._next.clear()
-        self.workflow.save_state()
-        # Now create a new instance and restore
-        new_workflow = Workflow()
-        new_workflow._next.append("test")
-        new_workflow.restore_state()
-        self.assertEqual(len(new_workflow._next), 0)
 
 
 
@@ -184,6 +141,6 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # A confirmation request must be pending
         # TODO: test it
         # Now restore and re-run the state machine as if we got the confirmation
-        workflow.restore_state()
+        workflow.restore()
         list(workflow)
         self.assertIsNotNone(self._mlist.subscribers.get_member(self._anne))

@@ -23,48 +23,59 @@ __all__ = [
 
 
 import json
+import logging
 
 from collections import deque
 from mailman.interfaces.workflow import IWorkflowStateManager
 from zope.component import getUtility
 
 
+COMMASPACE = ', '
+log = logging.getLogger('mailman.error')
+
+
 
 class Workflow:
     """Generic workflow."""
 
-    _save_key = ''
-    _save_attributes = []
-    _initial_state = []
+    SAVE_KEY = ''
+    SAVE_ATTRIBUTES = ()
+    INITIAL_STATE = None
 
     def __init__(self):
-        self._next = deque(self._initial_state)
+        self._next = deque()
+        self.push(self.INITIAL_STATE)
 
     def __iter__(self):
         return self
 
+    def push(self, step):
+        self._next.append(step)
+
     def _pop(self):
         name = self._next.popleft()
         step = getattr(self, '_step_{}'.format(name))
-        return step, name
+        return name, step
 
     def __next__(self):
         try:
-            step, name = self._pop()
-            step()
+            name, step = self._pop()
+            return step()
         except IndexError:
             raise StopIteration
         except:
+            log.exception('deque: {}'.format(COMMASPACE.join(self._next)))
             raise
 
-    def save_state(self):
+    def save(self):
+        assert self.SAVE_KEY, 'Workflow SAVE_KEY must be set'
         state_manager = getUtility(IWorkflowStateManager)
-        data = {attr: getattr(self, attr) for attr in self._save_attributes}
-        # Note: only the next step is saved, not the whole stack. Not an issue
-        # since there's never more than a single step in the queue anyway.
-        # If we want to support more than a single step in the queue AND want
-        # to support state saving/restoring, change this method and the
-        # restore_state() method.
+        data = {attr: getattr(self, attr) for attr in self.SAVE_ATTRIBUTES}
+        # Note: only the next step is saved, not the whole stack.  This is not
+        # an issue in practice, since there's never more than a single step in
+        # the queue anyway.  If we want to support more than a single step in
+        # the queue *and* want to support state saving/restoring, change this
+        # method and the restore_state() method.
         if len(self._next) == 0:
             step = None
         elif len(self._next) == 1:
@@ -75,13 +86,13 @@ class Workflow:
                 "in the queue")
         state_manager.save(
             self.__class__.__name__,
-            self._save_key,
+            self.SAVE_KEY,
             step,
             json.dumps(data))
 
-    def restore_state(self):
+    def restore(self):
         state_manager = getUtility(IWorkflowStateManager)
-        state = state_manager.restore(self.__class__.__name__, self._save_key)
+        state = state_manager.restore(self.__class__.__name__, self.SAVE_KEY)
         if state is not None:
             self._next.clear()
             if state.step:
