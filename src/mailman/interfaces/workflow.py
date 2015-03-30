@@ -36,7 +36,7 @@ class IWorkflowState(Interface):
 
     step = Attribute("This workflow's next step.")
 
-    data = Attribute('Additional data (may be JSON-encodedeJSON .')
+    data = Attribute('Additional data (may be JSON-encoded).')
 
 
 
@@ -44,7 +44,7 @@ class IWorkflowStateManager(Interface):
     """The workflow states manager."""
 
     def save(name, key, step, data=None):
-        """Save the state of a workflow
+        """Save the state of a workflow.
 
         :param name: The name of the workflow.
         :type name: str

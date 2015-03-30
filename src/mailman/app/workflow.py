@@ -75,7 +75,7 @@ class Workflow:
         # an issue in practice, since there's never more than a single step in
         # the queue anyway.  If we want to support more than a single step in
         # the queue *and* want to support state saving/restoring, change this
-        # method and the restore_state() method.
+        # method and the restore() method.
         if len(self._next) == 0:
             step = None
         elif len(self._next) == 1:
