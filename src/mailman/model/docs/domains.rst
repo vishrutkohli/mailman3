@@ -9,10 +9,10 @@ Domains
     >>> manager = getUtility(IDomainManager)
     >>> manager.remove('example.com')
     <Domain example.com...>
-	>>> from mailman.interfaces.usermanager import IUserManager
-	>>> user_manager = getUtility(IUserManager)
+    >>> from mailman.interfaces.usermanager import IUserManager
+    >>> user_manager = getUtility(IUserManager)
     >>> user = user_manager.create_user('test@example.org')
-	>>> config.db.commit()
+    >>> config.db.commit()
 
 Domains are how Mailman interacts with email host names and web host names.
 ::
@@ -58,7 +58,7 @@ Domains can have explicit descriptions.
     ...     'example.net',
     ...     base_url='http://lists.example.net',
     ...     description='The example domain',
-    ...     owner_id=1)
+    ...     owner=user)
     <Domain example.net, The example domain,
             base_url: http://lists.example.net>
 

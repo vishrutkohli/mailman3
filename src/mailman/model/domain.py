@@ -29,7 +29,7 @@ from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
 from mailman.model.mailinglist import MailingList
-from mailman.model.user import User, Owner
+from mailman.model.user import User, DomainOwner
 from urllib.parse import urljoin, urlparse
 from sqlalchemy import Column, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
@@ -50,7 +50,7 @@ class Domain(Model):
     base_url = Column(Unicode)
     description = Column(Unicode)
     owners = relationship("User",
-                          secondary="owner",
+                          secondary="domain_owner",
                           backref="domains")
 
     def __init__(self, mail_host,
@@ -68,7 +68,7 @@ class Domain(Model):
             `mail_host` using the http protocol.
         :type base_url: string
         :param owner: The `User` who is the owner of this domain
-        :type owner: mailman.models.user.User
+        :type owner: `IUser`
         """
         self.mail_host = mail_host
         self.base_url = (base_url
@@ -111,11 +111,15 @@ class Domain(Model):
                     'base_url: {0.base_url}>').format(self)
 
     def add_owner(self, owner):
-        """ Add a domain owner"""
+        """Add a domain owner"""
         self.owners.append(owner)
 
-    @dbconnection
-    def remove_owner(self, store, owner):
+    def add_owners(self, owners):
+        """Add multiple owners"""
+        for each in owners:
+            self.owners.append(each)
+
+    def remove_owner(self, owner):
         """ Remove a domain owner"""
         self.owners.remove(owner)
 
@@ -129,20 +133,13 @@ class DomainManager:
             mail_host,
             description=None,
             base_url=None,
-            owner_id=None):
+            owner=None):
         """See `IDomainManager`."""
         # Be sure the mail_host is not already registered.  This is probably
         # a constraint that should (also) be maintained in the database.
         if self.get(mail_host) is not None:
             raise BadDomainSpecificationError(
                 'Duplicate email host: %s' % mail_host)
-        # Be sure that the owner exists
-        owner = None
-        if owner_id is not None:
-            owner = store.query(User).get(owner_id)
-            if owner is None:
-                raise BadDomainSpecificationError(
-                    'Owner of this domain does not exist')
 
         notify(DomainCreatingEvent(mail_host))
         domain = Domain(mail_host, description, base_url, owner)

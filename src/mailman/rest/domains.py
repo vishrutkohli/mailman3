@@ -110,9 +110,9 @@ class AllDomains(_DomainBase):
             validator = Validator(mail_host=str,
                                   description=str,
                                   base_url=str,
-                                  owner_id=int,
+                                  owner=int,
                                   _optional=('description', 'base_url',
-                                             'owner_id'))
+                                             'owner'))
             domain = domain_manager.add(**validator(request))
         except BadDomainSpecificationError as error:
             bad_request(response, str(error))

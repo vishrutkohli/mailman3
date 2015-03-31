@@ -179,9 +179,9 @@ class User(Model):
         return Memberships(self)
 
 
-class Owner(Model):
-    """Doomain to owners(user) association class"""
+class DomainOwner(Model):
+    """Domain to owners(user) association class"""
 
-    __tablename__ = 'owner'
+    __tablename__ = 'domain_owner'
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
     domain_id = Column(Integer, ForeignKey('domain.id'), primary_key=True)

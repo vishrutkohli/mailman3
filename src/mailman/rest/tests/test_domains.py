@@ -41,6 +41,11 @@ class TestDomains(unittest.TestCase):
         with transaction():
             self._mlist = create_list('test@example.com')
 
+    def test_create_domain(self):
+        """Create domain via REST"""
+        # TODO: Complete this
+        # Tests should be failing with improper REST API.
+
     def test_bogus_endpoint_extension(self):
         # /domains/<domain>/lists/<anything> is not a valid endpoint.
         with self.assertRaises(HTTPError) as cm:

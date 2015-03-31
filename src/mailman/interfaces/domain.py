@@ -122,8 +122,8 @@ class IDomainManager(Interface):
             interface of the domain.  If not given, it defaults to
             http://`mail_host`/
         :type base_url: string
-        :param owner_id: Owner of the domain, defaults to None
-        :type owner_id: integer
+        :param owner: Owner of the domain, defaults to None
+        :type owner: `Iuser`
         :return: The new domain object
         :rtype: `IDomain`
         :raises `BadDomainSpecificationError`: when the `mail_host` is
