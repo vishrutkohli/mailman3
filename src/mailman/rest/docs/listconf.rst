@@ -61,6 +61,7 @@ All readable attributes for a list are available on a sub-resource.
     scheme: http
     send_welcome_message: True
     subject_prefix: [Ant]
+    subscription_policy: confirm
     volume: 1
     web_host: lists.example.com
     welcome_message_uri: mailman:///welcome.txt
@@ -106,6 +107,7 @@ When using ``PUT``, all writable attributes must be included.
     ...             reply_to_address='bee@example.com',
     ...             send_welcome_message=False,
     ...             subject_prefix='[ant]',
+    ...             subscription_policy='moderate',
     ...             welcome_message_uri='mailman:///welcome.txt',
     ...             default_member_action='hold',
     ...             default_nonmember_action='discard',
@@ -156,6 +158,7 @@ These values are changed permanently.
     ...
     send_welcome_message: False
     subject_prefix: [ant]
+    subscription_policy: moderate
     ...
     welcome_message_uri: mailman:///welcome.txt
 
