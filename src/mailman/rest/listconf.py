@@ -29,7 +29,8 @@ from mailman.core.errors import (
 from mailman.interfaces.action import Action
 from mailman.interfaces.archiver import ArchivePolicy
 from mailman.interfaces.autorespond import ResponseAction
-from mailman.interfaces.mailinglist import IAcceptableAliasSet, ReplyToMunging
+from mailman.interfaces.mailinglist import (
+    IAcceptableAliasSet, ReplyToMunging, SubscriptionPolicy)
 from mailman.rest.helpers import (
     GetterSetter, bad_request, etag, no_content, okay)
 from mailman.rest.validator import PatchValidator, Validator, enum_validator
@@ -142,6 +143,7 @@ ATTRIBUTES = dict(
     scheme=GetterSetter(None),
     send_welcome_message=GetterSetter(as_boolean),
     subject_prefix=GetterSetter(str),
+    subscription_policy=GetterSetter(enum_validator(SubscriptionPolicy)),
     volume=GetterSetter(None),
     web_host=GetterSetter(None),
     welcome_message_uri=GetterSetter(str),
