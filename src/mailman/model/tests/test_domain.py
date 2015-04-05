@@ -81,25 +81,23 @@ class TestDomainManager(unittest.TestCase):
         self.assertRaises(KeyError, self._manager.remove, 'doesnotexist.com')
 
     def test_domain_create_with_owner(self):
-        user = getUtility(IUserManager).create_user('someuser@example.org')
-        config.db.commit()
-        domain = self._manager.add('example.org', owner=user)
+        domain = self._manager.add('example.org',
+                                   owners=['someuser@example.org'])
         self.assertEqual(len(domain.owners), 1)
-        self.assertEqual(domain.owners[0].id, user.id)
+        self.assertEqual(domain.owners[0].addresses[0].email,
+                         'someuser@example.org')
 
     def test_add_domain_owner(self):
-        user = getUtility(IUserManager).create_user('someuser@example.org')
-        config.db.commit()
         domain = self._manager.add('example.org')
-        domain.add_owner(user)
+        domain.add_owner('someuser@example.org')
         self.assertEqual(len(domain.owners), 1)
-        self.assertEqual(domain.owners[0].id, user.id)
+        self.assertEqual(domain.owners[0].addresses[0].email,
+                         'someuser@example.org')
 
     def test_remove_domain_owner(self):
-        user = getUtility(IUserManager).create_user('someuser@somedomain.org')
-        config.db.commit()
-        domain = self._manager.add('example.org', owner=user)
-        domain.remove_owner(user)
+        domain = self._manager.add('example.org',
+                                   owners=['someuser@example.org'])
+        domain.remove_owner('someuser@example.org')
         self.assertEqual(len(domain.owners), 0)
 
 
@@ -134,6 +132,3 @@ class TestDomainLifecycleEvents(unittest.TestCase):
         self.assertEqual(listmanager.get('dog@example.org'), None)
         self.assertEqual(listmanager.get('ewe@example.com'), ewe)
         self.assertEqual(listmanager.get('fly@example.com'), fly)
-
-    def test_owners_are_deleted_when_domain_is(self):
-        self._domainmanager.remove('example.net')

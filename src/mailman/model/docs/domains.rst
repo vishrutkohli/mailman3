@@ -58,7 +58,7 @@ Domains can have explicit descriptions.
     ...     'example.net',
     ...     base_url='http://lists.example.net',
     ...     description='The example domain',
-    ...     owner=user)
+    ...     owners=['user@domain.com'])
     <Domain example.net, The example domain,
             base_url: http://lists.example.net>
 
@@ -67,13 +67,13 @@ Domains can have explicit descriptions.
     <Domain example.net, The example domain,
             base_url: http://lists.example.net>
 
-Domains can have multiple number of owners, ideally one of the owners
-should  have a verified preferred address. However this is not checked
-right now and contact_address from config is used as a fallback.
+Domains can have multiple owners, ideally one of the owners should have a
+verified preferred address. However this is not checked right now and
+contact_address from config can be used as a fallback.
 ::
 
    >>> net_domain = manager['example.net']
-   >>> net_domain.add_owner(user_manager.get_user('test@example.org'))
+   >>> net_domain.add_owner('test@example.org')
 
 
 Domains can list all associated mailing lists with the mailing_lists property.

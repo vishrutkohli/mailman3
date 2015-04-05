@@ -27,6 +27,7 @@ import unittest
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
 from mailman.interfaces.listmanager import IListManager
+from mailman.interfaces.domain import IDomainManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 from urllib.error import HTTPError
@@ -41,10 +42,16 @@ class TestDomains(unittest.TestCase):
         with transaction():
             self._mlist = create_list('test@example.com')
 
-    def test_create_domain(self):
-        """Create domain via REST"""
-        # TODO: Complete this
-        # Tests should be failing with improper REST API.
+    def test_create_domains(self):
+        """Test Create domain via REST"""
+        data = {'mail_host': 'example.org',
+                'description': 'Example domain',
+                'base_url': 'http://example.org',
+                'owners': ['someone@example.com',
+                           'secondowner@example.com',]}
+        content, response = call_api('http://localhost:9001/3.0/domains',
+                                     data, method="POST")
+        self.assertEqual(response.status, 201)
 
     def test_bogus_endpoint_extension(self):
         # /domains/<domain>/lists/<anything> is not a valid endpoint.

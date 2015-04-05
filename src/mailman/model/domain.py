@@ -28,6 +28,7 @@ from mailman.database.transaction import dbconnection
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.model.mailinglist import MailingList
 from mailman.model.user import User, DomainOwner
 from urllib.parse import urljoin, urlparse
@@ -35,6 +36,7 @@ from sqlalchemy import Column, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
+from zope.component import getUtility
 
 
 
@@ -46,7 +48,7 @@ class Domain(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mail_host = Column(Unicode) # TODO: add index?
+    mail_host = Column(Unicode)
     base_url = Column(Unicode)
     description = Column(Unicode)
     owners = relationship("User",
@@ -56,7 +58,7 @@ class Domain(Model):
     def __init__(self, mail_host,
                  description=None,
                  base_url=None,
-                 owner=None):
+                 owners=[]):
         """Create and register a domain.
 
         :param mail_host: The host name for the email interface.
@@ -67,16 +69,16 @@ class Domain(Model):
             scheme.  If not given, it will be constructed from the
             `mail_host` using the http protocol.
         :type base_url: string
-        :param owner: The `User` who is the owner of this domain
-        :type owner: `IUser`
+        :param owners: List of `User` who are the owners of this domain
+        :type owners: list
         """
         self.mail_host = mail_host
         self.base_url = (base_url
                          if base_url is not None
                          else 'http://' + mail_host)
         self.description = description
-        if owner is not None:
-            self.owners.append(owner)
+        if len(owners):
+            self.add_owners(owners)
 
     @property
     def url_host(self):
@@ -112,16 +114,22 @@ class Domain(Model):
 
     def add_owner(self, owner):
         """Add a domain owner"""
-        self.owners.append(owner)
+        user_manager = getUtility(IUserManager)
+        user = user_manager.get_user(owner)
+        if user is None:
+            user = user_manager.create_user(owner)
+        self.owners.append(user)
 
     def add_owners(self, owners):
         """Add multiple owners"""
-        for each in owners:
-            self.owners.append(each)
+        assert(isinstance(owners, list))
+        for owner in owners:
+            self.add_owner(owner)
 
     def remove_owner(self, owner):
         """ Remove a domain owner"""
-        self.owners.remove(owner)
+        user_manager = getUtility(IUserManager)
+        self.owners.remove(user_manager.get_user(owner))
 
 
 @implementer(IDomainManager)
@@ -133,7 +141,7 @@ class DomainManager:
             mail_host,
             description=None,
             base_url=None,
-            owner=None):
+            owners=[]):
         """See `IDomainManager`."""
         # Be sure the mail_host is not already registered.  This is probably
         # a constraint that should (also) be maintained in the database.
@@ -142,7 +150,7 @@ class DomainManager:
                 'Duplicate email host: %s' % mail_host)
 
         notify(DomainCreatingEvent(mail_host))
-        domain = Domain(mail_host, description, base_url, owner)
+        domain = Domain(mail_host, description, base_url, owners)
         store.add(domain)
         notify(DomainCreatedEvent(domain))
         return domain

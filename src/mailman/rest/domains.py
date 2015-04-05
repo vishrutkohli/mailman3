@@ -25,6 +25,7 @@ __all__ = [
 
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, IDomainManager)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
     BadRequest, CollectionMixin, NotFound, bad_request, child, created, etag,
     no_content, not_found, okay, path_to)
@@ -110,10 +111,11 @@ class AllDomains(_DomainBase):
             validator = Validator(mail_host=str,
                                   description=str,
                                   base_url=str,
-                                  owner=int,
+                                  owners=list,
                                   _optional=('description', 'base_url',
-                                             'owner'))
-            domain = domain_manager.add(**validator(request))
+                                             'owners'))
+            values = validator(request)
+            domain = domain_manager.add(**values)
         except BadDomainSpecificationError as error:
             bad_request(response, str(error))
         except ValueError as error:

@@ -22,6 +22,7 @@ __all__ = [
     'AddressUser',
     'AllUsers',
     'Login',
+    'OwnersForDomain',
     ]
 
 
@@ -395,27 +396,25 @@ class OwnersForDomain(_UserBase):
 
     def on_post(self, request, response):
         """POST to /domains/<domain>/owners """
-        validator = Validator(owner_id=GetterSetter(int))
+        validator = Validator(owner=GetterSetter(str))
         try:
             values = validator(request)
         except ValueError as error:
             bad_request(response, str(error))
             return
-        owner = getUtility(IUserManager).get_user_by_id(values['owner_id'])
-        self._domain.add_owner(owner)
+        self._domain.add_owner(values['owner'])
         return no_content(response)
 
-    def on_patch(self, request, response):
-        # TODO: complete this
-        pass
-
-    def on_put(self, request, response):
-        # TODO: complete this
-        pass
-
     def on_delete(self, request, response):
-        # TODO: complete this
-        pass
+        """DELETE to /domains/<domain>/owners"""
+        validator = Validator(owner=GetterSetter(str))
+        try:
+            values = validator(request)
+        except ValueError as error:
+            bad_request(response, str(error))
+            return
+        self._domain.remove_owner(owner)
+        return no_content(response)
 
     @paginate
     def _get_collection(self, request):
