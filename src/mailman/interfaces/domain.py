@@ -111,7 +111,7 @@ class IDomain(Interface):
 class IDomainManager(Interface):
     """The manager of domains."""
 
-    def add(mail_host, description=None, base_url=None, owner_id=None):
+    def add(mail_host, description=None, base_url=None, owners=None):
         """Add a new domain.
 
         :param mail_host: The email host name for the domain.
@@ -122,9 +122,10 @@ class IDomainManager(Interface):
             interface of the domain.  If not given, it defaults to
             http://`mail_host`/
         :type base_url: string
-        :param owners: List of owners of the domain, defaults to None
-        :type owners: list
-        :return: The new domain object
+        :param owners: Sequence of owners of the domain, defaults to None,
+            meaning the domain does not have owners.
+        :type owners: sequence of `IUser` or string emails.
+        :return: The new domain object.
         :rtype: `IDomain`
         :raises `BadDomainSpecificationError`: when the `mail_host` is
             already registered.

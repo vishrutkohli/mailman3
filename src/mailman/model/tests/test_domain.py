@@ -26,12 +26,11 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.config import config
 from mailman.interfaces.domain import (
     DomainCreatedEvent, DomainCreatingEvent, DomainDeletedEvent,
-    DomainDeletingEvent, IDomainManager, BadDomainSpecificationError)
-from mailman.interfaces.usermanager import IUserManager
+    DomainDeletingEvent, IDomainManager)
 from mailman.interfaces.listmanager import IListManager
+from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import event_subscribers
 from mailman.testing.layers import ConfigLayer
 from zope.component import getUtility
@@ -80,25 +79,97 @@ class TestDomainManager(unittest.TestCase):
         # Trying to delete a missing domain gives you a KeyError.
         self.assertRaises(KeyError, self._manager.remove, 'doesnotexist.com')
 
-    def test_domain_create_with_owner(self):
-        domain = self._manager.add('example.org',
-                                   owners=['someuser@example.org'])
+    def test_domain_creation_no_default_owners(self):
+        # If a domain is created without owners, then it has none.
+        domain = self._manager.add('example.org')
+        self.assertEqual(len(domain.owners), 0)
+
+    def test_domain_creation_with_owner(self):
+        # You can create a new domain with a single owner.
+        domain = self._manager.add('example.org', owners=['anne@example.org'])
         self.assertEqual(len(domain.owners), 1)
         self.assertEqual(domain.owners[0].addresses[0].email,
-                         'someuser@example.org')
+                         'anne@example.org')
+
+    def test_domain_creation_with_owners(self):
+        # You can create a new domain with multiple owners.
+        domain = self._manager.add(
+            'example.org', owners=['anne@example.org',
+                                   'bart@example.net'])
+        self.assertEqual(len(domain.owners), 2)
+        self.assertEqual(
+            sorted(owner.addresses[0].email for owner in domain.owners),
+            ['anne@example.org', 'bart@example.net'])
+
+    def test_domain_creation_creates_new_users(self):
+        # Domain creation with existing users does not create new users, but
+        # any user which doesn't yet exist (and is linked to the given
+        # address), gets created.
+        user_manager = getUtility(IUserManager)
+        user_manager.make_user('anne@example.com')
+        user_manager.make_user('bart@example.com')
+        domain = self._manager.add(
+            'example.org', owners=['anne@example.com',
+                                   'bart@example.com',
+                                   'cris@example.com'])
+        self.assertEqual(len(domain.owners), 3)
+        self.assertEqual(
+            sorted(owner.addresses[0].email for owner in domain.owners),
+            ['anne@example.com', 'bart@example.com', 'cris@example.com'])
+        # Now cris exists as a user.
+        self.assertIsNotNone(user_manager.get_user('cris@example.com'))
+
+    def test_domain_creation_with_users(self):
+        # Domains can be created with IUser objects.
+        user_manager = getUtility(IUserManager)
+        anne = user_manager.make_user('anne@example.com')
+        bart = user_manager.make_user('bart@example.com')
+        domain = self._manager.add('example.org', owners=[anne, bart])
+        self.assertEqual(len(domain.owners), 2)
+        self.assertEqual(
+            sorted(owner.addresses[0].email for owner in domain.owners),
+            ['anne@example.com', 'bart@example.com'])
+        def sort_key(owner):
+            return owner.addresses[0].email
+        self.assertEqual(sorted(domain.owners, key=sort_key), [anne, bart])
 
     def test_add_domain_owner(self):
+        # Domain owners can be added after the domain is created.
         domain = self._manager.add('example.org')
-        domain.add_owner('someuser@example.org')
+        self.assertEqual(len(domain.owners), 0)
+        domain.add_owner('anne@example.org')
         self.assertEqual(len(domain.owners), 1)
         self.assertEqual(domain.owners[0].addresses[0].email,
-                         'someuser@example.org')
+                         'anne@example.org')
+
+    def test_add_multiple_domain_owners(self):
+        # Multiple domain owners can be added after the domain is created.
+        domain = self._manager.add('example.org')
+        self.assertEqual(len(domain.owners), 0)
+        domain.add_owners(['anne@example.org', 'bart@example.net'])
+        self.assertEqual(len(domain.owners), 2)
+        self.assertEqual([owner.addresses[0].email for owner in domain.owners],
+                         ['anne@example.org', 'bart@example.net'])
 
     def test_remove_domain_owner(self):
-        domain = self._manager.add('example.org',
-                                   owners=['someuser@example.org'])
-        domain.remove_owner('someuser@example.org')
-        self.assertEqual(len(domain.owners), 0)
+        # Domain onwers can be removed.
+        domain = self._manager.add(
+            'example.org', owners=['anne@example.org',
+                                   'bart@example.net'])
+        domain.remove_owner('anne@example.org')
+        self.assertEqual(len(domain.owners), 1)
+        self.assertEqual([owner.addresses[0].email for owner in domain.owners],
+                         ['bart@example.net'])
+
+    def test_remove_missing_owner(self):
+        # Users which aren't owners can't be removed.
+        domain = self._manager.add(
+            'example.org', owners=['anne@example.org',
+                                   'bart@example.net'])
+        self.assertRaises(ValueError, domain.remove_owner, 'cris@example.org')
+        self.assertEqual(len(domain.owners), 2)
+        self.assertEqual([owner.addresses[0].email for owner in domain.owners],
+                         ['anne@example.org', 'bart@example.net'])
 
 
 
