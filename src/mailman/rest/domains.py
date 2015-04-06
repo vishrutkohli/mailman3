@@ -25,7 +25,6 @@ __all__ = [
 
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, IDomainManager)
-from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
     BadRequest, CollectionMixin, NotFound, bad_request, child, created, etag,
     no_content, not_found, okay, path_to)

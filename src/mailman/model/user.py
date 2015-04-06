@@ -18,8 +18,8 @@
 """Model for users."""
 
 __all__ = [
+    'DomainOwner',
     'User',
-    'DomainOwner'
     ]
 
 
@@ -35,7 +35,7 @@ from mailman.model.preferences import Preferences
 from mailman.model.roster import Memberships
 from mailman.utilities.datetime import factory as date_factory
 from mailman.utilities.uid import UniqueIDFactory
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Unicode, Boolean
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Unicode
 from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
@@ -180,9 +180,11 @@ class User(Model):
         return Memberships(self)
 
 
+
 class DomainOwner(Model):
-    """Domain to owners(user) association class"""
+    """Internal table for associating domains to their owners."""
 
     __tablename__ = 'domain_owner'
+
     user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
     domain_id = Column(Integer, ForeignKey('domain.id'), primary_key=True)

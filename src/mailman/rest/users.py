@@ -59,18 +59,19 @@ class PasswordEncrypterGetterSetter(GetterSetter):
 
 
 ATTRIBUTES = dict(
-    display_name=GetterSetter(str),
     cleartext_password=PasswordEncrypterGetterSetter(),
+    display_name=GetterSetter(str),
+    is_server_owner=GetterSetter(as_boolean),
     )
 
 
 CREATION_FIELDS = dict(
-    email=str,
     display_name=str,
-    password=str,
+    email=str,
     is_server_owner=bool,
+    password=str,
     _optional=('display_name', 'password', 'is_server_owner'),
-)
+    )
 
 
 
@@ -80,6 +81,7 @@ def create_user(arguments, response):
     # strip that out (if it exists), then create the user, adding the password
     # after the fact if successful.
     password = arguments.pop('password', None)
+    is_server_owner = arguments.pop('is_server_owner', False)
     try:
         user = getUtility(IUserManager).create_user(**arguments)
     except ExistingAddressError as error:
@@ -90,6 +92,7 @@ def create_user(arguments, response):
         # This will have to be reset since it cannot be retrieved.
         password = generate(int(config.passwords.password_length))
     user.password = config.password_context.encrypt(password)
+    user.is_server_owner = is_server_owner
     location = path_to('users/{}'.format(user.user_id.int))
     created(response, location)
     return user
@@ -107,10 +110,10 @@ class _UserBase(CollectionMixin):
         # but we serialize its integer equivalent.
         user_id = user.user_id.int
         resource = dict(
-            user_id=user_id,
             created_on=user.created_on,
-            self_link=path_to('users/{}'.format(user_id)),
             is_server_owner=user.is_server_owner,
+            self_link=path_to('users/{}'.format(user_id)),
+            user_id=user_id,
         )
         # Add the password attribute, only if the user has a password.  Same
         # with the real name.  These could be None or the empty string.
@@ -296,8 +299,8 @@ class AddressUser(_UserBase):
         del fields['email']
         fields['user_id'] = int
         fields['auto_create'] = as_boolean
-        fields['_optional'] = fields['_optional'] + ('user_id', 'auto_create',
-                                                     'is_server_owner')
+        fields['_optional'] = fields['_optional'] + (
+            'user_id', 'auto_create', 'is_server_owner')
         try:
             validator = Validator(**fields)
             arguments = validator(request)
@@ -332,8 +335,8 @@ class AddressUser(_UserBase):
         # Process post data and check for an existing user.
         fields = CREATION_FIELDS.copy()
         fields['user_id'] = int
-        fields['_optional'] = fields['_optional'] + ('user_id', 'email',
-                                                     'is_server_owner')
+        fields['_optional'] = fields['_optional'] + (
+            'user_id', 'email', 'is_server_owner')
         try:
             validator = Validator(**fields)
             arguments = validator(request)
@@ -383,6 +386,8 @@ class Login:
         else:
             forbidden(response)
 
+
+
 class OwnersForDomain(_UserBase):
     """Owners for a particular domain."""
 

@@ -257,8 +257,9 @@ You can change both the display name and the password by PUTing the full
 resource.
 
     >>> dump_json('http://localhost:9001/3.0/users/4', {
-    ...           'display_name': 'David Personhood',
     ...           'cleartext_password': 'the garden',
+    ...           'display_name': 'David Personhood',
+    ...           'is_server_owner': False,
     ...           }, method='PUT')
     content-length: 0
     date: ...
@@ -416,3 +417,82 @@ This time, Elly successfully logs into Mailman.
     date: ...
     server: ...
     status: 204
+
+
+Server owners
+=============
+
+Users can be designated as server owners.  Elly is not currently a server
+owner.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    is_server_owner: False
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Let's make her a server owner.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/users/5', {
+    ...           'is_server_owner': True,
+    ...           }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    is_server_owner: True
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Elly later retires as server owner.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/users/5', {
+    ...           'is_server_owner': False,
+    ...           }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    is_server_owner: False
+    password: {plaintext}...
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Gwen, a new users, takes over as a server owner.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/users', {
+    ...           'display_name': 'Gwen Person',
+    ...           'email': 'gwen@example.com',
+    ...           'is_server_owner': True,
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/users/7
+    server: ...
+    status: 201
+
+    >>> dump_json('http://localhost:9001/3.0/users/7')
+    created_on: 2005-08-01T07:49:23
+    display_name: Gwen Person
+    http_etag: "..."
+    is_server_owner: True
+    password: {plaintext}...
+    self_link: http://localhost:9001/3.0/users/7
+    user_id: 7

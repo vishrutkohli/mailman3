@@ -1,0 +1,309 @@
+=== modified file 'src/mailman/rest/docs/domains.rst'
+--- src/mailman/rest/docs/domains.rst	2014-12-16 01:01:53 +0000
++++ src/mailman/rest/docs/domains.rst	2015-04-06 15:37:49 +0000
+@@ -29,14 +29,12 @@
+     >>> domain_manager.add(
+     ...     'example.com', 'An example domain', 'http://lists.example.com')
+     <Domain example.com, An example domain,
+-            base_url: http://lists.example.com,
+-            contact_address: postmaster@example.com>
++            base_url: http://lists.example.com>
+     >>> transaction.commit()
+ 
+     >>> dump_json('http://localhost:9001/3.0/domains')
+     entry 0:
+         base_url: http://lists.example.com
+-        contact_address: postmaster@example.com
+         description: An example domain
+         http_etag: "..."
+         mail_host: example.com
+@@ -51,24 +49,19 @@
+ 
+     >>> domain_manager.add(
+     ...     'example.org',
+-    ...     base_url='http://mail.example.org',
+-    ...     contact_address='listmaster@example.org')
+-    <Domain example.org, base_url: http://mail.example.org,
+-            contact_address: listmaster@example.org>
++    ...     base_url='http://mail.example.org')
++    <Domain example.org, base_url: http://mail.example.org>
+     >>> domain_manager.add(
+     ...     'lists.example.net',
+     ...     'Porkmasters',
+-    ...     'http://example.net',
+-    ...     'porkmaster@example.net')
++    ...     'http://example.net')
+     <Domain lists.example.net, Porkmasters,
+-            base_url: http://example.net,
+-            contact_address: porkmaster@example.net>
++            base_url: http://example.net>
+     >>> transaction.commit()
+ 
+     >>> dump_json('http://localhost:9001/3.0/domains')
+     entry 0:
+         base_url: http://lists.example.com
+-        contact_address: postmaster@example.com
+         description: An example domain
+         http_etag: "..."
+         mail_host: example.com
+@@ -76,7 +69,6 @@
+         url_host: lists.example.com
+     entry 1:
+         base_url: http://mail.example.org
+-        contact_address: listmaster@example.org
+         description: None
+         http_etag: "..."
+         mail_host: example.org
+@@ -84,7 +76,6 @@
+         url_host: mail.example.org
+     entry 2:
+         base_url: http://example.net
+-        contact_address: porkmaster@example.net
+         description: Porkmasters
+         http_etag: "..."
+         mail_host: lists.example.net
+@@ -103,7 +94,6 @@
+ 
+     >>> dump_json('http://localhost:9001/3.0/domains/lists.example.net')
+     base_url: http://example.net
+-    contact_address: porkmaster@example.net
+     description: Porkmasters
+     http_etag: "..."
+     mail_host: lists.example.net
+@@ -165,7 +155,6 @@
+ 
+     >>> dump_json('http://localhost:9001/3.0/domains/lists.example.com')
+     base_url: http://lists.example.com
+-    contact_address: postmaster@lists.example.com
+     description: None
+     http_etag: "..."
+     mail_host: lists.example.com
+@@ -176,9 +165,7 @@
+ ::
+ 
+     >>> domain_manager['lists.example.com']
+-    <Domain lists.example.com,
+-            base_url: http://lists.example.com,
+-            contact_address: postmaster@lists.example.com>
++    <Domain lists.example.com, base_url: http://lists.example.com>
+ 
+     # Unlock the database.
+     >>> transaction.abort()
+@@ -190,8 +177,7 @@
+     >>> dump_json('http://localhost:9001/3.0/domains', {
+     ...           'mail_host': 'my.example.com',
+     ...           'description': 'My new domain',
+-    ...           'base_url': 'http://allmy.example.com',
+-    ...           'contact_address': 'helpme@example.com'
++    ...           'base_url': 'http://allmy.example.com'
+     ...           })
+     content-length: 0
+     date: ...
+@@ -200,7 +186,6 @@
+ 
+     >>> dump_json('http://localhost:9001/3.0/domains/my.example.com')
+     base_url: http://allmy.example.com
+-    contact_address: helpme@example.com
+     description: My new domain
+     http_etag: "..."
+     mail_host: my.example.com
+@@ -208,9 +193,7 @@
+     url_host: allmy.example.com
+ 
+     >>> domain_manager['my.example.com']
+-    <Domain my.example.com, My new domain,
+-            base_url: http://allmy.example.com,
+-            contact_address: helpme@example.com>
++    <Domain my.example.com, My new domain, base_url: http://allmy.example.com>
+ 
+     # Unlock the database.
+     >>> transaction.abort()
+
+=== modified file 'src/mailman/rest/domains.py'
+--- src/mailman/rest/domains.py	2015-01-05 01:40:47 +0000
++++ src/mailman/rest/domains.py	2015-04-06 15:37:49 +0000
+@@ -25,10 +25,12 @@
+ 
+ from mailman.interfaces.domain import (
+     BadDomainSpecificationError, IDomainManager)
++from mailman.interfaces.usermanager import IUserManager
+ from mailman.rest.helpers import (
+     BadRequest, CollectionMixin, NotFound, bad_request, child, created, etag,
+     no_content, not_found, okay, path_to)
+ from mailman.rest.lists import ListsForDomain
++from mailman.rest.users import OwnersForDomain
+ from mailman.rest.validator import Validator
+ from zope.component import getUtility
+ 
+@@ -41,7 +43,6 @@
+         """See `CollectionMixin`."""
+         return dict(
+             base_url=domain.base_url,
+-            contact_address=domain.contact_address,
+             description=domain.description,
+             mail_host=domain.mail_host,
+             self_link=path_to('domains/{0}'.format(domain.mail_host)),
+@@ -88,6 +89,17 @@
+         else:
+             return BadRequest(), []
+ 
++    @child()
++    def owners(self, request, segments):
++        """/domains/<domain>/owners"""
++        if len(segments) == 0:
++            domain = getUtility(IDomainManager).get(self._domain)
++            if domain is None:
++                return NotFound()
++            return OwnersForDomain(domain)
++        else:
++            return BadRequest(), []
++
+ 
+ class AllDomains(_DomainBase):
+     """The domains."""
+@@ -99,12 +111,13 @@
+             validator = Validator(mail_host=str,
+                                   description=str,
+                                   base_url=str,
+-                                  contact_address=str,
++                                  owners=list,
+                                   _optional=('description', 'base_url',
+-                                             'contact_address'))
+-            domain = domain_manager.add(**validator(request))
+-        except BadDomainSpecificationError:
+-            bad_request(response, b'Domain exists')
++                                             'owners'))
++            values = validator(request)
++            domain = domain_manager.add(**values)
++        except BadDomainSpecificationError as error:
++            bad_request(response, str(error))
+         except ValueError as error:
+             bad_request(response, str(error))
+         else:
+
+=== modified file 'src/mailman/rest/tests/test_domains.py'
+--- src/mailman/rest/tests/test_domains.py	2015-01-05 01:40:47 +0000
++++ src/mailman/rest/tests/test_domains.py	2015-04-06 15:37:49 +0000
+@@ -27,6 +27,7 @@
+ from mailman.app.lifecycle import create_list
+ from mailman.database.transaction import transaction
+ from mailman.interfaces.listmanager import IListManager
++from mailman.interfaces.domain import IDomainManager
+ from mailman.testing.helpers import call_api
+ from mailman.testing.layers import RESTLayer
+ from urllib.error import HTTPError
+@@ -41,6 +42,17 @@
+         with transaction():
+             self._mlist = create_list('test@example.com')
+ 
++    def test_create_domains(self):
++        """Test Create domain via REST"""
++        data = {'mail_host': 'example.org',
++                'description': 'Example domain',
++                'base_url': 'http://example.org',
++                'owners': ['someone@example.com',
++                           'secondowner@example.com',]}
++        content, response = call_api('http://localhost:9001/3.0/domains',
++                                     data, method="POST")
++        self.assertEqual(response.status, 201)
++
+     def test_bogus_endpoint_extension(self):
+         # /domains/<domain>/lists/<anything> is not a valid endpoint.
+         with self.assertRaises(HTTPError) as cm:
+
+=== modified file 'src/mailman/rest/users.py'
+--- src/mailman/rest/users.py	2015-03-20 16:38:00 +0000
++++ src/mailman/rest/users.py	2015-04-06 15:37:49 +0000
+@@ -22,6 +22,7 @@
+     'AddressUser',
+     'AllUsers',
+     'Login',
++    'OwnersForDomain',
+     ]
+ 
+ 
+@@ -67,8 +68,9 @@
+     email=str,
+     display_name=str,
+     password=str,
+-    _optional=('display_name', 'password'),
+-    )
++    is_server_owner=bool,
++    _optional=('display_name', 'password', 'is_server_owner'),
++)
+ 
+ 
+ 
+@@ -108,7 +110,8 @@
+             user_id=user_id,
+             created_on=user.created_on,
+             self_link=path_to('users/{}'.format(user_id)),
+-            )
++            is_server_owner=user.is_server_owner,
++        )
+         # Add the password attribute, only if the user has a password.  Same
+         # with the real name.  These could be None or the empty string.
+         if user.password:
+@@ -293,7 +296,8 @@
+         del fields['email']
+         fields['user_id'] = int
+         fields['auto_create'] = as_boolean
+-        fields['_optional'] = fields['_optional'] + ('user_id', 'auto_create')
++        fields['_optional'] = fields['_optional'] + ('user_id', 'auto_create',
++                                                     'is_server_owner')
+         try:
+             validator = Validator(**fields)
+             arguments = validator(request)
+@@ -328,7 +332,8 @@
+         # Process post data and check for an existing user.
+         fields = CREATION_FIELDS.copy()
+         fields['user_id'] = int
+-        fields['_optional'] = fields['_optional'] + ('user_id', 'email')
++        fields['_optional'] = fields['_optional'] + ('user_id', 'email',
++                                                     'is_server_owner')
+         try:
+             validator = Validator(**fields)
+             arguments = validator(request)
+@@ -377,3 +382,41 @@
+             no_content(response)
+         else:
+             forbidden(response)
++
++class OwnersForDomain(_UserBase):
++    """Owners for a particular domain."""
++
++    def __init__(self, domain):
++        self._domain = domain
++
++    def on_get(self, request, response):
++        """/domains/<domain>/owners"""
++        resource = self._make_collection(request)
++        okay(response, etag(resource))
++
++    def on_post(self, request, response):
++        """POST to /domains/<domain>/owners """
++        validator = Validator(owner=GetterSetter(str))
++        try:
++            values = validator(request)
++        except ValueError as error:
++            bad_request(response, str(error))
++            return
++        self._domain.add_owner(values['owner'])
++        return no_content(response)
++
++    def on_delete(self, request, response):
++        """DELETE to /domains/<domain>/owners"""
++        validator = Validator(owner=GetterSetter(str))
++        try:
++            values = validator(request)
++        except ValueError as error:
++            bad_request(response, str(error))
++            return
++        self._domain.remove_owner(owner)
++        return no_content(response)
++
++    @paginate
++    def _get_collection(self, request):
++        """See `CollectionMixin`."""
++        return list(self._domain.owners)
+

@@ -28,8 +28,7 @@ Once a domain is added, it is accessible through the API.
 
     >>> domain_manager.add(
     ...     'example.com', 'An example domain', 'http://lists.example.com')
-    <Domain example.com, An example domain,
-            base_url: http://lists.example.com>
+    <Domain example.com, An example domain, base_url: http://lists.example.com>
     >>> transaction.commit()
 
     >>> dump_json('http://localhost:9001/3.0/domains')
@@ -55,8 +54,7 @@ At the top level, all domains are returned as separate entries.
     ...     'lists.example.net',
     ...     'Porkmasters',
     ...     'http://example.net')
-    <Domain lists.example.net, Porkmasters,
-            base_url: http://example.net>
+    <Domain lists.example.net, Porkmasters, base_url: http://example.net>
     >>> transaction.commit()
 
     >>> dump_json('http://localhost:9001/3.0/domains')
@@ -210,6 +208,76 @@ Domains can also be deleted via the API.
     date: ...
     server: ...
     status: 204
+
+
+Domain owners
+=============
+
+Domains can have owners.  By posting some addresses to the owners resource,
+you can add some domain owners.  Currently our domain has no owners:
+
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners')
+    http_etag: ...
+    start: 0
+    total_size: 0
+
+Anne and Bart volunteer to be a domain owners.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners', {
+    ...     'owner': 'anne@example.com',
+    ...     })
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners', {
+    ...     'owner': 'bart@example.com',
+    ...     })
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners')
+    entry 0:
+        created_on: 2005-08-01T07:49:23
+        http_etag: ...
+        is_server_owner: False
+        self_link: http://localhost:9001/3.0/users/1
+        user_id: 1
+    entry 1:
+        created_on: 2005-08-01T07:49:23
+        http_etag: ...
+        is_server_owner: False
+        self_link: http://localhost:9001/3.0/users/2
+        user_id: 2
+    http_etag: ...
+    start: 0
+    total_size: 2
+
+We can delete all the domain owners.
+
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners',
+    ...           method='DELETE')
+
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners')
+    entry 0:
+        created_on: 2005-08-01T07:49:23
+        http_etag: ...
+        is_server_owner: False
+        self_link: http://localhost:9001/3.0/users/1
+        user_id: 1
+    entry 1:
+        created_on: 2005-08-01T07:49:23
+        http_etag: ...
+        is_server_owner: False
+        self_link: http://localhost:9001/3.0/users/2
+        user_id: 2
+    http_etag: ...
+    start: 0
+    total_size: 2
 
 
 .. _Domains: ../../model/docs/domains.html
