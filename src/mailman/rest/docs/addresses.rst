@@ -190,6 +190,7 @@ representation:
     created_on: 2005-08-01T07:49:23
     display_name: Cris X. Person
     http_etag: "..."
+    is_server_owner: False
     password: ...
     self_link: http://localhost:9001/3.0/users/1
     user_id: 1

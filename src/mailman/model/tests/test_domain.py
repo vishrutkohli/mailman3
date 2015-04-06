@@ -26,9 +26,11 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.config import config
 from mailman.interfaces.domain import (
     DomainCreatedEvent, DomainCreatingEvent, DomainDeletedEvent,
-    DomainDeletingEvent, IDomainManager)
+    DomainDeletingEvent, IDomainManager, BadDomainSpecificationError)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.testing.helpers import event_subscribers
 from mailman.testing.layers import ConfigLayer
@@ -77,6 +79,26 @@ class TestDomainManager(unittest.TestCase):
     def test_delete_missing_domain(self):
         # Trying to delete a missing domain gives you a KeyError.
         self.assertRaises(KeyError, self._manager.remove, 'doesnotexist.com')
+
+    def test_domain_create_with_owner(self):
+        domain = self._manager.add('example.org',
+                                   owners=['someuser@example.org'])
+        self.assertEqual(len(domain.owners), 1)
+        self.assertEqual(domain.owners[0].addresses[0].email,
+                         'someuser@example.org')
+
+    def test_add_domain_owner(self):
+        domain = self._manager.add('example.org')
+        domain.add_owner('someuser@example.org')
+        self.assertEqual(len(domain.owners), 1)
+        self.assertEqual(domain.owners[0].addresses[0].email,
+                         'someuser@example.org')
+
+    def test_remove_domain_owner(self):
+        domain = self._manager.add('example.org',
+                                   owners=['someuser@example.org'])
+        domain.remove_owner('someuser@example.org')
+        self.assertEqual(len(domain.owners), 0)
 
 
 

@@ -28,11 +28,15 @@ from mailman.database.transaction import dbconnection
 from mailman.interfaces.domain import (
     BadDomainSpecificationError, DomainCreatedEvent, DomainCreatingEvent,
     DomainDeletedEvent, DomainDeletingEvent, IDomain, IDomainManager)
+from mailman.interfaces.usermanager import IUserManager
 from mailman.model.mailinglist import MailingList
+from mailman.model.user import User, DomainOwner
 from urllib.parse import urljoin, urlparse
 from sqlalchemy import Column, Integer, Unicode
+from sqlalchemy.orm import relationship, backref
 from zope.event import notify
 from zope.interface import implementer
+from zope.component import getUtility
 
 
 
@@ -44,15 +48,17 @@ class Domain(Model):
 
     id = Column(Integer, primary_key=True)
 
-    mail_host = Column(Unicode) # TODO: add index?
+    mail_host = Column(Unicode)
     base_url = Column(Unicode)
     description = Column(Unicode)
-    contact_address = Column(Unicode)
+    owners = relationship("User",
+                          secondary="domain_owner",
+                          backref="domains")
 
     def __init__(self, mail_host,
                  description=None,
                  base_url=None,
-                 contact_address=None):
+                 owners=[]):
         """Create and register a domain.
 
         :param mail_host: The host name for the email interface.
@@ -63,18 +69,16 @@ class Domain(Model):
             scheme.  If not given, it will be constructed from the
             `mail_host` using the http protocol.
         :type base_url: string
-        :param contact_address: The email address to contact a human for this
-            domain.  If not given, postmaster@`mail_host` will be used.
-        :type contact_address: string
+        :param owners: List of `User` who are the owners of this domain
+        :type owners: list
         """
         self.mail_host = mail_host
         self.base_url = (base_url
                          if base_url is not None
                          else 'http://' + mail_host)
         self.description = description
-        self.contact_address = (contact_address
-                                if contact_address is not None
-                                else 'postmaster@' + mail_host)
+        if len(owners):
+            self.add_owners(owners)
 
     @property
     def url_host(self):
@@ -103,13 +107,29 @@ class Domain(Model):
     def __repr__(self):
         """repr(a_domain)"""
         if self.description is None:
-            return ('<Domain {0.mail_host}, base_url: {0.base_url}, '
-                    'contact_address: {0.contact_address}>').format(self)
+            return ('<Domain {0.mail_host}, base_url: {0.base_url}>').format(self)
         else:
             return ('<Domain {0.mail_host}, {0.description}, '
-                    'base_url: {0.base_url}, '
-                    'contact_address: {0.contact_address}>').format(self)
+                    'base_url: {0.base_url}>').format(self)
 
+    def add_owner(self, owner):
+        """Add a domain owner"""
+        user_manager = getUtility(IUserManager)
+        user = user_manager.get_user(owner)
+        if user is None:
+            user = user_manager.create_user(owner)
+        self.owners.append(user)
+
+    def add_owners(self, owners):
+        """Add multiple owners"""
+        assert(isinstance(owners, list))
+        for owner in owners:
+            self.add_owner(owner)
+
+    def remove_owner(self, owner):
+        """ Remove a domain owner"""
+        user_manager = getUtility(IUserManager)
+        self.owners.remove(user_manager.get_user(owner))
 
 
 @implementer(IDomainManager)
@@ -121,15 +141,16 @@ class DomainManager:
             mail_host,
             description=None,
             base_url=None,
-            contact_address=None):
+            owners=[]):
         """See `IDomainManager`."""
         # Be sure the mail_host is not already registered.  This is probably
         # a constraint that should (also) be maintained in the database.
         if self.get(mail_host) is not None:
             raise BadDomainSpecificationError(
                 'Duplicate email host: %s' % mail_host)
+
         notify(DomainCreatingEvent(mail_host))
-        domain = Domain(mail_host, description, base_url, contact_address)
+        domain = Domain(mail_host, description, base_url, owners)
         store.add(domain)
         notify(DomainCreatedEvent(domain))
         return domain

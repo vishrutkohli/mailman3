@@ -22,6 +22,7 @@ __all__ = [
     'AddressUser',
     'AllUsers',
     'Login',
+    'OwnersForDomain',
     ]
 
 
@@ -67,8 +68,9 @@ CREATION_FIELDS = dict(
     email=str,
     display_name=str,
     password=str,
-    _optional=('display_name', 'password'),
-    )
+    is_server_owner=bool,
+    _optional=('display_name', 'password', 'is_server_owner'),
+)
 
 
 
@@ -108,7 +110,8 @@ class _UserBase(CollectionMixin):
             user_id=user_id,
             created_on=user.created_on,
             self_link=path_to('users/{}'.format(user_id)),
-            )
+            is_server_owner=user.is_server_owner,
+        )
         # Add the password attribute, only if the user has a password.  Same
         # with the real name.  These could be None or the empty string.
         if user.password:
@@ -293,7 +296,8 @@ class AddressUser(_UserBase):
         del fields['email']
         fields['user_id'] = int
         fields['auto_create'] = as_boolean
-        fields['_optional'] = fields['_optional'] + ('user_id', 'auto_create')
+        fields['_optional'] = fields['_optional'] + ('user_id', 'auto_create',
+                                                     'is_server_owner')
         try:
             validator = Validator(**fields)
             arguments = validator(request)
@@ -328,7 +332,8 @@ class AddressUser(_UserBase):
         # Process post data and check for an existing user.
         fields = CREATION_FIELDS.copy()
         fields['user_id'] = int
-        fields['_optional'] = fields['_optional'] + ('user_id', 'email')
+        fields['_optional'] = fields['_optional'] + ('user_id', 'email',
+                                                     'is_server_owner')
         try:
             validator = Validator(**fields)
             arguments = validator(request)
@@ -377,3 +382,41 @@ class Login:
             no_content(response)
         else:
             forbidden(response)
+
+class OwnersForDomain(_UserBase):
+    """Owners for a particular domain."""
+
+    def __init__(self, domain):
+        self._domain = domain
+
+    def on_get(self, request, response):
+        """/domains/<domain>/owners"""
+        resource = self._make_collection(request)
+        okay(response, etag(resource))
+
+    def on_post(self, request, response):
+        """POST to /domains/<domain>/owners """
+        validator = Validator(owner=GetterSetter(str))
+        try:
+            values = validator(request)
+        except ValueError as error:
+            bad_request(response, str(error))
+            return
+        self._domain.add_owner(values['owner'])
+        return no_content(response)
+
+    def on_delete(self, request, response):
+        """DELETE to /domains/<domain>/owners"""
+        validator = Validator(owner=GetterSetter(str))
+        try:
+            values = validator(request)
+        except ValueError as error:
+            bad_request(response, str(error))
+            return
+        self._domain.remove_owner(owner)
+        return no_content(response)
+
+    @paginate
+    def _get_collection(self, request):
+        """See `CollectionMixin`."""
+        return list(self._domain.owners)

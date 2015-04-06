@@ -127,7 +127,7 @@ Mailman has sent her the confirmation message.
     message.  If you think you are being maliciously subscribed to the list, or
     have any other questions, you may contact
     <BLANKLINE>
-        postmaster@example.com
+        alpha-owner@example.com
     <BLANKLINE>
 
 Once Anne confirms her registration, she will be made a member of the mailing
