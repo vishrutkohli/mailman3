@@ -9,21 +9,21 @@ Domains
     >>> manager = getUtility(IDomainManager)
     >>> manager.remove('example.com')
     <Domain example.com...>
-    >>> from mailman.interfaces.usermanager import IUserManager
-    >>> user_manager = getUtility(IUserManager)
-    >>> user = user_manager.create_user('test@example.org')
-    >>> config.db.commit()
 
 Domains are how Mailman interacts with email host names and web host names.
 ::
 
     >>> from operator import attrgetter
-    >>> def show_domains():
+    >>> def show_domains(*, with_owners=False):
     ...     if len(manager) == 0:
     ...         print('no domains')
     ...         return
     ...     for domain in sorted(manager, key=attrgetter('mail_host')):
     ...         print(domain)
+    ...     owners = sorted(owner.addresses[0].email
+    ...                     for owner in domain.owners)
+    ...     for owner in owners:
+    ...         print('- owner:', owner)
 
     >>> show_domains()
     no domains
@@ -51,30 +51,35 @@ web interface for the domain.
     >>> show_domains()
     <Domain example.com, base_url: https://mail.example.com>
 
-Domains can have explicit descriptions.
+Domains can have explicit descriptions, and can be created with one or more
+owners.
 ::
 
     >>> manager.add(
     ...     'example.net',
     ...     base_url='http://lists.example.net',
     ...     description='The example domain',
-    ...     owners=['user@domain.com'])
+    ...     owners=['anne@example.com'])
     <Domain example.net, The example domain,
             base_url: http://lists.example.net>
 
-    >>> show_domains()
+    >>> show_domains(with_owners=True)
     <Domain example.com, base_url: https://mail.example.com>
     <Domain example.net, The example domain,
             base_url: http://lists.example.net>
+    - owner: anne@example.com
 
 Domains can have multiple owners, ideally one of the owners should have a
-verified preferred address. However this is not checked right now and
-contact_address from config can be used as a fallback.
-::
+verified preferred address.  However this is not checked right now and the
+configuration's default contact address may be used as a fallback.
 
    >>> net_domain = manager['example.net']
-   >>> net_domain.add_owner('test@example.org')
-
+   >>> net_domain.add_owner('bart@example.org')
+   >>> show_domains(with_owners=True)
+   <Domain example.com, base_url: https://mail.example.com>
+   <Domain example.net, The example domain, base_url: http://lists.example.net>
+   - owner: anne@example.com
+   - owner: bart@example.org
 
 Domains can list all associated mailing lists with the mailing_lists property.
 ::
