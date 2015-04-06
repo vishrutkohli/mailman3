@@ -74,3 +74,4 @@ class MailArchive:
                 msg,
                 listid=mlist.list_id,
                 recipients=[self.recipient])
+        return None

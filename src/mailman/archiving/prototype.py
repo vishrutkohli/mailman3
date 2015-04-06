@@ -115,3 +115,5 @@ class Prototype:
                           message.get('message-id', 'n/a')))
         finally:
             lock.unlock(unconditionally=True)
+        # Can we get return the URL of the archived message?
+        return None
