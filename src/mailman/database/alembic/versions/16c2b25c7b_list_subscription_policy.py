@@ -1,14 +1,14 @@
 """List subscription policy
 
 Revision ID: 16c2b25c7b
-Revises: 33e1f5f6fa8
+Revises: 46e92facee7
 Create Date: 2015-03-21 11:00:44.634883
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '16c2b25c7b'
-down_revision = '33e1f5f6fa8'
+down_revision = '46e92facee7'
 
 from alembic import op
 import sqlalchemy as sa
