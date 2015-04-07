@@ -67,6 +67,48 @@ class Workflow:
             log.exception('deque: {}'.format(COMMASPACE.join(self._next)))
             raise
 
+    def run_thru(self, stop_after):
+        """Run the state machine through and including the given step.
+
+        :param stop_after: Name of method, sans prefix to run the
+            state machine through.  In other words, the state machine runs
+            until the named method completes.
+        """
+        results = []
+        while True:
+            try:
+                name, step = self._pop()
+            except (StopIteration, IndexError):
+                # We're done.
+                break
+            results.append(step())
+            if name == stop_after:
+                break
+        return results
+
+    def run_until(self, stop_before):
+        """Trun the state machine until (not including) the given step.
+
+        :param stop_before: Name of method, sans prefix that the
+            state machine is run until the method is reached.  Unlike
+            `run_thru()` the named method is not run.
+        """
+        results = []
+        while True:
+            try:
+                name, step = self._pop()
+            except (StopIteration, IndexError):
+                # We're done.
+                break
+            if name == stop_before:
+                # Stop executing, but not before we push the last state back
+                # onto the deque.  Otherwise, resuming the state machine would
+                # skip this step.
+                self._next.appendleft(step)
+                break
+            results.append(step())
+        return results
+
     def save(self):
         assert self.token, 'Workflow token must be set'
         state_manager = getUtility(IWorkflowStateManager)
