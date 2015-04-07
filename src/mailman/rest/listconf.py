@@ -33,7 +33,8 @@ from mailman.interfaces.mailinglist import (
     IAcceptableAliasSet, ReplyToMunging, SubscriptionPolicy)
 from mailman.rest.helpers import (
     GetterSetter, bad_request, etag, no_content, okay)
-from mailman.rest.validator import PatchValidator, Validator, enum_validator
+from mailman.rest.validator import (
+    PatchValidator, Validator, enum_validator, list_of_strings_validator)
 
 
 
@@ -73,14 +74,6 @@ def pipeline_validator(pipeline_name):
     raise ValueError('Unknown pipeline: {}'.format(pipeline_name))
 
 
-def list_of_str(values):
-    """Turn a list of things into a list of unicodes."""
-    for value in values:
-        if not isinstance(value, str):
-            raise ValueError('Expected str, got {!r}'.format(value))
-    return values
-
-
 
 # This is the list of IMailingList attributes that are exposed through the
 # REST API.  The values of the keys are the GetterSetter instance holding the
@@ -97,7 +90,7 @@ def list_of_str(values):
 # (e.g. datetimes, timedeltas, enums).
 
 ATTRIBUTES = dict(
-    acceptable_aliases=AcceptableAliases(list_of_str),
+    acceptable_aliases=AcceptableAliases(list_of_strings_validator),
     admin_immed_notify=GetterSetter(as_boolean),
     admin_notify_mchanges=GetterSetter(as_boolean),
     administrivia=GetterSetter(as_boolean),

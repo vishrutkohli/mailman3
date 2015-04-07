@@ -34,6 +34,7 @@ Anne's user record is returned as an entry into the collection of all users.
         created_on: 2005-08-01T07:49:23
         display_name: Anne Person
         http_etag: "..."
+        is_server_owner: False
         self_link: http://localhost:9001/3.0/users/1
         user_id: 1
     http_etag: "..."
@@ -50,11 +51,13 @@ returned in the REST API.
         created_on: 2005-08-01T07:49:23
         display_name: Anne Person
         http_etag: "..."
+        is_server_owner: False
         self_link: http://localhost:9001/3.0/users/1
         user_id: 1
     entry 1:
         created_on: 2005-08-01T07:49:23
         http_etag: "..."
+        is_server_owner: False
         self_link: http://localhost:9001/3.0/users/2
         user_id: 2
     http_etag: "..."
@@ -76,6 +79,7 @@ page.
         created_on: 2005-08-01T07:49:23
         display_name: Anne Person
         http_etag: "..."
+        is_server_owner: False
         self_link: http://localhost:9001/3.0/users/1
         user_id: 1
     http_etag: "..."
@@ -86,6 +90,7 @@ page.
     entry 0:
         created_on: 2005-08-01T07:49:23
         http_etag: "..."
+        is_server_owner: False
         self_link: http://localhost:9001/3.0/users/2
         user_id: 2
     http_etag: "..."
@@ -120,6 +125,7 @@ one was assigned to her.
     >>> dump_json('http://localhost:9001/3.0/users/3')
     created_on: 2005-08-01T07:49:23
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
@@ -131,6 +137,7 @@ address.
     >>> dump_json('http://localhost:9001/3.0/users/cris@example.com')
     created_on: 2005-08-01T07:49:23
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/3
     user_id: 3
@@ -158,6 +165,7 @@ Dave's user record includes his display name.
     created_on: 2005-08-01T07:49:23
     display_name: Dave Person
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
@@ -190,6 +198,7 @@ because it has the hash algorithm prefix (i.e. the *{plaintext}* marker).
     created_on: 2005-08-01T07:49:23
     display_name: Elly Person
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}supersekrit
     self_link: http://localhost:9001/3.0/users/5
     user_id: 5
@@ -214,6 +223,7 @@ Dave's display name has been updated.
     created_on: 2005-08-01T07:49:23
     display_name: David Person
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
@@ -238,6 +248,7 @@ addition of the algorithm prefix.
     created_on: 2005-08-01T07:49:23
     display_name: David Person
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}clockwork angels
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
@@ -246,8 +257,9 @@ You can change both the display name and the password by PUTing the full
 resource.
 
     >>> dump_json('http://localhost:9001/3.0/users/4', {
-    ...           'display_name': 'David Personhood',
     ...           'cleartext_password': 'the garden',
+    ...           'display_name': 'David Personhood',
+    ...           'is_server_owner': False,
     ...           }, method='PUT')
     content-length: 0
     date: ...
@@ -260,6 +272,7 @@ Dave's user record has been updated.
     created_on: 2005-08-01T07:49:23
     display_name: David Personhood
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}the garden
     self_link: http://localhost:9001/3.0/users/4
     user_id: 4
@@ -343,6 +356,7 @@ addresses can be used to look up Fred's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Fred Person
     http_etag: "..."
+    is_server_owner: False
     self_link: http://localhost:9001/3.0/users/6
     user_id: 6
 
@@ -350,6 +364,7 @@ addresses can be used to look up Fred's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Fred Person
     http_etag: "..."
+    is_server_owner: False
     self_link: http://localhost:9001/3.0/users/6
     user_id: 6
 
@@ -357,6 +372,7 @@ addresses can be used to look up Fred's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Fred Person
     http_etag: "..."
+    is_server_owner: False
     self_link: http://localhost:9001/3.0/users/6
     user_id: 6
 
@@ -364,6 +380,7 @@ addresses can be used to look up Fred's user record.
     created_on: 2005-08-01T07:49:23
     display_name: Fred Person
     http_etag: "..."
+    is_server_owner: False
     self_link: http://localhost:9001/3.0/users/6
     user_id: 6
 
@@ -382,6 +399,7 @@ password is hashed and getting her user record returns the hashed password.
     created_on: 2005-08-01T07:49:23
     display_name: Elly Person
     http_etag: "..."
+    is_server_owner: False
     password: {plaintext}supersekrit
     self_link: http://localhost:9001/3.0/users/5
     user_id: 5
@@ -399,3 +417,82 @@ This time, Elly successfully logs into Mailman.
     date: ...
     server: ...
     status: 204
+
+
+Server owners
+=============
+
+Users can be designated as server owners.  Elly is not currently a server
+owner.
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    is_server_owner: False
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Let's make her a server owner.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/users/5', {
+    ...           'is_server_owner': True,
+    ...           }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    is_server_owner: True
+    password: {plaintext}supersekrit
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Elly later retires as server owner.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/users/5', {
+    ...           'is_server_owner': False,
+    ...           }, method='PATCH')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+    >>> dump_json('http://localhost:9001/3.0/users/5')
+    created_on: 2005-08-01T07:49:23
+    display_name: Elly Person
+    http_etag: "..."
+    is_server_owner: False
+    password: {plaintext}...
+    self_link: http://localhost:9001/3.0/users/5
+    user_id: 5
+
+Gwen, a new users, takes over as a server owner.
+::
+
+    >>> dump_json('http://localhost:9001/3.0/users', {
+    ...           'display_name': 'Gwen Person',
+    ...           'email': 'gwen@example.com',
+    ...           'is_server_owner': True,
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/users/7
+    server: ...
+    status: 201
+
+    >>> dump_json('http://localhost:9001/3.0/users/7')
+    created_on: 2005-08-01T07:49:23
+    display_name: Gwen Person
+    http_etag: "..."
+    is_server_owner: True
+    password: {plaintext}...
+    self_link: http://localhost:9001/3.0/users/7
+    user_id: 7

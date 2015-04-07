@@ -295,4 +295,19 @@ membership role.
     zperson@example.org xtest_2.example.com MemberRole.owner
 
 
+Server owners
+=============
+
+Some users are server owners.  Zoe is not yet a server owner.
+
+    >>> user_1.is_server_owner
+    False
+
+So, let's make her one.
+
+    >>> user_1.is_server_owner = True
+    >>> user_1.is_server_owner
+    True
+
+
 .. _`usermanager.txt`: usermanager.html

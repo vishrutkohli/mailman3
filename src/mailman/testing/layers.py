@@ -200,7 +200,7 @@ class ConfigLayer(MockAndMonkeyLayer):
         with transaction():
             getUtility(IDomainManager).add(
                 'example.com', 'An example domain.',
-                'http://lists.example.com', 'postmaster@example.com')
+                'http://lists.example.com')
 
     @classmethod
     def testTearDown(cls):

@@ -29,7 +29,8 @@ from mailman.rest.helpers import (
     BadRequest, CollectionMixin, NotFound, bad_request, child, created, etag,
     no_content, not_found, okay, path_to)
 from mailman.rest.lists import ListsForDomain
-from mailman.rest.validator import Validator
+from mailman.rest.users import OwnersForDomain
+from mailman.rest.validator import Validator, list_of_strings_validator
 from zope.component import getUtility
 
 
@@ -41,7 +42,6 @@ class _DomainBase(CollectionMixin):
         """See `CollectionMixin`."""
         return dict(
             base_url=domain.base_url,
-            contact_address=domain.contact_address,
             description=domain.description,
             mail_host=domain.mail_host,
             self_link=path_to('domains/{0}'.format(domain.mail_host)),
@@ -88,6 +88,17 @@ class ADomain(_DomainBase):
         else:
             return BadRequest(), []
 
+    @child()
+    def owners(self, request, segments):
+        """/domains/<domain>/owners"""
+        if len(segments) == 0:
+            domain = getUtility(IDomainManager).get(self._domain)
+            if domain is None:
+                return NotFound()
+            return OwnersForDomain(domain)
+        else:
+            return BadRequest(), []
+
 
 class AllDomains(_DomainBase):
     """The domains."""
@@ -99,12 +110,18 @@ class AllDomains(_DomainBase):
             validator = Validator(mail_host=str,
                                   description=str,
                                   base_url=str,
-                                  contact_address=str,
-                                  _optional=('description', 'base_url',
-                                             'contact_address'))
-            domain = domain_manager.add(**validator(request))
-        except BadDomainSpecificationError:
-            bad_request(response, b'Domain exists')
+                                  owner=list_of_strings_validator,
+                                  _optional=(
+                                      'description', 'base_url', 'owner'))
+            values = validator(request)
+            # For consistency, owners are passed in as multiple `owner` keys,
+            # but .add() requires an `owners` keyword.  Match impedence.
+            owners = values.pop('owner', None)
+            if owners is not None:
+                values['owners'] = owners
+            domain = domain_manager.add(**values)
+        except BadDomainSpecificationError as error:
+            bad_request(response, str(error))
         except ValueError as error:
             bad_request(response, str(error))
         else:

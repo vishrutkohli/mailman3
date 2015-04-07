@@ -44,8 +44,7 @@ Now both the domain and the mailing list exist in the database.
 
     >>> from mailman.interfaces.domain import IDomainManager
     >>> getUtility(IDomainManager).get('example.xx')
-    <Domain example.xx, base_url: http://example.xx,
-            contact_address: postmaster@example.xx>
+    <Domain example.xx, base_url: http://example.xx>
 
 You can also create mailing lists in existing domains without the
 auto-creation flag.

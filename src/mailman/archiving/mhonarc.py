@@ -87,3 +87,6 @@ class MHonArc:
                       (msg['message-id'], proc.returncode))
         log.info(stdout)
         log.error(stderr)
+        # Can we get more information, such as the url to the message just
+        # archived, out of MHonArc?
+        return None
