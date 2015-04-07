@@ -18,6 +18,7 @@
 """REST domain tests."""
 
 __all__ = [
+    'TestDomainOwners',
     'TestDomains',
     ]
 
@@ -40,6 +41,18 @@ class TestDomains(unittest.TestCase):
     def setUp(self):
         with transaction():
             self._mlist = create_list('test@example.com')
+
+    def test_create_domains(self):
+        # Create a domain with owners.
+        data = dict(
+            mail_host='example.org',
+            description='Example domain',
+            base_url='http://example.org',
+            owner=['someone@example.com', 'secondowner@example.com'],
+            )
+        content, response = call_api(
+            'http://localhost:9001/3.0/domains', data, method="POST")
+        self.assertEqual(response.status, 201)
 
     def test_bogus_endpoint_extension(self):
         # /domains/<domain>/lists/<anything> is not a valid endpoint.
@@ -87,3 +100,45 @@ class TestDomains(unittest.TestCase):
             call_api('http://localhost:9001/3.0/domains/example.com',
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
+
+
+
+class TestDomainOwners(unittest.TestCase):
+    layer = RESTLayer
+
+    def test_get_missing_domain_owners(self):
+        # Try to get the owners of a missing domain.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/example.net/owners')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_post_to_missing_domain_owners(self):
+        # Try to add owners to a missing domain.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/example.net/owners', (
+                ('owner', 'dave@example.com'), ('owner', 'elle@example.com'),
+                ))
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_delete_missing_domain_owners(self):
+        # Try to delete the owners of a missing domain.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/example.net/owners',
+                     method='DELETE')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_bad_post(self):
+        # Send POST data with an invalid attribute.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/example.com/owners', (
+                ('guy', 'dave@example.com'), ('gal', 'elle@example.com'),
+                ))
+        self.assertEqual(cm.exception.code, 400)
+
+    def test_bad_delete(self):
+        # Send DELETE with any data.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/domains/example.com/owners', {
+                'owner': 'dave@example.com',
+                }, method='DELETE')
+        self.assertEqual(cm.exception.code, 400)

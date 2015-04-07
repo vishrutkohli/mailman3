@@ -120,7 +120,7 @@ message is sent to the user in order to verify the registered address.
     message.  If you think you are being maliciously subscribed to the list,
     or have any other questions, you may contact
     <BLANKLINE>
-        postmaster@example.com
+        alpha-owner@example.com
     <BLANKLINE>
     >>> dump_msgdata(items[0].msgdata)
     _parsemsg           : False

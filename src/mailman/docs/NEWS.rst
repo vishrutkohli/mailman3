@@ -12,6 +12,14 @@ Here is a history of user visible changes to Mailman.
 ===============================
 (2015-XX-XX)
 
+Architecture
+------------
+ * Domains now have a list of owners, which are ``IUser`` objects, instead of
+   the single ``contact_address`` they used to have.  ``IUser`` objects now
+   also have a ``is_server_owner`` flag (defaulting to False) to indicate
+   whether they have superuser privileges.  Give by Abhliash Raj, with fixes
+   and refinements by Barry Warsaw.  (LP: #1423756)
+
 Bugs
 ----
  * Fix calculation of default configuration file to use when the ``$var_dir``
@@ -64,6 +72,11 @@ REST
    ``<api>/reserved/uids/orphans``.  Note that *no guarantees* of API
    stability will ever be made for resources under ``reserved``.
    (LP: #1420083)
+ * Domains can now optionally be created with owners; domain owners can be
+   added after the fact; domain owners can be deleted.  Also, users now have
+   an ``is_server_owner`` flag as part of their representation, which defaults
+   to False, and can be PUT and PATCH'd.  Given by Abhilash Raj, with fixes
+   and refinements by Barry Warsaw.  (LP: #1423756)
 
 
 3.0 beta 5 -- "Carve Away The Stone"

@@ -14,12 +14,16 @@ Domains are how Mailman interacts with email host names and web host names.
 ::
 
     >>> from operator import attrgetter
-    >>> def show_domains():
+    >>> def show_domains(*, with_owners=False):
     ...     if len(manager) == 0:
     ...         print('no domains')
     ...         return
     ...     for domain in sorted(manager, key=attrgetter('mail_host')):
     ...         print(domain)
+    ...     owners = sorted(owner.addresses[0].email
+    ...                     for owner in domain.owners)
+    ...     for owner in owners:
+    ...         print('- owner:', owner)
 
     >>> show_domains()
     no domains
@@ -28,17 +32,14 @@ Adding a domain requires some basic information, of which the email host name
 is the only required piece.  The other parts are inferred from that.
 
     >>> manager.add('example.org')
-    <Domain example.org, base_url: http://example.org,
-            contact_address: postmaster@example.org>
+    <Domain example.org, base_url: http://example.org>
     >>> show_domains()
-    <Domain example.org, base_url: http://example.org,
-            contact_address: postmaster@example.org>
+    <Domain example.org, base_url: http://example.org>
 
 We can remove domains too.
 
     >>> manager.remove('example.org')
-    <Domain example.org, base_url: http://example.org,
-            contact_address: postmaster@example.org>
+    <Domain example.org, base_url: http://example.org>
     >>> show_domains()
     no domains
 
@@ -46,30 +47,39 @@ Sometimes the email host name is different than the base url for hitting the
 web interface for the domain.
 
     >>> manager.add('example.com', base_url='https://mail.example.com')
-    <Domain example.com, base_url: https://mail.example.com,
-            contact_address: postmaster@example.com>
+    <Domain example.com, base_url: https://mail.example.com>
     >>> show_domains()
-    <Domain example.com, base_url: https://mail.example.com,
-            contact_address: postmaster@example.com>
+    <Domain example.com, base_url: https://mail.example.com>
 
-Domains can have explicit descriptions and contact addresses.
+Domains can have explicit descriptions, and can be created with one or more
+owners.
 ::
 
     >>> manager.add(
     ...     'example.net',
     ...     base_url='http://lists.example.net',
-    ...     contact_address='postmaster@example.com',
-    ...     description='The example domain')
+    ...     description='The example domain',
+    ...     owners=['anne@example.com'])
     <Domain example.net, The example domain,
-            base_url: http://lists.example.net,
-            contact_address: postmaster@example.com>
+            base_url: http://lists.example.net>
 
-    >>> show_domains()
-    <Domain example.com, base_url: https://mail.example.com,
-            contact_address: postmaster@example.com>
+    >>> show_domains(with_owners=True)
+    <Domain example.com, base_url: https://mail.example.com>
     <Domain example.net, The example domain,
-            base_url: http://lists.example.net,
-            contact_address: postmaster@example.com>
+            base_url: http://lists.example.net>
+    - owner: anne@example.com
+
+Domains can have multiple owners, ideally one of the owners should have a
+verified preferred address.  However this is not checked right now and the
+configuration's default contact address may be used as a fallback.
+
+   >>> net_domain = manager['example.net']
+   >>> net_domain.add_owner('bart@example.org')
+   >>> show_domains(with_owners=True)
+   <Domain example.com, base_url: https://mail.example.com>
+   <Domain example.net, The example domain, base_url: http://lists.example.net>
+   - owner: anne@example.com
+   - owner: bart@example.org
 
 Domains can list all associated mailing lists with the mailing_lists property.
 ::
@@ -105,8 +115,7 @@ In the global domain manager, domains are indexed by their email host name.
 
     >>> print(manager['example.net'])
     <Domain example.net, The example domain,
-            base_url: http://lists.example.net,
-            contact_address: postmaster@example.com>
+            base_url: http://lists.example.net>
 
 As with dictionaries, you can also get the domain.  If the domain does not
 exist, ``None`` or a default is returned.
@@ -114,8 +123,7 @@ exist, ``None`` or a default is returned.
 
     >>> print(manager.get('example.net'))
     <Domain example.net, The example domain,
-            base_url: http://lists.example.net,
-            contact_address: postmaster@example.com>
+            base_url: http://lists.example.net>
 
     >>> print(manager.get('doesnotexist.com'))
     None
