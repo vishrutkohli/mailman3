@@ -38,11 +38,11 @@ log = logging.getLogger('mailman.error')
 class Workflow:
     """Generic workflow."""
 
-    SAVE_KEY = ''
     SAVE_ATTRIBUTES = ()
     INITIAL_STATE = None
 
     def __init__(self):
+        self.token = None
         self._next = deque()
         self.push(self.INITIAL_STATE)
 
@@ -68,7 +68,7 @@ class Workflow:
             raise
 
     def save(self):
-        assert self.SAVE_KEY, 'Workflow SAVE_KEY must be set'
+        assert self.token, 'Workflow token must be set'
         state_manager = getUtility(IWorkflowStateManager)
         data = {attr: getattr(self, attr) for attr in self.SAVE_ATTRIBUTES}
         # Note: only the next step is saved, not the whole stack.  This is not
@@ -86,13 +86,13 @@ class Workflow:
                 "in the queue")
         state_manager.save(
             self.__class__.__name__,
-            self.SAVE_KEY,
+            self.token,
             step,
             json.dumps(data))
 
     def restore(self):
         state_manager = getUtility(IWorkflowStateManager)
-        state = state_manager.restore(self.__class__.__name__, self.SAVE_KEY)
+        state = state_manager.restore(self.__class__.__name__, self.token)
         if state is not None:
             self._next.clear()
             if state.step:

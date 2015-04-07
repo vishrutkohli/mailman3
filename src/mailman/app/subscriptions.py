@@ -71,7 +71,7 @@ class SubscriptionWorkflow(Workflow):
 
     def __init__(self, mlist, subscriber,
                  pre_verified, pre_confirmed, pre_approved):
-        super(SubscriptionWorkflow, self).__init__()
+        super().__init__()
         self.mlist = mlist
         # The subscriber must be either an IUser or IAddress.
         if IAddress.providedBy(subscriber):
@@ -80,12 +80,12 @@ class SubscriptionWorkflow(Workflow):
         elif IUser.providedBy(subscriber):
             self.address = subscriber.preferred_address
             self.user = subscriber
+        else:
+            raise AssertionError('subscriber is neither an IUser nor IAddress')
         self.subscriber = subscriber
         self.pre_verified = pre_verified
         self.pre_confirmed = pre_confirmed
         self.pre_approved = pre_approved
-        # State saving
-        self.SAVE_KEY = '{}:{}'.format(self.mlist.list_id, self.address.email)
 
     def _maybe_set_preferred_address(self):
         if self.user is None:

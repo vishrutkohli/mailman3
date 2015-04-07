@@ -82,6 +82,21 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self._anne = 'anne@example.com'
         self._user_manager = getUtility(IUserManager)
 
+    def test_user_or_address_required(self):
+        # The `subscriber` attribute must be a user or address.
+        self.assertRaises(AssertionError, SubscriptionWorkflow,
+                          self._mlist,
+                          'not a user', False, False, False)
+
+    def test_user_without_preferred_address_gets_one(self):
+        # When subscribing a user without a preferred address, the first step
+        # in the workflow is to give the user a preferred address.
+        anne = self._user_manager.create_user(self._anne)
+        self.assertIsNone(anne.preferred_address)
+        workflow = SubscriptionWorkflow(self._mlist, anne, False, False, False)
+        next(workflow)
+        
+
     def test_preverified_address_joins_open_list(self):
         # The mailing list has an open subscription policy, so the subscriber
         # becomes a member with no human intervention.

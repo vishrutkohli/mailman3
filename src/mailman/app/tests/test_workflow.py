@@ -31,10 +31,10 @@ from mailman.testing.layers import ConfigLayer
 class MyWorkflow(Workflow):
     INITIAL_STATE = 'first'
     SAVE_ATTRIBUTES = ('ant', 'bee', 'cat')
-    SAVE_KEY = 'test-workflow'
 
     def __init__(self):
         super().__init__()
+        self.token = 'test-workflow'
         self.ant = 1
         self.bee = 2
         self.cat = 3
@@ -116,3 +116,11 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(new_workflow.bee, 8)
         self.assertEqual(new_workflow.cat, 7)
         self.assertEqual(new_workflow.dog, 4)
+
+    def test_run_thru(self):
+        # Run all steps through the given one.
+        results = self._workflow.run_thru(second)
+        self.assertEqual(results, ['one', 'two'])
+
+    def test_run_until(self):
+        # Run until (but not including
