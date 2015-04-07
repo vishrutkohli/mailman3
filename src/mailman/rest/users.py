@@ -38,7 +38,8 @@ from mailman.rest.helpers import (
     conflict, created, etag, forbidden, no_content, not_found, okay, paginate,
     path_to)
 from mailman.rest.preferences import Preferences
-from mailman.rest.validator import PatchValidator, Validator
+from mailman.rest.validator import (
+    PatchValidator, Validator, list_of_strings_validator)
 from passlib.utils import generate_password as generate
 from uuid import UUID
 from zope.component import getUtility
@@ -48,14 +49,27 @@ from zope.component import getUtility
 # Attributes of a user which can be changed via the REST API.
 class PasswordEncrypterGetterSetter(GetterSetter):
     def __init__(self):
-        super(PasswordEncrypterGetterSetter, self).__init__(
-            config.password_context.encrypt)
+        super().__init__(config.password_context.encrypt)
     def get(self, obj, attribute):
         assert attribute == 'cleartext_password'
-        super(PasswordEncrypterGetterSetter, self).get(obj, 'password')
+        super().get(obj, 'password')
     def put(self, obj, attribute, value):
         assert attribute == 'cleartext_password'
-        super(PasswordEncrypterGetterSetter, self).put(obj, 'password', value)
+        super().put(obj, 'password', value)
+
+
+class ListOfDomainOwners(GetterSetter):
+    def get(self, domain, attribute):
+        assert attribute == 'owner', (
+            'Unexpected attribute: {}'.format(attribute))
+        def sort_key(owner):
+            return owner.addresses[0].email
+        return sorted(domain.owners, key=sort_key)
+
+    def put(self, domain, attribute, value):
+        assert attribute == 'owner', (
+            'Unexpected attribute: {}'.format(attribute))
+        domain.add_owners(value)
 
 
 ATTRIBUTES = dict(
@@ -396,29 +410,42 @@ class OwnersForDomain(_UserBase):
 
     def on_get(self, request, response):
         """/domains/<domain>/owners"""
+        if self._domain is None:
+            not_found(response)
+            return
         resource = self._make_collection(request)
         okay(response, etag(resource))
 
     def on_post(self, request, response):
         """POST to /domains/<domain>/owners """
-        validator = Validator(owner=GetterSetter(str))
+        if self._domain is None:
+            not_found(response)
+            return
+        validator = Validator(
+            owner=ListOfDomainOwners(list_of_strings_validator))
         try:
-            values = validator(request)
+            validator.update(self._domain, request)
         except ValueError as error:
             bad_request(response, str(error))
             return
-        self._domain.add_owner(values['owner'])
         return no_content(response)
 
     def on_delete(self, request, response):
         """DELETE to /domains/<domain>/owners"""
-        validator = Validator(owner=GetterSetter(str))
+        if self._domain is None:
+            not_found(response)
         try:
-            values = validator(request)
+            # No arguments.
+            Validator()(request)
         except ValueError as error:
             bad_request(response, str(error))
             return
-        self._domain.remove_owner(owner)
+        owner_email = [
+            owner.addresses[0].email
+            for owner in self._domain.owners
+            ]
+        for email in owner_email:
+            self._domain.remove_owner(email)
         return no_content(response)
 
     @paginate

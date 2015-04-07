@@ -30,7 +30,7 @@ from mailman.rest.helpers import (
     no_content, not_found, okay, path_to)
 from mailman.rest.lists import ListsForDomain
 from mailman.rest.users import OwnersForDomain
-from mailman.rest.validator import Validator
+from mailman.rest.validator import Validator, list_of_strings_validator
 from zope.component import getUtility
 
 
@@ -110,10 +110,15 @@ class AllDomains(_DomainBase):
             validator = Validator(mail_host=str,
                                   description=str,
                                   base_url=str,
-                                  owners=list,
-                                  _optional=('description', 'base_url',
-                                             'owners'))
+                                  owner=list_of_strings_validator,
+                                  _optional=(
+                                      'description', 'base_url', 'owner'))
             values = validator(request)
+            # For consistency, owners are passed in as multiple `owner` keys,
+            # but .add() requires an `owners` keyword.  Match impedence.
+            owners = values.pop('owner', None)
+            if owners is not None:
+                values['owners'] = owners
             domain = domain_manager.add(**values)
         except BadDomainSpecificationError as error:
             bad_request(response, str(error))

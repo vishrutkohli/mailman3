@@ -224,17 +224,9 @@ you can add some domain owners.  Currently our domain has no owners:
 Anne and Bart volunteer to be a domain owners.
 ::
 
-    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners', {
-    ...     'owner': 'anne@example.com',
-    ...     })
-    content-length: 0
-    date: ...
-    server: ...
-    status: 204
-
-    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners', {
-    ...     'owner': 'bart@example.com',
-    ...     })
+    >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners', (
+    ...     ('owner', 'anne@example.com'), ('owner', 'bart@example.com')
+    ...     ))
     content-length: 0
     date: ...
     server: ...
@@ -261,8 +253,34 @@ We can delete all the domain owners.
 
     >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners',
     ...           method='DELETE')
+    content-length: 0
+    date: ...
+    server: ...
+    status: 204
+
+Now there are no owners.
 
     >>> dump_json('http://localhost:9001/3.0/domains/my.example.com/owners')
+    http_etag: ...
+    start: 0
+    total_size: 0
+
+New domains can be created with owners.
+
+    >>> dump_json('http://localhost:9001/3.0/domains', (
+    ...           ('mail_host', 'your.example.com'),
+    ...           ('owner', 'anne@example.com'),
+    ...           ('owner', 'bart@example.com'),
+    ...           ))
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/domains/your.example.com
+    server: ...
+    status: 201
+
+The new domain has the expected owners.
+
+    >>> dump_json('http://localhost:9001/3.0/domains/your.example.com/owners')
     entry 0:
         created_on: 2005-08-01T07:49:23
         http_etag: ...

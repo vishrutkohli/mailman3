@@ -22,6 +22,7 @@ __all__ = [
     'Validator',
     'enum_validator',
     'language_validator',
+    'list_of_strings_validator',
     'subscriber_validator',
     ]
 
@@ -64,6 +65,14 @@ def subscriber_validator(subscriber):
 def language_validator(code):
     """Convert a language code to a Language object."""
     return getUtility(ILanguageManager)[code]
+
+
+def list_of_strings_validator(values):
+    """Turn a list of things into a list of unicodes."""
+    for value in values:
+        if not isinstance(value, str):
+            raise ValueError('Expected str, got {!r}'.format(value))
+    return values
 
 
 
