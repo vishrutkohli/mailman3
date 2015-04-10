@@ -22,6 +22,7 @@ __all__ = [
     ]
 
 
+import sys
 import json
 import logging
 
@@ -45,6 +46,8 @@ class Workflow:
         self.token = None
         self._next = deque()
         self.push(self.INITIAL_STATE)
+        self.debug = False
+        self._count = 0
 
     def __iter__(self):
         return self
@@ -55,6 +58,9 @@ class Workflow:
     def _pop(self):
         name = self._next.popleft()
         step = getattr(self, '_step_{}'.format(name))
+        self._count += 1
+        if self.debug:
+            print('[{:02d}] -> {}'.format(self._count, name), file=sys.stderr)
         return name, step
 
     def __next__(self):

@@ -97,10 +97,10 @@ class AbstractRoster:
             yield member.address
 
     @dbconnection
-    def get_member(self, store, address):
+    def get_member(self, store, email):
         """See `IRoster`."""
         results = self._query().filter(
-            Address.email == address,
+            Address.email == email,
             Member.address_id == Address.id)
         if results.count() == 0:
             return None
@@ -158,13 +158,13 @@ class AdministratorRoster(AbstractRoster):
                 Member.role == MemberRole.moderator))
 
     @dbconnection
-    def get_member(self, store, address):
+    def get_member(self, store, email):
         """See `IRoster`."""
         results = store.query(Member).filter(
             Member.list_id == self._mlist.list_id,
             or_(Member.role == MemberRole.moderator,
                 Member.role == MemberRole.owner),
-            Address.email == address,
+            Address.email == email,
             Member.address_id == Address.id)
         if results.count() == 0:
             return None
@@ -178,6 +178,8 @@ class AdministratorRoster(AbstractRoster):
 
 class DeliveryMemberRoster(AbstractRoster):
     """Return all the members having a particular kind of delivery."""
+
+    role = MemberRole.member
 
     @property
     def member_count(self):
@@ -283,7 +285,7 @@ class Memberships:
             yield address
 
     @dbconnection
-    def get_member(self, store, address):
+    def get_member(self, store, email):
         """See `IRoster`."""
         results = store.query(Member).filter(
             Member.address_id == Address.id,

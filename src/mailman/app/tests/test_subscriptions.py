@@ -37,6 +37,7 @@ from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.datetime import now
+from unittest.mock import patch
 from zope.component import getUtility
 
 
@@ -84,18 +85,247 @@ class TestSubscriptionWorkflow(unittest.TestCase):
 
     def test_user_or_address_required(self):
         # The `subscriber` attribute must be a user or address.
-        self.assertRaises(AssertionError, SubscriptionWorkflow,
-                          self._mlist,
-                          'not a user', False, False, False)
+        self.assertRaises(
+            AssertionError, SubscriptionWorkflow, self._mlist, 'not a user')
 
-    def test_user_without_preferred_address_gets_one(self):
-        # When subscribing a user without a preferred address, the first step
-        # in the workflow is to give the user a preferred address.
-        anne = self._user_manager.create_user(self._anne)
-        self.assertIsNone(anne.preferred_address)
-        workflow = SubscriptionWorkflow(self._mlist, anne, False, False, False)
-        next(workflow)
-        
+    def test_sanity_checks_address(self):
+        # Ensure that the sanity check phase, when given an IAddress, ends up
+        # with a linked user.
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        self.assertIsNotNone(workflow.address)
+        self.assertIsNone(workflow.user)
+        workflow.run_thru('sanity_checks')
+        self.assertIsNotNone(workflow.address)
+        self.assertIsNotNone(workflow.user)
+        self.assertEqual(list(workflow.user.addresses)[0].email, self._anne)
+
+    def test_sanity_checks_user_with_preferred_address(self):
+        # Ensure that the sanity check phase, when given an IUser with a
+        # preferred address, ends up with an address.
+        anne = self._user_manager.make_user(self._anne)
+        address = list(anne.addresses)[0]
+        address.verified_on = now()
+        anne.preferred_address = address
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        # The constructor sets workflow.address because the user has a
+        # preferred address.
+        self.assertEqual(workflow.address, address)
+        self.assertEqual(workflow.user, anne)
+        workflow.run_thru('sanity_checks')
+        self.assertEqual(workflow.address, address)
+        self.assertEqual(workflow.user, anne)
+
+    def test_sanity_checks_user_without_preferred_address(self):
+        # Ensure that the sanity check phase, when given a user without a
+        # preferred address, but with at least one linked address, gets an
+        # address.
+        anne = self._user_manager.make_user(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        self.assertIsNone(workflow.address)
+        self.assertEqual(workflow.user, anne)
+        workflow.run_thru('sanity_checks')
+        self.assertIsNotNone(workflow.address)
+        self.assertEqual(workflow.user, anne)
+
+    def test_sanity_checks_user_with_multiple_linked_addresses(self):
+        # Ensure that the santiy check phase, when given a user without a
+        # preferred address, but with multiple linked addresses, gets of of
+        # those addresses (exactly which one is undefined).
+        anne = self._user_manager.make_user(self._anne)
+        anne.link(self._user_manager.create_address('anne@example.net'))
+        anne.link(self._user_manager.create_address('anne@example.org'))
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        self.assertIsNone(workflow.address)
+        self.assertEqual(workflow.user, anne)
+        workflow.run_thru('sanity_checks')
+        self.assertIn(workflow.address.email, ['anne@example.com',
+                                               'anne@example.net',
+                                               'anne@example.org'])
+        self.assertEqual(workflow.user, anne)
+
+    def test_sanity_checks_user_without_addresses(self):
+        # It is an error to try to subscribe a user with no linked addresses.
+        user = self._user_manager.create_user()
+        workflow = SubscriptionWorkflow(self._mlist, user)
+        self.assertRaises(AssertionError, workflow.run_thru, 'sanity_checks')
+
+    def test_verification_checks_with_verified_address(self):
+        # When the address is already verified, we skip straight to the
+        # confirmation checks.
+        anne = self._user_manager.create_address(self._anne)
+        anne.verified_on = now()
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        workflow.run_thru('verification_checks')
+        with patch.object(workflow, '_step_confirmation_checks') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_verification_checks_with_pre_verified_address(self):
+        # When the address is not yet verified, but the pre-verified flag is
+        # passed to the workflow, we skip to the confirmation checks.
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        workflow.run_thru('verification_checks')
+        with patch.object(workflow, '_step_confirmation_checks') as step:
+            next(workflow)
+        step.assert_called_once_with()
+        # And now the address is verified.
+        self.assertIsNotNone(anne.verified_on)
+
+    def test_verification_checks_confirmation_needed(self):
+        # The address is neither verified, nor is the pre-verified flag set.
+        # A confirmation message must be sent to the user which will also
+        # verify their address.
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        workflow.run_thru('verification_checks')
+        with patch.object(workflow, '_step_send_confirmation') as step:
+            next(workflow)
+        step.assert_called_once_with()
+        # The address still hasn't been verified.
+        self.assertIsNone(anne.verified_on)
+
+    def test_confirmation_checks_open_list(self):
+        # A subscription to an open list does not need to be confirmed or
+        # moderated.
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_do_subscription') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_confirmation_checks_no_user_confirmation_needed(self):
+        # A subscription to a list which does not need user confirmation skips
+        # to the moderation checks.
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_moderation_checks') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_confirmation_checks_confirm_pre_confirmed(self):
+        # The subscription policy requires user confirmation, but their
+        # subscription is pre-confirmed.
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_moderation_checks') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_confirmation_checks_confirm_and_moderate_pre_confirmed(self):
+        # The subscription policy requires user confirmation and moderation,
+        # but their subscription is pre-confirmed.
+        self._mlist.subscription_policy = \
+          SubscriptionPolicy.confirm_then_moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_moderation_checks') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_confirmation_checks_confirmation_needed(self):
+        # The subscription policy requires confirmation and the subscription
+        # is not pre-confirmed.
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_send_confirmation') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_confirmation_checks_moderate_confirmation_needed(self):
+        # The subscription policy requires confirmation and moderation, and the
+        # subscription is not pre-confirmed.
+        self._mlist.subscription_policy = \
+          SubscriptionPolicy.confirm_then_moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_send_confirmation') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_moderation_checks_pre_approved(self):
+        # The subscription is pre-approved by the moderator.
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_approved=True)
+        workflow.run_thru('moderation_checks')
+        with patch.object(workflow, '_step_do_subscription') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_moderation_checks_approval_required(self):
+        # The moderator must approve the subscription.
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        workflow.run_thru('moderation_checks')
+        with patch.object(workflow, '_step_get_moderator_approval') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_do_subscription(self):
+        # An open subscription policy plus a pre-verified address means the
+        # user gets subscribed to the mailing list without any further
+        # confirmations or approvals.
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        # Consume the entire state machine.
+        list(workflow)
+        # Anne is now a member of the mailing list.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertEqual(member.address, anne)
+
+    def test_do_subscription_pre_approved(self):
+        # An moderation-requiring subscription policy plus a pre-verified and
+        # pre-approved address means the user gets subscribed to the mailing
+        # list without any further confirmations or approvals.
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_approved=True)
+        # Consume the entire state machine.
+        list(workflow)
+        # Anne is now a member of the mailing list.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertEqual(member.address, anne)
+
+    def test_do_subscription_pre_approved_pre_confirmed(self):
+        # An moderation-requiring subscription policy plus a pre-verified and
+        # pre-approved address means the user gets subscribed to the mailing
+        # list without any further confirmations or approvals.
+        self._mlist.subscription_policy = \
+          SubscriptionPolicy.confirm_then_moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True,
+                                        pre_approved=True)
+        # Consume the entire state machine.
+        list(workflow)
+        # Anne is now a member of the mailing list.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertEqual(member.address, anne)
+
+    # XXX
 
     def test_preverified_address_joins_open_list(self):
         # The mailing list has an open subscription policy, so the subscriber
@@ -142,6 +372,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
             SubscriptionPolicy.confirm_then_moderate
         _do_check()
 
+    @unittest.expectedFailure
     def test_confirmation_required(self):
         # Tests subscriptions where user confirmation is required
         self._mlist.subscription_policy = \

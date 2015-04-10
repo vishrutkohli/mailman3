@@ -62,15 +62,15 @@ def _membership_sort_key(member):
 class SubscriptionWorkflow(Workflow):
     """Workflow of a subscription request."""
 
-    INITIAL_STATE = 'verification_check'
+    INITIAL_STATE = 'sanity_checks'
     SAVE_ATTRIBUTES = (
         'pre_approved',
         'pre_confirmed',
         'pre_verified',
         )
 
-    def __init__(self, mlist, subscriber,
-                 pre_verified, pre_confirmed, pre_approved):
+    def __init__(self, mlist, subscriber, *,
+                 pre_verified=False, pre_confirmed=False, pre_approved=False):
         super().__init__()
         self.mlist = mlist
         # The subscriber must be either an IUser or IAddress.
@@ -87,71 +87,73 @@ class SubscriptionWorkflow(Workflow):
         self.pre_confirmed = pre_confirmed
         self.pre_approved = pre_approved
 
-    def _maybe_set_preferred_address(self):
+    def _step_sanity_checks(self):
+        # Ensure that we have both an address and a user, even if the address
+        # is not verified.  We can't set the preferred address until it is
+        # verified.
         if self.user is None:
             # The address has no linked user so create one, link it, and set
             # the user's preferred address.
             assert self.address is not None, 'No address or user'
             self.user = getUtility(IUserManager).make_user(self.address.email)
-            self.user.preferred_address = self.address
-        elif self.user.preferred_address is None:
-            assert self.address is not None, 'No address or user'
-            # The address has a linked user, but no preferred address is set
-            # yet.  This is required, so use the address.
-            self.user.preferred_address = self.address
+        if self.address is None:
+            assert self.user.preferred_address is None, (
+                "Preferred address exists, but wasn't used in constructor")
+            addresses = list(self.user.addresses)
+            if len(addresses) == 0:
+                raise AssertionError('User has no addresses: {}'.format(
+                    self.user))
+            # This is rather arbitrary, but we have no choice.
+            self.address = addresses[0]
+        assert self.user is not None and self.address is not None, (
+            'Insane sanity check results')
+        self.push('verification_checks')
 
-    def _step_verification_check(self):
-        if self.address.verified_on is not None:
-            # The address is already verified.  Give the user a preferred
-            # address if it doesn't already have one.  We may still have to do
-            # a subscription confirmation check.  See below.
-            self._maybe_set_preferred_address()
-        else:
-            # The address is not yet verified.  Maybe we're pre-verifying it.
-            # If so, we also want to give the user a preferred address if it
-            # doesn't already have one.  We may still have to do a
-            # subscription confirmation check.  See below.
+    def _step_verification_checks(self):
+        # Is the address already verified, or is the pre-verified flag set?
+        if self.address.verified_on is None:
             if self.pre_verified:
                 self.address.verified_on = now()
-                self._maybe_set_preferred_address()
             else:
-                # Since the address was not already verified, and not
-                # pre-verified, we have to send a confirmation check, which
-                # doubles as a verification step.  Skip to that now.
-                self._next.append('send_confirmation')
+                # The address being subscribed is not yet verified, so we need
+                # to send a validation email that will also confirm that the
+                # user wants to be subscribed to this mailing list.
+                self.push('send_confirmation')
                 return
-        self._next.append('confirmation_check')
+        self.push('confirmation_checks')
 
-    def _step_confirmation_check(self):
-        # Must the user confirm their subscription request?  If the policy is
-        # open subscriptions, then we need neither confirmation nor moderator
-        # approval, so just subscribe them now.
-        if self.mlist.subscription_policy == SubscriptionPolicy.open:
-            self._next.append('do_subscription')
-        elif self.pre_confirmed:
-            # No confirmation is necessary.  We can skip to seeing whether a
-            # moderator confirmation is necessary.
-            self._next.append('moderation_check')
-        else:
-            self._next.append('send_confirmation')
+    def _step_confirmation_checks(self):
+        # If the list's subscription policy is open, then the user can be
+        # subscribed right here and now.
+        if self.mlist.subscription_policy is SubscriptionPolicy.open:
+            self.push('do_subscription')
+            return
+        # If we do not need the user's confirmation, then skip to the
+        # moderation checks.
+        if self.mlist.subscription_policy is SubscriptionPolicy.moderate:
+            self.push('moderation_checks')
+            return
+        # If the subscription has been pre-confirmed, then we can skip to the
+        # moderation checks.
+        if self.pre_confirmed:
+            self.push('moderation_checks')
+            return
+        # The user must confirm their subscription.
+        self.push('send_confirmation')
 
-    def _step_send_confirmation(self):
-        self._next.append('moderation_check')
-        self.save()
-        self._next.clear() # stop iteration until we get confirmation
-        # XXX: create the Pendable, send the ConfirmationNeededEvent
-        # (see Registrar.register)
-
-    def _step_moderation_check(self):
+    def _step_moderation_checks(self):
         # Does the moderator need to approve the subscription request?
-        if not self.pre_approved and self.mlist.subscription_policy in (
-                SubscriptionPolicy.moderate,
-                SubscriptionPolicy.confirm_then_moderate):
-            self._next.append('get_moderator_approval')
+        assert self.mlist.subscription_policy in (
+            SubscriptionPolicy.moderate,
+            SubscriptionPolicy.confirm_then_moderate)
+        if self.pre_approved:
+            self.push('do_subscription')
         else:
-            # The moderator does not need to approve the subscription, so go
-            # ahead and do that now.
-            self._next.append('do_subscription')
+            self.push('get_moderator_approval')
+
+    def _step_do_subscription(self):
+        # We can immediately subscribe the user to the mailing list.
+        self.mlist.subscribe(self.subscriber)
 
     def _step_get_moderator_approval(self):
         # In order to get the moderator's approval, we need to hold the
@@ -161,9 +163,12 @@ class SubscriptionWorkflow(Workflow):
             DeliveryMode.regular, 'en')
         hold_subscription(self.mlist, request)
 
-    def _step_do_subscription(self):
-        # We can immediately subscribe the user to the mailing list.
-        self.mlist.subscribe(self.subscriber)
+    def _step_send_confirmation(self):
+        self._next.append('moderation_check')
+        self.save()
+        self._next.clear() # stop iteration until we get confirmation
+        # XXX: create the Pendable, send the ConfirmationNeededEvent
+        # (see Registrar.register)
 
 
 @implementer(ISubscriptionService)
