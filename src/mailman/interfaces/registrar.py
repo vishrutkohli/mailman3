@@ -35,23 +35,14 @@ from zope.interface import Interface
 class ConfirmationNeededEvent:
     """Triggered when an address needs confirmation.
 
-    Addresses must be verified before they can receive messages or post to
-    mailing list.  When an address is registered with Mailman, via the
-    `IRegistrar` interface, an `IPendable` is created which represents the
-    pending registration.  This pending registration is stored in the
-    database, keyed by a token.  Then this event is triggered.
-
-    There may be several ways to confirm an email address.  On some sites,
-    registration may immediately produce a verification, e.g. because it is on
-    a known intranet.  Or verification may occur via external database lookup
-    (e.g. LDAP).  On most public mailing lists, a mail-back confirmation is
-    sent to the address, and only if they reply to the mail-back, or click on
-    an embedded link, is the registered address confirmed.
+    Addresses must be verified before they can receive messages or post
+    to mailing list.  The confirmation message is sent to the user when
+    this event is triggered.
     """
-    def __init__(self, mlist, pendable, token):
+    def __init__(self, mlist, token, email):
         self.mlist = mlist
-        self.pendable = pendable
         self.token = token
+        self.email = email
 
 
 

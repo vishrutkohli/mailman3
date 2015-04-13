@@ -32,7 +32,6 @@ from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
     MemberRole, MembershipIsBannedError, MissingPreferredAddressError)
-from mailman.interfaces.requests import IListRequests, RequestType
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
 from mailman.testing.helpers import LogFileMark, get_queue_messages
@@ -426,70 +425,88 @@ approval:
         items = get_queue_messages('virgin')
         self.assertEqual(len(items), 0)
 
-    # XXX
-
-    @unittest.expectedFailure
-    def test_preverified_address_joins_open_list(self):
-        # The mailing list has an open subscription policy, so the subscriber
-        # becomes a member with no human intervention.
-        self._mlist.subscription_policy = SubscriptionPolicy.open
-        anne = self._user_manager.create_address(self._anne, 'Anne Person')
+    def test_send_confirmation(self):
+        # A confirmation message gets sent when the address is not verified.
+        anne = self._user_manager.create_address(self._anne)
         self.assertIsNone(anne.verified_on)
-        self.assertIsNone(anne.user)
-        self.assertIsNone(self._mlist.subscribers.get_member(self._anne))
-        workflow = SubscriptionWorkflow(
-            self._mlist, anne,
-            pre_verified=True, pre_confirmed=False, pre_approved=False)
-        # Run the state machine to the end.  The result is that her address
-        # will be verified, linked to a user, and subscribed to the mailing
-        # list.
+        # Run the workflow to model the confirmation step.
+        workflow = SubscriptionWorkflow(self._mlist, anne)
         list(workflow)
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 1)
+        message = items[0].msg
+        token = workflow.token
+        self.assertEqual(message['Subject'], 'confirm {}'.format(token))
+        self.assertEqual(
+            message['From'], 'test-confirm+{}@example.com'.format(token))
+
+    def test_send_confirmation_pre_confirmed(self):
+        # A confirmation message gets sent when the address is not verified
+        # but the subscription is pre-confirmed.
+        anne = self._user_manager.create_address(self._anne)
+        self.assertIsNone(anne.verified_on)
+        # Run the workflow to model the confirmation step.
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_confirmed=True)
+        list(workflow)
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 1)
+        message = items[0].msg
+        token = workflow.token
+        self.assertEqual(
+            message['Subject'], 'confirm {}'.format(workflow.token))
+        self.assertEqual(
+            message['From'], 'test-confirm+{}@example.com'.format(token))
+
+    def test_send_confirmation_pre_verified(self):
+        # A confirmation message gets sent even when the address is verified
+        # when the subscription must be confirmed.
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        anne = self._user_manager.create_address(self._anne)
+        self.assertIsNone(anne.verified_on)
+        # Run the workflow to model the confirmation step.
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        list(workflow)
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 1)
+        message = items[0].msg
+        token = workflow.token
+        self.assertEqual(
+            message['Subject'], 'confirm {}'.format(workflow.token))
+        self.assertEqual(
+            message['From'], 'test-confirm+{}@example.com'.format(token))
+
+    def test_do_confirm_verify_address(self):
+        # The address is not yet verified, nor are we pre-verifying.  A
+        # confirmation message will be sent.  When the user confirms their
+        # subscription request, the address will end up being verified.
+        anne = self._user_manager.create_address(self._anne)
+        self.assertIsNone(anne.verified_on)
+        # Run the workflow to model the confirmation step.
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        list(workflow)
+        # The address is still not verified.
+        self.assertIsNone(anne.verified_on)
+        confirm_workflow = SubscriptionWorkflow(self._mlist)
+        confirm_workflow.token = workflow.token
+        confirm_workflow.restore()
+        confirm_workflow.run_thru('do_confirm_verify')
+        # The address is now verified.
         self.assertIsNotNone(anne.verified_on)
-        self.assertIsNotNone(anne.user)
-        self.assertIsNotNone(self._mlist.subscribers.get_member(self._anne))
 
-    @unittest.expectedFailure
-    def test_verified_address_joins_moderated_list(self):
-        # The mailing list is moderated but the subscriber is not a verified
-        # address and the subscription request is not pre-verified.
-        # A confirmation email must be sent, it will serve as the verification
-        # email too.
-        anne = self._user_manager.create_address(self._anne, 'Anne Person')
-        request_db = IListRequests(self._mlist)
-        def _do_check():
-            anne.verified_on = now()
-            self.assertIsNone(self._mlist.subscribers.get_member(self._anne))
-            workflow = SubscriptionWorkflow(
-                self._mlist, anne,
-                pre_verified=False, pre_confirmed=True, pre_approved=False)
-            # Run the state machine to the end.
-            list(workflow)
-            # Look in the requests db
-            requests = list(request_db.of_type(RequestType.subscription))
-            self.assertEqual(len(requests), 1)
-            self.assertEqual(requests[0].key, anne.email)
-            request_db.delete_request(requests[0].id)
-        self._mlist.subscription_policy = SubscriptionPolicy.moderate
-        _do_check()
-        self._mlist.subscription_policy = \
-            SubscriptionPolicy.confirm_then_moderate
-        _do_check()
-
-    @unittest.expectedFailure
-    def test_confirmation_required(self):
-        # Tests subscriptions where user confirmation is required
-        self._mlist.subscription_policy = \
-            SubscriptionPolicy.confirm_then_moderate
-        anne = self._user_manager.create_address(self._anne, 'Anne Person')
-        self.assertIsNone(self._mlist.subscribers.get_member(self._anne))
-        workflow = SubscriptionWorkflow(
-            self._mlist, anne,
-            pre_verified=True, pre_confirmed=False, pre_approved=True)
-        # Run the state machine to the end.
+    def test_do_confirmation_subscribes_user(self):
+        # Subscriptions to the mailing list must be confirmed.  Once that's
+        # done, the user's address (which is not initially verified) gets
+        # subscribed to the mailing list.
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        anne = self._user_manager.create_address(self._anne)
+        self.assertIsNone(anne.verified_on)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
         list(workflow)
-        # A confirmation request must be pending
-        # TODO: test it
-        # Now restore and re-run the state machine as if we got the confirmation
-        workflow.restore()
-        list(workflow)
-        self.assertIsNotNone(self._mlist.subscribers.get_member(self._anne))
+        self.assertIsNone(self._mlist.regular_members.get_member(self._anne))
+        confirm_workflow = SubscriptionWorkflow(self._mlist)
+        confirm_workflow.token = workflow.token
+        confirm_workflow.restore()
+        list(confirm_workflow)
+        self.assertIsNotNone(anne.verified_on)
+        self.assertEqual(
+            self._mlist.regular_members.get_member(self._anne).address, anne)

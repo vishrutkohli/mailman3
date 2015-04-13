@@ -156,18 +156,17 @@ def handle_ConfirmationNeededEvent(event):
     # the Subject header, or they can click on the URL in the body of the
     # message and confirm through the web.
     subject = 'confirm ' + event.token
-    mlist = getUtility(IListManager).get_by_list_id(event.pendable['list_id'])
-    confirm_address = mlist.confirm_address(event.token)
+    confirm_address = event.mlist.confirm_address(event.token)
     # For i18n interpolation.
-    confirm_url = mlist.domain.confirm_url(event.token)
-    email_address = event.pendable['email']
-    domain_name = mlist.domain.mail_host
-    contact_address = mlist.owner_address
+    confirm_url = event.mlist.domain.confirm_url(event.token)
+    email_address = event.email
+    domain_name = event.mlist.domain.mail_host
+    contact_address = event.mlist.owner_address
     # Send a verification email to the address.
     template = getUtility(ITemplateLoader).get(
         'mailman:///{0}/{1}/confirm.txt'.format(
-            mlist.fqdn_listname,
-            mlist.preferred_language.code))
+            event.mlist.fqdn_listname,
+            event.mlist.preferred_language.code))
     text = _(template)
     msg = UserNotification(email_address, confirm_address, subject, text)
-    msg.send(mlist)
+    msg.send(event.mlist)

@@ -45,6 +45,7 @@ from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.member import (
     DeliveryMode, MemberRole, MembershipIsBannedError)
 from mailman.interfaces.pending import IPendable, IPendings
+from mailman.interfaces.registrar import ConfirmationNeededEvent
 from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError, RequestRecord)
 from mailman.interfaces.user import IUser
@@ -56,6 +57,7 @@ from operator import attrgetter
 from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
+from zope.event import notify
 from zope.interface import implementer
 
 
@@ -171,6 +173,14 @@ class SubscriptionWorkflow(Workflow):
         # Is this email address banned?
         if IBanManager(self.mlist).is_banned(self.address.email):
             raise MembershipIsBannedError(self.mlist, self.address.email)
+        # Create a pending record.  This will give us the hash token we can use
+        # to uniquely name this workflow.
+        pendable = Pendable(
+            when=now().isoformat(),
+            list_id=self.mlist.list_id,
+            address=self.address.email,
+            )
+        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
         self.push('verification_checks')
 
     def _step_verification_checks(self):
@@ -215,24 +225,7 @@ class SubscriptionWorkflow(Workflow):
         else:
             self.push('get_moderator_approval')
 
-    def _step_do_subscription(self):
-        # We can immediately subscribe the user to the mailing list.
-        self.mlist.subscribe(self.subscriber)
-
     def _step_get_moderator_approval(self):
-        # Getting the moderator's approval requires several steps.  We'll need
-        # to suspend this workflow for an indeterminate amount of time while
-        # we wait for that approval.  We need a unique token for this
-        # suspended workflow, so we'll create a minimal pending record.  We
-        # also might need to send an email notification to the list
-        # moderators.
-        #
-        # Start by creating the pending record.  This will give us a hash
-        # token we can use to uniquely name this workflow.  It only needs to
-        # contain the current date, which we'll use to expire requests from
-        # the database, say if the moderator never approves the request.
-        pendable = Pendable(when=now().isoformat())
-        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
         # Here's the next step in the workflow, assuming the moderator
         # approves of the subscription.  If they don't, the workflow and
         # subscription request will just be thrown away.
@@ -272,12 +265,42 @@ class SubscriptionWorkflow(Workflow):
             self.subscriber = self.user
         self.push('do_subscription')
 
+    def _step_do_subscription(self):
+        # We can immediately subscribe the user to the mailing list.
+        self.mlist.subscribe(self.subscriber)
+
     def _step_send_confirmation(self):
-        self._next.append('moderation_check')
+        self.push('do_confirm_verify')
         self.save()
-        self._next.clear() # stop iteration until we get confirmation
-        # XXX: create the Pendable, send the ConfirmationNeededEvent
-        # (see Registrar.register)
+        # Triggering this event causes the confirmation message to be sent.
+        notify(ConfirmationNeededEvent(
+            self.mlist, self.token, self.address.email))
+        # Now we wait for the confirmation.
+        raise StopIteration
+
+    def _step_do_confirm_verify(self):
+        # Restore a little extra state that can't be stored in the database
+        # (because the order of setattr() on restore is indeterminate), then
+        # continue with the confirmation/verification step.
+        if self.which is WhichSubscriber.address:
+            self.subscriber = self.address
+        else:
+            assert self.which is WhichSubscriber.user
+            self.subscriber = self.user
+        # The user has confirmed their subscription request, and also verified
+        # their email address if necessary.  This latter needs to be set on the
+        # IAddress, but there's nothing more to do about the confirmation step.
+        # We just continue along with the workflow.
+        if self.address.verified_on is None:
+            self.address.verified_on = now()
+        # The next step depends on the mailing list's subscription policy.
+        next_step = ('moderation_check'
+                     if self.mlist.subscription_policy in (
+                         SubscriptionPolicy.moderate,
+                         SubscriptionPolicy.confirm_then_moderate,
+                         )
+                    else 'do_subscription')
+        self.push(next_step)
 
 
 @implementer(ISubscriptionService)
