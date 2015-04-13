@@ -94,3 +94,6 @@ class IPendings(Interface):
 
     def evict():
         """Remove all pended items whose lifetime has expired."""
+
+    def count():
+        """The number of pendables in the pendings database."""
