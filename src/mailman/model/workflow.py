@@ -51,15 +51,18 @@ class WorkflowStateManager:
     @dbconnection
     def save(self, store, name, token, step=None, data=None):
         """See `IWorkflowStateManager`."""
-        state = store.query(WorkflowState).get((name, token))
-        if state is None:
-            state = WorkflowState(name=name, token=token, step=step, data=data)
-            store.add(state)
-        else:
-            state.step = step
-            state.data = data
+        state = WorkflowState(name=name, token=token, step=step, data=data)
+        store.add(state)
 
     @dbconnection
     def restore(self, store, name, token):
         """See `IWorkflowStateManager`."""
-        return store.query(WorkflowState).get((name, token))
+        state = store.query(WorkflowState).get((name, token))
+        if state is not None:
+            store.delete(state)
+        return state
+
+    @dbconnection
+    def count(self, store):
+        """See `IWorkflowStateManager`."""
+        return store.query(WorkflowState).count()

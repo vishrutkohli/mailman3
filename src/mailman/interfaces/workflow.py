@@ -63,4 +63,9 @@ class IWorkflowStateManager(Interface):
         :type name: str
         :param token: A unique token identifying this workflow instance.
         :type token: str
+        :raises LookupError: when there's no token associated with the given
+            name in the workflow table.
         """
+
+    def count():
+        """The number of saved workflows in the database."""

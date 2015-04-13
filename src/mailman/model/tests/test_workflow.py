@@ -108,3 +108,23 @@ class TestWorkflow(unittest.TestCase):
         self._manager.save(name, token)
         workflow = self._manager.restore('ewe', 'fly')
         self.assertIsNone(workflow)
+
+    def test_restore_removes_record(self):
+        name = 'ant'
+        token = 'bee'
+        self.assertEqual(self._manager.count(), 0)
+        self._manager.save(name, token)
+        self.assertEqual(self._manager.count(), 1)
+        self._manager.restore(name, token)
+        self.assertEqual(self._manager.count(), 0)
+
+    def test_save_after_restore(self):
+        name = 'ant'
+        token = 'bee'
+        self.assertEqual(self._manager.count(), 0)
+        self._manager.save(name, token)
+        self.assertEqual(self._manager.count(), 1)
+        self._manager.restore(name, token)
+        self.assertEqual(self._manager.count(), 0)
+        self._manager.save(name, token)
+        self.assertEqual(self._manager.count(), 1)
