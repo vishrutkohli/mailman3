@@ -33,6 +33,7 @@ from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
 from mailman.interfaces.requests import IListRequests, RequestType
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
+from mailman.testing.helpers import LogFileMark, get_queue_messages
 from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
@@ -77,9 +78,11 @@ class TestJoin(unittest.TestCase):
 
 class TestSubscriptionWorkflow(unittest.TestCase):
     layer = ConfigLayer
+    maxDiff = None
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
+        self._mlist.admin_immed_notify = False
         self._anne = 'anne@example.com'
         self._user_manager = getUtility(IUserManager)
 
@@ -349,6 +352,63 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Now the user is subscribed to the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+
+    def test_get_moderator_approval_log_on_hold(self):
+        # When the subscription is held for moderator approval, a message is
+        # logged.
+        mark = LogFileMark('mailman.subscribe')
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True)
+        # Consume the entire state machine.
+        list(workflow)
+        line = mark.readline()
+        self.assertEqual(
+            line[29:-1],
+            'test@example.com: held subscription request from anne@example.com'
+            )
+
+    def test_get_moderator_approval_notifies_moderators(self):
+        # When the subscription is held for moderator approval, and the list
+        # is so configured, a notification is sent to the list moderators.
+        self._mlist.admin_immed_notify = True
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True)
+        # Consume the entire state machine.
+        list(workflow)
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 1)
+        message = items[0].msg
+        self.assertEqual(message['From'], 'test-owner@example.com')
+        self.assertEqual(message['To'], 'test-owner@example.com')
+        self.assertEqual(
+            message['Subject'],
+            'New subscription request to Test from anne@example.com')
+        self.assertEqual(message.get_payload(), """\
+Your authorization is required for a mailing list subscription request
+approval:
+
+    For:  anne@example.com
+    List: test@example.com""")
+
+    def test_get_moderator_approval_no_notifications(self):
+        # When the subscription is held for moderator approval, and the list
+        # is so configured, a notification is sent to the list moderators.
+        self._mlist.admin_immed_notify = False
+        self._mlist.subscription_policy = SubscriptionPolicy.moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True)
+        # Consume the entire state machine.
+        list(workflow)
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 0)
 
     # XXX
 

@@ -26,29 +26,38 @@ __all__ = [
 
 
 import uuid
+import logging
 
+from email.utils import formataddr
 from enum import Enum
+from datetime import timedelta
 from mailman.app.membership import add_member, delete_member
-from mailman.app.moderator import hold_subscription
 from mailman.app.workflow import Workflow
 from mailman.core.constants import system_preferences
+from mailman.core.i18n import _
 from mailman.database.transaction import dbconnection
+from mailman.email.message import UserNotification
 from mailman.interfaces.address import IAddress
 from mailman.interfaces.listmanager import (
     IListManager, ListDeletingEvent, NoSuchListError)
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.member import DeliveryMode, MemberRole
+from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError, RequestRecord)
 from mailman.interfaces.user import IUser
 from mailman.interfaces.usermanager import IUserManager
 from mailman.model.member import Member
 from mailman.utilities.datetime import now
+from mailman.utilities.i18n import make
 from operator import attrgetter
 from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
 from zope.interface import implementer
+
+
+log = logging.getLogger('mailman.subscribe')
 
 
 
@@ -64,6 +73,11 @@ def _membership_sort_key(member):
 class WhichSubscriber(Enum):
     address = 1
     user = 2
+
+
+@implementer(IPendable)
+class Pendable(dict):
+    pass
 
 
 
@@ -201,18 +215,44 @@ class SubscriptionWorkflow(Workflow):
         self.mlist.subscribe(self.subscriber)
 
     def _step_get_moderator_approval(self):
-        # In order to get the moderator's approval, we need to hold the
-        # subscription request in the database
-        request = RequestRecord(
-            self.address.email, self.subscriber.display_name,
-            # XXX Need to get these last to into the constructor.
-            DeliveryMode.regular, 'en')
-        self.token = hold_subscription(self.mlist, request)
+        # Getting the moderator's approval requires several steps.  We'll need
+        # to suspend this workflow for an indeterminate amount of time while
+        # we wait for that approval.  We need a unique token for this
+        # suspended workflow, so we'll create a minimal pending record.  We
+        # also might need to send an email notification to the list
+        # moderators.
+        #
+        # Start by creating the pending record.  This will give us a hash
+        # token we can use to uniquely name this workflow.  It only needs to
+        # contain the current date, which we'll use to expire requests from
+        # the database, say if the moderator never approves the request.
+        pendable = Pendable(when=now().isoformat())
+        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
         # Here's the next step in the workflow, assuming the moderator
         # approves of the subscription.  If they don't, the workflow and
         # subscription request will just be thrown away.
         self.push('subscribe_from_restored')
         self.save()
+        log.info('{}: held subscription request from {}'.format(
+            self.mlist.fqdn_listname, self.address.email))
+        # Possibly send a notification to the list moderators.
+        if self.mlist.admin_immed_notify:
+            subject = _(
+                'New subscription request to $self.mlist.display_name '
+                'from $self.address.email')
+            username = formataddr(
+                (self.subscriber.display_name, self.address.email))
+            text = make('subauth.txt',
+                        mailing_list=self.mlist,
+                        username=username,
+                        listname=self.mlist.fqdn_listname,
+                        )
+            # This message should appear to come from the <list>-owner so as
+            # to avoid any useless bounce processing.
+            msg = UserNotification(
+                self.mlist.owner_address, self.mlist.owner_address,
+                subject, text, self.mlist.preferred_language)
+            msg.send(self.mlist, tomoderators=True)
         # The workflow must stop running here.
         raise StopIteration
 

@@ -3,9 +3,3 @@ approval:
 
     For:  $username
     List: $listname
-
-At your convenience, visit:
-
-    $admindb_url
-
-to process the request.
