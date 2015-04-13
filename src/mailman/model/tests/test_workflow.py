@@ -39,72 +39,72 @@ class TestWorkflow(unittest.TestCase):
     def test_save_restore_workflow(self):
         # Save and restore a workflow.
         name = 'ant'
-        key = 'bee'
+        token = 'bee'
         step = 'cat'
         data = 'dog'
-        self._manager.save(name, key, step, data)
-        workflow = self._manager.restore(name, key)
+        self._manager.save(name, token, step, data)
+        workflow = self._manager.restore(name, token)
         self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.key, key)
+        self.assertEqual(workflow.token, token)
         self.assertEqual(workflow.step, step)
         self.assertEqual(workflow.data, data)
 
     def test_save_restore_workflow_without_step(self):
         # Save and restore a workflow that contains no step.
         name = 'ant'
-        key = 'bee'
+        token = 'bee'
         data = 'dog'
-        self._manager.save(name, key, data=data)
-        workflow = self._manager.restore(name, key)
+        self._manager.save(name, token, data=data)
+        workflow = self._manager.restore(name, token)
         self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.key, key)
+        self.assertEqual(workflow.token, token)
         self.assertIsNone(workflow.step)
         self.assertEqual(workflow.data, data)
 
     def test_save_restore_workflow_without_data(self):
         # Save and restore a workflow that contains no data.
         name = 'ant'
-        key = 'bee'
+        token = 'bee'
         step = 'cat'
-        self._manager.save(name, key, step)
-        workflow = self._manager.restore(name, key)
+        self._manager.save(name, token, step)
+        workflow = self._manager.restore(name, token)
         self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.key, key)
+        self.assertEqual(workflow.token, token)
         self.assertEqual(workflow.step, step)
         self.assertIsNone(workflow.data)
 
     def test_save_restore_workflow_without_step_or_data(self):
         # Save and restore a workflow that contains no step or data.
         name = 'ant'
-        key = 'bee'
-        self._manager.save(name, key)
-        workflow = self._manager.restore(name, key)
+        token = 'bee'
+        self._manager.save(name, token)
+        workflow = self._manager.restore(name, token)
         self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.key, key)
+        self.assertEqual(workflow.token, token)
         self.assertIsNone(workflow.step)
         self.assertIsNone(workflow.data)
 
     def test_restore_workflow_with_no_matching_name(self):
         # Try to restore a workflow that has no matching name in the database.
         name = 'ant'
-        key = 'bee'
-        self._manager.save(name, key)
-        workflow = self._manager.restore('ewe', key)
+        token = 'bee'
+        self._manager.save(name, token)
+        workflow = self._manager.restore('ewe', token)
         self.assertIsNone(workflow)
 
-    def test_restore_workflow_with_no_matching_key(self):
-        # Try to restore a workflow that has no matching key in the database.
+    def test_restore_workflow_with_no_matching_token(self):
+        # Try to restore a workflow that has no matching token in the database.
         name = 'ant'
-        key = 'bee'
-        self._manager.save(name, key)
+        token = 'bee'
+        self._manager.save(name, token)
         workflow = self._manager.restore(name, 'fly')
         self.assertIsNone(workflow)
 
-    def test_restore_workflow_with_no_matching_key_or_name(self):
-        # Try to restore a workflow that has no matching key or name in the
+    def test_restore_workflow_with_no_matching_token_or_name(self):
+        # Try to restore a workflow that has no matching token or name in the
         # database.
         name = 'ant'
-        key = 'bee'
-        self._manager.save(name, key)
+        token = 'bee'
+        self._manager.save(name, token)
         workflow = self._manager.restore('ewe', 'fly')
         self.assertIsNone(workflow)

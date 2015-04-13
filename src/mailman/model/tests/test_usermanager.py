@@ -80,3 +80,8 @@ class TestUserManager(unittest.TestCase):
         user = self._usermanager.create_user('anne@example.com', 'Anne Person')
         other_user = self._usermanager.make_user('anne@example.com')
         self.assertIs(user, other_user)
+
+    def test_get_user_by_id(self):
+        original = self._usermanager.make_user('anne@example.com')
+        copy = self._usermanager.get_user_by_id(original.user_id)
+        self.assertEqual(original, copy)

@@ -32,7 +32,7 @@ class IWorkflowState(Interface):
 
     name = Attribute('The name of the workflow.')
 
-    key = Attribute('A unique key identifying the workflow instance.')
+    token = Attribute('A unique key identifying the workflow instance.')
 
     step = Attribute("This workflow's next step.")
 
@@ -43,24 +43,24 @@ class IWorkflowState(Interface):
 class IWorkflowStateManager(Interface):
     """The workflow states manager."""
 
-    def save(name, key, step, data=None):
+    def save(name, token, step, data=None):
         """Save the state of a workflow.
 
         :param name: The name of the workflow.
         :type name: str
-        :param key: A unique key identifying this workflow instance.
-        :type key: str
+        :param token: A unique token identifying this workflow instance.
+        :type token: str
         :param step: The next step for this workflow.
         :type step: str
         :param data: Additional data (workflow-specific).
         :type data: str
         """
 
-    def restore(name, key):
+    def restore(name, token):
         """Get the saved state for a workflow or None if nothing was saved.
 
         :param name: The name of the workflow.
         :type name: str
-        :param key: A unique key identifying this workflow instance.
-        :type key: str
+        :param token: A unique token identifying this workflow instance.
+        :type token: str
         """

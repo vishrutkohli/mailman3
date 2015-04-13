@@ -25,6 +25,9 @@ __all__ = [
 
 
 
+import uuid
+
+from enum import Enum
 from mailman.app.membership import add_member, delete_member
 from mailman.app.moderator import hold_subscription
 from mailman.app.workflow import Workflow
@@ -58,6 +61,11 @@ def _membership_sort_key(member):
     return (member.list_id, member.address.email, member.role.value)
 
 
+class WhichSubscriber(Enum):
+    address = 1
+    user = 2
+
+
 
 class SubscriptionWorkflow(Workflow):
     """Workflow of a subscription request."""
@@ -67,25 +75,62 @@ class SubscriptionWorkflow(Workflow):
         'pre_approved',
         'pre_confirmed',
         'pre_verified',
+        'address_key',
+        'subscriber_key',
+        'user_key',
         )
 
-    def __init__(self, mlist, subscriber, *,
+    def __init__(self, mlist, subscriber=None, *,
                  pre_verified=False, pre_confirmed=False, pre_approved=False):
         super().__init__()
         self.mlist = mlist
+        self.address = None
+        self.user = None
+        self.which = None
         # The subscriber must be either an IUser or IAddress.
         if IAddress.providedBy(subscriber):
             self.address = subscriber
             self.user = self.address.user
+            self.which = WhichSubscriber.address
         elif IUser.providedBy(subscriber):
             self.address = subscriber.preferred_address
             self.user = subscriber
-        else:
-            raise AssertionError('subscriber is neither an IUser nor IAddress')
+            self.which = WhichSubscriber.user
         self.subscriber = subscriber
         self.pre_verified = pre_verified
         self.pre_confirmed = pre_confirmed
         self.pre_approved = pre_approved
+
+    @property
+    def user_key(self):
+        # For save.
+        return self.user.user_id.hex
+
+    @user_key.setter
+    def user_key(self, hex_key):
+        # For restore.
+        uid = uuid.UUID(hex_key)
+        self.user = getUtility(IUserManager).get_user_by_id(uid)
+        assert self.user is not None
+
+    @property
+    def address_key(self):
+        # For save.
+        return self.address.email
+
+    @address_key.setter
+    def address_key(self, email):
+        # For restore.
+        self.address = getUtility(IUserManager).get_address(email)
+        assert self.address is not None
+
+    @property
+    def subscriber_key(self):
+        return self.which.value
+
+    @subscriber_key.setter
+    def subscriber_key(self, key):
+        self.which = WhichSubscriber(key)
 
     def _step_sanity_checks(self):
         # Ensure that we have both an address and a user, even if the address
@@ -160,8 +205,27 @@ class SubscriptionWorkflow(Workflow):
         # subscription request in the database
         request = RequestRecord(
             self.address.email, self.subscriber.display_name,
+            # XXX Need to get these last to into the constructor.
             DeliveryMode.regular, 'en')
-        hold_subscription(self.mlist, request)
+        self.token = hold_subscription(self.mlist, request)
+        # Here's the next step in the workflow, assuming the moderator
+        # approves of the subscription.  If they don't, the workflow and
+        # subscription request will just be thrown away.
+        self.push('subscribe_from_restored')
+        self.save()
+        # The workflow must stop running here.
+        raise StopIteration
+
+    def _step_subscribe_from_restored(self):
+        # Restore a little extra state that can't be stored in the database
+        # (because the order of setattr() on restore is indeterminate), then
+        # subscribe the user.
+        if self.which is WhichSubscriber.address:
+            self.subscriber = self.address
+        else:
+            assert self.which is WhichSubscriber.user
+            self.subscriber = self.user
+        self.push('do_subscription')
 
     def _step_send_confirmation(self):
         self._next.append('moderation_check')
