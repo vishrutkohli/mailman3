@@ -38,10 +38,12 @@ from mailman.core.i18n import _
 from mailman.database.transaction import dbconnection
 from mailman.email.message import UserNotification
 from mailman.interfaces.address import IAddress
+from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.listmanager import (
     IListManager, ListDeletingEvent, NoSuchListError)
 from mailman.interfaces.mailinglist import SubscriptionPolicy
-from mailman.interfaces.member import DeliveryMode, MemberRole
+from mailman.interfaces.member import (
+    DeliveryMode, MemberRole, MembershipIsBannedError)
 from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError, RequestRecord)
@@ -166,6 +168,9 @@ class SubscriptionWorkflow(Workflow):
             self.address = addresses[0]
         assert self.user is not None and self.address is not None, (
             'Insane sanity check results')
+        # Is this email address banned?
+        if IBanManager(self.mlist).is_banned(self.address.email):
+            raise MembershipIsBannedError(self.mlist, self.address.email)
         self.push('verification_checks')
 
     def _step_verification_checks(self):

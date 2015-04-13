@@ -29,7 +29,9 @@ import unittest
 from mailman.app.lifecycle import create_list
 from mailman.app.subscriptions import SubscriptionWorkflow
 from mailman.interfaces.address import InvalidEmailAddressError
-from mailman.interfaces.member import MemberRole, MissingPreferredAddressError
+from mailman.interfaces.bans import IBanManager
+from mailman.interfaces.member import (
+    MemberRole, MembershipIsBannedError, MissingPreferredAddressError)
 from mailman.interfaces.requests import IListRequests, RequestType
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
@@ -152,6 +154,20 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         user = self._user_manager.create_user()
         workflow = SubscriptionWorkflow(self._mlist, user)
         self.assertRaises(AssertionError, workflow.run_thru, 'sanity_checks')
+
+    def test_sanity_checks_globally_banned_address(self):
+        # An exception is raised if the address is globally banned.
+        anne = self._user_manager.create_address(self._anne)
+        IBanManager(None).ban(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        self.assertRaises(MembershipIsBannedError, list, workflow)
+
+    def test_sanity_checks_banned_address(self):
+        # An exception is raised if the address is banned by the mailing list.
+        anne = self._user_manager.create_address(self._anne)
+        IBanManager(self._mlist).ban(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        self.assertRaises(MembershipIsBannedError, list, workflow)
 
     def test_verification_checks_with_verified_address(self):
         # When the address is already verified, we skip straight to the
