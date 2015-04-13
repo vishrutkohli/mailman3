@@ -32,12 +32,14 @@ from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.member import (
     MemberRole, MembershipIsBannedError, MissingPreferredAddressError)
+from mailman.interfaces.pending import IPendings
 from mailman.interfaces.subscriptions import (
     MissingUserError, ISubscriptionService)
 from mailman.testing.helpers import LogFileMark, get_queue_messages
 from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
+from mailman.interfaces.workflow import IWorkflowStateManager
 from mailman.utilities.datetime import now
 from unittest.mock import patch
 from zope.component import getUtility
@@ -342,6 +344,32 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Anne is now a member of the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+
+    def test_do_subscription_cleanups(self):
+        # Once the user is subscribed, the token, and its associated pending
+        # database record will be removed from the database.
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True,
+                                        pre_approved=True)
+        # Cache the token.
+        token = workflow.token
+        # Consume the entire state machine.
+        list(workflow)
+        # Anne is now a member of the mailing list.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertEqual(member.address, anne)
+        # The workflow is done, so it has no token.
+        self.assertIsNone(workflow.token)
+        # The pendable associated with the token has been evicted.
+        self.assertIsNone(getUtility(IPendings).confirm(token, expunge=False))
+        # There is no saved workflow associated with the token.
+        new_workflow = SubscriptionWorkflow(self._mlist)
+        new_workflow.token = token
+        new_workflow.restore()
+        self.assertIsNone(new_workflow.which)
 
     def test_moderator_approves(self):
         # The workflow runs until moderator approval is required, at which

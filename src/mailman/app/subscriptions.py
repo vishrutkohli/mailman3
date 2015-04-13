@@ -50,6 +50,7 @@ from mailman.interfaces.subscriptions import (
     ISubscriptionService, MissingUserError, RequestRecord)
 from mailman.interfaces.user import IUser
 from mailman.interfaces.usermanager import IUserManager
+from mailman.interfaces.workflow import IWorkflowStateManager
 from mailman.model.member import Member
 from mailman.utilities.datetime import now
 from mailman.utilities.i18n import make
@@ -176,7 +177,6 @@ class SubscriptionWorkflow(Workflow):
         # Create a pending record.  This will give us the hash token we can use
         # to uniquely name this workflow.
         pendable = Pendable(
-            when=now().isoformat(),
             list_id=self.mlist.list_id,
             address=self.address.email,
             )
@@ -268,6 +268,9 @@ class SubscriptionWorkflow(Workflow):
     def _step_do_subscription(self):
         # We can immediately subscribe the user to the mailing list.
         self.mlist.subscribe(self.subscriber)
+        # This workflow is done so throw away any associated state.
+        getUtility(IWorkflowStateManager).restore(self.name, self.token)
+        self.token = None
 
     def _step_send_confirmation(self):
         self.push('do_confirm_verify')

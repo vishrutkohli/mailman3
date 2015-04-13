@@ -49,6 +49,10 @@ class Workflow:
         self.debug = False
         self._count = 0
 
+    @property
+    def name(self):
+        return self.__class__.__name__
+
     def __iter__(self):
         return self
 
