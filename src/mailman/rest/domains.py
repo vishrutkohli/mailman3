@@ -118,7 +118,10 @@ class AllDomains(_DomainBase):
             # but .add() requires an `owners` keyword.  Match impedence.
             owners = values.pop('owner', None)
             if owners is not None:
-                values['owners'] = owners
+                if isinstance(owners, str):
+                    values['owners'] = [owners]
+                else:
+                    values['owners'] = owners
             domain = domain_manager.add(**values)
         except BadDomainSpecificationError as error:
             bad_request(response, str(error))
