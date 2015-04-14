@@ -39,7 +39,6 @@ from mailman.testing.helpers import LogFileMark, get_queue_messages
 from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.usermanager import IUserManager
-from mailman.interfaces.workflow import IWorkflowStateManager
 from mailman.utilities.datetime import now
 from unittest.mock import patch
 from zope.component import getUtility
