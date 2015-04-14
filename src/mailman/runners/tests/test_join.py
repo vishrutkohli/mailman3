@@ -197,6 +197,8 @@ join digest=no
         self.assertEqual(anne.address.email, 'anne@example.org')
         self.assertEqual(anne.delivery_mode, DeliveryMode.regular)
 
+    # LP: #1444184 - digest=mime is not currently supported.
+    @unittest.expectedFailure
     def test_join_with_mime_digests(self):
         # Test the digest=mime argument to the join command.
         msg = mfs("""\
@@ -211,6 +213,8 @@ join digest=mime
         self.assertEqual(anne.address.email, 'anne@example.org')
         self.assertEqual(anne.delivery_mode, DeliveryMode.mime_digests)
 
+    # LP: #1444184 - digest=mime is not currently supported.
+    @unittest.expectedFailure
     def test_join_with_plain_digests(self):
         # Test the digest=mime argument to the join command.
         msg = mfs("""\

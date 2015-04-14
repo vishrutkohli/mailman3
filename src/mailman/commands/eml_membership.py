@@ -37,6 +37,28 @@ from zope.interface import implementer
 
 
 
+def match_subscriber(email, display_name):
+    # Return something matching the email which should be used as the
+    # subscriber by the IRegistrar interface.
+    manager = getUtility(IUserManager)
+    # Is there a user with a preferred address matching the email?
+    user = manager.get_user(email)
+    if user is not None:
+        preferred = user.preferred_address
+        if preferred is not None and preferred.email == email.lower():
+            return user
+    # Is there an address matching the email?
+    address = manager.get_address(email)
+    if address is not None:
+        return address
+    # Make a new user and subscribe their first (and only) address.  We can't
+    # make the first address their preferred address because it hasn't been
+    # verified yet.
+    user = manager.make_user(email, display_name)
+    return list(user.addresses)[0]
+
+
+
 @implementer(IEmailCommand)
 class Join:
     """The email 'join' command."""
@@ -60,34 +82,35 @@ used.
         delivery_mode = self._parse_arguments(arguments, results)
         if delivery_mode is ContinueProcessing.no:
             return ContinueProcessing.no
-        display_name, address = parseaddr(msg['from'])
+        display_name, email = parseaddr(msg['from'])
         # Address could be None or the empty string.
-        if not address:
-            address = msg.sender
-        if not address:
+        if not email:
+            email = msg.sender
+        if not email:
             print(_('$self.name: No valid address found to subscribe'),
                   file=results)
             return ContinueProcessing.no
-        if isinstance(address, bytes):
-            address = address.decode('ascii')
+        if isinstance(email, bytes):
+            email = email.decode('ascii')
         # Have we already seen one join request from this user during the
         # processing of this email?
         joins = getattr(results, 'joins', set())
-        if address in joins:
+        if email in joins:
             # Do not register this join.
             return ContinueProcessing.yes
-        joins.add(address)
+        joins.add(email)
         results.joins = joins
-        person = formataddr((display_name, address))
+        person = formataddr((display_name, email))
         # Is this person already a member of the list?  Search for all
         # matching memberships.
         members = getUtility(ISubscriptionService).find_members(
-            address, mlist.list_id, MemberRole.member)
+            email, mlist.list_id, MemberRole.member)
         if len(members) > 0:
             print(_('$person is already a member'), file=results)
-        else:
-            IRegistrar(mlist).register(address)
-            print(_('Confirmation email sent to $person'), file=results)
+            return ContinueProcessing.yes
+        subscriber = match_subscriber(email, display_name)
+        IRegistrar(mlist).register(subscriber)
+        print(_('Confirmation email sent to $person'), file=results)
         return ContinueProcessing.yes
 
     def _parse_arguments(self, arguments, results):

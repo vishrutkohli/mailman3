@@ -25,7 +25,6 @@ __all__ = [
 from mailman.core.i18n import _
 from mailman.interfaces.command import ContinueProcessing, IEmailCommand
 from mailman.interfaces.registrar import IRegistrar
-from zope.component import getUtility
 from zope.interface import implementer
 
 
@@ -53,7 +52,11 @@ class Confirm:
             return ContinueProcessing.yes
         tokens.add(token)
         results.confirms = tokens
-        succeeded = IRegistrar(mlist).confirm(token)
+        try:
+            succeeded = IRegistrar(mlist).confirm(token)
+        except LookupError:
+            # The token must not exist in the database.
+            succeeded = False
         if succeeded:
             print(_('Confirmed'), file=results)
             return ContinueProcessing.yes

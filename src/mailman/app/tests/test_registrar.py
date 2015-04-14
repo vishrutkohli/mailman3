@@ -74,7 +74,8 @@ class TestRegistrar(unittest.TestCase):
         # happens immediately.
         self._mlist.subscription_policy = SubscriptionPolicy.open
         self._anne.verified_on = now()
-        self._registrar.register(self._anne)
+        status = self._registrar.register(self._anne)
+        self.assertIsNone(status)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertEqual(member.address, self._anne)
 
@@ -145,7 +146,10 @@ class TestRegistrar(unittest.TestCase):
         self.assertIsNone(member)
         # Now confirm the subscription, and wait for the moderator to approve
         # the subscription.  She is still not subscribed.
-        self._registrar.confirm(token)
+        status = self._registrar.confirm(token)
+        # The status is not true because the user has not yet been subscribed
+        # to the mailing list.
+        self.assertFalse(status)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Confirm once more, this time as the moderator approving the

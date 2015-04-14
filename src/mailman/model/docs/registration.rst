@@ -48,6 +48,7 @@ list.  In this case, verifying implies that she also confirms her wish to join
 the mailing list.
 
     >>> registrar.confirm(token)
+    True
     >>> mlist.members.get_member('anne@example.com')
     <Member: Anne Person <anne@example.com> on ant@example.com
         as MemberRole.member>
@@ -85,6 +86,7 @@ subscribed to the mailing list.
 When the moderator confirms Bart's subscription, he joins the mailing list.
 
     >>> registrar.confirm(token)
+    True
     >>> mlist.members.get_member('bart@example.com')
     <Member: Bart Person <bart@example.com> on ant@example.com
         as MemberRole.member>

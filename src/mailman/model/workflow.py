@@ -63,6 +63,14 @@ class WorkflowStateManager:
         return state
 
     @dbconnection
+    def discard(self, store, name, token):
+        """See `IWorkflowStateManager`."""
+        state = store.query(WorkflowState).get((name, token))
+        if state is not None:
+            store.delete(state)
+
+    @property
+    @dbconnection
     def count(self, store):
         """See `IWorkflowStateManager`."""
         return store.query(WorkflowState).count()

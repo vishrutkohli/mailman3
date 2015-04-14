@@ -75,8 +75,9 @@ class IRegistrar(Interface):
         :type mlist: `IMailingList`
         :param subscriber: The user or address to subscribe.
         :type email: ``IUser`` or ``IAddress``
-        :return: The confirmation token string.
-        :rtype: str
+        :return: The confirmation token string, or None if the workflow
+            completes (i.e. the member has been subscribed).
+        :rtype: str or None
         :raises MembershipIsBannedError: when the address being subscribed
             appears in the global or list-centric bans.
         """
@@ -89,6 +90,10 @@ class IRegistrar(Interface):
         or the moderator must approve the subscription request.
 
         :param token: A token matching a workflow.
+        :type token: string
+        :return: A flag indicating whether the confirmation succeeded in
+            subscribing the user or not.
+        :rtype: bool
         :raises LookupError: when no workflow is associated with the token.
         """
 

@@ -140,6 +140,7 @@ address, and the other is the results of his email command.
     >>> len(messages)
     2
 
+    >>> from mailman.interfaces.registrar import IRegistrar
     >>> registrar = IRegistrar(mlist)
     >>> for item in messages:
     ...     subject = item.msg['subject']

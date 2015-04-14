@@ -43,11 +43,11 @@ class TestWorkflow(unittest.TestCase):
         step = 'cat'
         data = 'dog'
         self._manager.save(name, token, step, data)
-        workflow = self._manager.restore(name, token)
-        self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.token, token)
-        self.assertEqual(workflow.step, step)
-        self.assertEqual(workflow.data, data)
+        state = self._manager.restore(name, token)
+        self.assertEqual(state.name, name)
+        self.assertEqual(state.token, token)
+        self.assertEqual(state.step, step)
+        self.assertEqual(state.data, data)
 
     def test_save_restore_workflow_without_step(self):
         # Save and restore a workflow that contains no step.
@@ -55,11 +55,11 @@ class TestWorkflow(unittest.TestCase):
         token = 'bee'
         data = 'dog'
         self._manager.save(name, token, data=data)
-        workflow = self._manager.restore(name, token)
-        self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.token, token)
-        self.assertIsNone(workflow.step)
-        self.assertEqual(workflow.data, data)
+        state = self._manager.restore(name, token)
+        self.assertEqual(state.name, name)
+        self.assertEqual(state.token, token)
+        self.assertIsNone(state.step)
+        self.assertEqual(state.data, data)
 
     def test_save_restore_workflow_without_data(self):
         # Save and restore a workflow that contains no data.
@@ -67,38 +67,38 @@ class TestWorkflow(unittest.TestCase):
         token = 'bee'
         step = 'cat'
         self._manager.save(name, token, step)
-        workflow = self._manager.restore(name, token)
-        self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.token, token)
-        self.assertEqual(workflow.step, step)
-        self.assertIsNone(workflow.data)
+        state = self._manager.restore(name, token)
+        self.assertEqual(state.name, name)
+        self.assertEqual(state.token, token)
+        self.assertEqual(state.step, step)
+        self.assertIsNone(state.data)
 
     def test_save_restore_workflow_without_step_or_data(self):
         # Save and restore a workflow that contains no step or data.
         name = 'ant'
         token = 'bee'
         self._manager.save(name, token)
-        workflow = self._manager.restore(name, token)
-        self.assertEqual(workflow.name, name)
-        self.assertEqual(workflow.token, token)
-        self.assertIsNone(workflow.step)
-        self.assertIsNone(workflow.data)
+        state = self._manager.restore(name, token)
+        self.assertEqual(state.name, name)
+        self.assertEqual(state.token, token)
+        self.assertIsNone(state.step)
+        self.assertIsNone(state.data)
 
     def test_restore_workflow_with_no_matching_name(self):
         # Try to restore a workflow that has no matching name in the database.
         name = 'ant'
         token = 'bee'
         self._manager.save(name, token)
-        workflow = self._manager.restore('ewe', token)
-        self.assertIsNone(workflow)
+        state = self._manager.restore('ewe', token)
+        self.assertIsNone(state)
 
     def test_restore_workflow_with_no_matching_token(self):
         # Try to restore a workflow that has no matching token in the database.
         name = 'ant'
         token = 'bee'
         self._manager.save(name, token)
-        workflow = self._manager.restore(name, 'fly')
-        self.assertIsNone(workflow)
+        state = self._manager.restore(name, 'fly')
+        self.assertIsNone(state)
 
     def test_restore_workflow_with_no_matching_token_or_name(self):
         # Try to restore a workflow that has no matching token or name in the
@@ -106,25 +106,43 @@ class TestWorkflow(unittest.TestCase):
         name = 'ant'
         token = 'bee'
         self._manager.save(name, token)
-        workflow = self._manager.restore('ewe', 'fly')
-        self.assertIsNone(workflow)
+        state = self._manager.restore('ewe', 'fly')
+        self.assertIsNone(state)
 
     def test_restore_removes_record(self):
         name = 'ant'
         token = 'bee'
-        self.assertEqual(self._manager.count(), 0)
+        self.assertEqual(self._manager.count, 0)
         self._manager.save(name, token)
-        self.assertEqual(self._manager.count(), 1)
+        self.assertEqual(self._manager.count, 1)
         self._manager.restore(name, token)
-        self.assertEqual(self._manager.count(), 0)
+        self.assertEqual(self._manager.count, 0)
 
     def test_save_after_restore(self):
         name = 'ant'
         token = 'bee'
-        self.assertEqual(self._manager.count(), 0)
+        self.assertEqual(self._manager.count, 0)
         self._manager.save(name, token)
-        self.assertEqual(self._manager.count(), 1)
+        self.assertEqual(self._manager.count, 1)
         self._manager.restore(name, token)
-        self.assertEqual(self._manager.count(), 0)
+        self.assertEqual(self._manager.count, 0)
         self._manager.save(name, token)
-        self.assertEqual(self._manager.count(), 1)
+        self.assertEqual(self._manager.count, 1)
+
+    def test_discard(self):
+        # Discard some workflow state.  This is use by IRegistrar.discard().
+        self._manager.save('ant', 'token', 'one')
+        self._manager.save('bee', 'token', 'two')
+        self._manager.save('ant', 'nekot', 'three')
+        self._manager.save('bee', 'nekot', 'four')
+        self.assertEqual(self._manager.count, 4)
+        self._manager.discard('bee', 'token')
+        self.assertEqual(self._manager.count, 3)
+        state = self._manager.restore('ant', 'token')
+        self.assertEqual(state.step, 'one')
+        state = self._manager.restore('bee', 'token')
+        self.assertIsNone(state)
+        state = self._manager.restore('ant', 'nekot')
+        self.assertEqual(state.step, 'three')
+        state = self._manager.restore('bee', 'nekot')
+        self.assertEqual(state.step, 'four')

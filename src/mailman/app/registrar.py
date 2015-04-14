@@ -27,10 +27,12 @@ import logging
 
 from mailman.app.subscriptions import SubscriptionWorkflow
 from mailman.core.i18n import _
+from mailman.database.transaction import flush
 from mailman.email.message import UserNotification
 from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.registrar import ConfirmationNeededEvent, IRegistrar
 from mailman.interfaces.templates import ITemplateLoader
+from mailman.interfaces.workflow import IWorkflowStateManager
 from zope.component import getUtility
 from zope.interface import implementer
 
@@ -67,13 +69,16 @@ class Registrar:
         """See `IRegistrar`."""
         workflow = SubscriptionWorkflow(self._mlist)
         workflow.token = token
-        workflow.debug = True
         workflow.restore()
         list(workflow)
+        return workflow.token is None
 
     def discard(self, token):
-        # Throw the record away.
-        getUtility(IPendings).confirm(token)
+        """See `IRegistrar`."""
+        with flush():
+            getUtility(IPendings).confirm(token)
+            getUtility(IWorkflowStateManager).discard(
+                SubscriptionWorkflow.__name__, token)
 
 
 

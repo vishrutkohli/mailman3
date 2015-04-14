@@ -365,11 +365,11 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self.assertIsNone(workflow.token)
         # The pendable associated with the token has been evicted.
         self.assertIsNone(getUtility(IPendings).confirm(token, expunge=False))
-        # There is no saved workflow associated with the token.
+        # There is no saved workflow associated with the token.  This shows up
+        # as an exception when we try to restore the workflow.
         new_workflow = SubscriptionWorkflow(self._mlist)
         new_workflow.token = token
-        new_workflow.restore()
-        self.assertIsNone(new_workflow.which)
+        self.assertRaises(LookupError, new_workflow.restore)
 
     def test_moderator_approves(self):
         # The workflow runs until moderator approval is required, at which
