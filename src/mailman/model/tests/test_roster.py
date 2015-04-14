@@ -26,7 +26,9 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.interfaces.address import IAddress
 from mailman.interfaces.member import DeliveryMode, MemberRole
+from mailman.interfaces.user import IUser
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.datetime import now
@@ -136,7 +138,8 @@ class TestMembershipsRoster(unittest.TestCase):
         self._ant = create_list('ant@example.com')
         self._bee = create_list('bee@example.com')
         user_manager = getUtility(IUserManager)
-        self._anne = user_manager.create_user('anne@example.com')
+        self._anne = user_manager.make_user(
+            'anne@example.com', 'Anne Person')
         preferred = list(self._anne.addresses)[0]
         preferred.verified_on = now()
         self._anne.preferred_address = preferred
@@ -144,9 +147,56 @@ class TestMembershipsRoster(unittest.TestCase):
     def test_no_memberships(self):
         # An unsubscribed user has no memberships.
         self.assertEqual(self._anne.memberships.member_count, 0)
+        self.assertIsNone(self._ant.members.get_member('anne@example.com'))
+        self.assertEqual(
+            self._ant.members.get_memberships('anne@example.com'),
+            [])
 
     def test_subscriptions(self):
         # Anne subscribes to a couple of mailing lists.
         self._ant.subscribe(self._anne)
         self._bee.subscribe(self._anne)
         self.assertEqual(self._anne.memberships.member_count, 2)
+
+    def test_subscribed_as_user(self):
+        # Anne subscribes to a mailing list as a user and the member roster
+        # contains her membership.
+        self._ant.subscribe(self._anne)
+        self.assertEqual(
+            self._ant.members.get_member('anne@example.com').user,
+            self._anne)
+        memberships = self._ant.members.get_memberships('anne@example.com')
+        self.assertEqual(
+            [member.address.email for member in memberships],
+            ['anne@example.com'])
+
+    def test_subscribed_as_user_and_address(self):
+        # Anne subscribes to a mailing list twice, once as a user and once
+        # with an explicit address.  She has two memberships.
+        self._ant.subscribe(self._anne)
+        self._ant.subscribe(self._anne.preferred_address)
+        self.assertEqual(self._anne.memberships.member_count, 2)
+        self.assertEqual(self._ant.members.member_count, 2)
+        self.assertEqual(
+            [member.address.email for member in self._ant.members.members],
+            ['anne@example.com', 'anne@example.com'])
+        # get_member() is defined to return the explicit address.
+        member = self._ant.members.get_member('anne@example.com')
+        subscriber = member.subscriber
+        self.assertTrue(IAddress.providedBy(subscriber))
+        self.assertFalse(IUser.providedBy(subscriber))
+        # get_memberships() returns them all.
+        memberships = self._ant.members.get_memberships('anne@example.com')
+        self.assertEqual(len(memberships), 2)
+        as_address = (memberships[0]
+                      if IAddress.providedBy(memberships[0].subscriber)
+                      else memberships[1])
+        as_user = (memberships[1]
+                   if IUser.providedBy(memberships[1].subscriber)
+                   else memberships[0])
+        self.assertEqual(as_address.subscriber, self._anne.preferred_address)
+        self.assertEqual(as_user.subscriber, self._anne)
+        # All the email addresses match.
+        self.assertEqual(
+            [record.address.email for record in memberships],
+            ['anne@example.com', 'anne@example.com'])

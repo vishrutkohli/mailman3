@@ -97,21 +97,48 @@ class AbstractRoster:
             yield member.address
 
     @dbconnection
-    def get_member(self, store, address):
-        """See `IRoster`."""
-        results = store.query(Member).filter(
+    def _get_all_memberships(self, store, email):
+        # Avoid circular imports.
+        from mailman.model.user import User
+        # Here's a query that finds all members subscribed with an explicit
+        # email address.
+        members_a = store.query(Member).filter(
             Member.list_id == self._mlist.list_id,
             Member.role == self.role,
-            Address.email == address,
+            Address.email == email,
             Member.address_id == Address.id)
-        if results.count() == 0:
+        # Here's a query that finds all members subscribed with their
+        # preferred address.
+        members_u = store.query(Member).filter(
+            Member.list_id == self._mlist.list_id,
+            Member.role == self.role,
+            Address.email==email,
+            Member.user_id == User.id)
+        return members_a.union(members_u).all()
+
+    def get_member(self, email):
+        """See ``IRoster``."""
+        memberships = self._get_all_memberships(email)
+        count = len(memberships)
+        if count == 0:
             return None
-        elif results.count() == 1:
-            return results[0]
-        else:
-            raise AssertionError(
-                'Too many matching member results: {0}'.format(
-                    results.count()))
+        elif count == 1:
+            return memberships[0]
+        assert count == 2, 'Unexpected membership count: {}'.format(count)
+        # This is the case where the email address is subscribed both
+        # explicitly and indirectly through the preferred address.  By
+        # definition, we return the explicit address membership only.
+        return (memberships[0]
+                if memberships[0]._address is not None
+                else memberships[1])
+
+    def get_memberships(self, email):
+        """See ``IRoster``."""
+        memberships = self._get_all_memberships(email)
+        count = len(memberships)
+        assert 0 <= count <= 2, 'Unexpected membership count: {}'.format(
+            count)
+        return memberships
 
 
 
@@ -298,3 +325,10 @@ class Memberships:
             raise AssertionError(
                 'Too many matching member results: {0}'.format(
                     results.count()))
+
+    @dbconnection
+    def get_memberships(self, store, address):
+        """See `IRoster`."""
+        # 2015-04-14 BAW: See LP: #1444055 -- this currently exists just to
+        # pass a test.
+        raise NotImplementedError

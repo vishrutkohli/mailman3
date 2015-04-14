@@ -228,6 +228,38 @@ regardless of their role.
     fperson@example.com MemberRole.nonmember
 
 
+Subscriber type
+===============
+
+Members can be subscribed to a mailing list either via an explicit address, or
+indirectly through a user's preferred address.  Sometimes you want to know
+which one it is.
+
+Herb subscribes to the mailing list via an explicit address.
+
+    >>> herb = user_manager.create_address(
+    ...     'hperson@example.com', 'Herb Person')
+    >>> herb_member = mlist.subscribe(herb)
+
+Iris subscribes to the mailing list via her preferred address.
+
+    >>> iris = user_manager.make_user(
+    ...     'iperson@example.com', 'Iris Person')
+    >>> preferred = list(iris.addresses)[0]
+    >>> from mailman.utilities.datetime import now
+    >>> preferred.verified_on = now()
+    >>> iris.preferred_address = preferred
+    >>> iris_member = mlist.subscribe(iris)
+
+When we need to know which way a member is subscribed, we can look at the this
+attribute.
+
+    >>> herb_member.subscriber
+    <Address: Herb Person <hperson@example.com> [not verified] at ...>
+    >>> iris_member.subscriber
+    <User "Iris Person" (5) at ...>
+
+
 Moderation actions
 ==================
 
@@ -250,6 +282,8 @@ should go through the normal moderation checks.
     aperson@example.com MemberRole.member Action.defer
     bperson@example.com MemberRole.member Action.defer
     cperson@example.com MemberRole.member Action.defer
+    hperson@example.com MemberRole.member Action.defer
+    iperson@example.com MemberRole.member Action.defer
 
 Postings by nonmembers are held for moderator approval by default.
 
@@ -272,7 +306,7 @@ though that the address they're changing to must be verified.
     >>> gwen_member = bee.subscribe(gwen_address)
     >>> for m in bee.members.members:
     ...     print(m.member_id.int, m.mailing_list.list_id, m.address.email)
-    7 bee.example.com gwen@example.com
+    9 bee.example.com gwen@example.com
 
 Gwen gets a email address.
 
@@ -288,7 +322,7 @@ Now her membership reflects the new address.
 
     >>> for m in bee.members.members:
     ...     print(m.member_id.int, m.mailing_list.list_id, m.address.email)
-    7 bee.example.com gperson@example.com
+    9 bee.example.com gperson@example.com
 
 
 Events
