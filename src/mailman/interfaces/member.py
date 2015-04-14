@@ -175,6 +175,14 @@ class IMember(Interface):
     user = Attribute(
         """The user associated with this member.""")
 
+    subscriber = Attribute(
+        """The object representing how this member is subscribed.
+
+        This will be an ``IAddress`` if the user is subscribed via an explicit
+        address, otherwise if the the user is subscribed via their preferred
+        address, it will be an ``IUser``.
+        """)
+
     preferences = Attribute(
         """This member's preferences.""")
 
