@@ -54,6 +54,14 @@ class TestDomains(unittest.TestCase):
             'http://localhost:9001/3.0/domains', data, method="POST")
         self.assertEqual(response.status, 201)
 
+    def test_domain_create_with_single_owner(self):
+        # Creating domain with single owner should not raise InvalidEmailError
+        content, response = call_api('http://localhost:9001/3.0/domains',
+                                     dict(mail_host='example.in',
+                                          owner='someperson@example.com'),
+                                     method='POST')
+        self.assertEqual(response.status, 201)
+
     def test_bogus_endpoint_extension(self):
         # /domains/<domain>/lists/<anything> is not a valid endpoint.
         with self.assertRaises(HTTPError) as cm:
@@ -100,6 +108,7 @@ class TestDomains(unittest.TestCase):
             call_api('http://localhost:9001/3.0/domains/example.com',
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
+
 
 
 
