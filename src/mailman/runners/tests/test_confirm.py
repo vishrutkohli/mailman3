@@ -46,14 +46,14 @@ class TestConfirm(unittest.TestCase):
     layer = ConfigLayer
 
     def setUp(self):
-        registrar = getUtility(IRegistrar)
         self._commandq = config.switchboards['command']
         self._runner = make_testable_runner(CommandRunner, 'command')
         with transaction():
             # Register a subscription requiring confirmation.
             self._mlist = create_list('test@example.com')
             self._mlist.send_welcome_message = False
-            self._token = registrar.register(self._mlist, 'anne@example.org')
+            anne = getUtility(IUserManager).create_address('anne@example.org')
+            self._token = IRegistrar(self._mlist).register(anne)
 
     def test_confirm_with_re_prefix(self):
         subject = 'Re: confirm {0}'.format(self._token)

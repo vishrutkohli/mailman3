@@ -297,7 +297,7 @@ class SubscriptionWorkflow(Workflow):
         if self.address.verified_on is None:
             self.address.verified_on = now()
         # The next step depends on the mailing list's subscription policy.
-        next_step = ('moderation_check'
+        next_step = ('moderation_checks'
                      if self.mlist.subscription_policy in (
                          SubscriptionPolicy.moderate,
                          SubscriptionPolicy.confirm_then_moderate,

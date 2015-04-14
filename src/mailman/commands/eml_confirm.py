@@ -53,7 +53,7 @@ class Confirm:
             return ContinueProcessing.yes
         tokens.add(token)
         results.confirms = tokens
-        succeeded = getUtility(IRegistrar).confirm(token)
+        succeeded = IRegistrar(mlist).confirm(token)
         if succeeded:
             print(_('Confirmed'), file=results)
             return ContinueProcessing.yes

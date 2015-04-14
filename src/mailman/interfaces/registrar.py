@@ -47,58 +47,58 @@ class ConfirmationNeededEvent:
 
 
 class IRegistrar(Interface):
-    """Interface for registering and verifying email addresses and users.
+    """Interface for subscribing addresses and users.
 
     This is a higher level interface to user registration, email address
     confirmation, etc. than the IUserManager.  The latter does no validation,
     syntax checking, or confirmation, while this interface does.
     """
 
-    def register(mlist, email, display_name=None, delivery_mode=None):
-        """Register the email address, requesting verification.
+    def register(mlist, subscriber=None, *,
+                 pre_verified=False, pre_confirmed=False, pre_approved=False):
+        """Subscribe an address or user according to subscription policies.
 
-        No `IAddress` or `IUser` is created during this step, but after
-        successful confirmation, it is guaranteed that an `IAddress` with a
-        linked `IUser` will exist.  When a verified `IAddress` matching
-        `email` already exists, this method will do nothing, except link a new
-        `IUser` to the `IAddress` if one is not yet associated with the
-        email address.
+        The mailing list's subscription policy is used to subscribe
+        `subscriber` to the given mailing list.  The subscriber can be
+        an ``IUser``, in which case the user must have a preferred
+        address, and that preferred address will be subscribed.  The
+        subscriber can also be an ``IAddress``, in which case the
+        address will be subscribed.
 
-        In all cases, the email address is sanity checked for validity first.
+        The workflow may pause (i.e. be serialized, saved, and
+        suspended) when some out-of-band confirmation step is required.
+        For example, if the user must confirm, or the moderator must
+        approve the subscription.  Use the ``confirm(token)`` method to
+        resume the workflow.
 
-        :param mlist: The mailing list that is the focus of this registration.
+        :param mlist: The mailing list to subscribe to.
         :type mlist: `IMailingList`
-        :param email: The email address to register.
-        :type email: str
-        :param display_name: The optional display name of the user.
-        :type display_name: str
-        :param delivery_mode: The optional delivery mode for this
-            registration.  If not given, regular delivery is used.
-        :type delivery_mode: `DeliveryMode`
+        :param subscriber: The user or address to subscribe.
+        :type email: ``IUser`` or ``IAddress``
         :return: The confirmation token string.
         :rtype: str
-        :raises InvalidEmailAddressError: if the address is not allowed.
+        :raises MembershipIsBannedError: when the address being subscribed
+            appears in the global or list-centric bans.
         """
 
     def confirm(token):
-        """Confirm the pending registration matched to the given `token`.
+        """Continue any paused workflow.
 
-        Confirmation ensures that the IAddress exists and is linked to an
-        IUser, with the latter being created and linked if necessary.
+        Confirmation may occur after the user confirms their
+        subscription request, or their email address must be verified,
+        or the moderator must approve the subscription request.
 
-        :param token: A token matching a pending event with a type of
-            'registration'.
-        :return: Boolean indicating whether the confirmation succeeded or
-            not.  It may fail if the token is no longer in the database, or if
-            the token did not match a registration event.
+        :param token: A token matching a workflow.
+        :raises LookupError: when no workflow is associated with the token.
         """
 
     def discard(token):
-        """Discard the pending registration matched to the given `token`.
-
-        The event record is discarded and the IAddress is not verified.  No
-        IUser is created.
+        """Discard the workflow matched to the given `token`.
 
         :param token: A token matching a pending event with a type of
             'registration'.
+        :raises LookupError: when no workflow is associated with the token.
         """
+
+    def evict():
+        """Evict all saved workflows which have expired."""

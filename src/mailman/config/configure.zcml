@@ -40,6 +40,12 @@
     factory="mailman.model.requests.ListRequests"
     />
 
+  <adapter
+    for="mailman.interfaces.mailinglist.IMailingList"
+    provides="mailman.interfaces.registrar.IRegistrar"
+    factory="mailman.app.registrar.Registrar"
+    />
+
   <utility
     provides="mailman.interfaces.bounce.IBounceProcessor"
     factory="mailman.model.bounce.BounceProcessor"
@@ -85,11 +91,6 @@
   <utility
     provides="mailman.interfaces.pending.IPendings"
     factory="mailman.model.pending.Pendings"
-    />
-
-  <utility
-    provides="mailman.interfaces.registrar.IRegistrar"
-    factory="mailman.app.registrar.Registrar"
     />
 
   <utility

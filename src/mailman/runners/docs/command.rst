@@ -140,9 +140,7 @@ address, and the other is the results of his email command.
     >>> len(messages)
     2
 
-    >>> from mailman.interfaces.registrar import IRegistrar
-    >>> from zope.component import getUtility
-    >>> registrar = getUtility(IRegistrar)
+    >>> registrar = IRegistrar(mlist)
     >>> for item in messages:
     ...     subject = item.msg['subject']
     ...     print('Subject:', subject)

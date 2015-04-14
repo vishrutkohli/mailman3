@@ -29,6 +29,7 @@ from mailman.commands.eml_confirm import Confirm
 from mailman.email.message import Message
 from mailman.interfaces.command import ContinueProcessing
 from mailman.interfaces.registrar import IRegistrar
+from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.command import Results
 from mailman.testing.helpers import get_queue_messages, reset_the_world
 from mailman.testing.layers import ConfigLayer
@@ -43,8 +44,9 @@ class TestConfirm(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        self._token = getUtility(IRegistrar).register(
-            self._mlist, 'anne@example.com', 'Anne Person')
+        anne = getUtility(IUserManager).create_address(
+            'anne@example.com', 'Anne Person')
+        self._token = IRegistrar(self._mlist).register(anne)
         self._command = Confirm()
         # Clear the virgin queue.
         get_queue_messages('virgin')

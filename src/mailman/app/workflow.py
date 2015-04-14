@@ -145,10 +145,12 @@ class Workflow:
     def restore(self):
         state_manager = getUtility(IWorkflowStateManager)
         state = state_manager.restore(self.__class__.__name__, self.token)
-        if state is not None:
-            self._next.clear()
-            if state.step:
-                self._next.append(state.step)
-            if state.data is not None:
-                for attr, value in json.loads(state.data).items():
-                    setattr(self, attr, value)
+        if state is None:
+            # The token doesn't exist in the database.
+            raise LookupError(self.token)
+        self._next.clear()
+        if state.step:
+            self._next.append(state.step)
+        if state.data is not None:
+            for attr, value in json.loads(state.data).items():
+                setattr(self, attr, value)

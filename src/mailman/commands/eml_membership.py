@@ -86,8 +86,7 @@ used.
         if len(members) > 0:
             print(_('$person is already a member'), file=results)
         else:
-            getUtility(IRegistrar).register(mlist, address,
-                                            display_name, delivery_mode)
+            IRegistrar(mlist).register(address)
             print(_('Confirmation email sent to $person'), file=results)
         return ContinueProcessing.yes
 

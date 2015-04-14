@@ -160,7 +160,7 @@ class TestJoinWithDigests(unittest.TestCase):
         subject_words = str(messages[1].msg['subject']).split()
         self.assertEqual(subject_words[0], 'confirm')
         token = subject_words[1]
-        status = getUtility(IRegistrar).confirm(token)
+        status = IRegistrar(self._mlist).confirm(token)
         self.assertTrue(status, 'Confirmation failed')
         # Now, make sure that Anne is a member of the list and is receiving
         # digest deliveries.
