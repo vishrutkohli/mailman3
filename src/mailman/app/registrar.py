@@ -63,7 +63,7 @@ class Registrar:
             pre_confirmed=pre_confirmed,
             pre_approved=pre_approved)
         list(workflow)
-        return workflow.token
+        return workflow.token, workflow.token_owner
 
     def confirm(self, token):
         """See `IRegistrar`."""
@@ -71,7 +71,7 @@ class Registrar:
         workflow.token = token
         workflow.restore()
         list(workflow)
-        return workflow.token
+        return workflow.token, workflow.token_owner
 
     def discard(self, token):
         """See `IRegistrar`."""
