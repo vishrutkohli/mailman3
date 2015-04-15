@@ -26,7 +26,8 @@ import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
-from mailman.interfaces.mailinglist import IAcceptableAliasSet
+from mailman.interfaces.mailinglist import (
+    IAcceptableAliasSet, SubscriptionPolicy)
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
 
@@ -90,3 +91,20 @@ class TestConfiguration(unittest.TestCase):
         # All three acceptable aliases were set.
         self.assertEqual(set(IAcceptableAliasSet(self._mlist).aliases),
                          set(aliases))
+
+    def test_patch_subscription_policy(self):
+        # The new subscription_policy value can be patched.
+        #
+        # To start with, the subscription policy is confirm by default.
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/test@example.com/config')
+        self.assertEqual(resource['subscription_policy'], 'confirm')
+        # Let's patch it to do some moderation.
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/test@example.com/config', dict(
+                subscription_policy='confirm_then_moderate'),
+            method='PATCH')
+        self.assertEqual(response.status, 204)
+        # And now we verify that it has the requested setting.
+        self.assertEqual(self._mlist.subscription_policy,
+                         SubscriptionPolicy.confirm_then_moderate)
