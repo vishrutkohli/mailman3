@@ -150,7 +150,7 @@ def find(template_file, mlist=None, language=None, _trace=False):
         try:
             if _trace:
                 print('@@@', path, end='', file=sys.stderr)
-            fp = open(path)
+            fp = open(path, 'r', encoding='utf-8')
         except IOError as error:
             if error.errno == errno.ENOENT:
                 if _trace:
