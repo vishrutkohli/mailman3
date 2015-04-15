@@ -146,15 +146,48 @@ class TestRegistrar(unittest.TestCase):
         self.assertIsNone(member)
         # Now confirm the subscription, and wait for the moderator to approve
         # the subscription.  She is still not subscribed.
-        status = self._registrar.confirm(token)
-        # The status is not true because the user has not yet been subscribed
-        # to the mailing list.
-        self.assertFalse(status)
+        new_token = self._registrar.confirm(token)
+        # The new token, used for the moderator to approve the message, is not
+        # the same as the old token.
+        self.assertNotEqual(new_token, token)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Confirm once more, this time as the moderator approving the
         # subscription.  Now she's a member.
-        self._registrar.confirm(token)
+        self._registrar.confirm(new_token)
+        member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(member.address, self._anne)
+
+    def test_confirm_then_moderate_with_different_tokens(self):
+        # Ensure that the confirmation token the user sees when they have to
+        # confirm their subscription is different than the token the moderator
+        # sees when they approve the subscription.  This prevents the user
+        # from using a replay attack to subvert moderator approval.
+        self._mlist.subscription_policy = \
+          SubscriptionPolicy.confirm_then_moderate
+        self._anne.verified_on = now()
+        # Runs until subscription confirmation.
+        token = self._registrar.register(self._anne)
+        self.assertIsNotNone(token)
+        member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertIsNone(member)
+        # Now confirm the subscription, and wait for the moderator to approve
+        # the subscription.  She is still not subscribed.
+        new_token = self._registrar.confirm(token)
+        # The status is not true because the user has not yet been subscribed
+        # to the mailing list.
+        self.assertIsNotNone(new_token)
+        member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertIsNone(member)
+        # The new token is different than the old token.
+        self.assertNotEqual(token, new_token)
+        # Trying to confirm with the old token does not work.
+        self.assertRaises(LookupError, self._registrar.confirm, token)
+        # Confirm once more, this time with the new token, as the moderator
+        # approving the subscription.  Now she's a member.
+        done_token = self._registrar.confirm(new_token)
+        # The token is None, signifying that the member has been subscribed.
+        self.assertIsNone(done_token)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertEqual(member.address, self._anne)
 

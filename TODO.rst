@@ -1,5 +1,4 @@
 * TO DO:
- - make sure a user can't double confirm to bypass moderator approval
  - get rid of hold_subscription
  - subsume handle_subscription
  - workflow for unsubscription

@@ -53,7 +53,7 @@ class Confirm:
         tokens.add(token)
         results.confirms = tokens
         try:
-            succeeded = IRegistrar(mlist).confirm(token)
+            succeeded = (IRegistrar(mlist).confirm(token) is None)
         except LookupError:
             # The token must not exist in the database.
             succeeded = False

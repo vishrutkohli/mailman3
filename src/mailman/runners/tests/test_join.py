@@ -161,7 +161,7 @@ class TestJoinWithDigests(unittest.TestCase):
         self.assertEqual(subject_words[0], 'confirm')
         token = subject_words[1]
         status = IRegistrar(self._mlist).confirm(token)
-        self.assertTrue(status, 'Confirmation failed')
+        self.assertIsNone(status, 'Confirmation failed')
         # Now, make sure that Anne is a member of the list and is receiving
         # digest deliveries.
         members = getUtility(ISubscriptionService).find_members(

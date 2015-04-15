@@ -290,6 +290,14 @@ class SubscriptionWorkflow(Workflow):
         else:
             assert self.which is WhichSubscriber.user
             self.subscriber = self.user
+        # Create a new token to prevent replay attacks.  It seems like this
+        # should produce the same token, but it won't because the pending adds
+        # a bit of randomization.
+        pendable = Pendable(
+            list_id=self.mlist.list_id,
+            address=self.address.email,
+            )
+        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
         # The user has confirmed their subscription request, and also verified
         # their email address if necessary.  This latter needs to be set on the
         # IAddress, but there's nothing more to do about the confirmation step.

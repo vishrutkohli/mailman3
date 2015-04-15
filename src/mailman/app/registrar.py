@@ -71,7 +71,7 @@ class Registrar:
         workflow.token = token
         workflow.restore()
         list(workflow)
-        return workflow.token is None
+        return workflow.token
 
     def discard(self, token):
         """See `IRegistrar`."""

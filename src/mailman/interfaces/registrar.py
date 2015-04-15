@@ -91,9 +91,9 @@ class IRegistrar(Interface):
 
         :param token: A token matching a workflow.
         :type token: string
-        :return: A flag indicating whether the confirmation succeeded in
-            subscribing the user or not.
-        :rtype: bool
+        :return: The new token for any follow up confirmation, or None if the
+            user was subscribed.
+        :rtype: str or None
         :raises LookupError: when no workflow is associated with the token.
         """
 

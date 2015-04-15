@@ -537,3 +537,44 @@ approval:
         self.assertIsNotNone(anne.verified_on)
         self.assertEqual(
             self._mlist.regular_members.get_member(self._anne).address, anne)
+
+    def test_prevent_confirmation_replay_attacks(self):
+        # Ensure that if the workflow requires two confirmations, e.g. first
+        # the user confirming their subscription, and then the moderator
+        # approving it, that different tokens are used in these two cases.
+        self._mlist.subscription_policy = \
+          SubscriptionPolicy.confirm_then_moderate
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne, pre_verified=True)
+        # Run the state machine up to the first confirmation, and cache the
+        # confirmation token.
+        list(workflow)
+        token = workflow.token
+        # Anne is not yet a member of the mailing list.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertIsNone(member)
+        # The old token will not work for moderator approval.
+        moderator_workflow = SubscriptionWorkflow(self._mlist)
+        moderator_workflow.token = token
+        moderator_workflow.restore()
+        list(moderator_workflow)
+        # While we wait for the moderator to approve the subscription, note
+        # that there's a new token for the next steps.
+        self.assertNotEqual(token, moderator_workflow.token)
+        # The old token won't work.
+        final_workflow = SubscriptionWorkflow(self._mlist)
+        final_workflow.token = token
+        self.assertRaises(LookupError, final_workflow.restore)
+        # Running this workflow will fail.
+        self.assertRaises(AssertionError, list, final_workflow)
+        # Anne is still not subscribed.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertIsNone(member)
+        # However, if we use the new token, her subscription request will be
+        # approved by the moderator.
+        final_workflow.token = moderator_workflow.token
+        final_workflow.restore()
+        list(final_workflow)
+        # And now Anne is a member.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertEqual(member.address.email, self._anne)

@@ -31,7 +31,7 @@ from mailman.interfaces.command import ContinueProcessing
 from mailman.interfaces.registrar import IRegistrar
 from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.command import Results
-from mailman.testing.helpers import get_queue_messages, reset_the_world
+from mailman.testing.helpers import get_queue_messages
 from mailman.testing.layers import ConfigLayer
 from zope.component import getUtility
 
@@ -50,9 +50,6 @@ class TestConfirm(unittest.TestCase):
         self._command = Confirm()
         # Clear the virgin queue.
         get_queue_messages('virgin')
-
-    def tearDown(self):
-        reset_the_world()
 
     def test_welcome_message(self):
         # A confirmation causes a welcome message to be sent to the member, if
