@@ -68,7 +68,9 @@ def language_validator(code):
 
 
 def list_of_strings_validator(values):
-    """Turn a list of things into a list of unicodes."""
+    """Turn a list of things, or a single thing, into a list of unicodes."""
+    if not isinstance(values, (list, tuple)):
+        values = [values]
     for value in values:
         if not isinstance(value, str):
             raise ValueError('Expected str, got {!r}'.format(value))

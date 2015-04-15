@@ -27,6 +27,7 @@ import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.database.transaction import transaction
+from mailman.interfaces.domain import IDomainManager
 from mailman.interfaces.listmanager import IListManager
 from mailman.testing.helpers import call_api
 from mailman.testing.layers import RESTLayer
@@ -53,6 +54,21 @@ class TestDomains(unittest.TestCase):
         content, response = call_api(
             'http://localhost:9001/3.0/domains', data, method="POST")
         self.assertEqual(response.status, 201)
+
+    def test_domain_create_with_single_owner(self):
+        # Creating domain with single owner should not raise InvalidEmailError.
+        content, response = call_api(
+            'http://localhost:9001/3.0/domains', dict(
+                mail_host='example.net',
+                owner='anne@example.com',
+                ),
+            method='POST')
+        self.assertEqual(response.status, 201)
+        # The domain has the expected owner.
+        domain = getUtility(IDomainManager).get('example.net')
+        self.assertEqual(
+            [list(owner.addresses)[0].email for owner in domain.owners],
+            ['anne@example.com'])
 
     def test_bogus_endpoint_extension(self):
         # /domains/<domain>/lists/<anything> is not a valid endpoint.
@@ -100,6 +116,7 @@ class TestDomains(unittest.TestCase):
             call_api('http://localhost:9001/3.0/domains/example.com',
                      method='DELETE')
         self.assertEqual(cm.exception.code, 404)
+
 
 
 

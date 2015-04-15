@@ -89,7 +89,7 @@ class IDomain(Interface):
         'The human readable description of the domain name.')
 
     owners = Attribute("""\
-        The relationship with the user database representing domain owners""")
+        The relationship with the user database representing domain owners.""")
 
     mailing_lists = Attribute(
         """All mailing lists for this domain.
