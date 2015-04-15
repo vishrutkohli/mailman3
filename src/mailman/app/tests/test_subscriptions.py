@@ -45,40 +45,6 @@ from zope.component import getUtility
 
 
 
-@unittest.skip('XXX -- no more .join()')
-class TestJoin(unittest.TestCase):
-    layer = ConfigLayer
-
-    def setUp(self):
-        self._mlist = create_list('test@example.com')
-        self._service = getUtility(ISubscriptionService)
-
-    def test_join_user_with_bogus_id(self):
-        # When `subscriber` is a missing user id, an exception is raised.
-        with self.assertRaises(MissingUserError) as cm:
-            self._service.join('test.example.com', uuid.UUID(int=99))
-        self.assertEqual(cm.exception.user_id, uuid.UUID(int=99))
-
-    def test_join_user_with_invalid_email_address(self):
-        # When `subscriber` is a string that is not an email address, an
-        # exception is raised.
-        with self.assertRaises(InvalidEmailAddressError) as cm:
-            self._service.join('test.example.com', 'bogus')
-        self.assertEqual(cm.exception.email, 'bogus')
-
-    def test_missing_preferred_address(self):
-        # A user cannot join a mailing list if they have no preferred address.
-        anne = self._service.join(
-            'test.example.com', 'anne@example.com', 'Anne Person')
-        # Try to join Anne as a user with a different role.  Her user has no
-        # preferred address, so this will fail.
-        self.assertRaises(MissingPreferredAddressError,
-                          self._service.join,
-                          'test.example.com', anne.user.user_id,
-                          role=MemberRole.owner)
-
-
-
 class TestSubscriptionWorkflow(unittest.TestCase):
     layer = ConfigLayer
     maxDiff = None
@@ -89,11 +55,12 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self._anne = 'anne@example.com'
         self._user_manager = getUtility(IUserManager)
 
-    def test_no_token_to_start_with(self):
-        # The workflow starts with no tokens.
+    def test_start_state(self):
+        # The workflow starts with no tokens or member.
         workflow = SubscriptionWorkflow(self._mlist)
         self.assertIsNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.no_one)
+        self.assertIsNone(workflow.member)
 
     def test_user_or_address_required(self):
         # The `subscriber` attribute must be a user or address.
@@ -318,6 +285,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Anne is now a member of the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+        self.assertEqual(workflow.member, member)
         # No further token is needed.
         self.assertIsNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.no_one)
@@ -336,6 +304,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Anne is now a member of the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+        self.assertEqual(workflow.member, member)
         # No further token is needed.
         self.assertIsNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.no_one)
@@ -356,6 +325,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Anne is now a member of the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+        self.assertEqual(workflow.member, member)
         # No further token is needed.
         self.assertIsNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.no_one)
@@ -376,6 +346,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Anne is now a member of the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+        self.assertEqual(workflow.member, member)
         # The workflow is done, so it has no token.
         self.assertIsNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.no_one)
@@ -401,6 +372,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # The user is not currently subscribed to the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertIsNone(member)
+        self.assertIsNone(workflow.member)
         # The token is owned by the moderator.
         self.assertIsNotNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.moderator)
@@ -414,6 +386,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         # Now the user is subscribed to the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address, anne)
+        self.assertEqual(approved_workflow.member, member)
         # No further token is needed.
         self.assertIsNone(approved_workflow.token)
         self.assertEqual(approved_workflow.token_owner, TokenOwner.no_one)
@@ -552,7 +525,10 @@ approval:
         self.assertIsNone(anne.verified_on)
         workflow = SubscriptionWorkflow(self._mlist, anne)
         list(workflow)
-        self.assertIsNone(self._mlist.regular_members.get_member(self._anne))
+        # Anne is not yet a member.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertIsNone(member)
+        self.assertIsNone(workflow.member)
         # The token is owned by the subscriber.
         self.assertIsNotNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.subscriber)
@@ -562,8 +538,10 @@ approval:
         confirm_workflow.restore()
         list(confirm_workflow)
         self.assertIsNotNone(anne.verified_on)
-        self.assertEqual(
-            self._mlist.regular_members.get_member(self._anne).address, anne)
+        # Anne is now a member.
+        member = self._mlist.regular_members.get_member(self._anne)
+        self.assertEqual(member.address, anne)
+        self.assertEqual(confirm_workflow.member, member)
         # No further token is needed.
         self.assertIsNone(confirm_workflow.token)
         self.assertEqual(confirm_workflow.token_owner, TokenOwner.no_one)
@@ -583,6 +561,7 @@ approval:
         # Anne is not yet a member of the mailing list.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertIsNone(member)
+        self.assertIsNone(workflow.member)
         # The token is owned by the subscriber.
         self.assertIsNotNone(workflow.token)
         self.assertEqual(workflow.token_owner, TokenOwner.subscriber)
@@ -606,6 +585,7 @@ approval:
         # Anne is still not subscribed.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertIsNone(member)
+        self.assertIsNone(final_workflow.member)
         # However, if we use the new token, her subscription request will be
         # approved by the moderator.
         final_workflow.token = moderator_workflow.token
@@ -614,6 +594,7 @@ approval:
         # And now Anne is a member.
         member = self._mlist.regular_members.get_member(self._anne)
         self.assertEqual(member.address.email, self._anne)
+        self.assertEqual(final_workflow.member, member)
         # No further token is needed.
         self.assertIsNone(final_workflow.token)
         self.assertEqual(final_workflow.token_owner, TokenOwner.no_one)

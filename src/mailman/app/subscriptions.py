@@ -103,6 +103,7 @@ class SubscriptionWorkflow(Workflow):
         self.address = None
         self.user = None
         self.which = None
+        self.member = None
         self._set_token(TokenOwner.no_one)
         # The subscriber must be either an IUser or IAddress.
         if IAddress.providedBy(subscriber):
@@ -285,7 +286,7 @@ class SubscriptionWorkflow(Workflow):
 
     def _step_do_subscription(self):
         # We can immediately subscribe the user to the mailing list.
-        self.mlist.subscribe(self.subscriber)
+        self.member = self.mlist.subscribe(self.subscriber)
         # This workflow is done so throw away any associated state.
         getUtility(IWorkflowStateManager).restore(self.name, self.token)
 
