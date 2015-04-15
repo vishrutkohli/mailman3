@@ -41,6 +41,7 @@ from mailman.interfaces.digests import DigestFrequency
 from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.mailinglist import IAcceptableAliasSet
 from mailman.interfaces.mailinglist import Personalization, ReplyToMunging
+from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus, MemberRole
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.usermanager import IUserManager
@@ -178,6 +179,7 @@ TYPES = dict(
     personalize=Personalization,
     preferred_language=check_language_code,
     reply_goes_to_list=ReplyToMunging,
+    subscription_policy=SubscriptionPolicy,
     topics_enabled=bool,
     )
 
@@ -202,6 +204,7 @@ NAME_MAPPINGS = dict(
     real_name='display_name',
     send_goodbye_msg='send_goodbye_message',
     send_welcome_msg='send_welcome_message',
+    subscribe_policy='subscription_policy',
     )
 
 # These DateTime fields of the mailinglist table need a type conversion to

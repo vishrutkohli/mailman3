@@ -424,7 +424,6 @@ There's now a message in the virgin queue, destined for the list owner.
     <BLANKLINE>
         For:  iris@example.org
         List: ant@example.com
-    ...
 
 Similarly, the administrator gets notifications on unsubscription requests.
 Jeff is a member of the mailing list, and chooses to unsubscribe.

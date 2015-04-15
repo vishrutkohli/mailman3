@@ -79,6 +79,7 @@ class TestConfiguration(unittest.TestCase):
                 reply_to_address='bee@example.com',
                 send_welcome_message=False,
                 subject_prefix='[ant]',
+                subscription_policy='confirm_then_moderate',
                 welcome_message_uri='mailman:///welcome.txt',
                 default_member_action='hold',
                 default_nonmember_action='discard',

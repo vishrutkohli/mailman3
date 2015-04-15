@@ -128,7 +128,7 @@ class Pendings:
         return token
 
     @dbconnection
-    def confirm(self, store, token, expunge=True):
+    def confirm(self, store, token, *, expunge=True):
         # Token can come in as a unicode, but it's stored in the database as
         # bytes.  They must be ascii.
         pendings = store.query(Pended).filter_by(token=str(token))
@@ -165,3 +165,8 @@ class Pendings:
                 for keyvalue in q:
                     store.delete(keyvalue)
                 store.delete(pending)
+
+    @property
+    @dbconnection
+    def count(self, store):
+        return store.query(Pended).count()

@@ -82,11 +82,11 @@ class IPendings(Interface):
         :return: A token string for inclusion in urls and email confirmations.
         """
 
-    def confirm(token, expunge=True):
+    def confirm(token, *, expunge=True):
         """Return the IPendable matching the token.
 
         :param token: The token string for the IPendable given by the `.add()`
-            method.
+            method, or None if there is no record associated with the token.
         :param expunge: A flag indicating whether the pendable record should
             also be removed from the database or not.
         :return: The matching IPendable or None if no match was found.
@@ -94,3 +94,5 @@ class IPendings(Interface):
 
     def evict():
         """Remove all pended items whose lifetime has expired."""
+
+    count = Attribute('The number of pendables in the pendings database.')

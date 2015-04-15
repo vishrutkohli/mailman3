@@ -25,18 +25,15 @@ __all__ = [
 
 import logging
 
+from mailman.app.subscriptions import SubscriptionWorkflow
 from mailman.core.i18n import _
+from mailman.database.transaction import flush
 from mailman.email.message import UserNotification
-from mailman.interfaces.address import IEmailValidator
-from mailman.interfaces.listmanager import IListManager
-from mailman.interfaces.member import DeliveryMode, MemberRole
 from mailman.interfaces.pending import IPendable, IPendings
 from mailman.interfaces.registrar import ConfirmationNeededEvent, IRegistrar
 from mailman.interfaces.templates import ITemplateLoader
-from mailman.interfaces.usermanager import IUserManager
-from mailman.utilities.datetime import now
+from mailman.interfaces.workflow import IWorkflowStateManager
 from zope.component import getUtility
-from zope.event import notify
 from zope.interface import implementer
 
 
@@ -54,96 +51,34 @@ class PendableRegistration(dict):
 class Registrar:
     """Handle registrations and confirmations for subscriptions."""
 
-    def register(self, mlist, email, display_name=None, delivery_mode=None):
+    def __init__(self, mlist):
+        self._mlist = mlist
+
+    def register(self, subscriber=None, *,
+                 pre_verified=False, pre_confirmed=False, pre_approved=False):
         """See `IRegistrar`."""
-        if delivery_mode is None:
-            delivery_mode = DeliveryMode.regular
-        # First, do validation on the email address.  If the address is
-        # invalid, it will raise an exception, otherwise it just returns.
-        getUtility(IEmailValidator).validate(email)
-        # Create a pendable for the registration.
-        pendable = PendableRegistration(
-            type=PendableRegistration.PEND_KEY,
-            email=email,
-            display_name=display_name,
-            delivery_mode=delivery_mode.name,
-            list_id=mlist.list_id)
-        token = getUtility(IPendings).add(pendable)
-        # We now have everything we need to begin the confirmation dance.
-        # Trigger the event to start the ball rolling, and return the
-        # generated token.
-        notify(ConfirmationNeededEvent(mlist, pendable, token))
-        return token
+        workflow = SubscriptionWorkflow(
+            self._mlist, subscriber,
+            pre_verified=pre_verified,
+            pre_confirmed=pre_confirmed,
+            pre_approved=pre_approved)
+        list(workflow)
+        return workflow.token
 
     def confirm(self, token):
         """See `IRegistrar`."""
-        # For convenience
-        pendable = getUtility(IPendings).confirm(token)
-        if pendable is None:
-            return False
-        missing = object()
-        email = pendable.get('email', missing)
-        display_name = pendable.get('display_name', missing)
-        pended_delivery_mode = pendable.get('delivery_mode', 'regular')
-        try:
-            delivery_mode = DeliveryMode[pended_delivery_mode]
-        except ValueError:
-            log.error('Invalid pended delivery_mode for {0}: {1}',
-                      email, pended_delivery_mode)
-            delivery_mode = DeliveryMode.regular
-        if pendable.get('type') != PendableRegistration.PEND_KEY:
-            # It seems like it would be very difficult to accurately guess
-            # tokens, or brute force an attack on the SHA1 hash, so we'll just
-            # throw the pendable away in that case.  It's possible we'll need
-            # to repend the event or adjust the API to handle this case
-            # better, but for now, the simpler the better.
-            return False
-        # We are going to end up with an IAddress for the verified address
-        # and an IUser linked to this IAddress.  See if any of these objects
-        # currently exist in our database.
-        user_manager = getUtility(IUserManager)
-        address = (user_manager.get_address(email)
-                   if email is not missing else None)
-        user = (user_manager.get_user(email)
-                if email is not missing else None)
-        # If there is neither an address nor a user matching the confirmed
-        # record, then create the user, which will in turn create the address
-        # and link the two together
-        if address is None:
-            assert user is None, 'How did we get a user but not an address?'
-            user = user_manager.create_user(email, display_name)
-            # Because the database changes haven't been flushed, we can't use
-            # IUserManager.get_address() to find the IAddress just created
-            # under the hood.  Instead, iterate through the IUser's addresses,
-            # of which really there should be only one.
-            for address in user.addresses:
-                if address.email == email:
-                    break
-            else:
-                raise AssertionError('Could not find expected IAddress')
-        elif user is None:
-            user = user_manager.create_user()
-            user.display_name = display_name
-            user.link(address)
-        else:
-            # The IAddress and linked IUser already exist, so all we need to
-            # do is verify the address.
-            pass
-        address.verified_on = now()
-        # If this registration is tied to a mailing list, subscribe the person
-        # to the list right now.  That will generate a SubscriptionEvent,
-        # which can be used to send a welcome message.
-        list_id = pendable.get('list_id')
-        if list_id is not None:
-            mlist = getUtility(IListManager).get_by_list_id(list_id)
-            if mlist is not None:
-                member = mlist.subscribe(address, MemberRole.member)
-                member.preferences.delivery_mode = delivery_mode
-        return True
+        workflow = SubscriptionWorkflow(self._mlist)
+        workflow.token = token
+        workflow.restore()
+        list(workflow)
+        return workflow.token
 
     def discard(self, token):
-        # Throw the record away.
-        getUtility(IPendings).confirm(token)
+        """See `IRegistrar`."""
+        with flush():
+            getUtility(IPendings).confirm(token)
+            getUtility(IWorkflowStateManager).discard(
+                SubscriptionWorkflow.__name__, token)
 
 
 
@@ -156,18 +91,17 @@ def handle_ConfirmationNeededEvent(event):
     # the Subject header, or they can click on the URL in the body of the
     # message and confirm through the web.
     subject = 'confirm ' + event.token
-    mlist = getUtility(IListManager).get_by_list_id(event.pendable['list_id'])
-    confirm_address = mlist.confirm_address(event.token)
+    confirm_address = event.mlist.confirm_address(event.token)
     # For i18n interpolation.
-    confirm_url = mlist.domain.confirm_url(event.token)
-    email_address = event.pendable['email']
-    domain_name = mlist.domain.mail_host
-    contact_address = mlist.owner_address
+    confirm_url = event.mlist.domain.confirm_url(event.token)
+    email_address = event.email
+    domain_name = event.mlist.domain.mail_host
+    contact_address = event.mlist.owner_address
     # Send a verification email to the address.
     template = getUtility(ITemplateLoader).get(
         'mailman:///{0}/{1}/confirm.txt'.format(
-            mlist.fqdn_listname,
-            mlist.preferred_language.code))
+            event.mlist.fqdn_listname,
+            event.mlist.preferred_language.code))
     text = _(template)
     msg = UserNotification(email_address, confirm_address, subject, text)
-    msg.send(mlist)
+    msg.send(event.mlist)

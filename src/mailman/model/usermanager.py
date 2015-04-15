@@ -64,7 +64,6 @@ class UserManager:
             user.display_name = (
                 display_name if display_name else address.display_name)
             user.link(address)
-            return user
         return user
 
     @dbconnection
