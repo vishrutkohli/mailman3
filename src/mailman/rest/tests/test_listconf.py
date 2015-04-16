@@ -90,3 +90,11 @@ class TestConfiguration(unittest.TestCase):
         # All three acceptable aliases were set.
         self.assertEqual(set(IAcceptableAliasSet(self._mlist).aliases),
                          set(aliases))
+
+    def test_bad_description_update(self):
+        resource, response = call_api(
+            'http://localhost:9001/3.0/lists/test@example.com/config',
+            dict(description='A description with , to check stuff'), 'PATCH')
+        self.assertEqual(response.status, 204)
+        self.assertEqual(self._mlist.description,
+                         'A description with , to check stuff')
