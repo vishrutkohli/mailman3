@@ -376,7 +376,8 @@ class TestLP1074374(unittest.TestCase):
         call_api('http://localhost:9001/3.0/members', dict(
             list_id='test.example.com',
             subscriber='anne@example.com',
-            role='member'))
+            role='member',
+            pre_verified=True, pre_confirmed=True, pre_approved=True))
         # This is not the Anne you're looking for.  (IOW, the new Anne is a
         # different user).
         content, response = call_api(

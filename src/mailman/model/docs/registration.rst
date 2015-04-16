@@ -35,11 +35,13 @@ which represents this work flow.
 
 Anne attempts to join the mailing list.
 
-    >>> token = registrar.register(anne)
+    >>> token, token_owner, member = registrar.register(anne)
 
 Because her email address has not yet been verified, she has not yet become a
 member of the mailing list.
 
+    >>> print(member)
+    None
     >>> print(mlist.members.get_member('anne@example.com'))
     None
 
@@ -47,7 +49,10 @@ Once she verifies her email address, she will become a member of the mailing
 list.  In this case, verifying implies that she also confirms her wish to join
 the mailing list.
 
-    >>> registrar.confirm(token)
+    >>> token, token_owner, member = registrar.confirm(token)
+    >>> member
+    <Member: Anne Person <anne@example.com> on ant@example.com
+        as MemberRole.member>
     >>> mlist.members.get_member('anne@example.com')
     <Member: Anne Person <anne@example.com> on ant@example.com
         as MemberRole.member>
@@ -78,13 +83,18 @@ Now when Bart registers as a user for the mailing list, a token will still be
 generated, but this is only used by the moderator.  At first, Bart is not
 subscribed to the mailing list.
 
-    >>> token = registrar.register(bart)
+    >>> token, token_owner, member = registrar.register(bart)
+    >>> print(member)
+    None
     >>> print(mlist.members.get_member('bart@example.com'))
     None
 
 When the moderator confirms Bart's subscription, he joins the mailing list.
 
-    >>> registrar.confirm(token)
+    >>> token, token_owner, member = registrar.confirm(token)
+    >>> member
+    <Member: Bart Person <bart@example.com> on ant@example.com
+        as MemberRole.member>
     >>> mlist.members.get_member('bart@example.com')
     <Member: Bart Person <bart@example.com> on ant@example.com
         as MemberRole.member>

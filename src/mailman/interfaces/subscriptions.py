@@ -19,14 +19,16 @@
 
 __all__ = [
     'ISubscriptionService',
+    'MissingUserError',
     'RequestRecord',
+    'TokenOwner',
     ]
 
 
 from collections import namedtuple
-
+from enum import Enum
 from mailman.interfaces.errors import MailmanError
-from mailman.interfaces.member import DeliveryMode, MemberRole
+from mailman.interfaces.member import DeliveryMode
 from zope.interface import Interface
 
 
@@ -53,6 +55,14 @@ def RequestRecord(email, display_name='',
         from mailman.core.constants import system_preferences
         language = system_preferences.preferred_language
     return _RequestRecord(email, display_name, delivery_mode, language)
+
+
+
+class TokenOwner(Enum):
+    """Who 'owns' the token returned from the registrar?"""
+    no_one = 0
+    subscriber = 1
+    moderator = 2
 
 
 
@@ -103,44 +113,6 @@ class ISubscriptionService(Interface):
 
     def __iter__():
         """See `get_members()`."""
-
-    def join(list_id, subscriber, display_name=None,
-             delivery_mode=DeliveryMode.regular,
-             role=MemberRole.member):
-        """Subscribe to a mailing list.
-
-        A user for the address is created if it is not yet known to Mailman,
-        however newly registered addresses will not yet be validated.  No
-        confirmation message will be sent to the address, and the approval of
-        the subscription request is still dependent on the policy of the
-        mailing list.
-
-        :param list_id: The list id of the mailing list the user is
-            subscribing to.
-        :type list_id: string
-        :param subscriber: The email address or user id of the user getting
-            subscribed.
-        :type subscriber: string or int
-        :param display_name: The name of the user.  This is only used if a new
-            user is created, and it defaults to the local part of the email
-            address if not given.
-        :type display_name: string
-        :param delivery_mode: The delivery mode for this subscription.  This
-            can be one of the enum values of `DeliveryMode`.  If not given,
-            regular delivery is assumed.
-        :type delivery_mode: string
-        :param role: The membership role for this subscription.
-        :type role: `MemberRole`
-        :return: The just created member.
-        :rtype: `IMember`
-        :raises AlreadySubscribedError: if the user is already subscribed to
-            the mailing list.
-        :raises InvalidEmailAddressError: if the email address is not valid.
-        :raises MembershipIsBannedError: if the membership is not allowed.
-        :raises MissingUserError: when a bogus user id is given.
-        :raises NoSuchListError: if the named mailing list does not exist.
-        :raises ValueError: when `delivery_mode` is invalid.
-        """
 
     def leave(list_id, email):
         """Unsubscribe from a mailing list.

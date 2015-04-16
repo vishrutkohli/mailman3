@@ -25,6 +25,7 @@ __all__ = [
 from mailman.core.i18n import _
 from mailman.interfaces.command import ContinueProcessing, IEmailCommand
 from mailman.interfaces.registrar import IRegistrar
+from mailman.interfaces.subscriptions import TokenOwner
 from zope.interface import implementer
 
 
@@ -53,7 +54,15 @@ class Confirm:
         tokens.add(token)
         results.confirms = tokens
         try:
-            succeeded = (IRegistrar(mlist).confirm(token) is None)
+            token, token_owner, member = IRegistrar(mlist).confirm(token)
+            if token is None:
+                assert token_owner is TokenOwner.no_one, token_owner
+                assert member is not None, member
+                succeeded = True
+            else:
+                assert token_owner is not TokenOwner.no_one, token_owner
+                assert member is None, member
+                succeeded = False
         except LookupError:
             # The token must not exist in the database.
             succeeded = False

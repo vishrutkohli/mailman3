@@ -52,9 +52,11 @@ class IRegistrar(Interface):
     This is a higher level interface to user registration, email address
     confirmation, etc. than the IUserManager.  The latter does no validation,
     syntax checking, or confirmation, while this interface does.
+
+    To use this, adapt an ``IMailingList`` to this interface.
     """
 
-    def register(mlist, subscriber=None, *,
+    def register(subscriber=None, *,
                  pre_verified=False, pre_confirmed=False, pre_approved=False):
         """Subscribe an address or user according to subscription policies.
 
@@ -71,13 +73,14 @@ class IRegistrar(Interface):
         approve the subscription.  Use the ``confirm(token)`` method to
         resume the workflow.
 
-        :param mlist: The mailing list to subscribe to.
-        :type mlist: `IMailingList`
         :param subscriber: The user or address to subscribe.
         :type email: ``IUser`` or ``IAddress``
-        :return: The confirmation token string, or None if the workflow
-            completes (i.e. the member has been subscribed).
-        :rtype: str or None
+        :return: None if the workflow completes with the member being
+            subscribed.  If the workflow is paused for user confirmation or
+            moderator approval, a 3-tuple is returned where the first element
+            is a ``TokenOwner`` the second element is the token hash, and the
+            third element is the subscribed member.
+        :rtype: None or 2-tuple of (TokenOwner, str)
         :raises MembershipIsBannedError: when the address being subscribed
             appears in the global or list-centric bans.
         """
