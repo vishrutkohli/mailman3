@@ -147,7 +147,7 @@ address, and the other is the results of his email command.
     ...     print('Subject:', subject)
     ...     if 'confirm' in str(subject):
     ...         token = str(subject).split()[1].strip()
-    ...         new_token = registrar.confirm(token)
+    ...         new_token, token_owner, member = registrar.confirm(token)
     ...         assert new_token is None, 'Confirmation failed'
     Subject: The results of your email commands
     Subject: confirm ...

@@ -203,8 +203,24 @@ class TestSubscriptionWorkflow(unittest.TestCase):
 
     def test_confirmation_checks_confirm_pre_confirmed(self):
         # The subscription policy requires user confirmation, but their
-        # subscription is pre-confirmed.
+        # subscription is pre-confirmed.  Since moderation is not required,
+        # the user will be immediately subscribed.
         self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne,
+                                        pre_verified=True,
+                                        pre_confirmed=True)
+        workflow.run_thru('confirmation_checks')
+        with patch.object(workflow, '_step_do_subscription') as step:
+            next(workflow)
+        step.assert_called_once_with()
+
+    def test_confirmation_checks_confirm_then_moderate_pre_confirmed(self):
+        # The subscription policy requires user confirmation, but their
+        # subscription is pre-confirmed.  Since moderation is required, that
+        # check will be performed.
+        self._mlist.subscription_policy = \
+          SubscriptionPolicy.confirm_then_moderate
         anne = self._user_manager.create_address(self._anne)
         workflow = SubscriptionWorkflow(self._mlist, anne,
                                         pre_verified=True,
@@ -598,3 +614,17 @@ approval:
         # No further token is needed.
         self.assertIsNone(final_workflow.token)
         self.assertEqual(final_workflow.token_owner, TokenOwner.no_one)
+
+    def test_confirmation_needed_and_pre_confirmed(self):
+        # The subscription policy is 'confirm' but the subscription is
+        # pre-confirmed so the moderation checks can be skipped.
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(
+            self._mlist, anne,
+            pre_verified=True, pre_confirmed=True, pre_approved=True)
+        list(workflow)
+        # Anne was subscribed.
+        self.assertIsNone(workflow.token)
+        self.assertEqual(workflow.token_owner, TokenOwner.no_one)
+        self.assertEqual(workflow.member.address, anne)

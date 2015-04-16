@@ -1,5 +1,5 @@
 * TO DO:
- - plumb subscription policy through rest api
+ - rename ISubscriptionService to IMemberSearch or somesuch
  - get rid of hold_subscription
  - subsume handle_subscription
  - workflow for unsubscription

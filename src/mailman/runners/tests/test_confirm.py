@@ -53,7 +53,8 @@ class TestConfirm(unittest.TestCase):
             self._mlist = create_list('test@example.com')
             self._mlist.send_welcome_message = False
             anne = getUtility(IUserManager).create_address('anne@example.org')
-            self._token = IRegistrar(self._mlist).register(anne)
+            registrar = IRegistrar(self._mlist)
+            self._token, token_owner, member = registrar.register(anne)
 
     def test_confirm_with_re_prefix(self):
         subject = 'Re: confirm {0}'.format(self._token)

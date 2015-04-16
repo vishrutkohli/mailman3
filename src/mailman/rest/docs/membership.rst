@@ -598,14 +598,17 @@ A user can be subscribed to a mailing list via the REST API, either by a
 specific address, or more generally by their preferred address.  A subscribed
 user is called a member.
 
-Elly wants to subscribes to the `ant` mailing list.  Since Elly's email
-address is not yet known to Mailman, a user is created for her.  By default,
-get gets a regular delivery.
+The list owner wants to subscribe Elly to the `ant` mailing list.  Since
+Elly's email address is not yet known to Mailman, a user is created for her.
+By default, get gets a regular delivery.
 
     >>> dump_json('http://localhost:9001/3.0/members', {
     ...           'list_id': 'ant.example.com',
     ...           'subscriber': 'eperson@example.com',
     ...           'display_name': 'Elly Person',
+    ...           'pre_verified': True,
+    ...           'pre_confirmed': True,
+    ...           'pre_approved': True,
     ...           })
     content-length: 0
     date: ...
@@ -659,6 +662,9 @@ list with her preferred address.
     >>> dump_json('http://localhost:9001/3.0/members', {
     ...     'list_id': 'ant.example.com',
     ...     'subscriber': user_id,
+    ...     'pre_verified': True,
+    ...     'pre_confirmed': True,
+    ...     'pre_approved': True,
     ...     })
     content-length: 0
     date: ...
@@ -729,94 +735,6 @@ Elly is no longer a member of the mailing list.
     set()
 
 
-Digest delivery
-===============
-
-Fred joins the `ant` mailing list but wants MIME digest delivery.
-::
-
-    >>> transaction.abort()
-    >>> dump_json('http://localhost:9001/3.0/members', {
-    ...           'list_id': 'ant.example.com',
-    ...           'subscriber': 'fperson@example.com',
-    ...           'display_name': 'Fred Person',
-    ...           'delivery_mode': 'mime_digests',
-    ...           })
-    content-length: 0
-    date: ...
-    location: http://localhost:9001/3.0/members/10
-    server: ...
-    status: 201
-
-    >>> fred = user_manager.get_user('fperson@example.com')
-    >>> memberships = list(fred.memberships.members)
-    >>> len(memberships)
-    1
-
-Fred is getting MIME deliveries.
-
-    >>> memberships[0]
-    <Member: Fred Person <fperson@example.com>
-             on ant@example.com as MemberRole.member>
-    >>> print(memberships[0].delivery_mode)
-    DeliveryMode.mime_digests
-
-    >>> dump_json('http://localhost:9001/3.0/members/10')
-    address: http://localhost:9001/3.0/addresses/fperson@example.com
-    delivery_mode: mime_digests
-    email: fperson@example.com
-    http_etag: "..."
-    list_id: ant.example.com
-    member_id: 10
-    role: member
-    self_link: http://localhost:9001/3.0/members/10
-    user: http://localhost:9001/3.0/users/7
-
-Fred wants to change his delivery from MIME digest back to regular delivery.
-This can be done by PATCH'ing his member with the `delivery_mode` parameter.
-::
-
-    >>> transaction.abort()
-    >>> dump_json('http://localhost:9001/3.0/members/10', {
-    ...           'delivery_mode': 'regular',
-    ...           }, method='PATCH')
-    content-length: 0
-    date: ...
-    server: ...
-    status: 204
-
-    >>> dump_json('http://localhost:9001/3.0/members/10')
-    address: http://localhost:9001/3.0/addresses/fperson@example.com
-    delivery_mode: regular
-    email: fperson@example.com
-    http_etag: "..."
-    list_id: ant.example.com
-    member_id: 10
-    role: member
-    self_link: http://localhost:9001/3.0/members/10
-    user: http://localhost:9001/3.0/users/7
-
-If a PATCH request changes no attributes, nothing happens.
-::
-
-    >>> dump_json('http://localhost:9001/3.0/members/10', {}, method='PATCH')
-    content-length: 0
-    date: ...
-    server: ...
-    status: 204
-
-    >>> dump_json('http://localhost:9001/3.0/members/10')
-    address: http://localhost:9001/3.0/addresses/fperson@example.com
-    delivery_mode: regular
-    email: fperson@example.com
-    http_etag: "..."
-    list_id: ant.example.com
-    member_id: 10
-    role: member
-    self_link: http://localhost:9001/3.0/members/10
-    user: http://localhost:9001/3.0/users/7
-
-
 Changing delivery address
 =========================
 
@@ -849,30 +767,30 @@ addresses.
     >>> dump_json('http://localhost:9001/3.0/members')
     entry 0:
     ...
-    entry 5:
+    entry 4:
         address: http://localhost:9001/3.0/addresses/herb@example.com
         delivery_mode: regular
         email: herb@example.com
         http_etag: "..."
         list_id: ant.example.com
-        member_id: 11
+        member_id: 10
         role: member
-        self_link: http://localhost:9001/3.0/members/11
-        user: http://localhost:9001/3.0/users/8
+        self_link: http://localhost:9001/3.0/members/10
+        user: http://localhost:9001/3.0/users/7
     ...
-    entry 10:
+    entry 9:
         address: http://localhost:9001/3.0/addresses/herb@example.com
         delivery_mode: regular
         email: herb@example.com
         http_etag: "..."
         list_id: bee.example.com
-        member_id: 12
+        member_id: 11
         role: member
-        self_link: http://localhost:9001/3.0/members/12
-        user: http://localhost:9001/3.0/users/8
+        self_link: http://localhost:9001/3.0/members/11
+        user: http://localhost:9001/3.0/users/7
     http_etag: "..."
     start: 0
-    total_size: 11
+    total_size: 10
 
 In order to change all of his subscriptions to use a different email address,
 Herb must iterate through his memberships explicitly.
@@ -883,13 +801,13 @@ Herb must iterate through his memberships explicitly.
     >>> memberships = [entry['self_link'] for entry in content['entries']]
     >>> for url in sorted(memberships):
     ...     print(url)
+    http://localhost:9001/3.0/members/10
     http://localhost:9001/3.0/members/11
-    http://localhost:9001/3.0/members/12
 
 For each membership resource, the subscription address is changed by PATCH'ing
 the `address` attribute.
 
-    >>> dump_json('http://localhost:9001/3.0/members/11', {
+    >>> dump_json('http://localhost:9001/3.0/members/10', {
     ...           'address': 'hperson@example.com',
     ...           }, method='PATCH')
     content-length: 0
@@ -897,7 +815,7 @@ the `address` attribute.
     server: ...
     status: 204
 
-    >>> dump_json('http://localhost:9001/3.0/members/12', {
+    >>> dump_json('http://localhost:9001/3.0/members/11', {
     ...           'address': 'hperson@example.com',
     ...           }, method='PATCH')
     content-length: 0
@@ -924,20 +842,20 @@ his membership ids have not changed.
         email: hperson@example.com
         http_etag: "..."
         list_id: ant.example.com
-        member_id: 11
+        member_id: 10
         role: member
-        self_link: http://localhost:9001/3.0/members/11
-        user: http://localhost:9001/3.0/users/8
+        self_link: http://localhost:9001/3.0/members/10
+        user: http://localhost:9001/3.0/users/7
     entry 1:
         address: http://localhost:9001/3.0/addresses/hperson@example.com
         delivery_mode: regular
         email: hperson@example.com
         http_etag: "..."
         list_id: bee.example.com
-        member_id: 12
+        member_id: 11
         role: member
-        self_link: http://localhost:9001/3.0/members/12
-        user: http://localhost:9001/3.0/users/8
+        self_link: http://localhost:9001/3.0/members/11
+        user: http://localhost:9001/3.0/users/7
     http_etag: "..."
     start: 0
     total_size: 2

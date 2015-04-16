@@ -223,10 +223,16 @@ class SubscriptionWorkflow(Workflow):
         if self.mlist.subscription_policy is SubscriptionPolicy.moderate:
             self.push('moderation_checks')
             return
-        # If the subscription has been pre-confirmed, then we can skip to the
-        # moderation checks.
+        # If the subscription has been pre-confirmed, then we can skip the
+        # confirmation check can be skipped.  If moderator approval is
+        # required we need to check that, otherwise we can go straight to
+        # subscription.
         if self.pre_confirmed:
-            self.push('moderation_checks')
+            next_step = ('moderation_checks'
+                         if self.mlist.subscription_policy is
+                            SubscriptionPolicy.confirm_then_moderate
+                         else 'do_subscription')
+            self.push(next_step)
             return
         # The user must confirm their subscription.
         self.push('send_confirmation')
@@ -235,7 +241,8 @@ class SubscriptionWorkflow(Workflow):
         # Does the moderator need to approve the subscription request?
         assert self.mlist.subscription_policy in (
             SubscriptionPolicy.moderate,
-            SubscriptionPolicy.confirm_then_moderate)
+            SubscriptionPolicy.confirm_then_moderate,
+            ), self.mlist.subscription_policy
         if self.pre_approved:
             self.push('do_subscription')
         else:

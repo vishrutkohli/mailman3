@@ -77,8 +77,9 @@ class IRegistrar(Interface):
         :type email: ``IUser`` or ``IAddress``
         :return: None if the workflow completes with the member being
             subscribed.  If the workflow is paused for user confirmation or
-            moderator approval, a 2-tuple is returned where the first element
-            is a ``TokenOwner`` and the second element is the token hash.
+            moderator approval, a 3-tuple is returned where the first element
+            is a ``TokenOwner`` the second element is the token hash, and the
+            third element is the subscribed member.
         :rtype: None or 2-tuple of (TokenOwner, str)
         :raises MembershipIsBannedError: when the address being subscribed
             appears in the global or list-centric bans.
