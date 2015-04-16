@@ -37,8 +37,8 @@ moderator approval.
 
 The message is being held for moderator approval.
 
-    >>> token_owner.name
-    TokenOwner.moderator
+    >>> print(token_owner.name)
+    moderator
 
 The subscription request can be viewed in the REST API.
 

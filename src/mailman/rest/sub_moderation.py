@@ -35,25 +35,13 @@ from zope.component import getUtility
 class _ModerationBase:
     """Common base class."""
 
+    def __init__(self):
+        self._pendings = getUtility(IPendings)
+
     def _make_resource(self, token):
-        requests = IListRequests(self._mlist)
-        results = requests.get_request(request_id)
-        if results is None:
-            return None
-        key, data = results
-        resource = dict(key=key, request_id=request_id)
-        # Flatten the IRequest payload into the JSON representation.
-        resource.update(data)
-        # Check for a matching request type, and insert the type name into the
-        # resource.
-        request_type = RequestType[resource.pop('_request_type')]
-        if request_type not in expected_request_types:
-            return None
-        resource['type'] = request_type.name
-        # This key isn't what you think it is.  Usually, it's the Pendable
-        # record's row id, which isn't helpful at all.  If it's not there,
-        # that's fine too.
-        resource.pop('id', None)
+        pendable = self._pendings.confirm(token, expunge=False)
+        resource = dict(token=token)
+        resource.update(pendable)
         return resource
 
 
@@ -122,28 +110,14 @@ class SubscriptionRequests(_ModerationBase, CollectionMixin):
     """Resource for membership change requests."""
 
     def __init__(self, mlist):
+        super().__init__()
         self._mlist = mlist
-
-    def _resource_as_dict(self, request):
-        """See `CollectionMixin`."""
-        resource = self._make_resource(request.id, MEMBERSHIP_CHANGE_REQUESTS)
-        # Remove unnecessary keys.
-        del resource['key']
-        return resource
 
     def _get_collection(self, request):
         # There's currently no better way to query the pendings database for
         # all the entries that are associated with subscription holds on this
         # mailing list.  Brute force for now.
-        items = []
-        for token, pendable in getUtility(IPendings):
-            token_owner = pendable.get('token_owner')
-            if token_owner is None:
-                continue
-            item = dict(token=token)
-            item.update(pendable)
-            items.append(item)
-        return items
+        return [token for token, pendable in getUtility(IPendings)]
 
     def on_get(self, request, response):
         """/lists/listname/requests"""
