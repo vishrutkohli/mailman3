@@ -123,7 +123,7 @@ class MembershipIsBannedError(MembershipError):
     """The address is not allowed to subscribe to the mailing list."""
 
     def __init__(self, mlist, address):
-        super(MembershipIsBannedError, self).__init__()
+        super().__init__()
         self._mlist = mlist
         self._address = address
 
@@ -174,6 +174,14 @@ class IMember(Interface):
 
     user = Attribute(
         """The user associated with this member.""")
+
+    subscriber = Attribute(
+        """The object representing how this member is subscribed.
+
+        This will be an ``IAddress`` if the user is subscribed via an explicit
+        address, otherwise if the the user is subscribed via their preferred
+        address, it will be an ``IUser``.
+        """)
 
     preferences = Attribute(
         """This member's preferences.""")

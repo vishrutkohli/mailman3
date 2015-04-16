@@ -53,11 +53,26 @@ class IRoster(Interface):
         managed by this roster.
         """)
 
-    def get_member(address):
+    def get_member(email):
         """Get the member for the given address.
 
-        :param address: The email address to search for.
-        :type address: text
+        *Note* that it is possible for an email to be subscribed to a
+        mailing list twice, once through its explicit address and once
+        indirectly through a user's preferred address.  In this case,
+        this API always returns the explicit address.  Use
+        ``get_memberships()`` to return them all.
+
+        :param email: The email address to search for.
+        :type email: string
         :return: The member if found, otherwise None
         :rtype: `IMember` or None
+        """
+
+    def get_memberships(email):
+        """Get the memberships for the given address.
+
+        :param email: The email address to search for.
+        :type email: string
+        :return: All the memberships associated with this email address.
+        :rtype: sequence of length 0, 1, or 2 of ``IMember``
         """

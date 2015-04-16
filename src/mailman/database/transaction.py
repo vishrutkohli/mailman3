@@ -19,6 +19,7 @@
 
 __all__ = [
     'dbconnection',
+    'flush',
     'transaction',
     'transactional',
     ]
@@ -60,6 +61,22 @@ def transactional(function):
             config.db.abort()
             raise
     return wrapper
+
+
+
+@contextmanager
+def flush():
+    """Context manager for flushing SQLAlchemy.
+
+    We need this for SA whereas we didn't need it for Storm because the latter
+    did auto-reloads.  However, in SA this is needed when we add or delete
+    objects from the database.  Use it when you need the id after adding, or
+    when you want to be sure the object won't be found after a delete.
+
+    This is lighter weight than committing the transaction.
+    """
+    yield
+    config.db.store.flush()
 
 
 

@@ -19,26 +19,50 @@
 
 __all__ = [
     'SubscriptionService',
+    'SubscriptionWorkflow',
     'handle_ListDeletingEvent',
     ]
 
 
+
+import uuid
+import logging
+
+from email.utils import formataddr
+from enum import Enum
+from datetime import timedelta
+from mailman.app.membership import add_member, delete_member
+from mailman.app.workflow import Workflow
+from mailman.core.constants import system_preferences
+from mailman.core.i18n import _
+from mailman.database.transaction import dbconnection
+from mailman.email.message import UserNotification
+from mailman.interfaces.address import IAddress
+from mailman.interfaces.bans import IBanManager
+from mailman.interfaces.listmanager import (
+    IListManager, ListDeletingEvent, NoSuchListError)
+from mailman.interfaces.mailinglist import SubscriptionPolicy
+from mailman.interfaces.member import (
+    DeliveryMode, MemberRole, MembershipIsBannedError)
+from mailman.interfaces.pending import IPendable, IPendings
+from mailman.interfaces.registrar import ConfirmationNeededEvent
+from mailman.interfaces.subscriptions import (
+    ISubscriptionService, MissingUserError, RequestRecord)
+from mailman.interfaces.user import IUser
+from mailman.interfaces.usermanager import IUserManager
+from mailman.interfaces.workflow import IWorkflowStateManager
+from mailman.model.member import Member
+from mailman.utilities.datetime import now
+from mailman.utilities.i18n import make
 from operator import attrgetter
 from sqlalchemy import and_, or_
 from uuid import UUID
 from zope.component import getUtility
+from zope.event import notify
 from zope.interface import implementer
 
-from mailman.app.membership import add_member, delete_member
-from mailman.core.constants import system_preferences
-from mailman.database.transaction import dbconnection
-from mailman.interfaces.listmanager import (
-    IListManager, ListDeletingEvent, NoSuchListError)
-from mailman.interfaces.member import DeliveryMode, MemberRole
-from mailman.interfaces.subscriptions import (
-    ISubscriptionService, MissingUserError, RequestRecord)
-from mailman.interfaces.usermanager import IUserManager
-from mailman.model.member import Member
+
+log = logging.getLogger('mailman.subscribe')
 
 
 
@@ -51,7 +75,245 @@ def _membership_sort_key(member):
     return (member.list_id, member.address.email, member.role.value)
 
 
+class WhichSubscriber(Enum):
+    address = 1
+    user = 2
+
+
+@implementer(IPendable)
+class Pendable(dict):
+    pass
+
+
 
+class SubscriptionWorkflow(Workflow):
+    """Workflow of a subscription request."""
+
+    INITIAL_STATE = 'sanity_checks'
+    SAVE_ATTRIBUTES = (
+        'pre_approved',
+        'pre_confirmed',
+        'pre_verified',
+        'address_key',
+        'subscriber_key',
+        'user_key',
+        )
+
+    def __init__(self, mlist, subscriber=None, *,
+                 pre_verified=False, pre_confirmed=False, pre_approved=False):
+        super().__init__()
+        self.mlist = mlist
+        self.address = None
+        self.user = None
+        self.which = None
+        # The subscriber must be either an IUser or IAddress.
+        if IAddress.providedBy(subscriber):
+            self.address = subscriber
+            self.user = self.address.user
+            self.which = WhichSubscriber.address
+        elif IUser.providedBy(subscriber):
+            self.address = subscriber.preferred_address
+            self.user = subscriber
+            self.which = WhichSubscriber.user
+        self.subscriber = subscriber
+        self.pre_verified = pre_verified
+        self.pre_confirmed = pre_confirmed
+        self.pre_approved = pre_approved
+
+    @property
+    def user_key(self):
+        # For save.
+        return self.user.user_id.hex
+
+    @user_key.setter
+    def user_key(self, hex_key):
+        # For restore.
+        uid = uuid.UUID(hex_key)
+        self.user = getUtility(IUserManager).get_user_by_id(uid)
+        assert self.user is not None
+
+    @property
+    def address_key(self):
+        # For save.
+        return self.address.email
+
+    @address_key.setter
+    def address_key(self, email):
+        # For restore.
+        self.address = getUtility(IUserManager).get_address(email)
+        assert self.address is not None
+
+    @property
+    def subscriber_key(self):
+        return self.which.value
+
+    @subscriber_key.setter
+    def subscriber_key(self, key):
+        self.which = WhichSubscriber(key)
+
+    def _step_sanity_checks(self):
+        # Ensure that we have both an address and a user, even if the address
+        # is not verified.  We can't set the preferred address until it is
+        # verified.
+        if self.user is None:
+            # The address has no linked user so create one, link it, and set
+            # the user's preferred address.
+            assert self.address is not None, 'No address or user'
+            self.user = getUtility(IUserManager).make_user(self.address.email)
+        if self.address is None:
+            assert self.user.preferred_address is None, (
+                "Preferred address exists, but wasn't used in constructor")
+            addresses = list(self.user.addresses)
+            if len(addresses) == 0:
+                raise AssertionError('User has no addresses: {}'.format(
+                    self.user))
+            # This is rather arbitrary, but we have no choice.
+            self.address = addresses[0]
+        assert self.user is not None and self.address is not None, (
+            'Insane sanity check results')
+        # Is this email address banned?
+        if IBanManager(self.mlist).is_banned(self.address.email):
+            raise MembershipIsBannedError(self.mlist, self.address.email)
+        # Create a pending record.  This will give us the hash token we can use
+        # to uniquely name this workflow.
+        pendable = Pendable(
+            list_id=self.mlist.list_id,
+            address=self.address.email,
+            )
+        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
+        self.push('verification_checks')
+
+    def _step_verification_checks(self):
+        # Is the address already verified, or is the pre-verified flag set?
+        if self.address.verified_on is None:
+            if self.pre_verified:
+                self.address.verified_on = now()
+            else:
+                # The address being subscribed is not yet verified, so we need
+                # to send a validation email that will also confirm that the
+                # user wants to be subscribed to this mailing list.
+                self.push('send_confirmation')
+                return
+        self.push('confirmation_checks')
+
+    def _step_confirmation_checks(self):
+        # If the list's subscription policy is open, then the user can be
+        # subscribed right here and now.
+        if self.mlist.subscription_policy is SubscriptionPolicy.open:
+            self.push('do_subscription')
+            return
+        # If we do not need the user's confirmation, then skip to the
+        # moderation checks.
+        if self.mlist.subscription_policy is SubscriptionPolicy.moderate:
+            self.push('moderation_checks')
+            return
+        # If the subscription has been pre-confirmed, then we can skip to the
+        # moderation checks.
+        if self.pre_confirmed:
+            self.push('moderation_checks')
+            return
+        # The user must confirm their subscription.
+        self.push('send_confirmation')
+
+    def _step_moderation_checks(self):
+        # Does the moderator need to approve the subscription request?
+        assert self.mlist.subscription_policy in (
+            SubscriptionPolicy.moderate,
+            SubscriptionPolicy.confirm_then_moderate)
+        if self.pre_approved:
+            self.push('do_subscription')
+        else:
+            self.push('get_moderator_approval')
+
+    def _step_get_moderator_approval(self):
+        # Here's the next step in the workflow, assuming the moderator
+        # approves of the subscription.  If they don't, the workflow and
+        # subscription request will just be thrown away.
+        self.push('subscribe_from_restored')
+        self.save()
+        log.info('{}: held subscription request from {}'.format(
+            self.mlist.fqdn_listname, self.address.email))
+        # Possibly send a notification to the list moderators.
+        if self.mlist.admin_immed_notify:
+            subject = _(
+                'New subscription request to $self.mlist.display_name '
+                'from $self.address.email')
+            username = formataddr(
+                (self.subscriber.display_name, self.address.email))
+            text = make('subauth.txt',
+                        mailing_list=self.mlist,
+                        username=username,
+                        listname=self.mlist.fqdn_listname,
+                        )
+            # This message should appear to come from the <list>-owner so as
+            # to avoid any useless bounce processing.
+            msg = UserNotification(
+                self.mlist.owner_address, self.mlist.owner_address,
+                subject, text, self.mlist.preferred_language)
+            msg.send(self.mlist, tomoderators=True)
+        # The workflow must stop running here.
+        raise StopIteration
+
+    def _step_subscribe_from_restored(self):
+        # Restore a little extra state that can't be stored in the database
+        # (because the order of setattr() on restore is indeterminate), then
+        # subscribe the user.
+        if self.which is WhichSubscriber.address:
+            self.subscriber = self.address
+        else:
+            assert self.which is WhichSubscriber.user
+            self.subscriber = self.user
+        self.push('do_subscription')
+
+    def _step_do_subscription(self):
+        # We can immediately subscribe the user to the mailing list.
+        self.mlist.subscribe(self.subscriber)
+        # This workflow is done so throw away any associated state.
+        getUtility(IWorkflowStateManager).restore(self.name, self.token)
+        self.token = None
+
+    def _step_send_confirmation(self):
+        self.push('do_confirm_verify')
+        self.save()
+        # Triggering this event causes the confirmation message to be sent.
+        notify(ConfirmationNeededEvent(
+            self.mlist, self.token, self.address.email))
+        # Now we wait for the confirmation.
+        raise StopIteration
+
+    def _step_do_confirm_verify(self):
+        # Restore a little extra state that can't be stored in the database
+        # (because the order of setattr() on restore is indeterminate), then
+        # continue with the confirmation/verification step.
+        if self.which is WhichSubscriber.address:
+            self.subscriber = self.address
+        else:
+            assert self.which is WhichSubscriber.user
+            self.subscriber = self.user
+        # Create a new token to prevent replay attacks.  It seems like this
+        # should produce the same token, but it won't because the pending adds
+        # a bit of randomization.
+        pendable = Pendable(
+            list_id=self.mlist.list_id,
+            address=self.address.email,
+            )
+        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
+        # The user has confirmed their subscription request, and also verified
+        # their email address if necessary.  This latter needs to be set on the
+        # IAddress, but there's nothing more to do about the confirmation step.
+        # We just continue along with the workflow.
+        if self.address.verified_on is None:
+            self.address.verified_on = now()
+        # The next step depends on the mailing list's subscription policy.
+        next_step = ('moderation_checks'
+                     if self.mlist.subscription_policy in (
+                         SubscriptionPolicy.moderate,
+                         SubscriptionPolicy.confirm_then_moderate,
+                         )
+                    else 'do_subscription')
+        self.push(next_step)
+
+
 @implementer(ISubscriptionService)
 class SubscriptionService:
     """Subscription services for the REST API."""

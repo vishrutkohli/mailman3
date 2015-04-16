@@ -1,333 +1,90 @@
-====================
-Address registration
-====================
+============
+Registration
+============
 
-Before users can join a mailing list, they must first register with Mailman.
-The only thing they must supply is an email address, although there is
-additional information they may supply.  All registered email addresses must
-be verified before Mailman will send them any list traffic.
-
-The ``IUserManager`` manages users, but it does so at a fairly low level.
-Specifically, it does not handle verification, email address syntax validity
-checks, etc.  The ``IRegistrar`` is the interface to the object handling all
-this stuff.
+When a user wants to join a mailing list, they must register and verify their
+email address.  Then depending on how the mailing list is configured, they may
+need to confirm their subscription and have it approved by the list
+moderator.  The ``IRegistrar`` interface manages this work flow.
 
     >>> from mailman.interfaces.registrar import IRegistrar
-    >>> from zope.component import getUtility
-    >>> registrar = getUtility(IRegistrar)
 
-Here is a helper function to check the token strings.
+Registrars adapt mailing lists.
 
-    >>> def check_token(token):
-    ...     assert isinstance(token, str), 'Not a string'
-    ...     assert len(token) == 40, 'Unexpected length: %d' % len(token)
-    ...     assert token.isalnum(), 'Not alphanumeric'
-    ...     print('ok')
-
-Here is a helper function to extract tokens from confirmation messages.
-
-    >>> import re
-    >>> cre = re.compile('http://lists.example.com/confirm/(.*)')
-    >>> def extract_token(msg):
-    ...     mo = cre.search(msg.get_payload())
-    ...     return mo.group(1)
-
-
-Invalid email addresses
-=======================
-
-Addresses are registered within the context of a mailing list, mostly so that
-confirmation emails can come from some place.  You also need the email
-address of the user who is registering.
-
-    >>> mlist = create_list('alpha@example.com')
+    >>> from mailman.interfaces.mailinglist import SubscriptionPolicy
+    >>> mlist = create_list('ant@example.com')
     >>> mlist.send_welcome_message = False
+    >>> mlist.subscription_policy = SubscriptionPolicy.open
+    >>> registrar = IRegistrar(mlist)
 
-Some amount of sanity checks are performed on the email address, although
-honestly, not as much as probably should be done.  Still, some patently bad
-addresses are rejected outright.
+Usually, addresses are registered, but users with preferred addresses can be
+registered too.
+
+    >>> from mailman.interfaces.usermanager import IUserManager
+    >>> from zope.component import getUtility
+    >>> anne = getUtility(IUserManager).create_address(
+    ...     'anne@example.com', 'Anne Person')
 
 
 Register an email address
 =========================
 
-Registration of an unknown address creates nothing until the confirmation step
-is complete.  No ``IUser`` or ``IAddress`` is created at registration time,
-but a record is added to the pending database, and the token for that record
-is returned.
+When the registration steps involve confirmation or moderator approval, the
+process will pause until these steps are completed.  A unique token is created
+which represents this work flow.
 
-    >>> token = registrar.register(mlist, 'aperson@example.com', 'Anne Person')
-    >>> check_token(token)
-    ok
+Anne attempts to join the mailing list.
 
-There should be no records in the user manager for this address yet.
+    >>> token = registrar.register(anne)
 
-    >>> from mailman.interfaces.usermanager import IUserManager
-    >>> from zope.component import getUtility
-    >>> user_manager = getUtility(IUserManager)
-    >>> print(user_manager.get_user('aperson@example.com'))
-    None
-    >>> print(user_manager.get_address('aperson@example.com'))
+Because her email address has not yet been verified, she has not yet become a
+member of the mailing list.
+
+    >>> print(mlist.members.get_member('anne@example.com'))
     None
 
-But this address is waiting for confirmation.
-
-    >>> from mailman.interfaces.pending import IPendings
-    >>> pendingdb = getUtility(IPendings)
-
-    >>> dump_msgdata(pendingdb.confirm(token, expunge=False))
-    delivery_mode: regular
-    display_name : Anne Person
-    email        : aperson@example.com
-    list_id      : alpha.example.com
-    type         : registration
-
-
-Verification by email
-=====================
-
-There is also a verification email sitting in the virgin queue now.  This
-message is sent to the user in order to verify the registered address.
-
-    >>> from mailman.testing.helpers import get_queue_messages
-    >>> items = get_queue_messages('virgin')
-    >>> len(items)
-    1
-    >>> print(items[0].msg.as_string())
-    MIME-Version: 1.0
-    ...
-    Subject: confirm ...
-    From: alpha-confirm+...@example.com
-    To: aperson@example.com
-    ...
-    <BLANKLINE>
-    Email Address Registration Confirmation
-    <BLANKLINE>
-    Hello, this is the GNU Mailman server at example.com.
-    <BLANKLINE>
-    We have received a registration request for the email address
-    <BLANKLINE>
-        aperson@example.com
-    <BLANKLINE>
-    Before you can start using GNU Mailman at this site, you must first
-    confirm that this is your email address.  You can do this by replying to
-    this message, keeping the Subject header intact.  Or you can visit this
-    web page
-    <BLANKLINE>
-        http://lists.example.com/confirm/...
-    <BLANKLINE>
-    If you do not wish to register this email address simply disregard this
-    message.  If you think you are being maliciously subscribed to the list,
-    or have any other questions, you may contact
-    <BLANKLINE>
-        alpha-owner@example.com
-    <BLANKLINE>
-    >>> dump_msgdata(items[0].msgdata)
-    _parsemsg           : False
-    listid              : alpha.example.com
-    nodecorate          : True
-    recipients          : {'aperson@example.com'}
-    reduced_list_headers: True
-    version             : 3
-
-The confirmation token shows up in several places, each of which provides an
-easy way for the user to complete the confirmation.  The token will always
-appear in a URL in the body of the message.
-
-    >>> sent_token = extract_token(items[0].msg)
-    >>> sent_token == token
-    True
-
-The same token will appear in the ``From`` header.
-
-    >>> items[0].msg['from'] == 'alpha-confirm+' + token + '@example.com'
-    True
-
-It will also appear in the ``Subject`` header.
-
-    >>> items[0].msg['subject'] == 'confirm ' + token
-    True
-
-The user would then validate their registered address by clicking on a url or
-responding to the message.  Either way, the confirmation process extracts the
-token and uses that to confirm the pending registration.
+Once she verifies her email address, she will become a member of the mailing
+list.  In this case, verifying implies that she also confirms her wish to join
+the mailing list.
 
     >>> registrar.confirm(token)
-    True
-
-Now, there is an `IAddress` in the database matching the address, as well as
-an `IUser` linked to this address.  The `IAddress` is verified.
-
-    >>> found_address = user_manager.get_address('aperson@example.com')
-    >>> found_address
-    <Address: Anne Person <aperson@example.com> [verified] at ...>
-    >>> found_user = user_manager.get_user('aperson@example.com')
-    >>> found_user
-    <User "Anne Person" (...) at ...>
-    >>> found_user.controls(found_address.email)
-    True
-    >>> from datetime import datetime
-    >>> isinstance(found_address.verified_on, datetime)
-    True
+    >>> mlist.members.get_member('anne@example.com')
+    <Member: Anne Person <anne@example.com> on ant@example.com
+        as MemberRole.member>
 
 
-Non-standard registrations
-==========================
+Register a user
+===============
 
-If you try to confirm a registration token twice, of course only the first one
-will work.  The second one is ignored.
+Users can also register, but they must have a preferred address.  The mailing
+list will deliver messages to this preferred address.
 
-    >>> token = registrar.register(mlist, 'bperson@example.com')
-    >>> check_token(token)
-    ok
-    >>> items = get_queue_messages('virgin')
-    >>> len(items)
-    1
-    >>> sent_token = extract_token(items[0].msg)
-    >>> token == sent_token
-    True
-    >>> registrar.confirm(token)
-    True
-    >>> registrar.confirm(token)
-    False
+    >>> bart = getUtility(IUserManager).make_user(
+    ...     'bart@example.com', 'Bart Person')
 
-If an address is in the system, but that address is not linked to a user yet
-and the address is not yet validated, then no user is created until the
-confirmation step is completed.
-
-    >>> user_manager.create_address('cperson@example.com')
-    <Address: cperson@example.com [not verified] at ...>
-    >>> token = registrar.register(
-    ...     mlist, 'cperson@example.com', 'Claire Person')
-    >>> print(user_manager.get_user('cperson@example.com'))
-    None
-    >>> items = get_queue_messages('virgin')
-    >>> len(items)
-    1
-    >>> sent_token = extract_token(items[0].msg)
-    >>> registrar.confirm(sent_token)
-    True
-    >>> user_manager.get_user('cperson@example.com')
-    <User "Claire Person" (...) at ...>
-    >>> user_manager.get_address('cperson@example.com')
-    <Address: cperson@example.com [verified] at ...>
-
-Even if the address being registered has already been verified, the
-registration sends a confirmation.
-
-    >>> token = registrar.register(mlist, 'cperson@example.com')
-    >>> token is not None
-    True
-
-
-Discarding
-==========
-
-A confirmation token can also be discarded, say if the user changes his or her
-mind about registering.  When discarded, no `IAddress` or `IUser` is created.
-::
-
-    >>> token = registrar.register(mlist, 'eperson@example.com', 'Elly Person')
-    >>> check_token(token)
-    ok
-    >>> registrar.discard(token)
-    >>> print(pendingdb.confirm(token))
-    None
-    >>> print(user_manager.get_address('eperson@example.com'))
-    None
-    >>> print(user_manager.get_user('eperson@example.com'))
-    None
-
-    # Clear the virgin queue of all the preceding confirmation messages.
-    >>> ignore = get_queue_messages('virgin')
-
-
-Registering a new address for an existing user
-==============================================
-
-When a new address for an existing user is registered, there isn't too much
-different except that the new address will still need to be verified before it
-can be used.
-::
+Bart verifies his address and makes it his preferred address.
 
     >>> from mailman.utilities.datetime import now
-    >>> dperson = user_manager.create_user(
-    ...     'dperson@example.com', 'Dave Person')
-    >>> dperson
-    <User "Dave Person" (...) at ...>
-    >>> address = user_manager.get_address('dperson@example.com')
-    >>> address.verified_on = now()
+    >>> preferred = list(bart.addresses)[0]
+    >>> preferred.verified_on = now()
+    >>> bart.preferred_address = preferred
 
-    >>> from operator import attrgetter
-    >>> dump_list(repr(address) for address in dperson.addresses)
-    <Address: Dave Person <dperson@example.com> [verified] at ...>
-    >>> dperson.register('david.person@example.com', 'David Person')
-    <Address: David Person <david.person@example.com> [not verified] at ...>
-    >>> token = registrar.register(mlist, 'david.person@example.com')
+The mailing list's subscription policy does not require Bart to confirm his
+subscription, but the moderate does want to approve all subscriptions.
 
-    >>> items = get_queue_messages('virgin')
-    >>> len(items)
-    1
-    >>> sent_token = extract_token(items[0].msg)
-    >>> registrar.confirm(sent_token)
-    True
-    >>> user = user_manager.get_user('david.person@example.com')
-    >>> user is dperson
-    True
-    >>> user
-    <User "Dave Person" (...) at ...>
-    >>> dump_list(repr(address) for address in user.addresses)
-    <Address: Dave Person <dperson@example.com> [verified] at ...>
-    <Address: David Person <david.person@example.com> [verified] at ...>
+    >>> mlist.subscription_policy = SubscriptionPolicy.moderate
 
+Now when Bart registers as a user for the mailing list, a token will still be
+generated, but this is only used by the moderator.  At first, Bart is not
+subscribed to the mailing list.
 
-Corner cases
-============
-
-If you try to confirm a token that doesn't exist in the pending database, the
-confirm method will just return False.
-
-    >>> registrar.confirm(bytes(b'no token'))
-    False
-
-Likewise, if you try to confirm, through the `IRegistrar` interface, a token
-that doesn't match a registration event, you will get ``None``.  However, the
-pending event matched with that token will still be removed.
-::
-
-    >>> from mailman.interfaces.pending import IPendable
-    >>> from zope.interface import implementer
-
-    >>> @implementer(IPendable)
-    ... class SimplePendable(dict):
-    ...     pass
-
-    >>> pendable = SimplePendable(type='foo', bar='baz')
-    >>> token = pendingdb.add(pendable)
-    >>> registrar.confirm(token)
-    False
-    >>> print(pendingdb.confirm(token))
+    >>> token = registrar.register(bart)
+    >>> print(mlist.members.get_member('bart@example.com'))
     None
 
-
-Registration and subscription
-=============================
-
-Fred registers with Mailman at the same time that he subscribes to a mailing
-list.
-
-    >>> token = registrar.register(
-    ...     mlist, 'fred.person@example.com', 'Fred Person')
-
-Before confirmation, Fred is not a member of the mailing list.
-
-    >>> print(mlist.members.get_member('fred.person@example.com'))
-    None
-
-But after confirmation, he is.
+When the moderator confirms Bart's subscription, he joins the mailing list.
 
     >>> registrar.confirm(token)
-    True
-    >>> print(mlist.members.get_member('fred.person@example.com'))
-    <Member: Fred Person <fred.person@example.com>
-             on alpha@example.com as MemberRole.member>
+    >>> mlist.members.get_member('bart@example.com')
+    <Member: Bart Person <bart@example.com> on ant@example.com
+        as MemberRole.member>

@@ -160,8 +160,8 @@ class TestJoinWithDigests(unittest.TestCase):
         subject_words = str(messages[1].msg['subject']).split()
         self.assertEqual(subject_words[0], 'confirm')
         token = subject_words[1]
-        status = getUtility(IRegistrar).confirm(token)
-        self.assertTrue(status, 'Confirmation failed')
+        status = IRegistrar(self._mlist).confirm(token)
+        self.assertIsNone(status, 'Confirmation failed')
         # Now, make sure that Anne is a member of the list and is receiving
         # digest deliveries.
         members = getUtility(ISubscriptionService).find_members(
@@ -197,6 +197,8 @@ join digest=no
         self.assertEqual(anne.address.email, 'anne@example.org')
         self.assertEqual(anne.delivery_mode, DeliveryMode.regular)
 
+    # LP: #1444184 - digest=mime is not currently supported.
+    @unittest.expectedFailure
     def test_join_with_mime_digests(self):
         # Test the digest=mime argument to the join command.
         msg = mfs("""\
@@ -211,6 +213,8 @@ join digest=mime
         self.assertEqual(anne.address.email, 'anne@example.org')
         self.assertEqual(anne.delivery_mode, DeliveryMode.mime_digests)
 
+    # LP: #1444184 - digest=mime is not currently supported.
+    @unittest.expectedFailure
     def test_join_with_plain_digests(self):
         # Test the digest=mime argument to the join command.
         msg = mfs("""\

@@ -70,7 +70,7 @@ The ``subscribe`` command is an alias.
 Joining the sender
 ------------------
 
-When the message has a From field, that address will be subscribed.
+When the message has a ``From`` field, that address will be subscribed.
 
     >>> msg = message_from_string("""\
     ... From: Anne Person <anne@example.com>
@@ -85,13 +85,10 @@ When the message has a From field, that address will be subscribed.
     Confirmation email sent to Anne Person <anne@example.com>
     <BLANKLINE>
 
-Anne is not yet a member because she must confirm her subscription request
-first.
+Anne is not yet a member of the mailing list because she must confirm her
+subscription request first.
 
-    >>> from mailman.interfaces.usermanager import IUserManager
-    >>> from zope.component import getUtility
-    >>> user_manager = getUtility(IUserManager)
-    >>> print(user_manager.get_user('anne@example.com'))
+    >>> print(mlist.members.get_member('anne@example.com'))
     None
 
 Mailman has sent her the confirmation message.
@@ -118,10 +115,7 @@ Mailman has sent her the confirmation message.
     <BLANKLINE>
     Before you can start using GNU Mailman at this site, you must first
     confirm that this is your email address.  You can do this by replying to
-    this message, keeping the Subject header intact.  Or you can visit this
-    web page
-    <BLANKLINE>
-        http://lists.example.com/confirm/...
+    this message, keeping the Subject header intact.
     <BLANKLINE>
     If you do not wish to register this email address simply disregard this
     message.  If you think you are being maliciously subscribed to the list, or
@@ -130,8 +124,7 @@ Mailman has sent her the confirmation message.
         alpha-owner@example.com
     <BLANKLINE>
 
-Once Anne confirms her registration, she will be made a member of the mailing
-list.
+Anne confirms her registration.
 ::
 
     >>> def extract_token(message):
@@ -156,13 +149,7 @@ list.
     Confirmed
     <BLANKLINE>
 
-    >>> user = user_manager.get_user('anne@example.com')
-    >>> print(user.display_name)
-    Anne Person
-    >>> list(user.addresses)
-    [<Address: Anne Person <anne@example.com> [verified] at ...>]
-
-Anne is also now a member of the mailing list.
+Anne is now a member of the mailing list.
 
     >>> mlist.members.get_member('anne@example.com')
     <Member: Anne Person <anne@example.com>
@@ -180,12 +167,7 @@ Joining a second list
     >>> print(join.process(mlist_2, msg, {}, (), Results()))
     ContinueProcessing.yes
 
-Anne of course, is still registered.
-
-    >>> print(user_manager.get_user('anne@example.com'))
-    <User "Anne Person" (...) at ...>
-
-But she is not a member of the mailing list.
+Anne is not a member of the mailing list.
 
     >>> print(mlist_2.members.get_member('anne@example.com'))
     None
@@ -257,7 +239,9 @@ subscribe with.  Any of her registered, linked, and validated email addresses
 will do.
 ::
 
-    >>> anne = user_manager.get_user('anne@example.com')
+    >>> from mailman.interfaces.usermanager import IUserManager
+    >>> from zope.component import getUtility
+    >>> anne = getUtility(IUserManager).get_user('anne@example.com')
     >>> address = anne.register('anne.person@example.org')
 
     >>> results = Results()
@@ -333,11 +317,6 @@ message.
     ...     raise AssertionError('No confirmation message')
     >>> token = extract_token(item.msg)
 
-Bart is still not a user.
-
-    >>> print(user_manager.get_user('bart@example.com'))
-    None
-
 Bart replies to the original message, specifically keeping the Subject header
 intact except for any prefix.  Mailman matches the token and confirms Bart as
 a user of the system.
@@ -360,12 +339,7 @@ a user of the system.
     Confirmed
     <BLANKLINE>
 
-Now Bart is a user...
-
-    >>> print(user_manager.get_user('bart@example.com'))
-    <User "Bart Person" (...) at ...>
-
-...and a member of the mailing list.
+Now Bart is now a member of the mailing list.
 
     >>> print(mlist.members.get_member('bart@example.com'))
     <Member: Bart Person <bart@example.com>

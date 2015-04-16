@@ -19,6 +19,10 @@ Architecture
    also have a ``is_server_owner`` flag (defaulting to False) to indicate
    whether they have superuser privileges.  Give by Abhliash Raj, with fixes
    and refinements by Barry Warsaw.  (LP: #1423756)
+ * Mailing list subscription policy work flow has been completely rewritten.
+   It now properly supports email verification and subscription confirmation
+   by the user, and approval by the moderator using unique tokens.
+   ``IMailingList`` objects now have a ``subscription_policy`` attribute.
 
 Bugs
 ----

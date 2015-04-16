@@ -135,6 +135,10 @@ class Member(Model):
                 if self._address is None
                 else getUtility(IUserManager).get_user(self._address.email))
 
+    @property
+    def subscriber(self):
+        return (self._user if self._address is None else self._address)
+
     def _lookup(self, preference, default=None):
         pref = getattr(self.preferences, preference)
         if pref is not None:

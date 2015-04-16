@@ -13,6 +13,11 @@ In order to pend an event, you first need a pending database.
     >>> from zope.component import getUtility
     >>> pendingdb = getUtility(IPendings)
 
+There are nothing in the pendings database.
+
+    >>> pendingdb.count
+    0
+
 The pending database can add any ``IPendable`` to the database, returning a
 token that can be used in urls and such.
 ::
@@ -32,6 +37,11 @@ token that can be used in urls and such.
     >>> token = pendingdb.add(subscription)
     >>> len(token)
     40
+
+There's exactly one entry in the pendings database now.
+
+    >>> pendingdb.count
+    1
 
 There's not much you can do with tokens except to *confirm* them, which
 basically means returning the `IPendable` structure (as a dictionary) from the

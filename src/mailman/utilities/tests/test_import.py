@@ -44,7 +44,8 @@ from mailman.interfaces.autorespond import ResponseAction
 from mailman.interfaces.bans import IBanManager
 from mailman.interfaces.bounce import UnrecognizedBounceDisposition
 from mailman.interfaces.languages import ILanguageManager
-from mailman.interfaces.mailinglist import IAcceptableAliasSet
+from mailman.interfaces.mailinglist import (
+    IAcceptableAliasSet, SubscriptionPolicy)
 from mailman.interfaces.member import DeliveryMode, DeliveryStatus
 from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.templates import ITemplateLoader
@@ -300,6 +301,34 @@ class TestBasicImport(unittest.TestCase):
         self.assertEqual(self._mlist.encode_ascii_prefixes, False)
         self._import()
         self.assertEqual(self._mlist.encode_ascii_prefixes, True)
+
+    def test_subscription_policy_open(self):
+        self._mlist.subscription_policy = SubscriptionPolicy.confirm
+        self._pckdict['subscribe_policy'] = 0
+        self._import()
+        self.assertEqual(self._mlist.subscription_policy,
+                         SubscriptionPolicy.open)
+
+    def test_subscription_policy_confirm(self):
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        self._pckdict['subscribe_policy'] = 1
+        self._import()
+        self.assertEqual(self._mlist.subscription_policy,
+                         SubscriptionPolicy.confirm)
+
+    def test_subscription_policy_moderate(self):
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        self._pckdict['subscribe_policy'] = 2
+        self._import()
+        self.assertEqual(self._mlist.subscription_policy,
+                         SubscriptionPolicy.moderate)
+
+    def test_subscription_policy_confirm_then_moderate(self):
+        self._mlist.subscription_policy = SubscriptionPolicy.open
+        self._pckdict['subscribe_policy'] = 3
+        self._import()
+        self.assertEqual(self._mlist.subscription_policy,
+                         SubscriptionPolicy.confirm_then_moderate)
 
 
 
