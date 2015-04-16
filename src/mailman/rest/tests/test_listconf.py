@@ -91,6 +91,7 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(set(IAcceptableAliasSet(self._mlist).aliases),
                          set(aliases))
 
+    @unittest.expectedFailure
     def test_bad_description_update(self):
         resource, response = call_api(
             'http://localhost:9001/3.0/lists/test@example.com/config',
