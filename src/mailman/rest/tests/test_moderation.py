@@ -18,26 +18,28 @@
 """REST moderation tests."""
 
 __all__ = [
-    'TestModeration',
+    'TestPostModeration',
+    'TestSubscriptionModeration',
     ]
 
 
 import unittest
 
 from mailman.app.lifecycle import create_list
-from mailman.app.moderator import hold_message, hold_subscription
-from mailman.config import config
+from mailman.app.moderator import hold_message
 from mailman.database.transaction import transaction
-from mailman.interfaces.member import DeliveryMode
-from mailman.interfaces.subscriptions import RequestRecord
+from mailman.interfaces.registrar import IRegistrar
+from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
-    call_api, specialized_message_from_string as mfs)
+    call_api, get_queue_messages, specialized_message_from_string as mfs)
 from mailman.testing.layers import RESTLayer
+from mailman.utilities.datetime import now
 from urllib.error import HTTPError
+from zope.component import getUtility
 
 
 
-class TestModeration(unittest.TestCase):
+class TestPostModeration(unittest.TestCase):
     layer = RESTLayer
 
     def setUp(self):
@@ -71,56 +73,10 @@ Something else.
             call_api('http://localhost:9001/3.0/lists/ant@example.com/held/99')
         self.assertEqual(cm.exception.code, 404)
 
-    def test_subscription_request_as_held_message(self):
-        # Provide the request id of a subscription request using the held
-        # message API returns a not-found even though the request id is
-        # in the database.
-        held_id = hold_message(self._mlist, self._msg)
-        subscribe_id = hold_subscription(
-            self._mlist,
-            RequestRecord('bperson@example.net', 'Bart Person',
-                          DeliveryMode.regular, 'en'))
-        config.db.store.commit()
-        url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{0}'
-        with self.assertRaises(HTTPError) as cm:
-            call_api(url.format(subscribe_id))
-        self.assertEqual(cm.exception.code, 404)
-        # But using the held_id returns a valid response.
-        response, content = call_api(url.format(held_id))
-        self.assertEqual(response['message_id'], '<alpha>')
-
     def test_bad_held_message_action(self):
         # POSTing to a held message with a bad action.
         held_id = hold_message(self._mlist, self._msg)
         url = 'http://localhost:9001/3.0/lists/ant@example.com/held/{0}'
-        with self.assertRaises(HTTPError) as cm:
-            call_api(url.format(held_id), {'action': 'bogus'})
-        self.assertEqual(cm.exception.code, 400)
-        self.assertEqual(cm.exception.msg,
-                         b'Cannot convert parameters: action')
-
-    def test_bad_subscription_request_id(self):
-        # Bad request when request_id is not an integer.
-        with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/lists/ant@example.com/'
-                     'requests/bogus')
-        self.assertEqual(cm.exception.code, 400)
-
-    def test_missing_subscription_request_id(self):
-        # Bad request when the request_id is not in the database.
-        with self.assertRaises(HTTPError) as cm:
-            call_api('http://localhost:9001/3.0/lists/ant@example.com/'
-                     'requests/99')
-        self.assertEqual(cm.exception.code, 404)
-
-    def test_bad_subscription_action(self):
-        # POSTing to a held message with a bad action.
-        held_id = hold_subscription(
-            self._mlist,
-            RequestRecord('cperson@example.net', 'Cris Person',
-                          DeliveryMode.regular, 'en'))
-        config.db.store.commit()
-        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{0}'
         with self.assertRaises(HTTPError) as cm:
             call_api(url.format(held_id), {'action': 'bogus'})
         self.assertEqual(cm.exception.code, 400)
@@ -139,3 +95,168 @@ Something else.
         with self.assertRaises(HTTPError) as cm:
             call_api(url, dict(action='discard'))
         self.assertEqual(cm.exception.code, 404)
+
+
+
+class TestSubscriptionModeration(unittest.TestCase):
+    layer = RESTLayer
+
+    def setUp(self):
+        with transaction():
+            self._mlist = create_list('ant@example.com')
+            self._registrar = IRegistrar(self._mlist)
+            manager = getUtility(IUserManager)
+            self._anne = manager.create_address(
+                'anne@example.com', 'Anne Person')
+            self._bart = manager.make_user(
+                'bart@example.com', 'Bart Person')
+            preferred = list(self._bart.addresses)[0]
+            preferred.verified_on = now()
+            self._bart.preferred_address = preferred
+
+    def test_no_such_list(self):
+        # Try to get the requests of a nonexistent list.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/bee@example.com/'
+                     'requests')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_no_such_subscription_token(self):
+        # Bad request when the token is not in the database.
+        with self.assertRaises(HTTPError) as cm:
+            call_api('http://localhost:9001/3.0/lists/ant@example.com/'
+                     'requests/missing')
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_bad_subscription_action(self):
+        # POSTing to a held message with a bad action.
+        token, token_owner, member = self._registrar.register(self._anne)
+        # Anne's subscription request got held.
+        self.assertIsNone(member)
+        # Let's try to handle her request, but with a bogus action.
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='bogus',
+                ))
+        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(cm.exception.msg,
+                         b'Cannot convert parameters: action')
+
+    def test_list_held_requests(self):
+        # We can view all the held requests.
+        token_1, token_owner, member = self._registrar.register(self._anne)
+        # Anne's subscription request got held.
+        self.assertIsNone(member)
+        token_2, token_owner, member = self._registrar.register(self._bart)
+        content, response = call_api(
+            'http://localhost:9001/3.0/lists/ant@example.com/requests')
+        self.assertEqual(response.status, 200)
+        self.assertEqual(content['total_size'], 2)
+        import pdb; pdb.set_trace()
+
+    def test_accept(self):
+        # POST to the request to accept it.
+        token, token_owner, member = self._registrar.register(self._anne)
+        # Anne's subscription request got held.
+        self.assertIsNone(member)
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='accept',
+                ))
+        self.assertEqual(cm.exception.code, 204)
+        # Anne is a member.
+        self.assertEqual(
+            self._mlist.get_members('anne@example.com').address,
+            self._anne)
+        # The request URL no longer exists.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='accept',
+                ))
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_discard(self):
+        # POST to the request to discard it.
+        token, token_owner, member = self._registrar.register(self._anne)
+        # Anne's subscription request got held.
+        self.assertIsNone(member)
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='discard',
+                ))
+        self.assertEqual(cm.exception.code, 204)
+        # Anne is not a member.
+        self.assertIsNone(self._mlist.get_members('anne@example.com'))
+        # The request URL no longer exists.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='discard',
+                ))
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_defer(self):
+        # Defer the decision for some other moderator.
+        token, token_owner, member = self._registrar.register(self._anne)
+        # Anne's subscription request got held.
+        self.assertIsNone(member)
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='defer',
+                ))
+        self.assertEqual(cm.exception.code, 204)
+        # Anne is not a member.
+        self.assertIsNone(self._mlist.get_members('anne@example.com'))
+        # The request URL still exists.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='defer',
+                ))
+        self.assertEqual(cm.exception.code, 204)
+        # And now we can accept it.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='accept',
+                ))
+        self.assertEqual(cm.exception.code, 204)
+        # Anne is a member.
+        self.assertEqual(
+            self._mlist.get_members('anne@example.com').address,
+            self._anne)
+        # The request URL no longer exists.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='accept',
+                ))
+        self.assertEqual(cm.exception.code, 404)
+
+    def test_reject(self):
+        # POST to the request to reject it.  This leaves a bounce message in
+        # the virgin queue.
+        token, token_owner, member = self._registrar.register(self._anne)
+        # Anne's subscription request got held.
+        self.assertIsNone(member)
+        # There are currently no messages in the virgin queue.
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 0)
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='reject',
+                ))
+        self.assertEqual(cm.exception.code, 204)
+        # Anne is not a member.
+        self.assertIsNone(self._mlist.get_members('anne@example.com'))
+        # The request URL no longer exists.
+        with self.assertRaises(HTTPError) as cm:
+            call_api(url.format(token), dict(
+                action='reject',
+                ))
+        self.assertEqual(cm.exception.code, 404)
+        # And the rejection message is now in the virgin queue.
+        items = get_queue_messages('virgin')
+        self.assertEqual(len(items), 1)
+        self.assertEqual(str(items[0].msg), '')

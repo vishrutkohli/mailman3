@@ -24,7 +24,6 @@ __all__ = [
     ]
 
 
-
 import uuid
 import logging
 
@@ -170,6 +169,8 @@ class SubscriptionWorkflow(Workflow):
         pendable = Pendable(
             list_id=self.mlist.list_id,
             address=self.address.email,
+            hold_date=now().replace(microsecond=0).isoformat(),
+            token_owner=token_owner.name,
             )
         self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
 

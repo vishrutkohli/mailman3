@@ -75,12 +75,13 @@ class IRegistrar(Interface):
 
         :param subscriber: The user or address to subscribe.
         :type email: ``IUser`` or ``IAddress``
-        :return: None if the workflow completes with the member being
-            subscribed.  If the workflow is paused for user confirmation or
-            moderator approval, a 3-tuple is returned where the first element
-            is a ``TokenOwner`` the second element is the token hash, and the
-            third element is the subscribed member.
-        :rtype: None or 2-tuple of (TokenOwner, str)
+        :return: A 3-tuple is returned where the first element is the token
+            hash, the second element is a ``TokenOwner`, and the third element
+            is the subscribed member.  If the subscriber got subscribed
+            immediately, the token will be None and the member will be
+            an ``IMember``.  If the subscription got held, the token
+            will be a hash and the member will be None.
+        :rtype: (str-or-None, ``TokenOwner``, ``IMember``-or-None)
         :raises MembershipIsBannedError: when the address being subscribed
             appears in the global or list-centric bans.
         """
@@ -94,9 +95,13 @@ class IRegistrar(Interface):
 
         :param token: A token matching a workflow.
         :type token: string
-        :return: The new token for any follow up confirmation, or None if the
-            user was subscribed.
-        :rtype: str or None
+        :return: A 3-tuple is returned where the first element is the token
+            hash, the second element is a ``TokenOwner`, and the third element
+            is the subscribed member.  If the subscriber got subscribed
+            immediately, the token will be None and the member will be
+            an ``IMember``.  If the subscription is still being held, the token
+            will be a hash and the member will be None.
+        :rtype: (str-or-None, ``TokenOwner``, ``IMember``-or-None)
         :raises LookupError: when no workflow is associated with the token.
         """
 

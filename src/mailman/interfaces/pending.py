@@ -95,4 +95,10 @@ class IPendings(Interface):
     def evict():
         """Remove all pended items whose lifetime has expired."""
 
+    def __iter__():
+        """An iterator over all pendables.
+
+        Each element is a 2-tuple of the form (token, dict).
+        """
+
     count = Attribute('The number of pendables in the pendings database.')

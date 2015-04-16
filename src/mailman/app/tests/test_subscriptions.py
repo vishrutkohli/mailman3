@@ -57,6 +57,22 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self.assertEqual(workflow.token_owner, TokenOwner.no_one)
         self.assertIsNone(workflow.member)
 
+    def test_pended_data(self):
+        # There is a Pendable associated with the held request, and it has
+        # some data associated with it.
+        anne = self._user_manager.create_address(self._anne)
+        workflow = SubscriptionWorkflow(self._mlist, anne)
+        try:
+            workflow.run_thru('send_confirmation')
+        except StopIteration:
+            pass
+        self.assertIsNotNone(workflow.token)
+        pendable = getUtility(IPendings).confirm(workflow.token, expunge=False)
+        self.assertEqual(pendable['list_id'], 'test.example.com')
+        self.assertEqual(pendable['address'], 'anne@example.com')
+        self.assertEqual(pendable['hold_date'], '2005-08-01T07:49:23')
+        self.assertEqual(pendable['token_owner'], 'subscriber')
+
     def test_user_or_address_required(self):
         # The `subscriber` attribute must be a user or address.
         workflow = SubscriptionWorkflow(self._mlist)

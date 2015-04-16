@@ -42,7 +42,8 @@ from mailman.rest.helpers import (
     CollectionMixin, GetterSetter, NotFound, bad_request, child, created,
     etag, no_content, not_found, okay, paginate, path_to)
 from mailman.rest.members import AMember, MemberCollection
-from mailman.rest.moderation import HeldMessages, SubscriptionRequests
+from mailman.rest.post_moderation import HeldMessages
+from mailman.rest.sub_moderation import SubscriptionRequests
 from mailman.rest.validator import Validator
 from operator import attrgetter
 from zope.component import getUtility
