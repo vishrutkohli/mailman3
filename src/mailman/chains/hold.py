@@ -158,7 +158,7 @@ class HoldChain(TerminalChainBase):
             listname    = mlist.fqdn_listname,
             subject     = original_subject,
             sender      = msg.sender,
-            reason      = 'XXX', #reason,
+            reason      = 'N/A', #reason,
             confirmurl  = '{0}/{1}'.format(mlist.script_url('confirm'), token),
             admindb_url = mlist.script_url('admindb'),
             )

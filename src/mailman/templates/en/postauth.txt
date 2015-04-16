@@ -6,8 +6,5 @@ following mailing list posting:
     Subject: $subject
     Reason:  $reason
 
-At your convenience, visit:
-
-    $admindb_url
-        
-to approve or deny the request.
+At your convenience, visit your dashboard to approve or deny the
+request.

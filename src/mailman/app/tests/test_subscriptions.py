@@ -18,23 +18,18 @@
 """Tests for the subscription service."""
 
 __all__ = [
-    'TestJoin',
     'TestSubscriptionWorkflow',
     ]
 
 
-import uuid
 import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.app.subscriptions import SubscriptionWorkflow
-from mailman.interfaces.address import InvalidEmailAddressError
 from mailman.interfaces.bans import IBanManager
-from mailman.interfaces.member import (
-    MemberRole, MembershipIsBannedError, MissingPreferredAddressError)
+from mailman.interfaces.member import MembershipIsBannedError
 from mailman.interfaces.pending import IPendings
-from mailman.interfaces.subscriptions import (
-    ISubscriptionService, MissingUserError, TokenOwner)
+from mailman.interfaces.subscriptions import TokenOwner
 from mailman.testing.helpers import LogFileMark, get_queue_messages
 from mailman.testing.layers import ConfigLayer
 from mailman.interfaces.mailinglist import SubscriptionPolicy
@@ -418,11 +413,10 @@ class TestSubscriptionWorkflow(unittest.TestCase):
                                         pre_confirmed=True)
         # Consume the entire state machine.
         list(workflow)
-        line = mark.readline()
-        self.assertEqual(
-            line[29:-1],
-            'test@example.com: held subscription request from anne@example.com'
-            )
+        self.assertIn(
+           'test@example.com: held subscription request from anne@example.com',
+           mark.readline()
+           )
 
     def test_get_moderator_approval_notifies_moderators(self):
         # When the subscription is held for moderator approval, and the list
