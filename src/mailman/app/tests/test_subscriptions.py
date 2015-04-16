@@ -408,7 +408,7 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         list(workflow)
         line = mark.readline()
         self.assertEqual(
-            line[29:-1],
+            line[28:-1],
             'test@example.com: held subscription request from anne@example.com'
             )
 

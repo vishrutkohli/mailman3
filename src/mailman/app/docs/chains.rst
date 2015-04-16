@@ -132,13 +132,10 @@ This one is addressed to the list moderators.
         List:    test@example.com
         From:    aperson@example.com
         Subject: My first post
-        Reason:  XXX
+        Reason:  N/A
     <BLANKLINE>
-    At your convenience, visit:
-    <BLANKLINE>
-        http://lists.example.com/admindb/test@example.com
-    <BLANKLINE>
-    to approve or deny the request.
+    At your convenience, visit your dashboard to approve or deny the
+    request.
     <BLANKLINE>
     ...
     Content-Type: message/rfc822
@@ -189,7 +186,7 @@ This message is addressed to the sender of the message.
     <BLANKLINE>
     The reason it is being held:
     <BLANKLINE>
-        XXX
+        N/A
     <BLANKLINE>
     Either the message will get posted to the list, or you will receive
     notification of the moderator's decision.  If you would like to cancel
