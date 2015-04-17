@@ -25,7 +25,7 @@ Core Developers
 The following folks are or have been core developers of Mailman (in reverse
 alphabetical order):
 
-* Abhilash Raj
+* Abhilash Raj, Mailman's Youngest Core Dev
 * Aurélien Bompard
 * Barry Warsaw, Mailman's yappy guard dog
 * Florian Fuchs
