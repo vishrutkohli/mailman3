@@ -38,8 +38,11 @@ class _ModerationBase:
     def __init__(self):
         self._pendings = getUtility(IPendings)
 
-    def _make_resource(self, token):
+    def _resource_as_dict(self, token):
         pendable = self._pendings.confirm(token, expunge=False)
+        if pendable is None:
+            # This token isn't in the database.
+            raise LookupError
         resource = dict(token=token)
         resource.update(pendable)
         return resource
@@ -50,28 +53,20 @@ class IndividualRequest(_ModerationBase):
     """Resource for moderating a membership change."""
 
     def __init__(self, mlist, token):
+        super().__init__()
         self._mlist = mlist
         self._registrar = IRegistrar(self._mlist)
         self._token = token
 
     def on_get(self, request, response):
+        # Get the pended record associated with this token, if it exists in
+        # the pending table.
         try:
-            token, token_owner, member = self._registrar.confirm(self._token)
+            resource = self._resource_as_dict(self._token)
         except LookupError:
             not_found(response)
             return
-        try:
-            request_id = int(self._request_id)
-        except ValueError:
-            bad_request(response)
-            return
-        resource = self._make_resource(request_id, MEMBERSHIP_CHANGE_REQUESTS)
-        if resource is None:
-            not_found(response)
-        else:
-            # Remove unnecessary keys.
-            del resource['key']
-            okay(response, etag(resource))
+        okay(response, etag(resource))
 
     def on_post(self, request, response):
         try:
@@ -80,32 +75,34 @@ class IndividualRequest(_ModerationBase):
         except ValueError as error:
             bad_request(response, str(error))
             return
-        requests = IListRequests(self._mlist)
-        try:
-            request_id = int(self._request_id)
-        except ValueError:
-            bad_request(response)
-            return
-        results = requests.get_request(request_id)
-        if results is None:
-            not_found(response)
-            return
-        key, data = results
-        try:
-            request_type = RequestType[data['_request_type']]
-        except ValueError:
-            bad_request(response)
-            return
-        if request_type is RequestType.subscription:
-            handle_subscription(self._mlist, request_id, **arguments)
-        elif request_type is RequestType.unsubscription:
-            handle_unsubscription(self._mlist, request_id, **arguments)
-        else:
-            bad_request(response)
-            return
-        no_content(response)
+        action = arguments['action']
+        if action is Action.defer:
+            # At least see if the token is in the database.
+            pendable = self._pendings.confirm(self._token, expunge=False)
+            if pendable is None:
+                not_found(response)
+            else:
+                no_content(response)
+        elif action is Action.accept:
+            try:
+                self._registrar.confirm(self._token)
+            except LookupError:
+                not_found(response)
+            else:
+                no_content(response)
+        elif action is Action.discard:
+            # At least see if the token is in the database.
+            pendable = self._pendings.confirm(self._token, expunge=True)
+            if pendable is None:
+                not_found(response)
+            else:
+                no_content(response)
+        elif action is Action.reject:
+            # XXX
+            no_content(response)
 
 
+
 class SubscriptionRequests(_ModerationBase, CollectionMixin):
     """Resource for membership change requests."""
 
@@ -116,8 +113,20 @@ class SubscriptionRequests(_ModerationBase, CollectionMixin):
     def _get_collection(self, request):
         # There's currently no better way to query the pendings database for
         # all the entries that are associated with subscription holds on this
-        # mailing list.  Brute force for now.
-        return [token for token, pendable in getUtility(IPendings)]
+        # mailing list.  Brute force iterating over all the pendables.
+        collection = []
+        for token, pendable in getUtility(IPendings):
+            if 'token_owner' not in pendable:
+                # This isn't a subscription hold.
+                continue
+            list_id = pendable.get('list_id')
+            if list_id != self._mlist.list_id:
+                # Either there isn't a list_id field, in which case it can't
+                # be a subscription hold, or this is a hold for some other
+                # mailing list.
+                continue
+            collection.append(token)
+        return collection
 
     def on_get(self, request, response):
         """/lists/listname/requests"""

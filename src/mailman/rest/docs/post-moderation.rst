@@ -13,6 +13,7 @@ Held messages can be moderated through the REST API.  A mailing list starts
 with no held messages.
 
     >>> ant = create_list('ant@example.com')
+    >>> transaction.commit()
     >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/held')
     http_etag: "..."
     start: 0

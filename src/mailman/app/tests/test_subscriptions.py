@@ -69,8 +69,9 @@ class TestSubscriptionWorkflow(unittest.TestCase):
         self.assertIsNotNone(workflow.token)
         pendable = getUtility(IPendings).confirm(workflow.token, expunge=False)
         self.assertEqual(pendable['list_id'], 'test.example.com')
-        self.assertEqual(pendable['address'], 'anne@example.com')
-        self.assertEqual(pendable['hold_date'], '2005-08-01T07:49:23')
+        self.assertEqual(pendable['email'], 'anne@example.com')
+        self.assertEqual(pendable['display_name'], '')
+        self.assertEqual(pendable['when'], '2005-08-01T07:49:23')
         self.assertEqual(pendable['token_owner'], 'subscriber')
 
     def test_user_or_address_required(self):

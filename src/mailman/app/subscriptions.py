@@ -168,8 +168,9 @@ class SubscriptionWorkflow(Workflow):
             return
         pendable = Pendable(
             list_id=self.mlist.list_id,
-            address=self.address.email,
-            hold_date=now().replace(microsecond=0).isoformat(),
+            email=self.address.email,
+            display_name=self.address.display_name,
+            when=now().replace(microsecond=0).isoformat(),
             token_owner=token_owner.name,
             )
         self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))

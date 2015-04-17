@@ -42,15 +42,15 @@ The message is being held for moderator approval.
 
 The subscription request can be viewed in the REST API.
 
+    >>> transaction.commit()
     >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/requests')
     entry 0:
-        delivery_mode: regular
         display_name: Anne Person
         email: anne@example.com
         http_etag: "..."
-        language: en
-        request_id: ...
-        type: subscription
+        list_id: ant.example.com
+        token: ...
+        token_owner: moderator
         when: 2005-08-01T07:49:23
     http_etag: "..."
     start: 0
