@@ -59,7 +59,7 @@ class TestRegistrar(unittest.TestCase):
         self.assertEqual(self._pendings.count, 1)
         record = self._pendings.confirm(token, expunge=False)
         self.assertEqual(record['list_id'], self._mlist.list_id)
-        self.assertEqual(record['address'], 'anne@example.com')
+        self.assertEqual(record['email'], 'anne@example.com')
 
     def test_subscribe(self):
         # Registering a subscription request where no confirmation or

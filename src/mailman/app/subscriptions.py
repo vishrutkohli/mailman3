@@ -24,7 +24,6 @@ __all__ = [
     ]
 
 
-
 import uuid
 import logging
 
@@ -160,18 +159,25 @@ class SubscriptionWorkflow(Workflow):
 
     def _set_token(self, token_owner):
         assert isinstance(token_owner, TokenOwner)
+        pendings = getUtility(IPendings)
+        # Clear out the previous pending token if there is one.
+        if self.token is not None:
+            pendings.confirm(self.token)
         # Create a new token to prevent replay attacks.  It seems like this
-        # should produce the same token, but it won't because the pending adds
-        # a bit of randomization.
+        # would produce the same token, but it won't because the pending adds a
+        # bit of randomization.
         self.token_owner = token_owner
         if token_owner is TokenOwner.no_one:
             self.token = None
             return
         pendable = Pendable(
             list_id=self.mlist.list_id,
-            address=self.address.email,
+            email=self.address.email,
+            display_name=self.address.display_name,
+            when=now().replace(microsecond=0).isoformat(),
+            token_owner=token_owner.name,
             )
-        self.token = getUtility(IPendings).add(pendable, timedelta(days=3650))
+        self.token = pendings.add(pendable, timedelta(days=3650))
 
     def _step_sanity_checks(self):
         # Ensure that we have both an address and a user, even if the address

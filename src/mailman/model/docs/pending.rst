@@ -43,10 +43,9 @@ There's exactly one entry in the pendings database now.
     >>> pendingdb.count
     1
 
-There's not much you can do with tokens except to *confirm* them, which
-basically means returning the `IPendable` structure (as a dictionary) from the
-database that matches the token.  If the token isn't in the database, None is
-returned.
+You can *confirm* the pending, which means returning the `IPendable` structure
+(as a dictionary) from the database that matches the token.  If the token
+isn't in the database, None is returned.
 
     >>> pendable = pendingdb.confirm(b'missing')
     >>> print(pendable)
@@ -82,6 +81,18 @@ expunge it.
     type: one
     >>> print(pendingdb.confirm(token_1))
     None
+
+You can iterate over all the pendings in the database.
+
+    >>> pendables = list(pendingdb)
+    >>> def sort_key(item):
+    ...     token, pendable = item
+    ...     return pendable['type']
+    >>> sorted_pendables = sorted(pendables, key=sort_key)
+    >>> for token, pendable in sorted_pendables:
+    ...     print(pendable['type'])
+    three
+    two
 
 An event can be given a lifetime when it is pended, otherwise it just uses a
 default lifetime.

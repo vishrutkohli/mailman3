@@ -15,18 +15,15 @@
 # You should have received a copy of the GNU General Public License along with
 # GNU Mailman.  If not, see <http://www.gnu.org/licenses/>.
 
-"""REST API for Message moderation."""
+"""REST API for held message moderation."""
 
 __all__ = [
     'HeldMessage',
     'HeldMessages',
-    'MembershipChangeRequest',
-    'SubscriptionRequests',
     ]
 
 
-from mailman.app.moderator import (
-    handle_message, handle_subscription, handle_unsubscription)
+from mailman.app.moderator import handle_message
 from mailman.interfaces.action import Action
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
@@ -36,16 +33,11 @@ from mailman.rest.validator import Validator, enum_validator
 from zope.component import getUtility
 
 
-HELD_MESSAGE_REQUESTS = (RequestType.held_message,)
-MEMBERSHIP_CHANGE_REQUESTS = (RequestType.subscription,
-                              RequestType.unsubscription)
-
-
 
 class _ModerationBase:
     """Common base class."""
 
-    def _make_resource(self, request_id, expected_request_types):
+    def _make_resource(self, request_id):
         requests = IListRequests(self._mlist)
         results = requests.get_request(request_id)
         if results is None:
@@ -57,9 +49,9 @@ class _ModerationBase:
         # Check for a matching request type, and insert the type name into the
         # resource.
         request_type = RequestType[resource.pop('_request_type')]
-        if request_type not in expected_request_types:
+        if request_type is not RequestType.held_message:
             return None
-        resource['type'] = request_type.name
+        resource['type'] = RequestType.held_message.name
         # This key isn't what you think it is.  Usually, it's the Pendable
         # record's row id, which isn't helpful at all.  If it's not there,
         # that's fine too.
@@ -72,8 +64,7 @@ class _HeldMessageBase(_ModerationBase):
     """Held messages are a little different."""
 
     def _make_resource(self, request_id):
-        resource = super(_HeldMessageBase, self)._make_resource(
-            request_id, HELD_MESSAGE_REQUESTS)
+        resource = super(_HeldMessageBase, self)._make_resource(request_id)
         if resource is None:
             return None
         # Grab the message and insert its text representation into the
@@ -162,91 +153,3 @@ class HeldMessages(_HeldMessageBase, CollectionMixin):
     @child(r'^(?P<id>[^/]+)')
     def message(self, request, segments, **kw):
         return HeldMessage(self._mlist, kw['id'])
-
-
-
-class MembershipChangeRequest(_ModerationBase):
-    """Resource for moderating a membership change."""
-
-    def __init__(self, mlist, request_id):
-        self._mlist = mlist
-        self._request_id = request_id
-
-    def on_get(self, request, response):
-        try:
-            request_id = int(self._request_id)
-        except ValueError:
-            bad_request(response)
-            return
-        resource = self._make_resource(request_id, MEMBERSHIP_CHANGE_REQUESTS)
-        if resource is None:
-            not_found(response)
-        else:
-            # Remove unnecessary keys.
-            del resource['key']
-            okay(response, etag(resource))
-
-    def on_post(self, request, response):
-        try:
-            validator = Validator(action=enum_validator(Action))
-            arguments = validator(request)
-        except ValueError as error:
-            bad_request(response, str(error))
-            return
-        requests = IListRequests(self._mlist)
-        try:
-            request_id = int(self._request_id)
-        except ValueError:
-            bad_request(response)
-            return
-        results = requests.get_request(request_id)
-        if results is None:
-            not_found(response)
-            return
-        key, data = results
-        try:
-            request_type = RequestType[data['_request_type']]
-        except ValueError:
-            bad_request(response)
-            return
-        if request_type is RequestType.subscription:
-            handle_subscription(self._mlist, request_id, **arguments)
-        elif request_type is RequestType.unsubscription:
-            handle_unsubscription(self._mlist, request_id, **arguments)
-        else:
-            bad_request(response)
-            return
-        no_content(response)
-
-
-class SubscriptionRequests(_ModerationBase, CollectionMixin):
-    """Resource for membership change requests."""
-
-    def __init__(self, mlist):
-        self._mlist = mlist
-        self._requests = None
-
-    def _resource_as_dict(self, request):
-        """See `CollectionMixin`."""
-        resource = self._make_resource(request.id, MEMBERSHIP_CHANGE_REQUESTS)
-        # Remove unnecessary keys.
-        del resource['key']
-        return resource
-
-    def _get_collection(self, request):
-        requests = IListRequests(self._mlist)
-        self._requests = requests
-        items = []
-        for request_type in MEMBERSHIP_CHANGE_REQUESTS:
-            for request in requests.of_type(request_type):
-                items.append(request)
-        return items
-
-    def on_get(self, request, response):
-        """/lists/listname/requests"""
-        resource = self._make_collection(request)
-        okay(response, etag(resource))
-
-    @child(r'^(?P<id>[^/]+)')
-    def subscription(self, request, segments, **kw):
-        return MembershipChangeRequest(self._mlist, kw['id'])
