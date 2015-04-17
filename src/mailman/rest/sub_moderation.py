@@ -22,12 +22,14 @@ __all__ = [
     ]
 
 
+from mailman.app.moderator import send_rejection
 from mailman.interfaces.action import Action
 from mailman.interfaces.pending import IPendings
 from mailman.interfaces.registrar import IRegistrar
 from mailman.rest.helpers import (
     CollectionMixin, bad_request, child, etag, no_content, not_found, okay)
 from mailman.rest.validator import Validator, enum_validator
+from mailman.utilities.i18n import _
 from zope.component import getUtility
 
 
@@ -98,8 +100,16 @@ class IndividualRequest(_ModerationBase):
             else:
                 no_content(response)
         elif action is Action.reject:
-            # XXX
-            no_content(response)
+            # Like discard but sends a rejection notice to the user.
+            pendable = self._pendings.confirm(self._token, expunge=True)
+            if pendable is None:
+                not_found(response)
+            else:
+                no_content(response)
+                send_rejection(
+                    self._mlist, _('Subscription request'),
+                    pendable['email'],
+                    _('[No reason given]'))
 
 
 

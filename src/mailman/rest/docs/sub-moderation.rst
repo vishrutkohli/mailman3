@@ -65,13 +65,12 @@ You can view an individual membership change request by providing the token
 
     >>> dump_json('http://localhost:9001/3.0/lists/ant@example.com/'
     ...           'requests/{}'.format(token))
-    delivery_mode: regular
     display_name: Anne Person
     email: anne@example.com
     http_etag: "..."
-    language: en
-    request_id: ...
-    type: subscription
+    list_id: ant.example.com
+    token: ...
+    token_owner: moderator
     when: 2005-08-01T07:49:23
 
 
@@ -99,11 +98,9 @@ Anne's subscription request is accepted.
 
 Anne is now a member of the mailing list.
 
-    >>> transaction.abort()
     >>> ant.members.get_member('anne@example.com')
     <Member: Anne Person <anne@example.com> on ant@example.com
              as MemberRole.member>
-    >>> transaction.abort()
 
 There are no more membership change requests.
 

@@ -28,6 +28,7 @@ import unittest
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import hold_message
 from mailman.database.transaction import transaction
+from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.registrar import IRegistrar
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.helpers import (
@@ -100,6 +101,7 @@ Something else.
 
 class TestSubscriptionModeration(unittest.TestCase):
     layer = RESTLayer
+    maxDiff = None
 
     def setUp(self):
         with transaction():
@@ -206,6 +208,38 @@ class TestSubscriptionModeration(unittest.TestCase):
                      dict(action='accept'))
         self.assertEqual(cm.exception.code, 404)
 
+    def test_accept_by_moderator_clears_request_queue(self):
+        # After accepting a message held for moderator approval, there are no
+        # more requests to handle.
+        #
+        # We start with nothing in the queue.
+        content, response = call_api(
+            'http://localhost:9001/3.0/lists/ant@example.com/requests')
+        self.assertEqual(content['total_size'], 0)
+        # Anne tries to subscribe to a list that only requests moderator
+        # approval.
+        with transaction():
+            self._mlist.subscription_policy = SubscriptionPolicy.moderate
+            token, token_owner, member = self._registrar.register(
+                self._anne,
+                pre_verified=True, pre_confirmed=True)
+        # There's now one request in the queue, and it's waiting on moderator
+        # approval.
+        content, response = call_api(
+            'http://localhost:9001/3.0/lists/ant@example.com/requests')
+        self.assertEqual(content['total_size'], 1)
+        json = content['entries'][0]
+        self.assertEqual(json['token_owner'], 'moderator')
+        self.assertEqual(json['email'], 'anne@example.com')
+        # The moderator approves the request.
+        url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
+        content, response = call_api(url.format(token), {'action': 'accept'})
+        self.assertEqual(response.status, 204)
+        # And now the request queue is empty.
+        content, response = call_api(
+            'http://localhost:9001/3.0/lists/ant@example.com/requests')
+        self.assertEqual(content['total_size'], 0)
+
     def test_discard(self):
         # POST to the request to discard it.
         with transaction():
@@ -275,9 +309,9 @@ class TestSubscriptionModeration(unittest.TestCase):
             token, token_owner, member = self._registrar.register(self._anne)
         # Anne's subscription request got held.
         self.assertIsNone(member)
-        # There are currently no messages in the virgin queue.
-        items = get_queue_messages('virgin')
-        self.assertEqual(len(items), 0)
+        # Clear out the virgin queue, which currently contains the
+        # confirmation message sent to Anne.
+        get_queue_messages('virgin')
         url = 'http://localhost:9001/3.0/lists/ant@example.com/requests/{}'
         content, response = call_api(url.format(token), dict(
             action='reject',
@@ -291,10 +325,14 @@ class TestSubscriptionModeration(unittest.TestCase):
                 action='reject',
                 ))
         self.assertEqual(cm.exception.code, 404)
-        # And the rejection message is now in the virgin queue.
+        # And the rejection message to Anne is now in the virgin queue.
         items = get_queue_messages('virgin')
         self.assertEqual(len(items), 1)
-        self.assertEqual(str(items[0].msg), '')
+        message = items[0].msg
+        self.assertEqual(message['From'], 'ant-bounces@example.com')
+        self.assertEqual(message['To'], 'anne@example.com')
+        self.assertEqual(message['Subject'],
+                         'Request to mailing list "Ant" rejected')
 
     def test_reject_bad_token(self):
         # Try to accept a request with a bogus token.
