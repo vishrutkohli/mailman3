@@ -71,7 +71,7 @@ Mailman into that, and then run the ``alembic`` command.  For example::
     $ source /tmp/mm3/bin/activate
     $ python setup.py develop
     $ alembic -c src/mailman/config/alembic.cfg revision --autogenerate -m
-	  "<migration_name>"
+      "<migration_name>"
 
 This would create a new migration which would automatically be migrated to the
 database on the next run of Mailman.  Note that the database needs to be in
@@ -84,6 +84,14 @@ changes in the database schema.
 People upgrading Mailman from previous versions need not do anything manually,
 as soon as a new migration is added in the sources, it will be automatically
 reflected in the schema on first-run post-update.
+
+**Note:** When auto-generating migrations using Alembic, be sure to check
+the created migration before adding it to the version control.  You will have
+to manually change some of the special data types defined in
+``mailman.database.types``.  For example, ``mailman.database.types.Enum()``
+needs to be changed to ``sa.Integer()``, as the ``Enum`` type stores just the
+integer in the database.  A more complex migration would be needed for
+``UUID`` depending upon the database layer to be used.
 
 
 .. _SQLAlchemy: http://www.sqlalchemy.org/

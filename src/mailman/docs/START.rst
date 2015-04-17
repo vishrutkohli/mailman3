@@ -7,25 +7,6 @@ Getting started with GNU Mailman
 Copyright (C) 2008-2015 by the Free Software Foundation, Inc.
 
 
-Beta Release
-============
-
-This is a beta release.  The developers believe it has sufficient
-functionality to provide full mailing list services, but it is not yet ready
-for production use.
-
-The Mailman 3 beta releases are being provided to give developers and other
-interested people an early look at the next major version, and site
-administrators a chance to prepare for an eventual upgrade.  The core list
-management and post distribution functionality is now complete.  However,
-unlike Mailman 2 whose web interface and archives were tightly integrated with
-the core, Mailman 3 exposes a REST administrative interface to the web,
-communicates with archivers via decoupled interfaces, and leaves summary,
-search, and retrieval of archived messages to a separate application (a simple
-implementation is provided).  The web interface (known as `Postorius`_) and
-archiver (known as `Hyperkitty`_) are developed separately.
-
-
 Contact Us
 ==========
 
@@ -39,11 +20,12 @@ list, or ask on IRC channel ``#mailman`` on Freenode.
 Requirements
 ============
 
-Python 3.4 or newer is required.  It can either be the default 'python3' on
-your ``$PATH`` or it can be accessible via the ``python3.4`` binary.  If your
-operating system does not include Python, see http://www.python.org for
-information about downloading installers (where available) and installing it
-from source (when necessary or preferred).  Python 2 is not supported.
+For the Core, Python 3.4 or newer is required.  It can either be the default
+'python3' on your ``$PATH`` or it can be accessible via the ``python3.4``
+binary.  If your operating system does not include Python, see
+http://www.python.org for information about downloading installers (where
+available) and installing it from source (when necessary or preferred).
+Python 2 is not supported.
 
 You may need some additional dependencies, which are either available from
 your OS vendor, or can be downloaded automatically from the `Python
@@ -53,12 +35,12 @@ Cheeseshop`_.
 Documentation
 =============
 
-The documentation for Mailman 3 is distributed throughout the sources.
-The core documentation (such as this file, ``START.rst``) is found in
-the ``src/mailman/docs`` directory, but much of the documentation is
-in module-specific places.  A prebuilt HTML version of `Mailman 3
-documentation`_ is available at pythonhosted.org, as is `Postorius
-documentation`_.  `HyperKitty documentation`_ is available at ReadTheDocs.
+The documentation for Mailman 3 is distributed throughout the sources.  The
+core documentation (such as this file) is found in the ``src/mailman/docs``
+directory, but much of the documentation is in module-specific places.  A
+prebuilt HTML version of `Mailman 3 documentation`_ is available at
+pythonhosted.org, as is `Postorius documentation`_.  `HyperKitty
+documentation`_ is available at ReadTheDocs.
 
 The `Development Setup Guide`_ is a recent step-by-step explanation of
 how to set up a complete Mailman 3 system including the Mailman 3 core
@@ -107,23 +89,13 @@ Building for development
 
 To build Mailman for development purposes, you can create a virtual
 environment outside of tox.  You need to have the `virtualenv`_ program
-installed.
+installed, or you can use Python 3's built-in `pyvenv`_ command.
 
-First, create a virtual environment.  By default ``virtualenv`` uses the
-``python`` executable it finds first on your ``$PATH``.  Make sure this is
-Python 3.4 (just start the interactive interpreter and check the version in
-the startup banner).  The directory you install the virtualenv into is up to
-you, but for purposes of this document, we'll install it into ``/tmp/mm3``::
+First, create a virtual environment (venv).  The directory you install the
+venv into is up to you, but for purposes of this document, we'll install it
+into ``/tmp/mm3``::
 
-    % virtualenv -p python3 --system-site-packages /tmp/mm3
-
-If your default Python is not version 3.4, use the ``--python`` option to
-specify the Python executable.  You can use the command name if this version
-is on your ``PATH``::
-
-    % virtualenv --system-site-packages --python=python3.4 /tmp/mm3
-
-or you may specify the full path to any Python 3.4 executable.
+    % pyvenv /tmp/mm3
 
 Now, activate the virtual environment and set it up for development::
 
@@ -211,13 +183,6 @@ entirely, with a reasonable amount of effort.  However, as a core feature of
 Mailman, the web UI will emphasize usability over modularity at first, so most
 users should use the web UI described here.
 
-Postorius was prototyped at the `Pycon 2012 sprint`_, so it is "very alpha" as
-of Mailman 3 beta 1, and comes in several components.  In particular, it
-requires a `Django`_ installation, and Bazaar checkouts of the `REST client
-module`_ and `Postorius`_ itself.  Building it is fairly straightforward,
-based on Florian Fuchs' `Five Minute Guide` from his `blog post`_ on the
-Mailman wiki.  (Check the `blog post`_ for the most recent version!)
-
 
 The Archiver
 ------------
@@ -230,12 +195,9 @@ is appropriate for that archiver.  Summary, search, and retrieval of archived
 posts are handled by a separate application.
 
 A new archive UI called `Hyperkitty`_, based on the `notmuch mail indexer`_
-and `Django`_, was prototyped at the PyCon 2012 sprint by Toshio Kuratomi, and
-like the web UI it is also in early alpha as of Mailman 3 beta 1.  The
-Hyperkitty archiver is very loosely coupled to Mailman 3 core.  In fact, any
-email application that speaks LMTP or SMTP will be able to use Hyperkitty.
-
-A `five minute guide to Hyperkitty`_ is based on Toshio Kuratomi's README.
+and `Django`_, was prototyped at the PyCon 2012 sprint by Toshio Kuratomi.
+The Hyperkitty archiver is very loosely coupled to Mailman 3 core.  In fact,
+any email application that speaks LMTP or SMTP will be able to use Hyperkitty.
 
 
 .. _`Postorius`: https://launchpad.net/postorius
@@ -249,6 +211,7 @@ A `five minute guide to Hyperkitty`_ is based on Toshio Kuratomi's README.
 .. _`Pycon 2012 sprint`: https://us.pycon.org/2012/community/sprints/projects/
 .. _`Python Cheeseshop`: http://pypi.python.org/pypi
 .. _`virtualenv`: http://www.virtualenv.org/en/latest/
+.. _`pyvenv`: https://docs.python.org/3/library/venv.html
 .. _`Mailman 3 documentation`: http://www.pythonhosted.org/mailman/
 .. _`Postorius documentation`: http://www.pythonhosted.org/postorius/
 .. _`HyperKitty documentation`: https://hyperkitty.readthedocs.org/en/latest/development.html
