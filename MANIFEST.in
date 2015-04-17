@@ -11,6 +11,6 @@ prune src/web
 prune eggs
 prune parts
 prune .tox
-include src/mailman/testing/config.pck
+include src/mailman/testing/config*.pck
 include src/mailman/database/alembic/script.py.mako
 include src/mailman/database/alembic/versions/*.py
