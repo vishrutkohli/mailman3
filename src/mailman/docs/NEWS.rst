@@ -10,7 +10,7 @@ Here is a history of user visible changes to Mailman.
 
 3.0 rc 1 -- "Show Don't Tell"
 =============================
-(2015-XX-XX)
+(2015-04-17)
 
 Architecture
 ------------
