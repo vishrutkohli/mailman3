@@ -12,7 +12,7 @@ Governance
 
 GNU Mailman was invented by John Viega.  Barry Warsaw is the current project
 leader.  Aurélien Bompard leads HyperKitty and bundler development.  Florian
-Fuchs leads Postorious development.  Development of mailman.client is a group
+Fuchs leads Postorius development.  Development of mailman.client is a group
 effort.
 
 All project decisions are made by consensus via the Mailman Cabal, er,

@@ -86,7 +86,7 @@ Mailman 3 is really a suite of 5 projects:
 
  * Core - the core message processing and delivery system, exposing a REST API
    for administrative control.  Requires `Python 3.4`_ or newer.
- * Postorious - the new web user interfaces built on `Django`_.
+ * Postorius - the new web user interfaces built on `Django`_.
  * HyperKitty - the new archiver, also built on `Django`_.
  * mailman.client - a Python binding to the core's REST API.  Compatible with
    both Python 2 and Python 3.
