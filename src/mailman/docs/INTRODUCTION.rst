@@ -51,7 +51,7 @@ Mailman was originally developed by John Viega.  Subsequent development
 final release was a group effort, with the core contributors being: Barry
 Warsaw, Ken Manheimer, Scott Cotton, Harald Meland, and John Viega.  Version
 1.0 and beyond have been primarily maintained by Barry Warsaw with
-contributions from many; see the ACKNOWLEDGMENTS file for details.  Jeremy
+contributions from many; see the `ACKNOWLEDGMENTS`_ file for details.  Jeremy
 Hylton helped considerably with the Pipermail code in Mailman 2.0.  Mailman
 2.1 is primarily maintained by Mark Sapiro, with previous help by Tokio
 Kikuchi.  Barry Warsaw is the lead developer on Mailman 3.
@@ -79,10 +79,18 @@ lists and archives, etc., are available at:
     http://www.list.org/help.html
 
 
-Requirements
-============
+Bits and pieces
+===============
 
-Mailman 3 requires `Python 3.4`_ or newer.
+Mailman 3 is really a suite of 5 projects:
+
+ * Core - the core message processing and delivery system, exposing a REST API
+   for administrative control.  Requires `Python 3.4`_ or newer.
+ * Postorius - the new web user interfaces built on `Django`_.
+ * HyperKitty - the new archiver, also built on `Django`_.
+ * mailman.client - a Python binding to the core's REST API.  Compatible with
+   both Python 2 and Python 3.
+ * Bundler - a convenient installer.
 
 
 .. _`GNU Mailman`: http://www.list.org
@@ -91,3 +99,5 @@ Mailman 3 requires `Python 3.4`_ or newer.
 .. _Python: http://www.python.org
 .. _FAQ: http://wiki.list.org/display/DOC/Frequently+Asked+Questions
 .. _`Python 3.4`: https://www.python.org/downloads/release/python-342/
+.. _`ACKNOWLEDGMENTS`: ACKNOWLEDGMENTS.html
+.. _`Django`: https://www.djangoproject.com/

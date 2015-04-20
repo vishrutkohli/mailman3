@@ -52,9 +52,11 @@ class IRegistrar(Interface):
     This is a higher level interface to user registration, email address
     confirmation, etc. than the IUserManager.  The latter does no validation,
     syntax checking, or confirmation, while this interface does.
+
+    To use this, adapt an ``IMailingList`` to this interface.
     """
 
-    def register(mlist, subscriber=None, *,
+    def register(subscriber=None, *,
                  pre_verified=False, pre_confirmed=False, pre_approved=False):
         """Subscribe an address or user according to subscription policies.
 
@@ -71,13 +73,15 @@ class IRegistrar(Interface):
         approve the subscription.  Use the ``confirm(token)`` method to
         resume the workflow.
 
-        :param mlist: The mailing list to subscribe to.
-        :type mlist: `IMailingList`
         :param subscriber: The user or address to subscribe.
         :type email: ``IUser`` or ``IAddress``
-        :return: The confirmation token string, or None if the workflow
-            completes (i.e. the member has been subscribed).
-        :rtype: str or None
+        :return: A 3-tuple is returned where the first element is the token
+            hash, the second element is a ``TokenOwner`, and the third element
+            is the subscribed member.  If the subscriber got subscribed
+            immediately, the token will be None and the member will be
+            an ``IMember``.  If the subscription got held, the token
+            will be a hash and the member will be None.
+        :rtype: (str-or-None, ``TokenOwner``, ``IMember``-or-None)
         :raises MembershipIsBannedError: when the address being subscribed
             appears in the global or list-centric bans.
         """
@@ -91,9 +95,13 @@ class IRegistrar(Interface):
 
         :param token: A token matching a workflow.
         :type token: string
-        :return: The new token for any follow up confirmation, or None if the
-            user was subscribed.
-        :rtype: str or None
+        :return: A 3-tuple is returned where the first element is the token
+            hash, the second element is a ``TokenOwner`, and the third element
+            is the subscribed member.  If the subscriber got subscribed
+            immediately, the token will be None and the member will be
+            an ``IMember``.  If the subscription is still being held, the token
+            will be a hash and the member will be None.
+        :rtype: (str-or-None, ``TokenOwner``, ``IMember``-or-None)
         :raises LookupError: when no workflow is associated with the token.
         """
 

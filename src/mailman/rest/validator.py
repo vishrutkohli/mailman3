@@ -29,6 +29,7 @@ __all__ = [
 
 from mailman.core.errors import (
     ReadOnlyPATCHRequestError, UnknownPATCHRequestError)
+from mailman.interfaces.address import IEmailValidator
 from mailman.interfaces.languages import ILanguageManager
 from uuid import UUID
 from zope.component import getUtility
@@ -59,7 +60,10 @@ def subscriber_validator(subscriber):
     try:
         return UUID(int=int(subscriber))
     except ValueError:
-        return subscriber
+        # It must be an email address.
+        if getUtility(IEmailValidator).is_valid(subscriber):
+            return subscriber
+        raise ValueError
 
 
 def language_validator(code):

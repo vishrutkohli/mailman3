@@ -7,27 +7,37 @@ GNU Mailman Acknowledgments
 Copyright (C) 1998-2015 by the Free Software Foundation, Inc.
 
 
+Governance
+==========
+
+GNU Mailman was invented by John Viega.  Barry Warsaw is the current project
+leader.  Aurélien Bompard leads HyperKitty and bundler development.  Florian
+Fuchs leads Postorius development.  Development of mailman.client is a group
+effort.
+
+All project decisions are made by consensus via the Mailman Cabal, er,
+Steering Committee which can be contacted directly via mailman-cabal@python.org
+
+
 Core Developers
 ===============
 
 The following folks are or have been core developers of Mailman (in reverse
 alphabetical order):
 
+* Abhilash Raj, Mailman's Youngest Core Dev
+* Aurélien Bompard
 * Barry Warsaw, Mailman's yappy guard dog
-* Mark Sapiro, Mailman's compulsive responder
-* Tokio Kikuchi, Mailman's weatherman
-* John Viega, Mailman's inventor
-* Thomas Wouters, Mailman's Dutch treat
+* Florian Fuchs
 * Harald Meland, Norse Mailman
+* John Viega, Mailman's inventor
 * Ken Manheimer, Mailman's savior
+* Mark Sapiro, Mailman's compulsive responder
 * Scott Cotton, Cookie-Monster
-
-
-Steering Committee
-==================
-
-The Mailman Steering Committee can be contacted directly via
-mailman-cabal@python.org
+* Stephen J. Turnbull
+* Terri Oda
+* Thomas Wouters, Mailman's Dutch treat
+* Tokio Kikuchi (RIP), Mailman's weatherman
 
 
 Copyright Assignees
@@ -44,7 +54,6 @@ code, and have assigned copyright for contributions to the FSF:
 * Norbert Bollow
 * Joe Dugan
 * Ethan Mindlace Fremen
-* Florian Fuchs
 * Ben Gertzfield
 * Victoriano Giralt
 * Stephen Goss
@@ -58,7 +67,6 @@ code, and have assigned copyright for contributions to the FSF:
 * Simone Piunno
 * Claudia Schmidt
 * Andreas Schosser
-* Stephen J. Turnbull
 * Richard Wackerbarth
 
 
@@ -101,7 +109,6 @@ left off the list!
 * Stuart Bishop
 * David Blomquist
 * Bojan
-* Aurélien Bompard
 * Søren Bondrup
 * Grant Bowman
 * Alessio Bragadini

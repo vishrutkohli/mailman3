@@ -24,8 +24,11 @@ __all__ = [
 
 import unittest
 
-from mailman.rest.validator import list_of_strings_validator
+from mailman.interfaces.usermanager import IUserManager
+from mailman.rest.validator import (
+    list_of_strings_validator, subscriber_validator)
 from mailman.testing.layers import RESTLayer
+from zope.component import getUtility
 
 
 
@@ -46,3 +49,16 @@ class TestValidators(unittest.TestCase):
         # Strings are required.
         self.assertRaises(ValueError, list_of_strings_validator, 7)
         self.assertRaises(ValueError, list_of_strings_validator, ['ant', 7])
+
+    def test_subscriber_validator_uuid(self):
+        # Convert from an existing user id to a UUID.
+        anne = getUtility(IUserManager).make_user('anne@example.com')
+        uuid = subscriber_validator(str(anne.user_id.int))
+        self.assertEqual(anne.user_id, uuid)
+
+    def test_subscriber_validator_bad_uuid(self):
+        self.assertRaises(ValueError, subscriber_validator, 'not-a-thing')
+
+    def test_subscriber_validator_email_address(self):
+        self.assertEqual(subscriber_validator('anne@example.com'),
+                         'anne@example.com')

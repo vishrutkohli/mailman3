@@ -28,6 +28,7 @@ from mailman.app.lifecycle import create_list
 from mailman.interfaces.mailinglist import SubscriptionPolicy
 from mailman.interfaces.pending import IPendings
 from mailman.interfaces.registrar import IRegistrar
+from mailman.interfaces.subscriptions import TokenOwner
 from mailman.interfaces.usermanager import IUserManager
 from mailman.testing.layers import ConfigLayer
 from mailman.utilities.datetime import now
@@ -47,37 +48,34 @@ class TestRegistrar(unittest.TestCase):
         self._anne = getUtility(IUserManager).create_address(
             'anne@example.com')
 
-    def test_unique_token(self):
+    def test_initial_conditions(self):
         # Registering a subscription request provides a unique token associated
-        # with a pendable.
+        # with a pendable, and the owner of the token.
         self.assertEqual(self._pendings.count, 0)
-        token = self._registrar.register(self._anne)
+        token, token_owner, member = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.subscriber)
+        self.assertIsNone(member)
         self.assertEqual(self._pendings.count, 1)
         record = self._pendings.confirm(token, expunge=False)
         self.assertEqual(record['list_id'], self._mlist.list_id)
-        self.assertEqual(record['address'], 'anne@example.com')
+        self.assertEqual(record['email'], 'anne@example.com')
 
-    def test_no_token(self):
+    def test_subscribe(self):
         # Registering a subscription request where no confirmation or
-        # moderation steps are needed, leaves us with no token, since there's
-        # nothing more to do.
+        # moderation steps are needed, leaves us with no token or owner, since
+        # there's nothing more to do.
         self._mlist.subscription_policy = SubscriptionPolicy.open
         self._anne.verified_on = now()
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNone(token)
+        self.assertEqual(token_owner, TokenOwner.no_one)
+        member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(rmember, member)
+        self.assertEqual(member.address, self._anne)
+        # There's nothing to confirm.
         record = self._pendings.confirm(token, expunge=False)
         self.assertIsNone(record)
-
-    def test_is_subscribed(self):
-        # Where no confirmation or moderation steps are needed, registration
-        # happens immediately.
-        self._mlist.subscription_policy = SubscriptionPolicy.open
-        self._anne.verified_on = now()
-        status = self._registrar.register(self._anne)
-        self.assertIsNone(status)
-        member = self._mlist.regular_members.get_member('anne@example.com')
-        self.assertEqual(member.address, self._anne)
 
     def test_no_such_token(self):
         # Given a token which is not in the database, a LookupError is raised.
@@ -90,13 +88,18 @@ class TestRegistrar(unittest.TestCase):
         # to approve.  Running the workflow gives us a token.  Confirming the
         # token subscribes the user.
         self._mlist.subscription_policy = SubscriptionPolicy.open
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.subscriber)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Now confirm the subscription.
-        self._registrar.confirm(token)
+        token, token_owner, rmember = self._registrar.confirm(token)
+        self.assertIsNone(token)
+        self.assertEqual(token_owner, TokenOwner.no_one)
         member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(rmember, member)
         self.assertEqual(member.address, self._anne)
 
     def test_confirm_because_confirm(self):
@@ -106,13 +109,18 @@ class TestRegistrar(unittest.TestCase):
         # user.
         self._mlist.subscription_policy = SubscriptionPolicy.confirm
         self._anne.verified_on = now()
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.subscriber)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Now confirm the subscription.
-        self._registrar.confirm(token)
+        token, token_owner, rmember = self._registrar.confirm(token)
+        self.assertIsNone(token)
+        self.assertEqual(token_owner, TokenOwner.no_one)
         member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(rmember, member)
         self.assertEqual(member.address, self._anne)
 
     def test_confirm_because_moderation(self):
@@ -121,13 +129,18 @@ class TestRegistrar(unittest.TestCase):
         # token subscribes the user.
         self._mlist.subscription_policy = SubscriptionPolicy.moderate
         self._anne.verified_on = now()
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.moderator)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Now confirm the subscription.
-        self._registrar.confirm(token)
+        token, token_owner, rmember = self._registrar.confirm(token)
+        self.assertIsNone(token)
+        self.assertEqual(token_owner, TokenOwner.no_one)
         member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(rmember, member)
         self.assertEqual(member.address, self._anne)
 
     def test_confirm_because_confirm_then_moderation(self):
@@ -140,22 +153,30 @@ class TestRegistrar(unittest.TestCase):
           SubscriptionPolicy.confirm_then_moderate
         self._anne.verified_on = now()
         # Runs until subscription confirmation.
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.subscriber)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Now confirm the subscription, and wait for the moderator to approve
         # the subscription.  She is still not subscribed.
-        new_token = self._registrar.confirm(token)
+        new_token, token_owner, rmember = self._registrar.confirm(token)
         # The new token, used for the moderator to approve the message, is not
         # the same as the old token.
         self.assertNotEqual(new_token, token)
+        self.assertIsNotNone(new_token)
+        self.assertEqual(token_owner, TokenOwner.moderator)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Confirm once more, this time as the moderator approving the
         # subscription.  Now she's a member.
-        self._registrar.confirm(new_token)
+        token, token_owner, rmember = self._registrar.confirm(new_token)
+        self.assertIsNone(token)
+        self.assertEqual(token_owner, TokenOwner.no_one)
         member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(rmember, member)
         self.assertEqual(member.address, self._anne)
 
     def test_confirm_then_moderate_with_different_tokens(self):
@@ -167,16 +188,20 @@ class TestRegistrar(unittest.TestCase):
           SubscriptionPolicy.confirm_then_moderate
         self._anne.verified_on = now()
         # Runs until subscription confirmation.
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.subscriber)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Now confirm the subscription, and wait for the moderator to approve
         # the subscription.  She is still not subscribed.
-        new_token = self._registrar.confirm(token)
+        new_token, token_owner, rmember = self._registrar.confirm(token)
         # The status is not true because the user has not yet been subscribed
         # to the mailing list.
         self.assertIsNotNone(new_token)
+        self.assertEqual(token_owner, TokenOwner.moderator)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # The new token is different than the old token.
@@ -185,10 +210,12 @@ class TestRegistrar(unittest.TestCase):
         self.assertRaises(LookupError, self._registrar.confirm, token)
         # Confirm once more, this time with the new token, as the moderator
         # approving the subscription.  Now she's a member.
-        done_token = self._registrar.confirm(new_token)
+        done_token, token_owner, rmember = self._registrar.confirm(new_token)
         # The token is None, signifying that the member has been subscribed.
         self.assertIsNone(done_token)
+        self.assertEqual(token_owner, TokenOwner.no_one)
         member = self._mlist.regular_members.get_member('anne@example.com')
+        self.assertEqual(rmember, member)
         self.assertEqual(member.address, self._anne)
 
     def test_discard_waiting_for_confirmation(self):
@@ -197,8 +224,10 @@ class TestRegistrar(unittest.TestCase):
         self._mlist.subscription_policy = SubscriptionPolicy.confirm
         self._anne.verified_on = now()
         # Runs until subscription confirmation.
-        token = self._registrar.register(self._anne)
+        token, token_owner, rmember = self._registrar.register(self._anne)
         self.assertIsNotNone(token)
+        self.assertEqual(token_owner, TokenOwner.subscriber)
+        self.assertIsNone(rmember)
         member = self._mlist.regular_members.get_member('anne@example.com')
         self.assertIsNone(member)
         # Now discard the subscription request.

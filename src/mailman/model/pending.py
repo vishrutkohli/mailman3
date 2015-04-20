@@ -166,6 +166,11 @@ class Pendings:
                     store.delete(keyvalue)
                 store.delete(pending)
 
+    @dbconnection
+    def __iter__(self, store):
+        for pending in store.query(Pended).all():
+            yield pending.token, self.confirm(pending.token, expunge=False)
+
     @property
     @dbconnection
     def count(self, store):

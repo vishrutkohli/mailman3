@@ -25,18 +25,20 @@ __all__ = [
     ]
 
 
-from mailman.app.membership import delete_member
-from mailman.interfaces.address import InvalidEmailAddressError
-from mailman.interfaces.listmanager import IListManager, NoSuchListError
+from mailman.app.membership import add_member, delete_member
+from mailman.interfaces.address import IAddress, InvalidEmailAddressError
+from mailman.interfaces.listmanager import IListManager
 from mailman.interfaces.member import (
     AlreadySubscribedError, DeliveryMode, MemberRole, MembershipError,
-    NotAMemberError)
-from mailman.interfaces.subscriptions import ISubscriptionService
-from mailman.interfaces.user import UnverifiedAddressError
+    MembershipIsBannedError, NotAMemberError)
+from mailman.interfaces.registrar import IRegistrar
+from mailman.interfaces.subscriptions import (
+    ISubscriptionService, RequestRecord, TokenOwner)
+from mailman.interfaces.user import IUser, UnverifiedAddressError
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rest.helpers import (
-    CollectionMixin, NotFound, bad_request, child, conflict, created, etag,
-    no_content, not_found, okay, paginate, path_to)
+    CollectionMixin, NotFound, accepted, bad_request, child, conflict,
+    created, etag, no_content, not_found, okay, paginate, path_to)
 from mailman.rest.preferences import Preferences, ReadOnlyPreferences
 from mailman.rest.validator import (
     Validator, enum_validator, subscriber_validator)
@@ -202,7 +204,6 @@ class AllMembers(_MemberBase):
 
     def on_post(self, request, response):
         """Create a new member."""
-        service = getUtility(ISubscriptionService)
         try:
             validator = Validator(
                 list_id=str,
@@ -210,22 +211,125 @@ class AllMembers(_MemberBase):
                 display_name=str,
                 delivery_mode=enum_validator(DeliveryMode),
                 role=enum_validator(MemberRole),
-                _optional=('delivery_mode', 'display_name', 'role'))
-            member = service.join(**validator(request))
-        except AlreadySubscribedError:
-            conflict(response, b'Member already subscribed')
-        except NoSuchListError:
-            bad_request(response, b'No such list')
-        except InvalidEmailAddressError:
-            bad_request(response, b'Invalid email address')
+                pre_verified=bool,
+                pre_confirmed=bool,
+                pre_approved=bool,
+                _optional=('delivery_mode', 'display_name', 'role',
+                           'pre_verified', 'pre_confirmed', 'pre_approved'))
+            arguments = validator(request)
         except ValueError as error:
             bad_request(response, str(error))
+            return
+        # Dig the mailing list out of the arguments.
+        list_id = arguments.pop('list_id')
+        mlist = getUtility(IListManager).get_by_list_id(list_id)
+        if mlist is None:
+            bad_request(response, b'No such list')
+            return
+        # Figure out what kind of subscriber is being registered.  Either it's
+        # a user via their preferred email address or it's an explicit address.
+        # If it's a UUID, then it must be associated with an existing user.
+        subscriber = arguments.pop('subscriber')
+        user_manager = getUtility(IUserManager)
+        # We use the display name if there is one.
+        display_name = arguments.pop('display_name', '')
+        if isinstance(subscriber, UUID):
+            user = user_manager.get_user_by_id(subscriber)
+            if user is None:
+                bad_request(response, b'No such user')
+                return
+            subscriber = user
         else:
-            # The member_id are UUIDs.  We need to use the integer equivalent
-            # in the URL.
-            member_id = member.member_id.int
-            location = path_to('members/{0}'.format(member_id))
-            created(response, location)
+            # This must be an email address.  See if there's an existing
+            # address object associated with this email.
+            address = user_manager.get_address(subscriber)
+            if address is None:
+                # Create a new address, which of course will not be validated.
+                address = user_manager.create_address(
+                    subscriber, display_name)
+            subscriber = address
+        # What role are we subscribing?  Regular members go through the
+        # subscription policy workflow while owners, moderators, and
+        # nonmembers go through the legacy API for now.
+        role = arguments.pop('role', MemberRole.member)
+        if role is MemberRole.member:
+            # Get the pre_ flags for the subscription workflow.
+            pre_verified = arguments.pop('pre_verified', False)
+            pre_confirmed = arguments.pop('pre_confirmed', False)
+            pre_approved = arguments.pop('pre_approved', False)
+            # Now we can run the registration process until either the
+            # subscriber is subscribed, or the workflow is paused for
+            # verification, confirmation, or approval.
+            registrar = IRegistrar(mlist)
+            try:
+                token, token_owner, member = registrar.register(
+                    subscriber,
+                    pre_verified=pre_verified,
+                    pre_confirmed=pre_confirmed,
+                    pre_approved=pre_approved)
+            except AlreadySubscribedError:
+                conflict(response, b'Member already subscribed')
+                return
+            if token is None:
+                assert token_owner is TokenOwner.no_one, token_owner
+                # The subscription completed.  Let's get the resulting member
+                # and return the location to the new member.  Member ids are
+                # UUIDs and need to be converted to URLs because JSON doesn't
+                # directly support UUIDs.
+                member_id = member.member_id.int
+                location = path_to('members/{0}'.format(member_id))
+                created(response, location)
+                return
+            # The member could not be directly subscribed because there are
+            # some out-of-band steps that need to be completed.  E.g. the user
+            # must confirm their subscription or the moderator must approve
+            # it.  In this case, an HTTP 202 Accepted is exactly the code that
+            # we should use, and we'll return both the confirmation token and
+            # the "token owner" so the client knows who should confirm it.
+            assert token is not None, token
+            assert token_owner is not TokenOwner.no_one, token_owner
+            assert member is None, member
+            content = dict(token=token, token_owner=token_owner.name)
+            accepted(response, etag(content))
+            return
+        # 2015-04-15 BAW: We're subscribing some role other than a regular
+        # member.  Use the legacy API for this for now.
+        assert role in (MemberRole.owner,
+                        MemberRole.moderator,
+                        MemberRole.nonmember)
+        # 2015-04-15 BAW: We're limited to using an email address with this
+        # legacy API, so if the subscriber is a user, the user must have a
+        # preferred address, which we'll use, even though it will subscribe
+        # the explicit address.  It is an error if the user does not have a
+        # preferred address.
+        #
+        # If the subscriber is an address object, just use that.
+        if IUser.providedBy(subscriber):
+            if subscriber.preferred_address is None:
+                bad_request(response, b'User without preferred address')
+                return
+            email = subscriber.preferred_address.email
+        else:
+            assert IAddress.providedBy(subscriber)
+            email = subscriber.email
+        delivery_mode = arguments.pop('delivery_mode', DeliveryMode.regular)
+        record = RequestRecord(email, display_name, delivery_mode)
+        try:
+            member = add_member(mlist, record, role)
+        except InvalidEmailAddressError:
+            bad_request(response, b'Invalid email address')
+            return
+        except MembershipIsBannedError:
+            bad_request(response, b'Membership is banned')
+            return
+        # The subscription completed.  Let's get the resulting member
+        # and return the location to the new member.  Member ids are
+        # UUIDs and need to be converted to URLs because JSON doesn't
+        # directly support UUIDs.
+        member_id = member.member_id.int
+        location = path_to('members/{0}'.format(member_id))
+        created(response, location)
+        return
 
     def on_get(self, request, response):
         """/members"""

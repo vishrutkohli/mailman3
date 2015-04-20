@@ -2,9 +2,10 @@
 Subscription services
 =====================
 
-The `ISubscriptionService` utility provides higher level convenience methods
-useful for searching, retrieving, iterating, adding, and removing
-memberships.
+The ``ISubscriptionService`` utility provides higher level convenience methods
+useful for searching, retrieving, iterating, and removing memberships across
+all mailing lists on th esystem.  Adding new users is handled by the
+``IRegistrar`` interface.
 
     >>> from mailman.interfaces.subscriptions import ISubscriptionService
     >>> from zope.component import getUtility
@@ -22,183 +23,154 @@ membership role.  At first, there are no memberships.
     None
 
 
-Adding new members
-==================
+Listing members
+===============
 
-The service can be used to subscribe new members, by default with the `member`
-role.  At a minimum, a mailing list and an address for the new user is
-required.
+When there are some members, of any role on any mailing list, they can be
+retrieved through the subscription service.
 
-    >>> mlist = create_list('test@example.com')
-    >>> anne = service.join('test.example.com', 'anne@example.com')
-    >>> anne
-    <Member: anne <anne@example.com> on test@example.com as MemberRole.member>
+    >>> from mailman.app.lifecycle import create_list
+    >>> ant = create_list('ant@example.com')
+    >>> bee = create_list('bee@example.com')
+    >>> cat = create_list('cat@example.com')
 
-The real name of the new member can be given.
-
-    >>> bart = service.join('test.example.com', 'bart@example.com',
-    ...                     'Bart Person')
-    >>> bart
-    <Member: Bart Person <bart@example.com>
-             on test@example.com as MemberRole.member>
-
-Other roles can also be subscribed.
+Some people become members.
 
     >>> from mailman.interfaces.member import MemberRole
-    >>> anne_owner = service.join('test.example.com', 'anne@example.com',
-    ...                           role=MemberRole.owner)
-    >>> anne_owner
-    <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>
+    >>> from mailman.testing.helpers import subscribe
+    >>> anne_1 = subscribe(ant, 'Anne')
+    >>> anne_2 = subscribe(ant, 'Anne', MemberRole.owner)
+    >>> bart_1 = subscribe(ant, 'Bart', MemberRole.moderator)
+    >>> bart_2 = subscribe(bee, 'Bart', MemberRole.owner)
+    >>> anne_3 = subscribe(cat, 'Anne', email='anne@example.com')
+    >>> cris_1 = subscribe(cat, 'Cris')
 
-And all the subscribed members can now be displayed.
+The service can be used to iterate over them.
 
-    >>> service.get_members()
-    [<Member: anne <anne@example.com> on test@example.com as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.member>]
-    >>> sum(1 for member in service)
-    3
-    >>> print(service.get_member(UUID(int=3)))
-    <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>
+    >>> for member in service.get_members():
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
+    <Member: Bart Person <bperson@example.com>
+        on ant@example.com as MemberRole.moderator>
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.member>
+    <Member: Bart Person <bperson@example.com>
+        on bee@example.com as MemberRole.owner>
+    <Member: Anne Person <anne@example.com>
+        on cat@example.com as MemberRole.member>
+    <Member: Cris Person <cperson@example.com>
+        on cat@example.com as MemberRole.member>
 
-New members can also be added by providing an existing user id instead of an
-email address.  However, the user must have a preferred email address.
-::
+The service can also be used to get the information about a single member.
 
-    >>> from mailman.utilities.datetime import now
-    >>> address = list(bart.user.addresses)[0]
-    >>> address.verified_on = now()
-    >>> bart.user.preferred_address = address
-    >>> service.join('test.example.com', bart.user.user_id,
-    ...              role=MemberRole.owner)
-    <Member: Bart Person <bart@example.com>
-             on test@example.com as MemberRole.owner>
+    >>> print(service.get_member(bart_2.member_id))
+    <Member: Bart Person <bperson@example.com>
+        on bee@example.com as MemberRole.owner>
 
+There is an iteration shorthand for getting all the members.
 
-Removing members
-================
-
-Regular members can also be removed.
-
-    >>> cris = service.join('test.example.com', 'cris@example.com')
-    >>> service.get_members()
-    [<Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: cris <cris@example.com> on test@example.com
-              as MemberRole.member>]
-    >>> sum(1 for member in service)
-    5
-    >>> service.leave('test.example.com', 'cris@example.com')
-    >>> service.get_members()
-    [<Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.member>]
-    >>> sum(1 for member in service)
-    4
+    >>> for member in service:
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
+    <Member: Bart Person <bperson@example.com>
+        on ant@example.com as MemberRole.moderator>
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.member>
+    <Member: Bart Person <bperson@example.com>
+        on bee@example.com as MemberRole.owner>
+    <Member: Anne Person <anne@example.com>
+        on cat@example.com as MemberRole.member>
+    <Member: Cris Person <cperson@example.com>
+        on cat@example.com as MemberRole.member>
 
 
 Finding members
 ===============
 
-If you know the member id for a specific member, you can get that member.
+The subscription service can be used to find memberships based on specific
+search criteria.  For example, we can find all the mailing lists that Anne is
+a member of with her ``aperson@example.com`` address.
 
-    >>> service.get_member(UUID(int=3))
-    <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>
-
-If you know the member's address, you can find all their memberships, based on
-specific search criteria.  We start by subscribing Anne to a couple of new
-mailing lists.
-
-    >>> mlist2 = create_list('foo@example.com')
-    >>> mlist3 = create_list('bar@example.com')
-    >>> address = list(anne.user.addresses)[0]
-    >>> address.verified_on = now()
-    >>> anne.user.preferred_address = address
-    >>> mlist.subscribe(anne.user, MemberRole.moderator)
-    <Member: anne <anne@example.com> on test@example.com
-             as MemberRole.moderator>
-    >>> mlist2.subscribe(anne.user, MemberRole.member)
-    <Member: anne <anne@example.com> on foo@example.com as MemberRole.member>
-    >>> mlist3.subscribe(anne.user, MemberRole.owner)
-    <Member: anne <anne@example.com> on bar@example.com as MemberRole.owner>
-
-And now we can find all of Anne's memberships.
-
-    >>> service.find_members('anne@example.com')
-    [<Member: anne <anne@example.com> on bar@example.com as MemberRole.owner>,
-     <Member: anne <anne@example.com> on foo@example.com as MemberRole.member>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.moderator>]
+    >>> for member in service.find_members('aperson@example.com'):
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.member>
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
 
 There may be no matching memberships.
 
-    >>> service.find_members('cris@example.com')
+    >>> service.find_members('dave@example.com')
     []
 
 Memberships can also be searched for by user id.
 
-    >>> service.find_members(UUID(int=1))
-    [<Member: anne <anne@example.com> on bar@example.com as MemberRole.owner>,
-     <Member: anne <anne@example.com> on foo@example.com as MemberRole.member>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.moderator>]
+    >>> for member in service.find_members(anne_1.user.user_id):
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.member>
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
 
 You can find all the memberships for a specific mailing list.
 
-    >>> service.find_members(list_id='test.example.com')
-    [<Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: anne <anne@example.com> on test@example.com as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.moderator>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: Bart Person <bart@example.com> on test@example.com
-              as MemberRole.owner>]
+    >>> for member in service.find_members(list_id='ant.example.com'):
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.member>
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
+    <Member: Bart Person <bperson@example.com>
+        on ant@example.com as MemberRole.moderator>
 
 You can find all the memberships for an address on a specific mailing list,
 but you have to give it the list id, not the fqdn listname since the former is
 stable but the latter could change if the list is moved.
 
-    >>> service.find_members('anne@example.com', 'test.example.com')
-    [<Member: anne <anne@example.com> on test@example.com
-              as MemberRole.member>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.moderator>]
+    >>> for member in service.find_members(
+    ...         'bperson@example.com', 'ant.example.com'):
+    ...     print(member)
+    <Member: Bart Person <bperson@example.com>
+        on ant@example.com as MemberRole.moderator>
 
 You can find all the memberships for an address with a specific role.
 
-    >>> service.find_members('anne@example.com', role=MemberRole.owner)
-    [<Member: anne <anne@example.com> on bar@example.com as MemberRole.owner>,
-     <Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>]
+    >>> for member in service.find_members(
+    ...         list_id='ant.example.com', role=MemberRole.owner):
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
 
 You can also find a specific membership by all three criteria.
 
-    >>> service.find_members('anne@example.com', 'test.example.com',
-    ...                      MemberRole.owner)
-    [<Member: anne <anne@example.com> on test@example.com
-              as MemberRole.owner>]
+    >>> for member in service.find_members(
+    ...         'bperson@example.com', 'bee.example.com', MemberRole.owner):
+    ...     print(member)
+    <Member: Bart Person <bperson@example.com>
+        on bee@example.com as MemberRole.owner>
+
+
+Removing members
+================
+
+Members can be removed via this service.
+
+    >>> len(service.get_members())
+    6
+    >>> service.leave('cat.example.com', 'cperson@example.com')
+    >>> len(service.get_members())
+    5
+    >>> for member in service:
+    ...     print(member)
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.owner>
+    <Member: Bart Person <bperson@example.com>
+        on ant@example.com as MemberRole.moderator>
+    <Member: Anne Person <aperson@example.com>
+        on ant@example.com as MemberRole.member>
+    <Member: Bart Person <bperson@example.com>
+        on bee@example.com as MemberRole.owner>
+    <Member: Anne Person <anne@example.com>
+        on cat@example.com as MemberRole.member>

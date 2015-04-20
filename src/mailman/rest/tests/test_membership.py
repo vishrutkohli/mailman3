@@ -100,6 +100,9 @@ class TestMembership(unittest.TestCase):
             call_api('http://localhost:9001/3.0/members', {
                 'list_id': 'test.example.com',
                 'subscriber': 'anne@example.com',
+                'pre_verified': True,
+                'pre_confirmed': True,
+                'pre_approved': True,
                 })
         self.assertEqual(cm.exception.code, 409)
         self.assertEqual(cm.exception.reason, b'Member already subscribed')
@@ -115,6 +118,9 @@ class TestMembership(unittest.TestCase):
             call_api('http://localhost:9001/3.0/members', {
                 'list_id': 'test.example.com',
                 'subscriber': 'ANNE@example.com',
+                'pre_verified': True,
+                'pre_confirmed': True,
+                'pre_approved': True,
                 })
         self.assertEqual(cm.exception.code, 409)
         self.assertEqual(cm.exception.reason, b'Member already subscribed')
@@ -130,6 +136,9 @@ class TestMembership(unittest.TestCase):
             call_api('http://localhost:9001/3.0/members', {
                 'list_id': 'test.example.com',
                 'subscriber': 'anne@example.com',
+                'pre_verified': True,
+                'pre_confirmed': True,
+                'pre_approved': True,
                 })
         self.assertEqual(cm.exception.code, 409)
         self.assertEqual(cm.exception.reason, b'Member already subscribed')
@@ -151,6 +160,9 @@ class TestMembership(unittest.TestCase):
             'list_id': 'test.example.com',
             'subscriber': 'hugh/person@example.com',
             'display_name': 'Hugh Person',
+            'pre_verified': True,
+            'pre_confirmed': True,
+            'pre_approved': True,
             })
         self.assertEqual(content, None)
         self.assertEqual(response.status, 201)

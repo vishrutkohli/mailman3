@@ -25,6 +25,7 @@ __all__ = [
     'hold_message',
     'hold_subscription',
     'hold_unsubscription',
+    'send_rejection',
     ]
 
 
@@ -125,8 +126,9 @@ def handle_message(mlist, id, action,
             language = member.preferred_language
         else:
             language = None
-        _refuse(mlist, _('Posting of your message titled "$subject"'),
-                sender, comment or _('[No reason given]'), language)
+        send_rejection(
+            mlist, _('Posting of your message titled "$subject"'),
+            sender, comment or _('[No reason given]'), language)
     elif action is Action.accept:
         # Start by getting the message from the message store.
         msg = message_store.get_message_by_id(message_id)
@@ -236,10 +238,11 @@ def handle_subscription(mlist, id, action, comment=None):
         pass
     elif action is Action.reject:
         key, data = requestdb.get_request(id)
-        _refuse(mlist, _('Subscription request'),
-                data['email'],
-                comment or _('[No reason given]'),
-                lang=getUtility(ILanguageManager)[data['language']])
+        send_rejection(
+            mlist, _('Subscription request'),
+            data['email'],
+            comment or _('[No reason given]'),
+            lang=getUtility(ILanguageManager)[data['language']])
     elif action is Action.accept:
         key, data = requestdb.get_request(id)
         delivery_mode = DeliveryMode[data['delivery_mode']]
@@ -307,8 +310,9 @@ def handle_unsubscription(mlist, id, action, comment=None):
         pass
     elif action is Action.reject:
         key, data = requestdb.get_request(id)
-        _refuse(mlist, _('Unsubscription request'), email,
-                comment or _('[No reason given]'))
+        send_rejection(
+            mlist, _('Unsubscription request'), email,
+            comment or _('[No reason given]'))
     elif action is Action.accept:
         key, data = requestdb.get_request(id)
         try:
@@ -324,7 +328,7 @@ def handle_unsubscription(mlist, id, action, comment=None):
 
 
 
-def _refuse(mlist, request, recip, comment, origmsg=None, lang=None):
+def send_rejection(mlist, request, recip, comment, origmsg=None, lang=None):
     # As this message is going to the requester, try to set the language to
     # his/her language choice, if they are a member.  Otherwise use the list's
     # preferred language.

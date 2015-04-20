@@ -46,7 +46,8 @@ class TestConfirm(unittest.TestCase):
         self._mlist = create_list('test@example.com')
         anne = getUtility(IUserManager).create_address(
             'anne@example.com', 'Anne Person')
-        self._token = IRegistrar(self._mlist).register(anne)
+        self._token, token_owner, member = IRegistrar(self._mlist).register(
+            anne)
         self._command = Confirm()
         # Clear the virgin queue.
         get_queue_messages('virgin')

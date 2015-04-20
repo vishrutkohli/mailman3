@@ -18,7 +18,7 @@
 """Mailman version strings."""
 
 # Mailman version.
-VERSION = '3.0.0b6'
+VERSION = '3.0.0'
 CODENAME = "Show Don't Tell"
 
 # And as a hex number in the manner of PY_VERSION_HEX.
@@ -32,9 +32,9 @@ FINAL = 0xf
 MAJOR_REV = 3
 MINOR_REV = 0
 MICRO_REV = 0
-REL_LEVEL = BETA
+REL_LEVEL = FINAL
 # At most 15 beta releases!
-REL_SERIAL = 6
+REL_SERIAL = 0
 
 HEX_VERSION = ((MAJOR_REV << 24) | (MINOR_REV << 16) | (MICRO_REV << 8) |
                (REL_LEVEL << 4)  | (REL_SERIAL << 0))

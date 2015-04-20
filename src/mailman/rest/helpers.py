@@ -300,6 +300,12 @@ def not_found(response, body=b'404 Not Found'):
         response.body = body
 
 
+def accepted(response, body=None):
+    response.status = falcon.HTTP_202
+    if body is not None:
+        response.body = body
+
+
 def bad_request(response, body='400 Bad Request'):
     response.status = falcon.HTTP_400
     if body is not None:

@@ -56,7 +56,7 @@ class Start:
             default=False, action='store_true',
             help=_("""\
             If the master watcher finds an existing master lock, it will
-            normally exit with an error message.  With this option,the master
+            normally exit with an error message.  With this option, the master
             will perform an extra level of checking.  If a process matching
             the host/pid described in the lock file is running, the master
             will still exit, requiring you to manually clean up the lock.  But
@@ -78,7 +78,7 @@ class Start:
             This flag is not recommended for normal production environments.
 
             Note though, that if you run with -u and are not in the mailman
-            group, you may have permission problems, such as begin unable to
+            group, you may have permission problems, such as being unable to
             delete a list's archives through the web.  Tough luck!"""))
         command_parser.add_argument(
             '-q', '--quiet',
