@@ -23,6 +23,7 @@ Architecture
    It now properly supports email verification and subscription confirmation
    by the user, and approval by the moderator using unique tokens.
    ``IMailingList`` objects now have a ``subscription_policy`` attribute.
+   (LP: #1095552)
 
 Bugs
 ----
