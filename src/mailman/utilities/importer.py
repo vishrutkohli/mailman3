@@ -47,6 +47,7 @@ from mailman.interfaces.nntp import NewsgroupModeration
 from mailman.interfaces.usermanager import IUserManager
 from mailman.utilities.filesystem import makedirs
 from mailman.utilities.i18n import search
+from sqlalchemy import Boolean
 from urllib.error import URLError
 from zope.component import getUtility
 
@@ -153,7 +154,6 @@ enabled: yes
 
 # Attributes in Mailman 2 which have a different type in Mailman 3.
 TYPES = dict(
-    allow_list_posts=bool,
     autorespond_owner=ResponseAction,
     autorespond_postings=ResponseAction,
     autorespond_requests=ResponseAction,
@@ -163,24 +163,18 @@ TYPES = dict(
     default_member_action=member_action_mapping,
     default_nonmember_action=nonmember_action_mapping,
     digest_volume_frequency=DigestFrequency,
-    emergency=bool,
-    encode_ascii_prefixes=bool,
     filter_action=filter_action_mapping,
     filter_extensions=list_members_to_unicode,
     filter_types=list_members_to_unicode,
     forward_unrecognized_bounces_to=UnrecognizedBounceDisposition,
-    gateway_to_mail=bool,
-    include_rfc2369_headers=bool,
     moderator_password=str_to_bytes,
     newsgroup_moderation=NewsgroupModeration,
-    nntp_prefix_subject_too=bool,
     pass_extensions=list_members_to_unicode,
     pass_types=list_members_to_unicode,
     personalize=Personalization,
     preferred_language=check_language_code,
     reply_goes_to_list=ReplyToMunging,
     subscription_policy=SubscriptionPolicy,
-    topics_enabled=bool,
     )
 
 
@@ -253,6 +247,10 @@ def import_config_pck(mlist, config_dict):
                 value = bytes_to_str(value)
             # Some types require conversion.
             converter = TYPES.get(key)
+            if converter is None:
+                column = getattr(mlist.__class__, key, None)
+                if column is not None and isinstance(column.type, Boolean):
+                    converter = bool
             try:
                 if converter is not None:
                     value = converter(value)
