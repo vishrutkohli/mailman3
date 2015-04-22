@@ -373,11 +373,11 @@ class Loop:
         var_dir = os.environ.get('MAILMAN_VAR_DIR')
         if var_dir is not None:
             env['MAILMAN_VAR_DIR'] = var_dir
-        # For the testing framework, if this environment variable is set, pass
-        # it on to the subprocess.
-        coverage_env = os.environ.get('COVERAGE_PROCESS_START')
-        if coverage_env is not None:
-            env['COVERAGE_PROCESS_START'] = coverage_env
+        # For the testing framework, if these environment variables are set,
+        # pass them on to the subprocess.
+        for envvar in ('COVERAGE_PROCESS_START', 'MAILMAN_EXTRA_TESTING_CFG'):
+            if envvar in os.environ:
+                env[envvar] = os.environ[envvar]
         args.append(env)
         os.execle(*args)
         # We should never get here.
