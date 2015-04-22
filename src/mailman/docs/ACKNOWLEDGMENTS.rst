@@ -26,7 +26,7 @@ The following folks are or have been core developers of Mailman (in reverse
 alphabetical order):
 
 * Abhilash Raj, Mailman's Youngest Core Dev
-* Aurélien Bompard
+* Aurélien Bompard, Pizzaman
 * Barry Warsaw, Mailman's yappy guard dog
 * Florian Fuchs
 * Harald Meland, Norse Mailman
