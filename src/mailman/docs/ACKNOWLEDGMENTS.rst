@@ -34,7 +34,7 @@ alphabetical order):
 * Ken Manheimer, Mailman's savior
 * Mark Sapiro, Mailman's compulsive responder
 * Scott Cotton, Cookie-Monster
-* Stephen J. Turnbull
+* Stephen J. Turnbull, Standards Otaku
 * Terri Oda
 * Thomas Wouters, Mailman's Dutch treat
 * Tokio Kikuchi (RIP), Mailman's weatherman
