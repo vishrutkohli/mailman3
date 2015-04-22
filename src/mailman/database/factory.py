@@ -135,6 +135,12 @@ class DatabaseTestingFactory:
         database = call_name(database_class)
         verifyObject(IDatabase, database)
         database.initialize()
+        # Remove existing tables (PostgreSQL will keep them across runs)
+        metadata = MetaData(bind=database.engine)
+        metadata.reflect()
+        metadata.drop_all()
+        database.commit()
+        # Now create the current model without Alembic upgrades.
         Model.metadata.create_all(database.engine)
         database.commit()
         # Make _reset() a bound method of the database instance.

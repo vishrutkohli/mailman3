@@ -24,6 +24,7 @@ __all__ = [
 
 from mailman.database.base import SABaseDatabase
 from mailman.database.model import Model
+from sqlalchemy import Integer
 
 
 
@@ -42,8 +43,12 @@ class PostgreSQLDatabase(SABaseDatabase):
         # http://stackoverflow.com/questions/544791/
         # django-postgresql-how-to-reset-primary-key
         for table in tables:
-            store.execute("""\
-                SELECT setval('"{0}_id_seq"', coalesce(max("id"), 1),
-                              max("id") IS NOT null)
-                       FROM "{0}";
-                """.format(table))
+            for column in table.primary_key:
+                if (column.autoincrement
+                        and isinstance(column.type, Integer)
+                        and not column.foreign_keys):
+                    store.execute("""\
+                        SELECT setval('"{0}_{1}_seq"', coalesce(max("{1}"), 1),
+                                      max("{1}") IS NOT null)
+                               FROM "{0}";
+                        """.format(table, column.name))

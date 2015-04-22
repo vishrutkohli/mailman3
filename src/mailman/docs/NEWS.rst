@@ -45,6 +45,8 @@ Bugs
    list itself is deleted.  (LP: #1432239)
  * The built-in example ``IArchiver`` implementations now explicitly return
    None.  (LP: #1203359)
+ * The test suite now runs successfully again with PostgreSQL.  Given by
+   Aurélien Bompard.  (LP: #1435941)
 
 Configuration
 -------------
