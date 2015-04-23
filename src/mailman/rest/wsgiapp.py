@@ -57,7 +57,10 @@ class RootedAPI(API):
 
     @transactional
     def __call__(self, environ, start_response):
-        """See `RestishApp`."""
+        # The only difference between this and the super class's wsgi API is
+        # that this wraps a transactional handler around the call.  If an
+        # error occurs, the current transaction is aborted, otherwise it is
+        # committed.
         return super(RootedAPI, self).__call__(
             environ, start_response)
 
@@ -129,8 +132,7 @@ class RootedAPI(API):
                 if len(path_segments) == 0:
                     # We're at the end of the path, so the root must be the
                     # responder.
-                    method_map = create_http_method_map(
-                        resource, None, None, None)
+                    method_map = create_http_method_map(resource, None, None)
                     responder = method_map[method]
                     return responder, {}, resource
                 this_segment = path_segments.pop(0)
