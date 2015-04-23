@@ -24,6 +24,7 @@ Architecture
    by the user, and approval by the moderator using unique tokens.
    ``IMailingList`` objects now have a ``subscription_policy`` attribute.
    (LP: #1095552)
+ * Port the REST machinery to Falcon 0.3. (LP: #1446881)
 
 Bugs
 ----
