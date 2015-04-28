@@ -92,7 +92,6 @@ case second `m'.  Any other spelling is incorrect.""",
         },
     install_requires = [
         'alembic',
-        'enum34',
         'falcon>=0.3rc1',
         'flufl.bounce',
         'flufl.i18n',
