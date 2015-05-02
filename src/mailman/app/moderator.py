@@ -20,10 +20,8 @@
 __all__ = [
     'handle_ListDeletingEvent',
     'handle_message',
-    'handle_subscription',
     'handle_unsubscription',
     'hold_message',
-    'hold_subscription',
     'hold_unsubscription',
     'send_rejection',
     ]
@@ -32,19 +30,16 @@ __all__ = [
 import time
 import logging
 
-from email.utils import formataddr, formatdate, getaddresses, make_msgid
-from mailman.app.membership import add_member, delete_member
+from email.utils import formatdate, getaddresses, make_msgid
+from mailman.app.membership import delete_member
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.email.message import UserNotification
 from mailman.interfaces.action import Action
-from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.listmanager import ListDeletingEvent
-from mailman.interfaces.member import (
-    AlreadySubscribedError, DeliveryMode, NotAMemberError)
+from mailman.interfaces.member import NotAMemberError
 from mailman.interfaces.messages import IMessageStore
 from mailman.interfaces.requests import IListRequests, RequestType
-from mailman.interfaces.subscriptions import RequestRecord
 from mailman.utilities.datetime import now
 from mailman.utilities.i18n import make
 from zope.component import getUtility
@@ -191,78 +186,6 @@ def handle_message(mlist, id, action,
         if comment:
             note += '\n\tReason: ' + comment
         vlog.info(note, mlist.fqdn_listname, rejection, sender, subject)
-
-
-
-def hold_subscription(mlist, record):
-    data = dict(when=now().isoformat(),
-                email=record.email,
-                display_name=record.display_name,
-                delivery_mode=record.delivery_mode.name,
-                language=record.language)
-    # Now hold this request.  We'll use the email address as the key.
-    requestsdb = IListRequests(mlist)
-    request_id = requestsdb.hold_request(
-        RequestType.subscription, record.email, data)
-    vlog.info('%s: held subscription request from %s',
-              mlist.fqdn_listname, record.email)
-    # Possibly notify the administrator in default list language
-    if mlist.admin_immed_notify:
-        email = record.email # XXX: seems unnecessary
-        subject = _(
-            'New subscription request to $mlist.display_name from $email')
-        text = make('subauth.txt',
-                    mailing_list=mlist,
-                    username=record.email,
-                    listname=mlist.fqdn_listname,
-                    admindb_url=mlist.script_url('admindb'),
-                    )
-        # This message should appear to come from the <list>-owner so as
-        # to avoid any useless bounce processing.
-        msg = UserNotification(
-            mlist.owner_address, mlist.owner_address,
-            subject, text, mlist.preferred_language)
-        msg.send(mlist, tomoderators=True)
-    return request_id
-
-
-
-def handle_subscription(mlist, id, action, comment=None):
-    requestdb = IListRequests(mlist)
-    if action is Action.defer:
-        # Nothing to do.
-        return
-    elif action is Action.discard:
-        # Nothing to do except delete the request from the database.
-        pass
-    elif action is Action.reject:
-        key, data = requestdb.get_request(id)
-        send_rejection(
-            mlist, _('Subscription request'),
-            data['email'],
-            comment or _('[No reason given]'),
-            lang=getUtility(ILanguageManager)[data['language']])
-    elif action is Action.accept:
-        key, data = requestdb.get_request(id)
-        delivery_mode = DeliveryMode[data['delivery_mode']]
-        email = data['email']
-        display_name = data['display_name']
-        language = getUtility(ILanguageManager)[data['language']]
-        try:
-            add_member(
-                mlist,
-                RequestRecord(email, display_name, delivery_mode, language))
-        except AlreadySubscribedError:
-            # The address got subscribed in some other way after the original
-            # request was made and accepted.
-            pass
-        slog.info('%s: new %s, %s %s', mlist.fqdn_listname,
-                  delivery_mode, formataddr((display_name, email)),
-                  'via admin approval')
-    else:
-        raise AssertionError('Unexpected action: {0}'.format(action))
-    # Delete the request from the database.
-    requestdb.delete_request(id)
 
 
 
