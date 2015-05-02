@@ -8,6 +8,9 @@ Copyright (C) 1998-2015 by the Free Software Foundation, Inc.
 Here is a history of user visible changes to Mailman.
 
 
+3.1.0 -- "Between The Wheels"
+=============================
+
 3.0.0 -- "Show Don't Tell"
 ==========================
 (2015-04-28)
