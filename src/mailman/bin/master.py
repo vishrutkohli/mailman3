@@ -37,7 +37,7 @@ from lazr.config import as_boolean
 from mailman.config import config
 from mailman.core.i18n import _
 from mailman.core.logging import reopen
-from mailman.options import Options
+from mailman.utilities.options import Options
 
 
 DOT = '.'
@@ -53,7 +53,7 @@ PRESERVE_ENVS = (
 
 
 
-class ScriptOptions(Options):
+class MasterOptions(Options):
     """Options for the master watcher."""
 
     usage = _("""\
@@ -526,7 +526,7 @@ Runner {0} reached maximum restart limit of {1:d}, not restarting.""",
 def main():
     """Main process."""
 
-    options = ScriptOptions()
+    options = MasterOptions()
     options.initialize()
     # Acquire the master lock, exiting if we can't.  We'll let the caller
     # handle any clean up or lock breaking.  No `with` statement here because
