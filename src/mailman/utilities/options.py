@@ -19,8 +19,6 @@
 
 __all__ = [
     'Options',
-    'SingleMailingListOptions',
-    'MultipleMailingListOptions',
     ]
 
 
@@ -142,27 +140,3 @@ class Options:
                        else self.options.config)
         initialize(config_file, propagate_logs=propagate_logs)
         self.sanity_check()
-
-
-
-class SingleMailingListOptions(Options):
-    """A helper for specifying the mailing list on the command line."""
-
-    def add_options(self):
-        """See `Options`."""
-        self.parser.add_option(
-            '-l', '--listname',
-            type='unicode', help=_('The mailing list name'))
-        super(SingleMailingListOptions, self).add_options()
-
-
-class MultipleMailingListOptions(Options):
-    """A helper for specifying multiple mailing lists on the command line."""
-
-    def add_options(self):
-        """See `Options`."""
-        self.parser.add_option(
-            '-l', '--listname',
-            default=[], action='append', dest='listnames', type='unicode',
-            help=_("""\
-A mailing list name.  It is okay to have multiple --listname options."""))
