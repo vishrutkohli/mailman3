@@ -27,13 +27,12 @@ import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.app.moderator import (
-    handle_message, handle_subscription, handle_unsubscription, hold_message,
-    hold_subscription, hold_unsubscription)
+    handle_message, handle_unsubscription, hold_message, hold_unsubscription)
 from mailman.interfaces.action import Action
-from mailman.interfaces.member import DeliveryMode
 from mailman.interfaces.messages import IMessageStore
+from mailman.interfaces.registrar import IRegistrar
 from mailman.interfaces.requests import IListRequests
-from mailman.interfaces.subscriptions import RequestRecord
+from mailman.interfaces.usermanager import IUserManager
 from mailman.runners.incoming import IncomingRunner
 from mailman.runners.outgoing import OutgoingRunner
 from mailman.runners.pipeline import PipelineRunner
@@ -163,16 +162,17 @@ class TestUnsubscription(unittest.TestCase):
 
     def setUp(self):
         self._mlist = create_list('test@example.com')
-        self._request_db = IListRequests(self._mlist)
+        self._registrar = IRegistrar(self._mlist)
 
     def test_unsubscribe_defer(self):
         # When unsubscriptions must be approved by the moderator, but the
         # moderator defers this decision.
-        token = hold_subscription(
-            self._mlist,
-            RequestRecord('anne@example.org', 'Anne Person',
-                          DeliveryMode.regular, 'en'))
-        handle_subscription(self._mlist, token, Action.accept)
+        anne = getUtility(IUserManager).create_address(
+            'anne@example.org', 'Anne Person')
+        token, token_owner, member = self._registrar.register(
+            anne, pre_verified=True, pre_confirmed=True, pre_approved=True)
+        self.assertIsNone(token)
+        self.assertEqual(member.address.email, 'anne@example.org')
         # Now hold and handle an unsubscription request.
         token = hold_unsubscription(self._mlist, 'anne@example.org')
         handle_unsubscription(self._mlist, token, Action.defer)

@@ -232,130 +232,55 @@ The forwarded message is in the virgin queue, destined for the moderator.
     zack@example.com
 
 
-Holding subscription requests
-=============================
-
-For closed lists, subscription requests will also be held for moderator
-approval.  In this case, several pieces of information related to the
-subscription must be provided, including the subscriber's address and real
-name, what kind of delivery option they are choosing and their preferred
-language.
-
-    >>> from mailman.app.moderator import hold_subscription
-    >>> from mailman.interfaces.member import DeliveryMode
-    >>> from mailman.interfaces.subscriptions import RequestRecord
-    >>> req_id = hold_subscription(
-    ...     mlist,
-    ...     RequestRecord('fred@example.org', 'Fred Person',
-    ...                   DeliveryMode.regular, 'en'))
-
-
-Disposing of membership change requests
----------------------------------------
-
-Just as with held messages, the moderator can select one of several
-dispositions for this membership change request.  The most trivial is to
-simply defer a decision for now.
-
-    >>> from mailman.app.moderator import handle_subscription
-    >>> handle_subscription(mlist, req_id, Action.defer)
-    >>> requests.get_request(req_id) is not None
-    True
-
-The held subscription can also be discarded.
-
-    >>> handle_subscription(mlist, req_id, Action.discard)
-    >>> print(requests.get_request(req_id))
-    None
-
-Gwen tries to subscribe to the mailing list, but...
-
-    >>> req_id = hold_subscription(
-    ...     mlist,
-    ...     RequestRecord('gwen@example.org', 'Gwen Person',
-    ...                   DeliveryMode.regular, 'en'))
-
-
-...her request is rejected...
-
-    >>> handle_subscription(
-    ...     mlist, req_id, Action.reject, 'This is a closed list')
-    >>> messages = get_queue_messages('virgin')
-    >>> len(messages)
-    1
-
-...and she receives a rejection notice.
-
-    >>> print(messages[0].msg.as_string())
-    MIME-Version: 1.0
-    ...
-    Subject: Request to mailing list "A Test List" rejected
-    From: ant-bounces@example.com
-    To: gwen@example.org
-    ...
-    Your request to the ant@example.com mailing list
-    <BLANKLINE>
-        Subscription request
-    <BLANKLINE>
-    has been rejected by the list moderator.  The moderator gave the
-    following reason for rejecting your request:
-    <BLANKLINE>
-    "This is a closed list"
-    ...
-
-The subscription can also be accepted.  This subscribes the address to the
-mailing list.
-
-    >>> mlist.send_welcome_message = False
-    >>> req_id = hold_subscription(
-    ...     mlist,
-    ...     RequestRecord('herb@example.org', 'Herb Person',
-    ...                   DeliveryMode.regular, 'en'))
-
-The moderators accept the subscription request.
-
-    >>> handle_subscription(mlist, req_id, Action.accept)
-
-And now Herb is a member of the mailing list.
-
-    >>> print(mlist.members.get_member('herb@example.org').address)
-    Herb Person <herb@example.org>
-
-
 Holding unsubscription requests
 ===============================
 
 Some lists require moderator approval for unsubscriptions.  In this case, only
 the unsubscribing address is required.
 
-Herb now wants to leave the mailing list, but his request must be approved.
+Fred is a member of the mailing list...
+
+    >>> mlist.send_welcome_message = False
+    >>> from mailman.interfaces.usermanager import IUserManager
+    >>> fred = getUtility(IUserManager).create_address(
+    ...     'fred@example.com', 'Fred Person')
+    >>> from mailman.interfaces.registrar import IRegistrar
+    >>> registrar = IRegistrar(mlist)
+    >>> token, token_owner, member = registrar.register(
+    ...     fred, pre_verified=True, pre_confirmed=True, pre_approved=True)
+    >>> member
+    <Member: Fred Person <fred@example.com> on ant@example.com
+             as MemberRole.member>
+
+...but now that he wants to leave the mailing list, his request must be
+approved.
 
     >>> from mailman.app.moderator import hold_unsubscription
-    >>> req_id = hold_unsubscription(mlist, 'herb@example.org')
+    >>> req_id = hold_unsubscription(mlist, 'fred@example.com')
 
 As with subscription requests, the unsubscription request can be deferred.
 
     >>> from mailman.app.moderator import handle_unsubscription
     >>> handle_unsubscription(mlist, req_id, Action.defer)
-    >>> print(mlist.members.get_member('herb@example.org').address)
-    Herb Person <herb@example.org>
+    >>> print(mlist.members.get_member('fred@example.com').address)
+    Fred Person <fred@example.com>
 
 The held unsubscription can also be discarded, and the member will remain
 subscribed.
 
     >>> handle_unsubscription(mlist, req_id, Action.discard)
-    >>> print(mlist.members.get_member('herb@example.org').address)
-    Herb Person <herb@example.org>
+    >>> print(mlist.members.get_member('fred@example.com').address)
+    Fred Person <fred@example.com>
 
 The request can be rejected, in which case a message is sent to the member,
 and the person remains a member of the mailing list.
 
-    >>> req_id = hold_unsubscription(mlist, 'herb@example.org')
+    >>> req_id = hold_unsubscription(mlist, 'fred@example.com')
     >>> handle_unsubscription(mlist, req_id, Action.reject, 'No can do')
-    >>> print(mlist.members.get_member('herb@example.org').address)
-    Herb Person <herb@example.org>
+    >>> print(mlist.members.get_member('fred@example.com').address)
+    Fred Person <fred@example.com>
 
-Herb gets a rejection notice.
+Fred gets a rejection notice.
 ::
 
     >>> messages = get_queue_messages('virgin')
@@ -367,7 +292,7 @@ Herb gets a rejection notice.
     ...
     Subject: Request to mailing list "A Test List" rejected
     From: ant-bounces@example.com
-    To: herb@example.org
+    To: fred@example.com
     ...
     Your request to the ant@example.com mailing list
     <BLANKLINE>
@@ -382,10 +307,10 @@ Herb gets a rejection notice.
 The unsubscription request can also be accepted.  This removes the member from
 the mailing list.
 
-    >>> req_id = hold_unsubscription(mlist, 'herb@example.org')
+    >>> req_id = hold_unsubscription(mlist, 'fred@example.com')
     >>> mlist.send_goodbye_message = False
     >>> handle_unsubscription(mlist, req_id, Action.accept)
-    >>> print(mlist.members.get_member('herb@example.org'))
+    >>> print(mlist.members.get_member('fred@example.com'))
     None
 
 
@@ -399,13 +324,24 @@ Usually, the list administrators want to be notified when there are membership
 change requests they need to moderate.  These notifications are sent when the
 list is configured to send them.
 
+    >>> from mailman.interfaces.mailinglist import SubscriptionPolicy
     >>> mlist.admin_immed_notify = True
+    >>> mlist.subscription_policy = SubscriptionPolicy.moderate
 
-Iris tries to subscribe to the mailing list.
+Gwen tries to subscribe to the mailing list.
 
-    >>> req_id = hold_subscription(mlist,
-    ...     RequestRecord('iris@example.org', 'Iris Person',
-    ...                   DeliveryMode.regular, 'en'))
+    >>> gwen = getUtility(IUserManager).create_address(
+    ...     'gwen@example.com', 'Gwen Person')
+    >>> token, token_owner, member = registrar.register(
+    ...     gwen, pre_verified=True, pre_confirmed=True)
+
+Her subscription must be approved by the list administrator, so she is not yet
+a member of the mailing list.
+
+    >>> print(member)
+    None
+    >>> print(mlist.members.get_member('gwen@example.com'))
+    None
 
 There's now a message in the virgin queue, destined for the list owner.
 
@@ -415,14 +351,14 @@ There's now a message in the virgin queue, destined for the list owner.
     >>> print(messages[0].msg.as_string())
     MIME-Version: 1.0
     ...
-    Subject: New subscription request to A Test List from iris@example.org
+    Subject: New subscription request to A Test List from gwen@example.com
     From: ant-owner@example.com
     To: ant-owner@example.com
     ...
     Your authorization is required for a mailing list subscription request
     approval:
     <BLANKLINE>
-        For:  iris@example.org
+        For:  Gwen Person <gwen@example.com>
         List: ant@example.com
 
 Similarly, the administrator gets notifications on unsubscription requests.
@@ -455,7 +391,10 @@ receive a membership change notice.
 
     >>> mlist.admin_notify_mchanges = True
     >>> mlist.admin_immed_notify = False
-    >>> handle_subscription(mlist, req_id, Action.accept)
+    >>> token, token_owner, member = registrar.confirm(token)
+    >>> member
+    <Member: Gwen Person <gwen@example.com> on ant@example.com
+             as MemberRole.member>
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -466,13 +405,13 @@ receive a membership change notice.
     From: noreply@example.com
     To: ant-owner@example.com
     ...
-    Iris Person <iris@example.org> has been successfully subscribed to A
+    Gwen Person <gwen@example.com> has been successfully subscribed to A
     Test List.
 
 Similarly when an unsubscription request is accepted, the administrators can
 get a notification.
 
-    >>> req_id = hold_unsubscription(mlist, 'iris@example.org')
+    >>> req_id = hold_unsubscription(mlist, 'gwen@example.com')
     >>> handle_unsubscription(mlist, req_id, Action.accept)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
@@ -484,21 +423,21 @@ get a notification.
     From: noreply@example.com
     To: ant-owner@example.com
     ...
-    Iris Person <iris@example.org> has been removed from A Test List.
+    Gwen Person <gwen@example.com> has been removed from A Test List.
 
 
 Welcome messages
 ----------------
 
-When a member is subscribed to the mailing list via moderator approval, she
-can get a welcome message.
+When a member is subscribed to the mailing list, they can get a welcome
+message.
 
     >>> mlist.admin_notify_mchanges = False
     >>> mlist.send_welcome_message = True
-    >>> req_id = hold_subscription(mlist,
-    ...     RequestRecord('kate@example.org', 'Kate Person',
-    ...                   DeliveryMode.regular, 'en'))
-    >>> handle_subscription(mlist, req_id, Action.accept)
+    >>> herb = getUtility(IUserManager).create_address(
+    ...     'herb@example.com', 'Herb Person')
+    >>> token, token_owner, member = registrar.register(
+    ...     herb, pre_verified=True, pre_confirmed=True, pre_approved=True)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
     1
@@ -507,7 +446,7 @@ can get a welcome message.
     ...
     Subject: Welcome to the "A Test List" mailing list
     From: ant-request@example.com
-    To: Kate Person <kate@example.org>
+    To: Herb Person <herb@example.com>
     ...
     Welcome to the "A Test List" mailing list!
     ...
@@ -520,7 +459,7 @@ Similarly, when the member's unsubscription request is approved, she'll get a
 goodbye message.
 
     >>> mlist.send_goodbye_message = True
-    >>> req_id = hold_unsubscription(mlist, 'kate@example.org')
+    >>> req_id = hold_unsubscription(mlist, 'herb@example.com')
     >>> handle_unsubscription(mlist, req_id, Action.accept)
     >>> messages = get_queue_messages('virgin')
     >>> len(messages)
@@ -530,5 +469,5 @@ goodbye message.
     ...
     Subject: You have been unsubscribed from the A Test List mailing list
     From: ant-bounces@example.com
-    To: kate@example.org
+    To: herb@example.com
     ...
