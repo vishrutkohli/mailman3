@@ -45,9 +45,9 @@ deprecated.
     >>> print(mlist.subscribe_address)
     _xtest-subscribe@example.com
 
-The leave (a.k.a. unsubscribe) address is where someone can email to get added
-to the mailing list.  The unsubscribe alias is a synonym for leave, but it's
-deprecated.
+The leave (a.k.a. unsubscribe) address is where someone can email to get
+removed from the mailing list.  The unsubscribe alias is a synonym for leave,
+but it's deprecated.
 
     >>> print(mlist.leave_address)
     _xtest-leave@example.com
