@@ -46,21 +46,16 @@ class TestSearchOrder(unittest.TestCase):
 
     def setUp(self):
         self.var_dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.var_dir)
         config.push('no template dir', """\
         [mailman]
         default_language: fr
         [paths.testing]
         var_dir: {0}
         """.format(self.var_dir))
-        language_manager = getUtility(ILanguageManager)
-        language_manager.add('de', 'utf-8', 'German')
-        language_manager.add('it', 'utf-8', 'Italian')
+        self.addCleanup(config.pop, 'no template dir')
         self.mlist = create_list('l@example.com')
         self.mlist.preferred_language = 'de'
-
-    def tearDown(self):
-        config.pop('no template dir')
-        shutil.rmtree(self.var_dir)
 
     def _stripped_search_order(self, template_file,
                                mailing_list=None, language=None):
