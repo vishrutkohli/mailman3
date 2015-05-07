@@ -17,6 +17,11 @@ Bugs
  * When the mailing list's `admin_notify_mchanges` is True, the list owners
    now get the subscription notification.  (Closes: #1)
 
+Configuration
+-------------
+ * The default languages from Mailman 2.1 have been ported over.  Given by
+   Aurélien Bompard.
+
 
 3.0.0 -- "Show Don't Tell"
 ==========================

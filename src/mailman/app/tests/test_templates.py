@@ -29,7 +29,6 @@ import unittest
 
 from mailman.app.lifecycle import create_list
 from mailman.config import config
-from mailman.interfaces.languages import ILanguageManager
 from mailman.interfaces.templates import ITemplateLoader
 from mailman.testing.layers import ConfigLayer
 from urllib.error import URLError
@@ -54,7 +53,6 @@ class TestTemplateLoader(unittest.TestCase):
         with open(os.path.join(path, 'demo.txt'), 'w') as fp:
             print('Test content', end='', file=fp)
         self._loader = getUtility(ITemplateLoader)
-        getUtility(ILanguageManager).add('it', 'utf-8', 'Italian')
         self._mlist = create_list('test@example.com')
 
     def tearDown(self):
