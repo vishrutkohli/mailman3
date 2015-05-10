@@ -96,12 +96,23 @@ def create_user(arguments, response):
     # after the fact if successful.
     password = arguments.pop('password', None)
     is_server_owner = arguments.pop('is_server_owner', False)
+    user_manager = getUtility(IUserManager)
     try:
-        user = getUtility(IUserManager).create_user(**arguments)
+        user = user_manager.create_user(**arguments)
     except ExistingAddressError as error:
-        bad_request(
-            response, 'Address already exists: {}'.format(error.address))
-        return None
+        # The address already exists.  If the address already has a user
+        # linked to it, raise an error, otherwise create a new user and link
+        # it to this address.
+        email = arguments.pop('email')
+        user = user_manager.get_user(email)
+        if user is None:
+            address = user_manager.get_address(email)
+            user = user_manager.create_user(**arguments)
+            user.link(address)
+        else:
+            bad_request(
+                response, 'User already exists: {}'.format(error.address))
+            return None
     if password is None:
         # This will have to be reset since it cannot be retrieved.
         password = generate(int(config.passwords.password_length))

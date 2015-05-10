@@ -22,6 +22,12 @@ Configuration
  * The default languages from Mailman 2.1 have been ported over.  Given by
    Aurélien Bompard.
 
+REST
+----
+ * When creating a user via REST using an address that already exists, but
+   isn't linked, the address is linked to the new user.  Given by Aurélien
+   Bompard.
+
 
 3.0.0 -- "Show Don't Tell"
 ==========================
