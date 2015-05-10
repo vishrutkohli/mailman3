@@ -496,3 +496,35 @@ Gwen, a new users, takes over as a server owner.
     password: {plaintext}...
     self_link: http://localhost:9001/3.0/users/7
     user_id: 7
+
+
+Linking users
+=============
+
+If an address already exists, but is not yet linked to a user, and a new user
+is requested for that address, the user will be linked to the existing
+address.
+
+Herb's address already exists, but no user is linked to it.
+
+    >>> herb = user_manager.create_address('herb@example.com')
+    >>> print(herb.user)
+    None
+    >>> transaction.commit()
+
+Now, a user creation request is received, using Herb's email address.
+
+    >>> dump_json('http://localhost:9001/3.0/users', {
+    ...           'email': 'herb@example.com',
+    ...           'display_name': 'Herb Person',
+    ...           })
+    content-length: 0
+    date: ...
+    location: http://localhost:9001/3.0/users/8
+    server: ...
+    status: 201
+
+Herb's email address is now linked to the new user.
+
+    >>> herb.user
+    <User "Herb Person" (8) at ...

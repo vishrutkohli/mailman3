@@ -160,7 +160,7 @@ class TestUsers(unittest.TestCase):
                      })
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason,
-                         b'Address already exists: anne@example.com')
+                         b'User already exists: anne@example.com')
 
     def test_addresses_of_missing_user_id(self):
         # Trying to get the /addresses of a missing user id results in error.
@@ -190,6 +190,39 @@ class TestUsers(unittest.TestCase):
                      })
         self.assertEqual(cm.exception.code, 404)
 
+    def test_existing_address_link(self):
+        # Creating a user with an existing address links them.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            user_manager.create_address('anne@example.com')
+        call_api('http://localhost:9001/3.0/users', dict(
+            email='anne@example.com',
+            ))
+        anne = user_manager.get_user('anne@example.com')
+        self.assertEqual(anne.display_name, '')
+        self.assertFalse(anne.is_server_owner)
+        self.assertIn('anne@example.com',
+                      [address.email for address in anne.addresses])
+
+    def test_existing_address_link_with_arguments(self):
+        # Creating a user with an existing address links them, and the
+        # addition arguments get honored.
+        user_manager = getUtility(IUserManager)
+        with transaction():
+            user_manager.create_address('anne@example.com')
+        call_api('http://localhost:9001/3.0/users', dict(
+            email='anne@example.com',
+            display_name='Anne Person',
+            password='123',
+            is_server_owner=True,
+            ))
+        anne = user_manager.get_user('anne@example.com')
+        self.assertEqual(anne.display_name, 'Anne Person')
+        self.assertTrue(anne.is_server_owner)
+        self.assertEqual(anne.password, '{plaintext}123')
+        self.assertIn('anne@example.com',
+                      [address.email for address in anne.addresses])
+
     def test_create_user_twice(self):
         # LP: #1418280.  No additional users should be created when an address
         # that already exists is given.
@@ -207,7 +240,7 @@ class TestUsers(unittest.TestCase):
                 email='anne@example.com'))
         self.assertEqual(cm.exception.code, 400)
         self.assertEqual(cm.exception.reason,
-                         b'Address already exists: anne@example.com')
+                         b'User already exists: anne@example.com')
         # But at least no new users was created.
         content, response = call_api('http://localhost:9001/3.0/users')
         self.assertEqual(content['total_size'], 1)
