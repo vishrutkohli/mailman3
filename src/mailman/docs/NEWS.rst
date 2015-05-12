@@ -22,6 +22,13 @@ Configuration
  * The default languages from Mailman 2.1 have been ported over.  Given by
    Aurélien Bompard.
 
+Interfaces
+----------
+ * Implement reasons for why a message is being held for moderator approval.
+   Given by Aurélien Bompard, tweaked by Barry Warsaw.
+ * The default `postauth.txt` and `postheld.txt` templates now no longer
+   include the inaccurate admindb and confirmation urls.
+
 REST
 ----
  * When creating a user via REST using an address that already exists, but
