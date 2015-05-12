@@ -44,15 +44,27 @@ from zope.component import getUtility
 from zope.event import notify
 from zope.interface import implementer
 
+SEMISPACE = '; '
+SPACE = ' '
+NL = '\n'
+
 
 log = logging.getLogger('mailman.vette')
-SEMISPACE = '; '
 
 
 
 @implementer(IPendable)
 class HeldMessagePendable(dict):
     PEND_KEY = 'held message'
+
+
+
+def _compose_reasons(msgdata, column=66):
+    # Rules can add reasons to the metadata.
+    reasons = msgdata.get('moderation_reasons', [_('N/A')])
+    return NL.join(
+        [(SPACE * 4) + wrap(_(reason), column=column)
+         for reason in reasons])
 
 
 
@@ -134,7 +146,6 @@ class HoldChain(TerminalChainBase):
         if rule_misses:
             msg['X-Mailman-Rule-Misses'] = SEMISPACE.join(rule_misses)
         # Hold the message by adding it to the list's request database.
-        # XXX How to calculate the reason?
         request_id = hold_message(mlist, msg, msgdata, None)
         # Calculate a confirmation token to send to the author of the
         # message.
@@ -158,9 +169,7 @@ class HoldChain(TerminalChainBase):
             listname    = mlist.fqdn_listname,
             subject     = original_subject,
             sender      = msg.sender,
-            reason      = 'N/A', #reason,
-            confirmurl  = '{0}/{1}'.format(mlist.script_url('confirm'), token),
-            admindb_url = mlist.script_url('admindb'),
+            reasons     = _compose_reasons(msgdata),
             )
         # At this point the message is held, but now we have to craft at least
         # two responses.  The first will go to the original author of the
@@ -203,10 +212,10 @@ class HoldChain(TerminalChainBase):
             with _.using(mlist.preferred_language.code):
                 language = mlist.preferred_language
                 charset = language.charset
+                substitutions['subject'] = original_subject
                 # We need to regenerate or re-translate a few values in the
                 # substitution dictionary.
-                #d['reason'] = _(reason) # XXX reason
-                substitutions['subject'] = original_subject
+                substitutions['reasons'] = _compose_reasons(msgdata, 55)
                 # craft the admin notification message and deliver it
                 subject = _(
                     '$mlist.fqdn_listname post from $msg.sender requires '
@@ -235,10 +244,11 @@ also appear in the first line of the body of the reply.""")),
                 nmsg.attach(MIMEMessage(msg))
                 nmsg.attach(MIMEMessage(dmsg))
                 nmsg.send(mlist, **dict(tomoderators=True))
-        # Log the held message
-        # XXX reason
-        reason = 'n/a'
-        log.info('HOLD: %s post from %s held, message-id=%s: %s',
-                 mlist.fqdn_listname, msg.sender,
-                 msg.get('message-id', 'n/a'), reason)
+        # Log the held message.  Log messages are not translated, so recast
+        # the reasons in the English.
+        with _.using('en'):
+            reasons = _compose_reasons(msgdata)
+            log.info('HOLD: %s post from %s held, message-id=%s: %s',
+                     mlist.fqdn_listname, msg.sender,
+                     msg.get('message-id', 'n/a'), SEMISPACE.join(reasons))
         notify(HoldEvent(mlist, msg, msgdata, self))

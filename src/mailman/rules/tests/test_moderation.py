@@ -25,6 +25,7 @@ __all__ = [
 import unittest
 
 from mailman.app.lifecycle import create_list
+from mailman.interfaces.action import Action
 from mailman.interfaces.member import MemberRole
 from mailman.interfaces.usermanager import IUserManager
 from mailman.rules import moderation
@@ -73,3 +74,39 @@ A message body.
         # Bill is not a member.
         bill_member = self._mlist.members.get_member('bill@example.com')
         self.assertIsNone(bill_member)
+
+    def test_moderation_reason(self):
+        # When a message is moderated, a reason is added to the metadata.
+        user_manager = getUtility(IUserManager)
+        anne = user_manager.create_address('anne@example.com')
+        msg = mfs("""\
+From: anne@example.com
+To: test@example.com
+Subject: A test message
+Message-ID: <ant>
+MIME-Version: 1.0
+
+A message body.
+""")
+        # Anne is in the message's senders list.
+        self.assertIn('anne@example.com', msg.senders)
+        # Now run the rule.
+        rule = moderation.NonmemberModeration()
+        msgdata = {}
+        result = rule.check(self._mlist, msg, msgdata)
+        self.assertTrue(result, 'NonmemberModeration rule should hit')
+        # The reason for moderation should be in the msgdata.
+        reasons = msgdata['moderation_reasons']
+        self.assertEqual(reasons, ['The message is not from a list member'])
+        # Now make Anne a moderated member...
+        anne_member = self._mlist.subscribe(anne, MemberRole.member)
+        anne_member.moderation_action = Action.hold
+        # ...and run the rule again.
+        rule = moderation.MemberModeration()
+        msgdata = {}
+        result = rule.check(self._mlist, msg, msgdata)
+        self.assertTrue(result, 'MemberModeration rule should hit')
+        # The reason for moderation should be in the msgdata.
+        reasons = msgdata['moderation_reasons']
+        self.assertEqual(
+            reasons, ['The message comes from a moderated member'])
