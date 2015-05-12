@@ -55,6 +55,9 @@ class MemberModeration:
                 # stored in the pending request table.
                 msgdata['moderation_action'] = action.name
                 msgdata['moderation_sender'] = sender
+                msgdata.setdefault('moderation_reasons', []).append(
+                    # This will get translated at the point of use.
+                    'The message comes from a moderated member')
                 return True
         # The sender is not a member so this rule does not match.
         return False
@@ -100,6 +103,9 @@ class NonmemberModeration:
                 # stored in the pending request table.
                 msgdata['moderation_action'] = action.name
                 msgdata['moderation_sender'] = sender
+                msgdata.setdefault('moderation_reasons', []).append(
+                    # This will get translated at the point of use.
+                    'The message is not from a list member')
                 return True
         # The sender must be a member, so this rule does not match.
         return False
