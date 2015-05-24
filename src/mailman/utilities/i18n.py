@@ -32,14 +32,14 @@ import errno
 from itertools import product
 from mailman.config import config
 from mailman.core.constants import system_preferences
-from mailman.core.errors import MailmanException
+from mailman.core.errors import MailmanError
 from mailman.core.i18n import _
 from mailman.utilities.string import expand, wrap as wrap_text
 from pkg_resources import resource_filename
 
 
 
-class TemplateNotFoundError(MailmanException):
+class TemplateNotFoundError(MailmanError):
     """The named template was not found."""
 
     def __init__(self, template_file):

@@ -48,25 +48,7 @@ __all__ = [
 
 
 
-# Base class for all exceptions raised in Mailman.
-class MailmanException(Exception):
-    pass
-
-
-
-# "New" style membership exceptions (new w/ MM2.1)
-class MemberError(MailmanException): pass
-class AlreadyReceivingDigests(MemberError): pass
-class AlreadyReceivingRegularDeliveries(MemberError): pass
-class CantDigestError(MemberError): pass
-class MustDigestError(MemberError): pass
-
-
-
-# New style class based exceptions.  All the above errors should eventually be
-# converted.
-
-class MailmanError(MailmanException):
+class MailmanError(Exception):
     """Base class for all Mailman errors."""
     pass
 

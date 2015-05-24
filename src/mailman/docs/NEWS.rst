@@ -32,6 +32,11 @@ Interfaces
  * The default `postauth.txt` and `postheld.txt` templates now no longer
    include the inaccurate admindb and confirmation urls.
 
+Internal API
+------------
+ * A handful of unused legacy exceptions have been removed.  The redundant
+   `MailmanException` has been removed; use `MailmanError` everywhere.
+
 REST
 ----
  * When creating a user via REST using an address that already exists, but
