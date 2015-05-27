@@ -41,6 +41,10 @@ help.  Let's say you create the `mailman` database in PostgreSQL via::
 
     $ sudo -u postgres createdb -O $USER mailman
 
+You would also need the python driver `psycopg2` for Postgresql.::
+
+    $ pip install psycopg2
+
 You would then need to set both the `class` and `url` variables in
 `mailman.cfg` like so::
 
