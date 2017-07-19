@@ -1,95 +1,13 @@
-==============================================
-Mailman - The GNU Mailing List Management System
-==============================================
+# Systers-Mailman3
 
-Copyright (C) 1998-2015 by the Free Software Foundation, Inc.
-
-This is GNU Mailman, a mailing list management system distributed under the
-terms of the GNU General Public License (GPL) version 3 or later.  The name of
-this software is spelled "Mailman" with a leading capital 'M' but with a lower
-case second 'm'.  Any other spelling is incorrect.
-
-Mailman is written in Python which is available for all platforms that Mailman
-is supported on, including GNU/Linux and most other Unix-like operating
-systems (e.g. Solaris, \*BSD, MacOSX, etc.).  Mailman is not supported on
-Windows, although web and mail clients on any platform should be able to
-interact with Mailman just fine.
-
-The Mailman home page is:
-
-    http://www.list.org
-
-and there is a community driven wiki at
-
-    http://wiki.list.org
-
-For more information on Mailman, see the above web sites, or the
-:ref:`documentation provided with this software <start-here>`.
+Systers is an international community of over 3,000 women involved in technical-computing. The community uses a custom version of Mailman3, that includes : 
+1. Essay Feature
+2. Stats for Admins
+..*Number of subscribers/unsubscribers.
+..*Number of total unique subject lines.
+..*Number of subscribers that posted.
 
 
-Table of Contents
-=================
+Systers was founded by Anita Borg in 1987 as a small electronic mailing list for women in “systems”. Today, Systers broadly promotes the interests of women in the computing and technology fields. Anita created Systers to “increase the number of women in computer science and make the environments in which women work more conducive to their continued participation in the field.” The Systers community serves this purpose by providing women a private space to seek advice from their peers, and discuss the challenges they share as women technologist.
 
-.. toctree::
-    :glob:
-
-    src/mailman/docs/INTRODUCTION
-    src/mailman/docs/START
-    src/mailman/docs/RELEASENOTES
-    src/mailman/docs/DATABASE
-    src/mailman/docs/MTA
-    src/mailman/docs/8-miles-high
-    src/mailman/docs/WebUIin5
-    src/mailman/docs/ArchiveUIin5
-    src/mailman/docs/DEVELOP
-
-
-Mailman modules
----------------
-
-These documents are generated from the doctest suite.
-
-.. toctree::
-    :glob:
-
-    src/mailman/model/docs/*
-    src/mailman/runners/docs/*
-    src/mailman/chains/docs/*
-    src/mailman/rules/docs/*
-    src/mailman/handlers/docs/*
-    src/mailman/rest/docs/*
-    src/mailman/core/docs/*
-    src/mailman/app/docs/*
-    src/mailman/styles/docs/*
-    src/mailman/archiving/docs/*
-    src/mailman/mta/docs/*
-    src/mailman/bin/docs/*
-    src/mailman/commands/docs/*
-    src/mailman/docs/NEWS
-    src/mailman/docs/STYLEGUIDE
-    src/mailman/docs/ACKNOWLEDGMENTS
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
-NEWS/Changelog
-==============
-
-News and the changelog can be found in the package documentation:
-
-src/mailman/docs/news.rst
-
-
-Installation
-============
-
-To install GNU Mailman follow the instructions in the documentation:
-http://mailman.readthedocs.org/
-
-
+[Homepage](https://anitaborg.org/get-involved/systers/)
