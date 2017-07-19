@@ -2,30 +2,12 @@
 Mailman - The GNU Mailing List Management System
 ================================================
 
-.. image:: https://gitlab.com/mailman/mailman/badges/master/build.svg
-    :target: https://gitlab.com/mailman/mailman/commits/master
-
-.. image:: https://readthedocs.org/projects/mailman/badge
-    :target: https://mailman.readthedocs.io
-
-.. image:: http://img.shields.io/pypi/v/mailman.svg
-    :target: https://pypi.python.org/pypi/mailman
-
-.. image:: http://img.shields.io/pypi/dm/mailman.svg
-    :target: https://pypi.python.org/pypi/mailman
-
-Copyright (C) 1998-2017 by the Free Software Foundation, Inc.
+Copyright (C) 1998-2015 by the Free Software Foundation, Inc.
 
 This is GNU Mailman, a mailing list management system distributed under the
 terms of the GNU General Public License (GPL) version 3 or later.  The name of
 this software is spelled "Mailman" with a leading capital 'M' but with a lower
 case second 'm'.  Any other spelling is incorrect.
-
-Technically speaking, you are reading the documentation for Mailman Core.  The
-full `Mailman 3 suite <http://docs.mailman3.org>`_ includes a web user
-interface called Postorius, a web archiver called HyperKitty, and a few other
-components.  If you're looking for instructions on installing the full suite,
-read that documentation.
 
 Mailman is written in Python which is available for all platforms that Mailman
 is supported on, including GNU/Linux and most other Unix-like operating
@@ -42,27 +24,58 @@ and there is a community driven wiki at
     http://wiki.list.org
 
 For more information on Mailman, see the above web sites, or the
-documentation provided with this software.
+:ref:`documentation provided with this software <start-here>`.
 
 
 Table of Contents
 =================
 
-    src/mailman/docs/introduction
-    src/mailman/docs/release-notes
-    src/mailman/docs/install
-    src/mailman/config/docs/config
-    src/mailman/docs/database
-    src/mailman/docs/mta
-    src/mailman/docs/postorius
-    src/mailman/docs/hyperkitty
-    src/mailman/docs/contribute
-    src/mailman/docs/STYLEGUIDE
-    src/mailman/docs/internationalization
-    src/mailman/docs/architecture
+.. toctree::
+    :glob:
+
+    src/mailman/docs/INTRODUCTION
+    src/mailman/docs/START
+    src/mailman/docs/RELEASENOTES
+    src/mailman/docs/DATABASE
+    src/mailman/docs/MTA
     src/mailman/docs/8-miles-high
+    src/mailman/docs/WebUIin5
+    src/mailman/docs/ArchiveUIin5
+    src/mailman/docs/DEVELOP
+
+
+Mailman modules
+---------------
+
+These documents are generated from the doctest suite.
+
+.. toctree::
+    :glob:
+
+    src/mailman/model/docs/*
+    src/mailman/runners/docs/*
+    src/mailman/chains/docs/*
+    src/mailman/rules/docs/*
+    src/mailman/handlers/docs/*
+    src/mailman/rest/docs/*
+    src/mailman/core/docs/*
+    src/mailman/app/docs/*
+    src/mailman/styles/docs/*
+    src/mailman/archiving/docs/*
+    src/mailman/mta/docs/*
+    src/mailman/bin/docs/*
+    src/mailman/commands/docs/*
     src/mailman/docs/NEWS
+    src/mailman/docs/STYLEGUIDE
     src/mailman/docs/ACKNOWLEDGMENTS
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 
 NEWS/Changelog
