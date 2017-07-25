@@ -1,82 +1,37 @@
-================================================
-Mailman - The GNU Mailing List Management System
-================================================
+# Systers-Mailman3
 
-.. image:: https://gitlab.com/mailman/mailman/badges/master/build.svg
-    :target: https://gitlab.com/mailman/mailman/commits/master
+Mailman is written in Python which is available for all platforms that Mailman is supported on, including GNU/Linux and most other Unix-like operating systems.Mailman is not supported on Windows, although web and mail clients on any platform should be able to interact with Mailman just fine.
 
-.. image:: https://readthedocs.org/projects/mailman/badge
-    :target: https://mailman.readthedocs.io
+[Mailman Home Page](http://www.list.org/)
 
-.. image:: http://img.shields.io/pypi/v/mailman.svg
-    :target: https://pypi.python.org/pypi/mailman
+___
 
-.. image:: http://img.shields.io/pypi/dm/mailman.svg
-    :target: https://pypi.python.org/pypi/mailman
+**GNU Mailman 3** is actually a suite of 6 or 7 subprojects:
 
-Copyright (C) 1998-2017 by the Free Software Foundation, Inc.
+* 1\.[Mailman Core](https://pypi.python.org/pypi/mailman) - the core delivery engine which accepts messages, providers moderation and processing of the messages, and delivers messages to mailing list member recipients. It exposes its functionality to other components over a private, administrative REST API.
 
-This is GNU Mailman, a mailing list management system distributed under the
-terms of the GNU General Public License (GPL) version 3 or later.  The name of
-this software is spelled "Mailman" with a leading capital 'M' but with a lower
-case second 'm'.  Any other spelling is incorrect.
+* 2\.[Postorius](https://pypi.python.org/pypi/postorius) - A new Django-based web user interface for end users and list administrators.
 
-Technically speaking, you are reading the documentation for Mailman Core.  The
-full `Mailman 3 suite <http://docs.mailman3.org>`_ includes a web user
-interface called Postorius, a web archiver called HyperKitty, and a few other
-components.  If you're looking for instructions on installing the full suite,
-read that documentation.
+* 3\.[HyperKitty](https://pypi.python.org/pypi/HyperKitty) - A new Django-based web archiver.
 
-Mailman is written in Python which is available for all platforms that Mailman
-is supported on, including GNU/Linux and most other Unix-like operating
-systems (e.g. Solaris, \*BSD, MacOSX, etc.).  Mailman is not supported on
-Windows, although web and mail clients on any platform should be able to
-interact with Mailman just fine.
+* 4\.[mailman-hyperkitty](https://pypi.python.org/pypi/mailman-hyperkitty) - A plugin for the core to communicate with HyperKitty.
 
-The Mailman home page is:
+* 5\.[django-mailman3](https://pypi.python.org/pypi/django-mailman3) - Django modules and templates common to Postorius and HyperKitty (New in mailman 3.1).
 
-    http://www.list.org
+* 6\.[mailmanclient](https://pypi.python.org/pypi/mailmanclient) - The official Python 2 and 3 bindings to the administrative REST API. Used by Postorius and HyperKitty, this provides a convenient, object-based API for programmatic access to the Core.
 
-and there is a community driven wiki at
+The Core is required. Postorius and HyperKitty are awesome, and highly recommended, but you could of course roll your own web ui and archiver. mailman.client is useful, but you could always program directly against the REST API. 
 
-    http://wiki.list.org
+___
 
-For more information on Mailman, see the above web sites, or the
-documentation provided with this software.
+**Systers** is an international community of over 3,000 women involved in technical-computing. The community uses a custom version of Mailman3, that includes : 
+* 1\. Essay Feature
+* 2\. Stats for Admins
+    * 2.1\.Number of unsubscribers through different channels.
+    * 2.2\.Number of total unique subject lines.
+    * 2.3\.Number of subscribers that posted.
 
+___
+Systers was founded by Anita Borg in 1987 as a small electronic mailing list for women in “systems”. Today, Systers broadly promotes the interests of women in the computing and technology fields. Anita created Systers to “increase the number of women in computer science and make the environments in which women work more conducive to their continued participation in the field.” The Systers community serves this purpose by providing women a private space to seek advice from their peers, and discuss the challenges they share as women technologist.
 
-Table of Contents
-=================
-
-    src/mailman/docs/introduction
-    src/mailman/docs/release-notes
-    src/mailman/docs/install
-    src/mailman/config/docs/config
-    src/mailman/docs/database
-    src/mailman/docs/mta
-    src/mailman/docs/postorius
-    src/mailman/docs/hyperkitty
-    src/mailman/docs/contribute
-    src/mailman/docs/STYLEGUIDE
-    src/mailman/docs/internationalization
-    src/mailman/docs/architecture
-    src/mailman/docs/8-miles-high
-    src/mailman/docs/NEWS
-    src/mailman/docs/ACKNOWLEDGMENTS
-
-
-NEWS/Changelog
-==============
-
-News and the changelog can be found in the package documentation:
-
-src/mailman/docs/news.rst
-
-
-Installation
-============
-
-To install GNU Mailman follow the instructions in the documentation:
-http://mailman.readthedocs.org/
-
-
+[Systers Homepage](https://anitaborg.org/get-involved/systers/)
