@@ -1,3 +1,5 @@
+[![Travis](https://img.shields.io/travis/rust-lang/rust.svg?style=plastic)](https://github.com/systers/mailman3)
+
 # Systers-Mailman3
 
 Mailman is written in Python which is available for all platforms that Mailman is supported on, including GNU/Linux and most other Unix-like operating systems.Mailman is not supported on Windows, although web and mail clients on any platform should be able to interact with Mailman just fine.
