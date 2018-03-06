@@ -4,4 +4,4 @@ python:
   - "3.4"
 install: pip install tox-travis
 script:
-  - tox -e py34
+  - tox 
