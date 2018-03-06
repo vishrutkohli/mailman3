@@ -132,7 +132,7 @@ class RootedAPI(API):
                 if len(path_segments) == 0:
                     # We're at the end of the path, so the root must be the
                     # responder.
-                    method_map = create_http_method_map(resource, None, None)
+                    method_map = create_http_method_map(resource)
                     responder = method_map[method]
                     return responder, {}, resource
                 this_segment = path_segments.pop(0)
